@@ -11,18 +11,22 @@ export interface Usuario {
   atualizadoEm: Date;
 }
 
-// RF02, RN01: Vínculo entre atores — alunos sempre precisam de vínculo ativo
-export type StatusVinculo = 'pendente' | 'ativo' | 'inativo';
-export type TipoVinculo = 'aluno-professor' | 'aluno-academia' | 'professor-academia';
+// RF07, RF08, RF09, RN05, RN06: Vínculo entre atores — tipo derivado do par de perfis
+export type StatusVinculo = 'pendente' | 'aceito' | 'recusado';
+export type TipoVinculo = 'aluno-academia' | 'aluno-professor' | 'professor-academia';
+export type PerfilSolicitante = 'aluno' | 'professor';
+export type PerfilDestinatario = 'professor' | 'academia';
 
 export interface Vinculo {
-  id: string;
-  tipo: TipoVinculo;
+  id: string; // `${solicitanteId}_${destinatarioId}`
   solicitanteId: string;
   destinatarioId: string;
+  perfilSolicitante: PerfilSolicitante;
+  perfilDestinatario: PerfilDestinatario;
+  tipo: TipoVinculo;
   status: StatusVinculo;
   criadoEm: Date;
-  atualizadoEm: Date;
+  respondidoEm?: Date;
 }
 
 // RF03: Gestão de turmas por academia ou professor autônomo

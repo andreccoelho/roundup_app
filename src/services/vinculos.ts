@@ -1,51 +1,85 @@
-// RF02, RN01: CRUD de vínculos entre atores do sistema
+// RF07, RF08, RF09, RN05, RN06: vínculos entre aluno, professor e academia
 import {
-  doc, getDoc, setDoc, updateDoc, deleteDoc,
+  doc, setDoc, updateDoc,
   collection, query, where, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { Vinculo, StatusVinculo } from '../types';
+import { Usuario, Vinculo, TipoVinculo, PerfilSolicitante, PerfilDestinatario } from '../types';
 
-const COLECAO = 'vinculos';
+const COLECAO_VINCULOS = 'vinculos';
+const COLECAO_USUARIOS = 'usuarios';
 
-export async function criarVinculo(vinculo: Vinculo): Promise<void> {
-  await setDoc(doc(db, COLECAO, vinculo.id), vinculo);
+export function determinarTipoVinculo(
+  perfilSolicitante: PerfilSolicitante,
+  perfilDestinatario: PerfilDestinatario,
+): TipoVinculo {
+  if (perfilSolicitante === 'aluno' && perfilDestinatario === 'academia') return 'aluno-academia';
+  if (perfilSolicitante === 'aluno' && perfilDestinatario === 'professor') return 'aluno-professor';
+  if (perfilSolicitante === 'professor' && perfilDestinatario === 'academia') return 'professor-academia';
+  throw new Error(`Combinação de vínculo inválida: ${perfilSolicitante} -> ${perfilDestinatario}`);
 }
 
-export async function buscarVinculo(id: string): Promise<Vinculo | null> {
-  const snap = await getDoc(doc(db, COLECAO, id));
-  return snap.exists() ? (snap.data() as Vinculo) : null;
-}
-
-export async function atualizarVinculo(id: string, dados: Partial<Vinculo>): Promise<void> {
-  await updateDoc(doc(db, COLECAO, id), dados);
-}
-
-export async function removerVinculo(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLECAO, id));
-}
-
-export async function listarVinculosPorSolicitante(solicitanteId: string): Promise<Vinculo[]> {
-  const q = query(collection(db, COLECAO), where('solicitanteId', '==', solicitanteId));
+export async function listarAcademiasDisponiveis(): Promise<Usuario[]> {
+  const q = query(collection(db, COLECAO_USUARIOS), where('perfil', '==', 'academia'));
   const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Vinculo);
+  return snap.docs.map(d => d.data() as Usuario);
 }
 
-export async function listarVinculosPorDestinatario(destinatarioId: string): Promise<Vinculo[]> {
-  const q = query(collection(db, COLECAO), where('destinatarioId', '==', destinatarioId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Vinculo);
+export async function listarProfessoresAutonomos(): Promise<Usuario[]> {
+  const qProfessores = query(collection(db, COLECAO_USUARIOS), where('perfil', '==', 'professor'));
+  const qVinculosAtivos = query(
+    collection(db, COLECAO_VINCULOS),
+    where('tipo', '==', 'professor-academia'),
+    where('status', '==', 'aceito'),
+  );
+
+  const [snapProfessores, snapVinculos] = await Promise.all([getDocs(qProfessores), getDocs(qVinculosAtivos)]);
+
+  const professoresComAcademia = new Set(
+    snapVinculos.docs.map(d => (d.data() as Vinculo).solicitanteId),
+  );
+
+  return snapProfessores.docs
+    .map(d => d.data() as Usuario)
+    .filter(professor => !professoresComAcademia.has(professor.id));
 }
 
-export async function listarVinculosPorStatus(
-  usuarioId: string,
-  status: StatusVinculo,
-): Promise<Vinculo[]> {
+export async function solicitarVinculo(
+  solicitanteId: string,
+  destinatarioId: string,
+  perfilSolicitante: PerfilSolicitante,
+  perfilDestinatario: PerfilDestinatario,
+): Promise<void> {
+  const tipo = determinarTipoVinculo(perfilSolicitante, perfilDestinatario);
+  const vinculo: Vinculo = {
+    id: `${solicitanteId}_${destinatarioId}`,
+    solicitanteId,
+    destinatarioId,
+    perfilSolicitante,
+    perfilDestinatario,
+    tipo,
+    status: 'pendente',
+    criadoEm: new Date(),
+  };
+  await setDoc(doc(db, COLECAO_VINCULOS, vinculo.id), vinculo);
+}
+
+export async function listarSolicitacoesPendentes(destinatarioId: string): Promise<Vinculo[]> {
   const q = query(
-    collection(db, COLECAO),
-    where('destinatarioId', '==', usuarioId),
-    where('status', '==', status),
+    collection(db, COLECAO_VINCULOS),
+    where('destinatarioId', '==', destinatarioId),
+    where('status', '==', 'pendente'),
   );
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as Vinculo);
+}
+
+export async function responderSolicitacao(
+  vinculoId: string,
+  resposta: 'aceito' | 'recusado',
+): Promise<void> {
+  await updateDoc(doc(db, COLECAO_VINCULOS, vinculoId), {
+    status: resposta,
+    respondidoEm: new Date(),
+  });
 }

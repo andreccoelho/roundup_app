@@ -1,43 +1,30 @@
-# Prompt para Claude Code — Levantamento de types + botão de teste de vínculo
+# Prompt para Claude Code — Corrigir regra de leitura de `usuarios`
 
-Cole o bloco abaixo como instrução no Claude Code, dentro do repositório `roundup_app`.
+Copie e cole o texto abaixo no Claude Code, dentro do repositório do projeto (`roundup_app`).
 
 ---
 
-## Contexto
+No `firestore.rules`, a regra da coleção `usuarios` está bloqueando as queries de descoberta usadas em `listarAcademiasDisponiveis` e `listarProfessoresAutonomos` (telas `VincularAlunoScreen`/`VincularProfessorScreen`). A regra atual só libera `get` do próprio documento, e como essas funções fazem `where('perfil', '==', ...)`, o Firestore trata isso como `list` e nega a query inteira (nenhum documento de outro UID passa na condição), retornando lista vazia sem erro visível na tela.
 
-O projeto RoundUp já tem Firebase configurado e funcionando (Auth + Firestore), com regras de segurança publicadas para as coleções `usuarios` e `vinculos`. As telas ainda não têm conteúdo funcional além de placeholders, então não existe forma de testar `criarVinculo` pelo fluxo real do app ainda.
+Troque a regra de `usuarios` de:
 
-## Tarefa, parte A: levantamento de informação
+```
+match /usuarios/{usuarioId} {
+  allow read, write: if request.auth != null && request.auth.uid == usuarioId;
+}
+```
 
-Abrir `src/types/` (pode ser `index.ts` ou arquivos separados) e reportar de volta, na resposta, o conteúdo completo e exato de:
-- `StatusVinculo` (o enum ou union type, com todos os valores literais)
-- `Turma`
-- `Sessao`
-- `CheckIn`
+para:
 
-Não resumir nem parafrasear, colar o código-fonte real dessas definições na resposta.
+```
+match /usuarios/{usuarioId} {
+  allow read: if request.auth != null;
+  allow write: if request.auth != null && request.auth.uid == usuarioId;
+}
+```
 
-## Tarefa, parte B: botão de teste temporário
+Isso libera leitura (get e list/query) para qualquer usuário autenticado, mantendo a escrita restrita ao dono do documento. Mantenha todo o resto do arquivo (`vinculos`, `turmas`, `sessoes`, `checkins`, e o bloco final que nega tudo mais) exatamente como está.
 
-Em uma das telas de dashboard placeholder já existentes (`src/screens/aluno/DashboardScreen.tsx` ou equivalente, a que já é alcançada depois do login funcionar), adicionar um botão temporário que:
+Depois de editar, rode `firebase deploy --only firestore:rules` (ou o comando equivalente já usado no projeto) para publicar, e confirme que `VincularAlunoScreen` passa a listar academias e professores autônomos existentes no Firestore.
 
-1. Chama `criarVinculo` de `src/services/vinculos.ts`
-2. Usa `usuario.id` (do `useAuth()`) como `solicitanteId`
-3. Usa uma constante no topo do arquivo, `UID_DESTINATARIO_TESTE`, como `destinatarioId`, com um comentário deixando claro que o desenvolvedor precisa substituir esse valor por um UID real de outro usuário de teste (pego em Authentication → Users no console)
-4. Usa o valor real e correto de `StatusVinculo` para o estado inicial de um vínculo recém-criado (o valor correto está na parte A do levantamento, não usar um nome chutado)
-5. Envolve a chamada em try/catch, e mostra o resultado (sucesso ou o erro do Firebase, incluindo `permission-denied` se acontecer) via `Alert.alert` ou `console.log`, o que for mais simples de ver no ambiente de teste
-
-Marcar claramente esse bloco de código com um comentário do tipo `// TODO: remover após validar a regra de segurança de vinculos`, para não ser confundido com funcionalidade definitiva depois.
-
-## O que não fazer
-
-- Não remover nem alterar nenhuma tela ou navegação existente além de adicionar o botão.
-- Não mexer nas regras do Firestore, isso é feito manualmente no console pelo desenvolvedor.
-- Não implementar a tela de vínculo definitiva agora, esse botão é só para validar a regra de segurança que já foi publicada.
-
-## Entrega esperada
-
-- O conteúdo literal de `StatusVinculo`, `Turma`, `Sessao` e `CheckIn`, colado na resposta.
-- Confirmação de que `npx tsc --noEmit` roda sem erro depois da mudança.
-- Nome do arquivo onde o botão de teste foi adicionado.
+**Atenção de segurança para deixar registrada no commit**: essa mudança expõe o documento inteiro de `usuarios/{uid}` (nome, telefone, email, o que mais estiver salvo lá) para qualquer usuário autenticado, não só os campos usados na descoberta (`perfil`, `nome`). É uma solução rápida para destravar o fluxo agora; considerar depois separar uma coleção pública mínima (ex.: `diretorioPublico`) só com os campos necessários para descoberta, mantendo `usuarios` privado, para atender RNF04 (isolamento de dados) de forma mais correta.

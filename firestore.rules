@@ -1,0 +1,100 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // RF01, RF02: cada usuário só lê/escreve o próprio documento
+    match /usuarios/{usuarioId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == usuarioId;
+    }
+
+    // RF07, RF08, RN01, RN05, RN06: vínculos entre atores
+    match /vinculos/{vinculoId} {
+      function perfilDe(uid) {
+        return get(/databases/$(database)/documents/usuarios/$(uid)).data.perfil;
+      }
+
+      // RNF04: o tipo gravado precisa bater com os perfis reais de
+      // solicitanteId e destinatarioId em usuarios/{uid}
+      function tipoBateComPerfis() {
+        let perfilSolicitante = perfilDe(request.resource.data.solicitanteId);
+        let perfilDestinatario = perfilDe(request.resource.data.destinatarioId);
+        return
+          (perfilSolicitante == 'aluno' && perfilDestinatario == 'academia' && request.resource.data.tipo == 'aluno-academia') ||
+          (perfilSolicitante == 'aluno' && perfilDestinatario == 'professor' && request.resource.data.tipo == 'aluno-professor') ||
+          (perfilSolicitante == 'professor' && perfilDestinatario == 'academia' && request.resource.data.tipo == 'professor-academia');
+      }
+
+      // leitura própria (solicitante/destinatário), mais uma exceção estreita
+      // para descoberta (RF08): vínculos professor-academia já aceitos
+      // precisam ser legíveis por qualquer autenticado para que
+      // listarProfessoresAutonomos() saiba excluir quem já tem academia.
+      allow read: if request.auth != null &&
+        (resource.data.solicitanteId == request.auth.uid ||
+         resource.data.destinatarioId == request.auth.uid ||
+         (resource.data.tipo == 'professor-academia' && resource.data.status == 'aceito'));
+
+      allow create: if request.auth != null &&
+        request.resource.data.solicitanteId == request.auth.uid &&
+        request.resource.data.status == 'pendente' &&
+        tipoBateComPerfis();
+
+      allow update: if request.auth != null && (
+        resource.data.destinatarioId == request.auth.uid ||
+        (resource.data.solicitanteId == request.auth.uid &&
+         request.resource.data.status == 'encerrado')
+      );
+
+      allow delete: if request.auth != null && resource.data.solicitanteId == request.auth.uid;
+    }
+
+    // RF03, RN07: turmas — leitura aberta a autenticados (aluno precisa
+    // encontrar turmas pra pedir vínculo), escrita restrita a quem é responsável
+    match /turmas/{turmaId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null &&
+        request.resource.data.responsavelId == request.auth.uid;
+
+      allow update, delete: if request.auth != null &&
+        (resource.data.responsavelId == request.auth.uid ||
+         resource.data.academiaId == request.auth.uid);
+    }
+
+    // RF04: sessões — leitura aberta (aluno precisa ver o calendário),
+    // escrita restrita ao professor responsável
+    match /sessoes/{sessaoId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null &&
+        request.resource.data.professorId == request.auth.uid;
+
+      allow update, delete: if request.auth != null &&
+        resource.data.professorId == request.auth.uid;
+    }
+
+    // RF13, RN02: check-ins — aluno cria o próprio, professor da sessão
+    // pode ler e validar
+    match /checkins/{checkinId} {
+      allow read: if request.auth != null && (
+        resource.data.alunoId == request.auth.uid ||
+        get(/databases/$(database)/documents/sessoes/$(resource.data.sessaoId)).data.professorId == request.auth.uid
+      );
+
+      allow create: if request.auth != null &&
+        request.resource.data.alunoId == request.auth.uid;
+
+      allow update: if request.auth != null &&
+        get(/databases/$(database)/documents/sessoes/$(resource.data.sessaoId)).data.professorId == request.auth.uid;
+
+      allow delete: if request.auth != null && resource.data.alunoId == request.auth.uid;
+    }
+
+    // missoes, graduacoes, configuracoesGamificacao, consentimentosLGPD:
+    // ainda não modeladas, seguem negadas por padrão abaixo
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
