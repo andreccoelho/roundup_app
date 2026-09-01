@@ -7,7 +7,7 @@ import {
   signOut,
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import { buscarUsuario } from '../services/usuarios';
+import { buscarUsuario, criarUsuario } from '../services/usuarios';
 import { Usuario } from '../types';
 
 interface AuthContextData {
@@ -15,7 +15,7 @@ interface AuthContextData {
   usuario: Usuario | null;
   carregando: boolean;
   login: (email: string, senha: string) => Promise<void>;
-  cadastrar: (email: string, senha: string) => Promise<User>;
+  cadastrar: (email: string, senha: string, nome: string, perfil: Usuario['perfil']) => Promise<Usuario>;
   logout: () => Promise<void>;
 }
 
@@ -44,9 +44,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmailAndPassword(auth, email, senha);
   }
 
-  async function cadastrar(email: string, senha: string): Promise<User> {
+  async function cadastrar(
+    email: string,
+    senha: string,
+    nome: string,
+    perfil: Usuario['perfil']
+  ): Promise<Usuario> {
     const credencial = await createUserWithEmailAndPassword(auth, email, senha);
-    return credencial.user;
+    const agora = new Date();
+    const novoUsuario: Usuario = {
+      id: credencial.user.uid,
+      nome,
+      email,
+      perfil,
+      criadoEm: agora,
+      atualizadoEm: agora,
+    };
+
+    await criarUsuario(novoUsuario);
+
+    setUsuario(novoUsuario);
+    return novoUsuario;
   }
 
   async function logout(): Promise<void> {

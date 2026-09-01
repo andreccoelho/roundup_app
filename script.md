@@ -1,78 +1,133 @@
-## Contexto do projeto
+# Prompt para Claude Code — Verificação completa do fluxo de cadastro/login
 
-RoundUp é um aplicativo mobile de gamificação para academias de luta, TCC de Engenharia da Computação. Stack: React Native + Expo (SDK 57) + Firebase (Auth, Firestore, Storage), TypeScript.
+Cole o bloco abaixo como instrução no Claude Code, dentro do repositório `roundup_app`.
 
-O modelo de atores é central: três perfis, **Academia**, **Professor** e **Aluno**. Professores podem atuar de forma autônoma ou vinculados a uma academia; alunos sempre precisam de um vínculo ativo (com academia ou com professor autônomo). Isso deve se refletir na navegação, nos tipos e nas regras de acesso.
+---
 
-O `package.json` já tem instalado: `firebase`, `@react-native-async-storage/async-storage`, `@react-navigation/native`, `@react-navigation/native-stack`, `react-native-screens`, `react-native-safe-area-context`, `expo-image-picker`, `expo-notifications`.
+## Contexto
 
-A estrutura de pastas já existe, mas está vazia:
+O RoundUp é um app React Native + Expo + Firebase (Auth, Firestore, Storage), com três perfis de usuário: `academia`, `professor`, `aluno`.
+
+Foi identificado um bug: a função `cadastrar` em `src/contexts/AuthContext.tsx` cria a credencial no Firebase Auth, mas nunca grava o documento correspondente na coleção `usuarios` do Firestore. Resultado: o usuário aparece em Authentication → Users no console, mas não existe nenhum documento em `usuarios/{uid}`.
+
+Código atual de `src/contexts/AuthContext.tsx`:
+```tsx
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  User,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+} from 'firebase/auth';
+import { auth } from '../services/firebase';
+import { buscarUsuario } from '../services/usuarios';
+import { Usuario } from '../types';
+
+interface AuthContextData {
+  usuarioAuth: User | null;
+  usuario: Usuario | null;
+  carregando: boolean;
+  login: (email: string, senha: string) => Promise<void>;
+  cadastrar: (email: string, senha: string) => Promise<User>;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [usuarioAuth, setUsuarioAuth] = useState<User | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [carregando, setCarregando] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setUsuarioAuth(user);
+      if (user) {
+        const dadosUsuario = await buscarUsuario(user.uid);
+        setUsuario(dadosUsuario);
+      } else {
+        setUsuario(null);
+      }
+      setCarregando(false);
+    });
+    return unsubscribe;
+  }, []);
+
+  async function login(email: string, senha: string): Promise<void> {
+    await signInWithEmailAndPassword(auth, email, senha);
+  }
+
+  async function cadastrar(email: string, senha: string): Promise<User> {
+    const credencial = await createUserWithEmailAndPassword(auth, email, senha);
+    return credencial.user;
+  }
+
+  async function logout(): Promise<void> {
+    await signOut(auth);
+  }
+
+  return (
+    <AuthContext.Provider value={{ usuarioAuth, usuario, carregando, login, cadastrar, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthContextData {
+  return useContext(AuthContext);
+}
 ```
-src/
-  navigation/
-  screens/
-    auth/
-    aluno/
-    professor/
-    academia/
-  components/
-  services/
-  contexts/
-  types/
-  constants/
+
+## Tarefa
+
+Fazer uma auditoria completa do fluxo de cadastro/login, não só corrigir o sintoma pontual. Percorrer:
+
+### 1. `src/types/` (interface `Usuario`)
+Conferir se já existe `perfil: 'academia' | 'professor' | 'aluno'`, `nome`, `email`, `criadoEm`. Se algum campo essencial estiver faltando para o cadastro (RF01), ajustar a interface.
+
+### 2. `src/services/usuarios.ts`
+Verificar se já existe uma função de criação do documento (`criarUsuario` ou nome equivalente) usando `setDoc` do Firestore modular. Se não existir, criar. Ela deve gravar em `usuarios/{uid}` com os mesmos campos definidos em `types/Usuario`. Reaproveitar `buscarUsuario`, que já existe, sem duplicar lógica de acesso ao Firestore.
+
+### 3. `src/contexts/AuthContext.tsx`
+Corrigir `cadastrar` para:
+- Receber `perfil: Usuario['perfil']` e `nome: string` como parâmetros, além de `email` e `senha`.
+- Depois de criar a credencial no Auth, chamar a função de criação do Firestore com esses dados.
+- Se a escrita no Firestore falhar depois do Auth já ter criado o usuário, isso precisa ficar visível (lançar o erro adiante, não engolir silenciosamente). Não é necessário implementar rollback do usuário do Auth nessa fase, só não esconder a falha.
+- Atualizar o estado `usuario` do contexto com os dados recém-criados logo após o cadastro, sem depender de esperar o próximo disparo de `onAuthStateChanged`.
+
+### 4. Tela de cadastro/teste
+Ajustar a chamada de `cadastrar` para passar `perfil` e `nome` (pode ser um seletor simples entre aluno/professor/academia, mesmo que rudimentar, só para validar o fluxo).
+
+### 5. `RootNavigator` (ou equivalente em `src/navigation/`)
+Confirmar que a decisão de qual stack mostrar (`AlunoStack`, `ProfessorStack`, `AcademiaStack`, `AuthStack`) usa `usuario?.perfil` do contexto, não apenas `usuarioAuth`. Confirmar que o estado `carregando` é respeitado, para não piscar a tela errada antes do perfil terminar de carregar.
+
+## Sobre as regras do Firestore (não mexer agora)
+
+As regras de segurança do projeto ainda não foram escritas, o banco está em modo de produção padrão, que nega toda leitura e escrita. Isso significa que, ao testar o cadastro corrigido, a escrita em `usuarios/{uid}` provavelmente vai falhar com `permission-denied`, mesmo com o código certo. Isso é esperado nessa fase e não indica um bug no código corrigido.
+
+Não escreva as regras de segurança definitivas como parte dessa tarefa, é uma etapa separada. Se quiser desbloquear o teste agora, aplique manualmente essa regra temporária no console (aba Regras do Firestore), e ela será substituída depois pela versão definitiva:
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /usuarios/{usuarioId} {
+      allow read, write: if request.auth != null && request.auth.uid == usuarioId;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
 ```
 
-## O que criar
+## Teste esperado ao final
 
-### 1. `src/types/`
-Interfaces TypeScript para as entidades abaixo (um arquivo por entidade ou um `index.ts` único, como preferir organizar):
-`Usuario` (com campo `perfil: 'academia' | 'professor' | 'aluno'`), `Vinculo`, `Turma`, `Sessao`, `CheckIn`, `Missao`, `MissaoProgresso`, `Graduacao`, `ConfiguracaoGamificacao`, `ConsentimentoLGPD`.
-
-Use nomes de campos em português, coerentes com a documentação do TCC (ex.: `nome`, `modalidade`, `responsavelId`, `dataHoraInicio`).
-
-### 2. `src/services/firebase.ts`
-Inicializar o app do Firebase lendo a configuração de variáveis de ambiente `EXPO_PUBLIC_FIREBASE_*` (não hardcodar credenciais). Exportar `auth`, `db` (Firestore) e `storage`.
-
-Para o Auth em React Native, usar:
-```ts
-import { initializeAuth, getReactNativePersistence } from "firebase/auth";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-```
-Se o TypeScript reclamar que `getReactNativePersistence` não existe em `firebase/auth` (é um problema conhecido de tipagem do editor, o Metro resolve certo em runtime), resolva com um comentário `// @ts-ignore` na linha do import, não reescreva a inicialização por causa disso.
-
-Criar também um `.env.example` (sem valores reais, só os nomes das chaves) e confirmar que `.env` está no `.gitignore`.
-
-### 3. `src/services/` (um arquivo por entidade)
-`usuarios.ts`, `vinculos.ts`, `turmas.ts`, `sessoes.ts`, `checkins.ts`, `missoes.ts`, `graduacoes.ts`, `configuracoesGamificacao.ts`, `consentimentosLGPD.ts`.
-
-Cada um com funções CRUD básicas usando o SDK modular do Firestore (`getDoc`, `setDoc`, `updateDoc`, `query`/`where` para listagens por escopo de vínculo). Sem lógica de negócio completa ainda, só o esqueleto que compila e é reaproveitável pelas telas.
-
-### 4. `src/contexts/AuthContext.tsx`
-Contexto com o usuário autenticado (via `onAuthStateChanged`), o perfil ativo, e funções `login`, `logout`, `cadastrar`. Deve envolver o `App.tsx`.
-
-### 5. `src/navigation/`
-- `AuthStack.tsx`: telas de login, cadastro e recuperação de senha.
-- `AlunoStack.tsx`, `ProfessorStack.tsx`, `AcademiaStack.tsx`: cada uma com uma tela inicial placeholder (dashboard) por enquanto.
-- `RootNavigator.tsx`: decide qual stack mostrar com base no estado de autenticação e no perfil do `AuthContext`.
-
-### 6. `src/screens/`
-Um componente placeholder simples por pasta (`auth/LoginScreen.tsx`, `auth/CadastroScreen.tsx`, `auth/RecuperarSenhaScreen.tsx`, e um `DashboardScreen.tsx` em cada uma de `aluno/`, `professor/`, `academia/`), só para a navegação ter algo para renderizar.
-
-### 7. `src/components/`
-Um componente compartilhado simples, tipo `LoadingScreen.tsx`, usado enquanto o estado de autenticação carrega.
-
-### 8. `src/constants/`
-`colors.ts` com a paleta monocromática (preto, branco, cinza) já definida na identidade visual do projeto. Não presumir que a fonte Homebase Regular já está nos assets, só deixar o arquivo de tipografia preparado para receber ela depois.
-
-## Regras de código
-- Comentar os arquivos de services e types referenciando o código do requisito correspondente (ex.: `// RF13, RN02: check-in único por sessão`), para manter rastreabilidade com a lista de requisitos do TCC.
-- TypeScript com tipagem explícita, evitar `any`.
-- Nomes de domínio (entidades, coleções, campos) em português; nomes de componentes e funções seguem convenção usual de React/TypeScript.
-
-## O que não fazer agora
-- Não implementar regras de negócio completas (validação de check-in, cálculo de pontos, ranking).
-- Não criar o projeto no console do Firebase nem preencher credenciais reais, isso é manual e já será feito à parte.
-- Não escrever regras de segurança do Firestore ainda, isso é uma etapa separada.
+- Criar um usuário de teste com perfil definido.
+- Confirmar que aparece em Authentication → Users **e** em Firestore → `usuarios/{uid}`, com o campo `perfil` correto.
+- Fazer logout e login de novo, confirmar que o app carrega o perfil salvo sem pedir para escolher de novo.
+- Rodar `npx tsc --noEmit` sem erros.
 
 ## Entrega esperada
-Ao final, listar os arquivos criados e confirmar que o projeto builda sem erro de import (`npx tsc --noEmit`).
+
+Listar os arquivos alterados ou criados, e um resumo objetivo do que foi corrigido em cada um.

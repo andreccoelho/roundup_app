@@ -1,9 +1,15 @@
-import { initializeApp } from 'firebase/app';
-// @ts-ignore
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp } from "firebase/app";
+import {
+  initializeAuth,
+  // @ts-ignore: getReactNativePersistence não está na tipagem web, mas existe no bundle nativo resolvido pelo Metro
+  getReactNativePersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -16,8 +22,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+// @ts-ignore: getReactNativePersistence não aparece na tipagem web, mas existe no bundle nativo
 export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
+  persistence:
+      Platform.OS === "web"
+          ? browserLocalPersistence
+          : getReactNativePersistence(AsyncStorage),
 });
 
 export const db = getFirestore(app);
