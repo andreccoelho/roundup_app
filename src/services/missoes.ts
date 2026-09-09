@@ -1,4 +1,5 @@
-// RF05: CRUD de missões; RF06: CRUD de progresso de missões por aluno
+// Adiado para o Ciclo 2 (RF18, progresso de missões) e Ciclo 3 (RF23, criação de missões).
+// Esqueleto mantido; a coleção segue bloqueada em firestore.rules até ser modelada.
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, getDocs,

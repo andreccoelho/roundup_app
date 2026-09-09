@@ -40,6 +40,11 @@ script.md
 # typescript
 *.tsbuildinfo
 
+# local JDK downloaded for firebase-tools emulators + emulator logs
+.tools/
+*-debug.log
+firebase-export-*/
+
 # generated native folders
 /ios
 /android

@@ -1,4 +1,5 @@
-// RF07: CRUD de graduações (faixas/belts)
+// Adiado para o Ciclo 3 (RF25, RN03: registro de graduações).
+// Esqueleto mantido; a coleção segue bloqueada em firestore.rules até ser modelada.
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, getDocs,

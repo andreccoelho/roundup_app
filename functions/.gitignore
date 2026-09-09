@@ -1,0 +1,13 @@
+# Compiled output
+lib/
+generated/
+
+# Dependencies
+node_modules/
+
+# Logs
+firebase-debug.log
+firebase-debug.*.log
+
+# Runtime config (never commit secrets)
+.runtimeconfig.json

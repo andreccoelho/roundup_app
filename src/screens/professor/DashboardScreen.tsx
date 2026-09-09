@@ -18,6 +18,9 @@ export default function DashboardScreen() {
       <TouchableOpacity style={styles.botaoPrimario} onPress={() => navigation.navigate('SolicitacoesProfessor')}>
         <Text style={styles.textoBotaoPrimario}>Solicitações pendentes</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.botaoPrimario} onPress={() => navigation.navigate('Turmas')}>
+        <Text style={styles.textoBotaoPrimario}>Turmas</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.botaoLogout} onPress={logout}>
         <Text style={styles.textoBotaoLogout}>Sair</Text>
       </TouchableOpacity>

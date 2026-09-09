@@ -1,4 +1,5 @@
-// RN10: CRUD de consentimentos LGPD — registro obrigatório no cadastro
+// Adiado para o Ciclo 4 (RF28, RNF10: consentimento LGPD registrado no cadastro).
+// Esqueleto mantido; firestore.rules já publica a regra final (é registro de auditoria imutável).
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, getDocs,

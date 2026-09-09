@@ -1,4 +1,5 @@
-// RF08, RF09: CRUD de configurações de gamificação por academia ou professor autônomo
+// Adiado para o Ciclo 3 (RF33: personalização do sistema de pontuação e graduação).
+// Esqueleto mantido; a coleção segue bloqueada em firestore.rules até ser modelada.
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, getDocs,

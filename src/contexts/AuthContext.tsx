@@ -9,6 +9,7 @@ import {
 import { auth } from '../services/firebase';
 import { buscarUsuario, criarUsuario } from '../services/usuarios';
 import { Usuario } from '../types';
+import { agoraTimestamp } from '../utils/datas';
 
 interface AuthContextData {
   usuarioAuth: User | null;
@@ -51,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     perfil: Usuario['perfil']
   ): Promise<Usuario> {
     const credencial = await createUserWithEmailAndPassword(auth, email, senha);
-    const agora = new Date();
+    const agora = agoraTimestamp();
     const novoUsuario: Usuario = {
       id: credencial.user.uid,
       nome,

@@ -1,30 +1,64 @@
-# Prompt para Claude Code — Corrigir regra de leitura de `usuarios`
+# RoundUp — Cloud Function para sincronizar leitoresIds na matrícula
 
-Copie e cole o texto abaixo no Claude Code, dentro do repositório do projeto (`roundup_app`).
+## Problema
 
----
+`matriculas.create` não consegue adicionar o aluno a `leitoresIds` de sessões já existentes da turma: para isso precisaria consultar essas sessões, e a consulta só passa na regra se o aluno já estiver em `leitoresIds`, o que ainda não está. Paradoxo de ordem, sem solução no cliente. RF14 fica quebrado para quem se matricula em turma já em andamento.
 
-No `firestore.rules`, a regra da coleção `usuarios` está bloqueando as queries de descoberta usadas em `listarAcademiasDisponiveis` e `listarProfessoresAutonomos` (telas `VincularAlunoScreen`/`VincularProfessorScreen`). A regra atual só libera `get` do próprio documento, e como essas funções fazem `where('perfil', '==', ...)`, o Firestore trata isso como `list` e nega a query inteira (nenhum documento de outro UID passa na condição), retornando lista vazia sem erro visível na tela.
+## Solução
 
-Troque a regra de `usuarios` de:
+Cloud Function com Admin SDK, que ignora as regras de segurança e resolve o paradoxo.
 
+**Aviso ao usuário antes de começar:** isso exige o plano Blaze (pay-as-you-go) no projeto Firebase. O gatilho em si tem cota gratuita generosa (2 milhões de invocações/mês), mas o plano Spark não permite Cloud Functions. Confirme que o projeto já está no Blaze antes de fazer deploy; se não estiver, pare e avise.
+
+## Implementação
+
+**1.** Inicialize `functions/` com `firebase init functions`, TypeScript, se ainda não existir.
+
+**2.** `functions/src/index.ts`, gatilho `onDocumentCreated` em `matriculas/{matriculaId}`:
+
+```ts
+export const sincronizarLeitorNaMatricula = onDocumentCreated(
+  'matriculas/{matriculaId}',
+  async (event) => {
+    const matricula = event.data?.data();
+    if (!matricula || matricula.status !== 'ativa') return;
+
+    const agora = Timestamp.now();
+    const sessoesSnap = await db.collection('sessoes')
+      .where('turmaId', '==', matricula.turmaId)
+      .where('inicio', '>=', agora)
+      .where('status', 'in', ['agendada', 'aberta'])
+      .get();
+
+    const batch = db.batch();
+    sessoesSnap.docs.forEach((doc) => {
+      batch.update(doc.ref, {
+        leitoresIds: FieldValue.arrayUnion(matricula.alunoId),
+      });
+    });
+    await batch.commit();
+  }
+);
 ```
-match /usuarios/{usuarioId} {
-  allow read, write: if request.auth != null && request.auth.uid == usuarioId;
-}
-```
 
-para:
+Sem `limit`: se a turma tiver centenas de sessões futuras, fatie em lotes de 500 (limite do `batch`). Log de erro claro se isso acontecer, não falhe silenciosamente.
 
-```
-match /usuarios/{usuarioId} {
-  allow read: if request.auth != null;
-  allow write: if request.auth != null && request.auth.uid == usuarioId;
-}
-```
+**3.** Espelhe o mesmo gatilho para `onDocumentUpdated`, cobrindo `cancelarMatricula` (status vira `'inativa'`): usa `arrayRemove` em vez de `arrayUnion`, mesmo filtro de sessões futuras.
 
-Isso libera leitura (get e list/query) para qualquer usuário autenticado, mantendo a escrita restrita ao dono do documento. Mantenha todo o resto do arquivo (`vinculos`, `turmas`, `sessoes`, `checkins`, e o bloco final que nega tudo mais) exatamente como está.
+**4.** Em `src/services/matriculas.ts`, remova a chamada direta a `atualizarLeitoresDasSessoesFuturas` que hoje engole o erro — a sincronização passa a ser responsabilidade exclusiva da function. Deixe o service apenas criar/atualizar o documento de matrícula.
 
-Depois de editar, rode `firebase deploy --only firestore:rules` (ou o comando equivalente já usado no projeto) para publicar, e confirme que `VincularAlunoScreen` passa a listar academias e professores autônomos existentes no Firestore.
+**5.** Teste no emulador: `firebase emulators:start --only functions,firestore`, crie uma matrícula em turma com sessão futura já cadastrada, confirme que `leitoresIds` foi atualizado. Adicione um teste de integração em `tests/functions/sincronizacao-leitores.test.ts` cobrindo matrícula e cancelamento.
 
-**Atenção de segurança para deixar registrada no commit**: essa mudança expõe o documento inteiro de `usuarios/{uid}` (nome, telefone, email, o que mais estiver salvo lá) para qualquer usuário autenticado, não só os campos usados na descoberta (`perfil`, `nome`). É uma solução rápida para destravar o fluxo agora; considerar depois separar uma coleção pública mínima (ex.: `diretorioPublico`) só com os campos necessários para descoberta, mantendo `usuarios` privado, para atender RNF04 (isolamento de dados) de forma mais correta.
+**6.** Atualize `docs/decisoes-tecnicas.md`: substitua a entrada de limitação conhecida por uma entrada de decisão, explicando por que a sincronização saiu do cliente e foi para Cloud Function.
+
+## Verificação
+
+- `npx tsc --noEmit` em `functions/` e no app.
+- Teste de integração da function passando no emulador.
+- `npm run test:rules` continua 100% (nenhuma regra muda nesta rodada).
+- Comando de deploy, sem executar: `firebase deploy --only functions,firestore:rules,firestore:indexes`.
+
+## Não fazer
+
+- Não alterar `firestore.rules`. O problema era de fluxo de escrita, não de regra.
+- Não implementar retry ou fila; se o batch falhar, logar e seguir — cobertura de falha fica para o Ciclo 4.

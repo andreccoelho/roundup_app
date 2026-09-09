@@ -1,98 +1,283 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // RF01, RF02: cada usuário só lê/escreve o próprio documento
+    // ---------- Helpers ----------
+    function autenticado() {
+      return request.auth != null;
+    }
+
+    function meuId() {
+      return request.auth.uid;
+    }
+
+    function dadosUsuario(uid) {
+      return get(/databases/$(database)/documents/usuarios/$(uid)).data;
+    }
+
+    function meuPerfil() {
+      return dadosUsuario(meuId()).perfil;
+    }
+
+    function souAluno()   { return meuPerfil() == 'aluno'; }
+    function souGestor()  { return meuPerfil() in ['professor', 'academia']; }
+
+    // RNF04: o tipo gravado precisa bater com os perfis reais de
+    // solicitanteId e destinatarioId em usuarios/{uid}
+    function tipoBateComPerfis() {
+      let perfilSolicitante = dadosUsuario(request.resource.data.solicitanteId).perfil;
+      let perfilDestinatario = dadosUsuario(request.resource.data.destinatarioId).perfil;
+      return
+        (perfilSolicitante == 'aluno' && perfilDestinatario == 'academia' && request.resource.data.tipo == 'aluno-academia') ||
+        (perfilSolicitante == 'aluno' && perfilDestinatario == 'professor' && request.resource.data.tipo == 'aluno-professor') ||
+        (perfilSolicitante == 'professor' && perfilDestinatario == 'academia' && request.resource.data.tipo == 'professor-academia');
+    }
+
+    // RN05: vínculo ativo do usuário autenticado com `outroId`, checado no documento privado
+    // usuarios/{meuId()}/privado/vinculos (Fase 1: saiu do documento raiz, que é legível por
+    // qualquer autenticado, para não expor o grafo institucional — RNF04). Usada apenas em
+    // escritas de documento único (matriculas.create, sessoes.update) — get()/exists()
+    // combinado com request.resource.data/resource.data funciona bem aí. NÃO é segura para
+    // regras de leitura usadas em getDocs(query(...)): ver decisão registrada em
+    // docs/decisoes-tecnicas.md sobre get()/exists() + resource.data em consultas de lista.
+    // get()/exists() dentro de regras não passam pelas próprias regras de leitura — por isso
+    // funciona mesmo com usuarios/{uid}/privado/{doc} fechado a qualquer client.
+    function tenhoVinculoAtivoCom(outroId) {
+      return exists(/databases/$(database)/documents/usuarios/$(meuId())/privado/vinculos)
+        && outroId in get(/databases/$(database)/documents/usuarios/$(meuId())/privado/vinculos).data.get('responsaveisIds', []);
+    }
+
+    function dadosTurma(turmaId) {
+      return get(/databases/$(database)/documents/turmas/$(turmaId)).data;
+    }
+
+    // RN05, RN06: só o destinatário de um vínculo já aceito pode gravar os campos que
+    // responderSolicitacao() atualiza no usuário/documento privado do solicitante — é a
+    // contraparte de aceitar o vínculo e atualizar esses dados na mesma transação.
+    // getAfter()/existsAfter(), não get()/exists(): a transação de responderSolicitacao()
+    // muda o status do vínculo para 'aceito' e escreve esses dados NA MESMA transação — um
+    // get() normal só enxergaria o estado antes da transação (ainda 'pendente') e negaria a
+    // escrita; getAfter()/existsAfter() enxergam o estado que a transação está prestes a
+    // gravar, incluindo a própria mudança de status.
+    function souDestinatarioDeVinculoAceito(solicitanteId) {
+      return existsAfter(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId()))
+        && getAfter(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId())).data.status == 'aceito';
+    }
+
+    // RF14, RNF04: prova que a mudança em leitoresIds é exatamente "adicionar/remover o
+    // próprio uid" — usadas pelo aluno se (des)matriculando, sem permitir que ele manipule
+    // o id de outra pessoa nesse array.
+    function souAdicionadoAosLeitores() {
+      let antes = resource.data.get('leitoresIds', []);
+      let depois = request.resource.data.get('leitoresIds', []);
+      return !(meuId() in antes) && (meuId() in depois)
+        && depois.size() == antes.size() + 1
+        && depois.hasAll(antes);
+    }
+
+    function souRemovidoDosLeitores() {
+      let antes = resource.data.get('leitoresIds', []);
+      let depois = request.resource.data.get('leitoresIds', []);
+      return (meuId() in antes) && !(meuId() in depois)
+        && antes.size() == depois.size() + 1
+        && antes.hasAll(depois);
+    }
+
+    // RN08: lê a sessão uma única vez para checar status e janela de check-in,
+    // evitando estourar o limite de get()/exists() por escrita
+    function janelaCheckInValida(sessaoId) {
+      let sessao = get(/databases/$(database)/documents/sessoes/$(sessaoId)).data;
+      return sessao.status != 'cancelada'
+        && request.time >= sessao.janelaCheckInInicio
+        && request.time <= sessao.janelaCheckInFim;
+    }
+
+    // RF11: matrícula com ID determinístico permite exists() direto
+    function matriculadoEm(turmaId) {
+      return exists(/databases/$(database)/documents/matriculas/$(turmaId + '_' + meuId()))
+        && get(/databases/$(database)/documents/matriculas/$(turmaId + '_' + meuId())).data.status == 'ativa';
+    }
+
+    // ---------- usuarios (RF01 a RF06) ----------
     match /usuarios/{usuarioId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == usuarioId;
+      // leitura ampla é necessária para as consultas de descoberta de academias e professores
+      allow read: if autenticado();
+      allow create: if autenticado()
+                    && usuarioId == meuId()
+                    && request.resource.data.perfil in ['aluno', 'professor', 'academia'];
+      allow update: if autenticado()
+                    && ((usuarioId == meuId() && request.resource.data.perfil == resource.data.perfil)
+                        // RN06: o destinatário de um vínculo professor-academia aceito grava só
+                        // autonomo/atualizadoEm do professor — contraparte de responderSolicitacao().
+                        // vinculosAtivos saiu daqui na Fase 1 desta rodada (ver usuarios/privado abaixo).
+                        || (souDestinatarioDeVinculoAceito(usuarioId)
+                            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autonomo', 'atualizadoEm'])));
+      allow delete: if false;  // exclusão é RF29, Ciclo 4
     }
 
-    // RF07, RF08, RN01, RN05, RN06: vínculos entre atores
+    // RN05, RN06: vínculos ativos do usuário — array movido para cá (Fase 1 desta rodada)
+    // porque `usuarios/{uid}` raiz é legível por qualquer autenticado (RNF04: expunha o
+    // grafo institucional inteiro). get()/exists() dentro de firestore.rules não passam
+    // pelas regras de leitura, então `tenhoVinculoAtivoCom()` continua enxergando este
+    // documento normalmente mesmo com leitura fechada para clientes.
+    match /usuarios/{usuarioId}/privado/{doc} {
+      allow read: if autenticado() && usuarioId == meuId();
+      // O dono nunca escreve isto diretamente; quem escreve é o DESTINATÁRIO de um vínculo
+      // que está aceitando (responderSolicitacao roda como o destinatário, gravando no
+      // documento do solicitante). "usuarioId == meuId()" fica como via de escape caso um
+      // fluxo futuro do próprio dono precise editar — hoje nenhum código faz isso.
+      allow write: if autenticado()
+                   && (usuarioId == meuId()
+                       || (doc == 'vinculos' && souDestinatarioDeVinculoAceito(usuarioId)));
+    }
+
+    // ---------- vinculos (RF07, RF08, RN05, RN06) ----------
+    // RNF04: a exceção de leitura ampla para vínculos professor-academia aceitos foi removida
+    // — listarProfessoresAutonomos() agora lê a propriedade `autonomo` direto em `usuarios`
+    // (RF05), então não precisa mais enxergar o grafo institucional inteiro.
     match /vinculos/{vinculoId} {
-      function perfilDe(uid) {
-        return get(/databases/$(database)/documents/usuarios/$(uid)).data.perfil;
-      }
-
-      // RNF04: o tipo gravado precisa bater com os perfis reais de
-      // solicitanteId e destinatarioId em usuarios/{uid}
-      function tipoBateComPerfis() {
-        let perfilSolicitante = perfilDe(request.resource.data.solicitanteId);
-        let perfilDestinatario = perfilDe(request.resource.data.destinatarioId);
-        return
-          (perfilSolicitante == 'aluno' && perfilDestinatario == 'academia' && request.resource.data.tipo == 'aluno-academia') ||
-          (perfilSolicitante == 'aluno' && perfilDestinatario == 'professor' && request.resource.data.tipo == 'aluno-professor') ||
-          (perfilSolicitante == 'professor' && perfilDestinatario == 'academia' && request.resource.data.tipo == 'professor-academia');
-      }
-
-      // leitura própria (solicitante/destinatário), mais uma exceção estreita
-      // para descoberta (RF08): vínculos professor-academia já aceitos
-      // precisam ser legíveis por qualquer autenticado para que
-      // listarProfessoresAutonomos() saiba excluir quem já tem academia.
-      allow read: if request.auth != null &&
-        (resource.data.solicitanteId == request.auth.uid ||
-         resource.data.destinatarioId == request.auth.uid ||
-         (resource.data.tipo == 'professor-academia' && resource.data.status == 'aceito'));
-
-      allow create: if request.auth != null &&
-        request.resource.data.solicitanteId == request.auth.uid &&
-        request.resource.data.status == 'pendente' &&
-        tipoBateComPerfis();
-
-      allow update: if request.auth != null && (
-        resource.data.destinatarioId == request.auth.uid ||
-        (resource.data.solicitanteId == request.auth.uid &&
-         request.resource.data.status == 'encerrado')
-      );
-
-      allow delete: if request.auth != null && resource.data.solicitanteId == request.auth.uid;
+      allow read: if autenticado()
+                  && (resource.data.get('solicitanteId', '') == meuId()
+                      || resource.data.get('destinatarioId', '') == meuId());
+      allow create: if autenticado()
+                    && request.resource.data.solicitanteId == meuId()
+                    // RN06: só aluno ou professor solicitam vínculo — a academia nunca é solicitante,
+                    // nem mesmo de professor-academia. Redundante com tipoBateComPerfis() (nenhum de
+                    // seus três pares aceita perfilSolicitante == 'academia'), mas explícito e testável.
+                    && meuPerfil() != 'academia'
+                    && vinculoId == request.resource.data.solicitanteId + '_' + request.resource.data.destinatarioId
+                    && request.resource.data.status == 'pendente'
+                    && tipoBateComPerfis();
+      // aceite ou recusa cabe apenas ao destinatário — StatusVinculo real é
+      // 'pendente' | 'aceito' | 'recusado', não 'ativo'/'inativo'
+      allow update: if autenticado()
+                    && resource.data.destinatarioId == meuId()
+                    && request.resource.data.status in ['aceito', 'recusado'];
+      allow delete: if false;
     }
 
-    // RF03, RN07: turmas — leitura aberta a autenticados (aluno precisa
-    // encontrar turmas pra pedir vínculo), escrita restrita a quem é responsável
+    // ---------- turmas (RF10, RN07) ----------
+    // DECISÃO CONHECIDA E RELEVANTE (ver docs/decisoes-tecnicas.md — "limitação de get() em
+    // regras de lista"): comprovamos que get()/exists() e resource.data não podem coexistir
+    // dentro do mesmo && quando a regra é avaliada para uma consulta de lista (list) — o
+    // motor de regras do emulador lança "evaluation error" mesmo bem abaixo do limite de 10
+    // chamadas, e isso vale mesmo se o valor de resource.data for repassado por parâmetro de
+    // função ou lido direto no corpo dela. Isso torna IMPOSSÍVEL checar "tenho vínculo aceito
+    // com resource.data.responsavelId" (ou qualquer checagem cruzada de coleção equivalente,
+    // como matriculadoEm(resource.data.turmaId)) dentro de uma regra usada por getDocs(query).
+    // Sem alternativa de baixo custo (exigiria desnormalizar um array de leitores autorizados
+    // em CADA turma, sincronizado a cada mudança de vínculo — fora do escopo desta rodada),
+    // a leitura de turmas ativas é aberta a qualquer autenticado, do mesmo jeito que
+    // `usuarios` já é ("leitura ampla necessária para descoberta"); turmas inativas continuam
+    // restritas ao responsável. listarTurmasPorResponsavel/listarTurmasDoAluno/
+    // listarTurmasDisponiveisParaAluno continuam funcionando exatamente como antes.
     match /turmas/{turmaId} {
-      allow read: if request.auth != null;
-
-      allow create: if request.auth != null &&
-        request.resource.data.responsavelId == request.auth.uid;
-
-      allow update, delete: if request.auth != null &&
-        (resource.data.responsavelId == request.auth.uid ||
-         resource.data.academiaId == request.auth.uid);
+      allow read: if autenticado()
+                  && (resource.data.get('responsavelId', '') == meuId()
+                      || resource.data.get('professorId', '') == meuId()
+                      || resource.data.get('ativa', false) == true);
+      allow create: if autenticado()
+                    && souGestor()
+                    && request.resource.data.responsavelId == meuId()
+                    && request.resource.data.responsavelPerfil == meuPerfil();
+      allow update: if autenticado()
+                    && resource.data.responsavelId == meuId()
+                    && request.resource.data.responsavelId == resource.data.responsavelId;
+      allow delete: if false;  // desativação por soft delete
     }
 
-    // RF04: sessões — leitura aberta (aluno precisa ver o calendário),
-    // escrita restrita ao professor responsável
+    // ---------- matriculas (RF11) ----------
+    match /matriculas/{matriculaId} {
+      allow read: if autenticado()
+                  && (resource.data.get('alunoId', '') == meuId()
+                      || resource.data.get('responsavelId', '') == meuId());
+      allow create: if autenticado()
+                    && souAluno()
+                    && request.resource.data.alunoId == meuId()
+                    && matriculaId == request.resource.data.turmaId + '_' + meuId()
+                    && request.resource.data.status == 'ativa'
+                    && request.resource.data.responsavelId == dadosTurma(request.resource.data.turmaId).responsavelId
+                    && tenhoVinculoAtivoCom(request.resource.data.responsavelId);
+      allow update: if autenticado()
+                    && (resource.data.alunoId == meuId()
+                        || resource.data.responsavelId == meuId());
+      allow delete: if false;
+    }
+
+    // ---------- sessoes (RF12, RF14, RN07, RN08) ----------
+    // DECISÃO DE PROJETO (ver docs/decisoes-tecnicas.md — não é mais limitação assumida):
+    // sessão expõe agenda operacional (quem treina, onde, quando), dado pessoal sob a LGPD —
+    // diferente de turma (nome/modalidade/nível), que continua aberta a autenticados como
+    // limitação conhecida. Em vez de checar vínculo/matrícula por get()/exists() cruzando
+    // coleção (impossível numa consulta de lista, ver nota em tenhoVinculoAtivoCom()),
+    // `leitoresIds` desnormaliza no próprio documento quem pode lê-lo — puramente
+    // resource.data, prova estaticamente segura para getDocs(query(...)) e sem custo de
+    // get() nenhum. `criarSessao` inicializa com responsável, professor e alunos já
+    // matriculados; `matricularAluno`/`cancelarMatricula` mantêm o array em dia nas sessões
+    // futuras (sessões passadas preservam o histórico de quem tinha acesso).
     match /sessoes/{sessaoId} {
-      allow read: if request.auth != null;
-
-      allow create: if request.auth != null &&
-        request.resource.data.professorId == request.auth.uid;
-
-      allow update, delete: if request.auth != null &&
-        resource.data.professorId == request.auth.uid;
+      allow read: if autenticado() && meuId() in resource.data.get('leitoresIds', []);
+      allow create: if autenticado()
+                    && souGestor()
+                    && request.resource.data.responsavelId == dadosTurma(request.resource.data.turmaId).responsavelId
+                    && (request.resource.data.responsavelId == meuId()
+                        || dadosTurma(request.resource.data.turmaId).professorId == meuId())
+                    && request.resource.data.janelaCheckInFim > request.resource.data.janelaCheckInInicio;
+      allow update: if autenticado()
+                    && (
+                         (
+                           (resource.data.responsavelId == meuId() || resource.data.professorId == meuId())
+                           && request.resource.data.turmaId == resource.data.turmaId
+                         )
+                         ||
+                         (
+                           // RF14, RN05: aluno (des)matriculando-se só pode adicionar/remover o
+                           // próprio uid em leitoresIds, e só se tiver vínculo com o responsável —
+                           // é a contraparte de atualizarLeitoresDasSessoesFuturas() em matriculas.ts
+                           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['leitoresIds'])
+                           && tenhoVinculoAtivoCom(resource.data.get('responsavelId', ''))
+                           && (souAdicionadoAosLeitores() || souRemovidoDosLeitores())
+                         )
+                       );
+      allow delete: if false;
     }
 
-    // RF13, RN02: check-ins — aluno cria o próprio, professor da sessão
-    // pode ler e validar
+    // ---------- checkins (RF13, RF15, RN02, RN08) ----------
     match /checkins/{checkinId} {
-      allow read: if request.auth != null && (
-        resource.data.alunoId == request.auth.uid ||
-        get(/databases/$(database)/documents/sessoes/$(resource.data.sessaoId)).data.professorId == request.auth.uid
-      );
-
-      allow create: if request.auth != null &&
-        request.resource.data.alunoId == request.auth.uid;
-
-      allow update: if request.auth != null &&
-        get(/databases/$(database)/documents/sessoes/$(resource.data.sessaoId)).data.professorId == request.auth.uid;
-
-      allow delete: if request.auth != null && resource.data.alunoId == request.auth.uid;
+      allow read: if autenticado()
+                  && (resource.data.get('alunoId', '') == meuId()
+                      || resource.data.get('responsavelId', '') == meuId());
+      // RN02: o ID determinístico impede o segundo check-in, o create falha por documento existente.
+      allow create: if autenticado()
+                    && souAluno()
+                    && request.resource.data.alunoId == meuId()
+                    && checkinId == request.resource.data.sessaoId + '_' + meuId()
+                    && matriculadoEm(request.resource.data.turmaId)
+                    && request.resource.data.status == 'pendente'
+                    && request.resource.data.pontos == 0
+                    && janelaCheckInValida(request.resource.data.sessaoId);
+      // validação de check-in é RF22, Ciclo 3, por isso apenas o responsável escreve
+      allow update: if autenticado()
+                    && resource.data.responsavelId == meuId();
+      allow delete: if false;
     }
 
-    // missoes, graduacoes, configuracoesGamificacao, consentimentosLGPD:
-    // ainda não modeladas, seguem negadas por padrão abaixo
+    // ---------- Coleções de ciclos posteriores ----------
+    // Bloqueio explícito enquanto não modeladas, evita coleção aberta em produção.
+    match /missoes/{doc}                  { allow read, write: if false; }  // RF23, Ciclo 3
+    match /missoesProgresso/{doc}         { allow read, write: if false; }  // RF18, Ciclo 2
+    match /graduacoes/{doc}               { allow read, write: if false; }  // RF25, Ciclo 3
+    match /configuracoesGamificacao/{doc} { allow read, write: if false; }  // RF33, Ciclo 3
 
+    // RF28, RNF10: consentimento é registro de auditoria, imutável após criação
+    match /consentimentosLGPD/{doc} {
+      allow read:   if autenticado() && resource.data.usuarioId == meuId();
+      allow create: if autenticado() && request.resource.data.usuarioId == meuId();
+      allow update, delete: if false;
+    }
+
+    // Negação padrão para qualquer coleção não declarada
     match /{document=**} {
       allow read, write: if false;
     }

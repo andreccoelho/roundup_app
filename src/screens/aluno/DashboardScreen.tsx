@@ -15,6 +15,15 @@ export default function DashboardScreen() {
       <TouchableOpacity style={styles.botaoVincular} onPress={() => navigation.navigate('VincularAluno')}>
         <Text style={styles.textoBotaoVincular}>Vincular-se</Text>
       </TouchableOpacity>
+      <TouchableOpacity style={styles.botaoVincular} onPress={() => navigation.navigate('TurmasDisponiveis')}>
+        <Text style={styles.textoBotaoVincular}>Turmas disponíveis</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.botaoVincular} onPress={() => navigation.navigate('Agenda')}>
+        <Text style={styles.textoBotaoVincular}>Agenda</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.botaoVincular} onPress={() => navigation.navigate('Historico')}>
+        <Text style={styles.textoBotaoVincular}>Histórico</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.botaoLogout} onPress={logout}>
         <Text style={styles.textoBotaoLogout}>Sair</Text>
       </TouchableOpacity>

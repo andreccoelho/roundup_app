@@ -6,9 +6,9 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/native": "^7.3.18",
     "@react-navigation/native-stack": "^7.18.10",
-    "expo": "~57.0.18",
-    "expo-image-picker": "~57.0.14",
-    "expo-notifications": "~57.0.15",
+    "expo": "~57.0.21",
+    "expo-image-picker": "~57.0.16",
+    "expo-notifications": "~57.0.17",
     "expo-status-bar": "~57.0.1",
     "firebase": "^12.18.0",
     "react": "19.2.3",
@@ -17,14 +17,22 @@
     "react-native-screens": "~4.26.0"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
+    "firebase-tools": "^15.29.0",
+    "jest": "~29.7.0",
+    "ts-jest": "^29.4.12",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test:rules": "firebase emulators:exec --only firestore \"jest tests/rules --runInBand\"",
+    "test:functions": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore \"jest tests/functions --runInBand\"",
+    "test:unit": "jest src"
   },
   "private": true
 }
