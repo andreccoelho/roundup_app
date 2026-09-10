@@ -1,6 +1,6 @@
 // RF12, RN07, RN08: sessão de treino pertence a uma turma e define a janela de check-in
 import {
-  doc, getDoc, setDoc, updateDoc,
+  doc, setDoc, updateDoc,
   collection, query, where, orderBy, limit, getDocs,
   type Firestore,
 } from 'firebase/firestore';
@@ -10,6 +10,7 @@ import { agoraTimestamp, paraTimestamp } from '../utils/datas';
 import { MINUTOS_ABERTURA_CHECKIN_ANTES_DO_INICIO } from '../constants/regras';
 import { buscarTurma } from './turmas';
 import { listarMatriculasPorTurma } from './matriculas';
+import { getDocSeguro } from './firestoreSeguro';
 
 const COLECAO = 'sessoes';
 
@@ -43,7 +44,10 @@ export async function criarSessao(dados: DadosCriarSessao): Promise<Sessao> {
   // RF14, RNF04: leitoresIds nasce com responsável, professor e os alunos já matriculados
   // na turma neste instante — matrículas futuras são sincronizadas por
   // atualizarLeitoresDasSessoesFuturas() em matriculas.ts
-  const matriculas = await listarMatriculasPorTurma(dados.turmaId);
+  // turma.responsavelId, não dados.autorId: quem cria pode ser o professor atribuído por uma
+  // academia, e matriculas.responsavelId é sempre o responsável da turma (ver decisão técnica
+  // em listarMatriculasPorTurma), nunca o professor atribuído.
+  const matriculas = await listarMatriculasPorTurma(dados.turmaId, turma.responsavelId);
   const alunosAtivos = matriculas.filter(m => m.status === 'ativa').map(m => m.alunoId);
   const leitoresIds = Array.from(new Set([turma.responsavelId, turma.professorId ?? turma.responsavelId, ...alunosAtivos]));
 
@@ -68,14 +72,17 @@ export async function criarSessao(dados: DadosCriarSessao): Promise<Sessao> {
 }
 
 export async function buscarSessao(id: string): Promise<Sessao | null> {
-  const snap = await getDoc(doc(db, COLECAO, id));
-  return snap.exists() ? (snap.data() as Sessao) : null;
+  return getDocSeguro<Sessao>(doc(db, COLECAO, id));
 }
 
-export async function listarSessoesPorTurma(turmaId: string): Promise<Sessao[]> {
-  const q = query(collection(db, COLECAO), where('turmaId', '==', turmaId));
+// Mesma limitação documentada em listarMatriculasPorTurma: filtrar só por `turmaId` é recusado
+// pelas regras reais (a regra de `sessoes` depende de `leitoresIds`, não de `turmaId`). Filtra
+// por `leitoresIds array-contains leitorId` — exatamente o que a regra verifica, mesmo padrão
+// já usado em listarProximasSessoesDoAluno — e reduz por turmaId em memória.
+export async function listarSessoesPorTurma(turmaId: string, leitorId: string): Promise<Sessao[]> {
+  const q = query(collection(db, COLECAO), where('leitoresIds', 'array-contains', leitorId));
   const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Sessao);
+  return snap.docs.map(d => d.data() as Sessao).filter(s => s.turmaId === turmaId);
 }
 
 export async function listarSessoesPorResponsavel(responsavelId: string): Promise<Sessao[]> {

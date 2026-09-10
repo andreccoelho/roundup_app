@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { Colors } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
 import { buscarSessao, abrirSessao, encerrarSessao } from '../../services/sessoes';
 import { listarCheckInsPorSessao } from '../../services/checkins';
 import { buscarUsuario } from '../../services/usuarios';
@@ -19,6 +20,7 @@ interface CheckInComNome {
 }
 
 export default function SessaoDetalheScreen() {
+  const { usuario } = useAuth();
   const route = useRoute<SessaoDetalheRoute>();
   const { sessaoId } = route.params;
 
@@ -33,12 +35,13 @@ export default function SessaoDetalheScreen() {
   }, [sessaoId]);
 
   async function carregarTudo() {
+    if (!usuario) return;
     setCarregando(true);
     setErro(null);
     try {
       const [sessaoEncontrada, listaCheckIns] = await Promise.all([
         buscarSessao(sessaoId),
-        listarCheckInsPorSessao(sessaoId),
+        listarCheckInsPorSessao(sessaoId, usuario.id),
       ]);
       setSessao(sessaoEncontrada);
       const comNome = await Promise.all(

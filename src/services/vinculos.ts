@@ -1,12 +1,13 @@
 // RF07, RF08, RN05, RN06: vínculos entre aluno, professor e academia
 // (RF09, gestão do vínculo pela academia, é Ciclo 3)
 import {
-  doc, getDoc, setDoc, updateDoc, runTransaction, arrayUnion,
+  doc, setDoc, updateDoc, runTransaction, arrayUnion,
   collection, query, where, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Usuario, Vinculo, VinculosPrivado, TipoVinculo, PerfilSolicitante, PerfilDestinatario } from '../types';
 import { agoraTimestamp } from '../utils/datas';
+import { getDocSeguro } from './firestoreSeguro';
 
 const COLECAO_VINCULOS = 'vinculos';
 const COLECAO_USUARIOS = 'usuarios';
@@ -113,17 +114,23 @@ export async function responderSolicitacao(
   });
 }
 
+// getDocSeguro(), não getDoc() direto: ver decisão técnica em services/firestoreSeguro.ts — só
+// UM dos dois sentidos costuma existir (o par pediu vínculo numa única direção), então o
+// sentido que não existe sempre negava com permission-denied e o Promise.all() original
+// propagava — na prática, matricularAluno() nunca conseguia confirmar vínculo algum.
+async function vinculoAceitoExiste(id: string): Promise<boolean> {
+  const vinculo = await getDocSeguro<Vinculo>(doc(db, COLECAO_VINCULOS, id));
+  return vinculo?.status === 'aceito';
+}
+
 // RN05, RN06: vínculo bilateral aceito, checado nos dois sentidos pelo ID determinístico —
 // mesmo padrão usado por vinculoAtivoEntre() no firestore.rules
 export async function existeVinculoAtivoEntre(uidA: string, uidB: string): Promise<boolean> {
-  const [snapAB, snapBA] = await Promise.all([
-    getDoc(doc(db, COLECAO_VINCULOS, `${uidA}_${uidB}`)),
-    getDoc(doc(db, COLECAO_VINCULOS, `${uidB}_${uidA}`)),
+  const [ativoAB, ativoBA] = await Promise.all([
+    vinculoAceitoExiste(`${uidA}_${uidB}`),
+    vinculoAceitoExiste(`${uidB}_${uidA}`),
   ]);
-  return (
-    (snapAB.exists() && (snapAB.data() as Vinculo).status === 'aceito') ||
-    (snapBA.exists() && (snapBA.data() as Vinculo).status === 'aceito')
-  );
+  return ativoAB || ativoBA;
 }
 
 // RF08: responsáveis (academia ou professor autônomo) com quem o aluno tem vínculo ativo —
@@ -136,4 +143,21 @@ export async function listarResponsaveisAtivosDoAluno(alunoId: string): Promise<
   );
   const snap = await getDocs(q);
   return snap.docs.map(d => (d.data() as Vinculo).destinatarioId);
+}
+
+// RF09: vínculos aceitos em que a academia é a destinatária — usado no painel da academia para
+// contar/listar professores e alunos vinculados. A regra de leitura de `vinculos` já permite
+// isso (destinatarioId == meuId()), sem precisar de nenhuma leitura ampla nova.
+export async function listarVinculosAceitosDaAcademia(
+  academiaId: string,
+  perfilSolicitante: PerfilSolicitante,
+): Promise<Vinculo[]> {
+  const q = query(
+    collection(db, COLECAO_VINCULOS),
+    where('destinatarioId', '==', academiaId),
+    where('perfilSolicitante', '==', perfilSolicitante),
+    where('status', '==', 'aceito'),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as Vinculo);
 }

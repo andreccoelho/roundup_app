@@ -1,10 +1,11 @@
 // RF11: matrícula do aluno em turma, condicionada a vínculo ativo com o responsável (RN05)
-import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { Matricula } from '../types';
 import { agoraTimestamp } from '../utils/datas';
 import { buscarTurma } from './turmas';
 import { existeVinculoAtivoEntre } from './vinculos';
+import { getDocSeguro } from './firestoreSeguro';
 
 const COLECAO = 'matriculas';
 
@@ -16,9 +17,11 @@ const COLECAO = 'matriculas';
 export async function matricularAluno(turmaId: string, alunoId: string): Promise<Matricula> {
   const id = `${turmaId}_${alunoId}`;
   const ref = doc(db, COLECAO, id);
-  const existente = await getDoc(ref);
-  if (existente.exists() && (existente.data() as Matricula).status === 'ativa') {
-    return existente.data() as Matricula;
+  // getDocSeguro(), não getDoc() direto: o caso comum é "ainda não tenho matrícula nesta
+  // turma" — ver decisão técnica em services/firestoreSeguro.ts.
+  const existente = await getDocSeguro<Matricula>(ref);
+  if (existente && existente.status === 'ativa') {
+    return existente;
   }
 
   const turma = await buscarTurma(turmaId);
@@ -38,7 +41,7 @@ export async function matricularAluno(turmaId: string, alunoId: string): Promise
     alunoId,
     responsavelId: turma.responsavelId,
     status: 'ativa',
-    criadoEm: existente.exists() ? (existente.data() as Matricula).criadoEm : agora,
+    criadoEm: existente?.criadoEm ?? agora,
     atualizadoEm: agora,
   };
   await setDoc(ref, matricula);
@@ -51,8 +54,7 @@ export async function cancelarMatricula(turmaId: string, alunoId: string): Promi
 }
 
 export async function buscarMatricula(turmaId: string, alunoId: string): Promise<Matricula | null> {
-  const snap = await getDoc(doc(db, COLECAO, `${turmaId}_${alunoId}`));
-  return snap.exists() ? (snap.data() as Matricula) : null;
+  return getDocSeguro<Matricula>(doc(db, COLECAO, `${turmaId}_${alunoId}`));
 }
 
 export async function listarMatriculasPorAluno(alunoId: string): Promise<Matricula[]> {
@@ -61,8 +63,18 @@ export async function listarMatriculasPorAluno(alunoId: string): Promise<Matricu
   return snap.docs.map(d => d.data() as Matricula);
 }
 
-export async function listarMatriculasPorTurma(turmaId: string): Promise<Matricula[]> {
-  const q = query(collection(db, COLECAO), where('turmaId', '==', turmaId));
+// DECISÃO TÉCNICA (descoberta ao testar o painel do professor contra as regras reais, não só o
+// emulador): filtrar só por `turmaId` faz o Firestore RECUSAR a consulta inteira com
+// "Missing or insufficient permissions" — a regra de leitura de `matriculas` depende de
+// `alunoId`/`responsavelId`, campos que essa consulta não usa como filtro, então o motor de
+// regras não consegue provar a consulta seguRA e nega de cara, mesmo que os documentos
+// retornados fossem todos permitidos. Mesma classe de limitação já documentada para `turmas` e
+// resolvida para `sessoes` via `leitoresIds`. Aqui a correção é filtrar pelo campo que a regra
+// realmente verifica (`responsavelId`, já desnormalizado da turma em cada matrícula) e reduzir
+// por `turmaId` em memória — o quem-chama já É o responsável (só TurmaDetalheScreen e o painel
+// do professor chamam isso, ambos como o dono da turma).
+export async function listarMatriculasPorTurma(turmaId: string, responsavelId: string): Promise<Matricula[]> {
+  const q = query(collection(db, COLECAO), where('responsavelId', '==', responsavelId));
   const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Matricula);
+  return snap.docs.map(d => d.data() as Matricula).filter(m => m.turmaId === turmaId);
 }

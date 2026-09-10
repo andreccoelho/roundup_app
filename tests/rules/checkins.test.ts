@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import {
   iniciarAmbiente, encerrarAmbiente, limparDados,
   comoUsuario, semear, usuarioBase, vinculoBase, turmaBase, matriculaBase, sessaoBase, checkinBase,
@@ -30,6 +30,17 @@ async function semearSessao(id: string, overrides: Record<string, unknown> = {})
 }
 
 describe('checkins', () => {
+  // realizarCheckIn() lê o próprio checkin DENTRO da transação pra impedir duplicata (RN02) —
+  // isso é um get() num documento que ainda não existe na maioria das vezes (primeiro check-in
+  // do aluno naquela sessão). Sem o "resource == null ||" na regra, essa leitura era negada e
+  // NENHUM primeiro check-in conseguia se completar.
+  test('ler um check-in que ainda não existe não é negado (existence check usado por RN02)', async () => {
+    await semearAtores();
+    await semearSessao('sessao1');
+    const dbAluno = comoUsuario('aluno1');
+    await assertSucceeds(getDoc(doc(dbAluno, 'checkins', 'sessao1_aluno1')));
+  });
+
   test('aluno matriculado faz check-in dentro da janela', async () => {
     await semearAtores();
     await semearSessao('sessao1');
@@ -120,5 +131,33 @@ describe('checkins', () => {
     });
     const dbAluno = comoUsuario('aluno1');
     await assertFails(updateDoc(doc(dbAluno, 'checkins', 'sessao1_aluno1'), { status: 'validado' }));
+  });
+
+  // RF22 (adiantado nesta rodada): validarCheckIn() em services/checkins.ts depende exatamente
+  // desta permissão — o responsável pela sessão (aqui, a academia) atualiza o check-in que o
+  // próprio aluno criou. É a "chamada" do painel do professor/academia.
+  test('responsável pela sessão valida o check-in do aluno (RF22, chamada do professor)', async () => {
+    await semearAtores();
+    await semearSessao('sessao1');
+    await semear(async (db) => {
+      await setDoc(doc(db, 'checkins', 'sessao1_aluno1'), checkinBase('sessao1', 'turma1', 'aluno1', 'academia1'));
+    });
+    const dbAcademia = comoUsuario('academia1');
+    await assertSucceeds(updateDoc(doc(dbAcademia, 'checkins', 'sessao1_aluno1'), {
+      status: 'validado',
+      validadoPor: 'academia1',
+      validadoEm: AGORA,
+    }));
+  });
+
+  test('quem não é o responsável pela sessão não valida o check-in de outro aluno', async () => {
+    await semearAtores();
+    await semearSessao('sessao1');
+    await semear(async (db) => {
+      await setDoc(doc(db, 'usuarios', 'professor2'), usuarioBase({ perfil: 'professor', autonomo: true }));
+      await setDoc(doc(db, 'checkins', 'sessao1_aluno1'), checkinBase('sessao1', 'turma1', 'aluno1', 'academia1'));
+    });
+    const dbProfessor2 = comoUsuario('professor2');
+    await assertFails(updateDoc(doc(dbProfessor2, 'checkins', 'sessao1_aluno1'), { status: 'validado' }));
   });
 });

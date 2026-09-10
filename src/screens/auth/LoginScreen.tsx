@@ -1,170 +1,123 @@
+// RF02: login por e-mail/senha, autenticação delegada ao Firebase; recuperação de senha e
+// cadastro vivem em telas próprias (RecuperarSenhaScreen, SelecaoPerfilScreen).
 import { useState } from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Colors } from '../../constants/colors';
+import { FontSize } from '../../constants/typography';
 import { useAuth } from '../../contexts/AuthContext';
-import { Perfil } from '../../types';
-
-const PERFIS: Perfil[] = ['aluno', 'professor', 'academia'];
+import { AuthStackParamList } from '../../navigation/AuthStack';
+import { emailValido } from '../../utils/validacaoCadastro';
+import { mensagemErroAutenticacao } from '../../utils/mensagensErro';
+import CampoTexto from '../../components/ui/CampoTexto';
+import Botao from '../../components/ui/Botao';
+import { IconeCorda } from '../../components/icones';
 
 export default function LoginScreen() {
-  const { login, cadastrar } = useAuth();
+  const { login } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Login'>>();
+
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [nome, setNome] = useState('');
-  const [perfil, setPerfil] = useState<Perfil>('aluno');
+  const [erros, setErros] = useState<{ email?: string; senha?: string }>({});
+  const [erroConta, setErroConta] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
-  async function handleLogin() {
-    setCarregando(true);
-    try {
-      await login(email, senha);
-    } catch (erro: any) {
-      Alert.alert('Erro ao entrar', erro.message);
-    } finally {
-      setCarregando(false);
-    }
+  function validar(): boolean {
+    const novosErros: { email?: string; senha?: string } = {};
+    if (!email.trim()) novosErros.email = 'Informe seu e-mail.';
+    else if (!emailValido(email)) novosErros.email = 'E-mail inválido.';
+    if (!senha) novosErros.senha = 'Informe sua senha.';
+    setErros(novosErros);
+    return Object.keys(novosErros).length === 0;
   }
 
-  async function handleCadastro() {
+  async function handleLogin() {
+    setErroConta(null);
+    if (!validar()) return;
     setCarregando(true);
     try {
-      await cadastrar(email, senha, nome, perfil);
+      await login(email.trim(), senha);
     } catch (erro: any) {
-      Alert.alert('Erro ao cadastrar', erro.message);
+      setErroConta(mensagemErroAutenticacao(erro?.code));
     } finally {
       setCarregando(false);
     }
   }
 
   return (
-      <View style={styles.container}>
-        <Text style={styles.titulo}>Login</Text>
-
-        <TextInput
-            style={styles.input}
-            placeholder="E-mail"
-            autoCapitalize="none"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-        />
-        <TextInput
-            style={styles.input}
-            placeholder="Senha"
-            secureTextEntry
-            value={senha}
-            onChangeText={setSenha}
-        />
-        <TextInput
-            style={styles.input}
-            placeholder="Nome (para criar conta de teste)"
-            value={nome}
-            onChangeText={setNome}
-        />
-        <View style={styles.linhaPerfis}>
-          {PERFIS.map((opcao) => (
-            <TouchableOpacity
-                key={opcao}
-                style={[styles.chipPerfil, perfil === opcao && styles.chipPerfilSelecionado]}
-                onPress={() => setPerfil(opcao)}
-            >
-              <Text style={[styles.textoChipPerfil, perfil === opcao && styles.textoChipPerfilSelecionado]}>
-                {opcao}
-              </Text>
-            </TouchableOpacity>
-          ))}
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+        <View style={styles.banda}>
+          <Text style={styles.wordmark}>RoundUp</Text>
+          <Text style={styles.tagline}>Treine. Evolua. Suba de nível.</Text>
+          <IconeCorda tamanho={32} cor={Colors.cinzaClaro} espessura={1.2} />
         </View>
 
-        {carregando ? (
-            <ActivityIndicator color={Colors.preto} />
-        ) : (
-            <>
-              <TouchableOpacity style={styles.botao} onPress={handleLogin}>
-                <Text style={styles.textoBotao}>Entrar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.botaoSecundario} onPress={handleCadastro}>
-                <Text style={styles.textoBotaoSecundario}>Criar conta de teste</Text>
-              </TouchableOpacity>
-            </>
-        )}
-      </View>
+        <View style={styles.corpo}>
+          {erroConta ? <Text style={styles.erroConta}>{erroConta}</Text> : null}
+
+          <CampoTexto
+            rotulo="E-mail"
+            placeholder="seuemail@exemplo.com"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            valor={email}
+            onAlterar={setEmail}
+            erro={erros.email}
+          />
+          <CampoTexto
+            rotulo="Senha"
+            placeholder="••••••••"
+            secureTextEntry
+            valor={senha}
+            onAlterar={setSenha}
+            erro={erros.senha}
+          />
+
+          <View style={styles.linhaEsqueci}>
+            <Botao
+              titulo="Esqueci minha senha"
+              variante="texto"
+              onPress={() => navigation.navigate('RecuperarSenha')}
+            />
+          </View>
+
+          <Botao titulo="Entrar" onPress={handleLogin} carregando={carregando} />
+
+          <View style={styles.rodape}>
+            <Text style={styles.rodapeTexto}>Não tem conta?</Text>
+            <Botao
+              titulo="Cadastre-se"
+              variante="texto"
+              onPress={() => navigation.navigate('SelecaoPerfil')}
+            />
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.branco,
-    paddingHorizontal: 24,
-  },
-  titulo: {
-    fontSize: 24,
-    color: Colors.preto,
-    marginBottom: 24,
-  },
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: Colors.cinzaEscuro,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    color: Colors.preto,
-  },
-  linhaPerfis: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  chipPerfil: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: Colors.cinzaEscuro,
-    borderRadius: 8,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  chipPerfilSelecionado: {
+  flex: { flex: 1, backgroundColor: Colors.branco },
+  scroll: { flexGrow: 1 },
+  banda: {
     backgroundColor: Colors.preto,
-    borderColor: Colors.preto,
-  },
-  textoChipPerfil: {
-    color: Colors.cinzaEscuro,
-    fontSize: 12,
-  },
-  textoChipPerfilSelecionado: {
-    color: Colors.branco,
-    fontWeight: 'bold',
-  },
-  botao: {
-    width: '100%',
-    backgroundColor: Colors.preto,
-    padding: 14,
-    borderRadius: 8,
+    paddingTop: 96,
+    paddingBottom: 40,
     alignItems: 'center',
-    marginTop: 8,
   },
-  textoBotao: {
-    color: Colors.branco,
-    fontWeight: 'bold',
-  },
-  botaoSecundario: {
-    marginTop: 12,
-  },
-  textoBotaoSecundario: {
-    color: Colors.cinzaEscuro,
-    textDecorationLine: 'underline',
-  },
+  wordmark: { color: Colors.branco, fontSize: FontSize.xxl, fontWeight: '700', letterSpacing: 1 },
+  tagline: { color: Colors.cinzaClaro, fontSize: FontSize.sm, marginTop: 8, marginBottom: 20 },
+  corpo: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24 },
+  erroConta: { color: Colors.alerta, fontSize: FontSize.sm, marginBottom: 16 },
+  linhaEsqueci: { alignItems: 'flex-end', marginBottom: 24, marginTop: -8 },
+  rodape: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 20 },
+  rodapeTexto: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
 });

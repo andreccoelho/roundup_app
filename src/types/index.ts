@@ -10,6 +10,11 @@ export interface Usuario {
   perfil: Perfil;
   fotoUrl?: string;
   autonomo?: boolean;   // RF05, RF08: só se aplica a perfil 'professor' — nasce true (RN06), vira false ao aceitar vínculo com academia
+  modalidades?: string[]; // RF04, RF05, RF06: oferecidas (academia), lecionadas (professor) ou praticadas (aluno)
+  faixaOuGrau?: string;   // RF06: só perfil 'aluno'
+  graduacao?: string;     // RF05: só perfil 'professor'
+  nomeAcademia?: string;  // RF04: só perfil 'academia' — nome institucional, distinto de `nome` (contato)
+  endereco?: string;      // RF04: só perfil 'academia'
   criadoEm: Timestamp;
   atualizadoEm: Timestamp;
 }

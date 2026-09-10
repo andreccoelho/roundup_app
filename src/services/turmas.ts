@@ -1,6 +1,6 @@
 // RF10, RN07: turmas pertencem a uma academia ou a um professor autônomo (responsável único)
 import {
-  doc, getDoc, setDoc, updateDoc,
+  doc, setDoc, updateDoc,
   collection, query, where, getDocs, documentId,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -8,6 +8,7 @@ import { Matricula, NivelTurma, Perfil, Turma } from '../types';
 import { agoraTimestamp } from '../utils/datas';
 import { LIMITE_CLAUSULA_IN } from '../constants/regras';
 import { listarResponsaveisAtivosDoAluno } from './vinculos';
+import { getDocSeguro } from './firestoreSeguro';
 
 const COLECAO = 'turmas';
 const COLECAO_MATRICULAS = 'matriculas';
@@ -57,14 +58,30 @@ export async function criarTurma(dados: DadosCriarTurma): Promise<Turma> {
 }
 
 export async function buscarTurma(id: string): Promise<Turma | null> {
-  const snap = await getDoc(doc(db, COLECAO, id));
-  return snap.exists() ? (snap.data() as Turma) : null;
+  return getDocSeguro<Turma>(doc(db, COLECAO, id));
 }
 
 export async function listarTurmasPorResponsavel(responsavelId: string): Promise<Turma[]> {
   const q = query(collection(db, COLECAO), where('responsavelId', '==', responsavelId));
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as Turma);
+}
+
+// RF10, RF12: turmas visíveis ao professor no painel — as que ele mesmo criou como autônomo
+// (responsavelId) MAIS as que uma academia atribuiu a ele (professorId). Duas consultas de
+// campo único (sem índice composto) e deduplicação por id, em vez de uma consulta OR que o
+// Firestore não suporta nativamente.
+export async function listarTurmasDoProfessor(professorId: string): Promise<Turma[]> {
+  const [comoResponsavel, comoAtribuido] = await Promise.all([
+    getDocs(query(collection(db, COLECAO), where('responsavelId', '==', professorId))),
+    getDocs(query(collection(db, COLECAO), where('professorId', '==', professorId))),
+  ]);
+  const porId = new Map<string, Turma>();
+  [...comoResponsavel.docs, ...comoAtribuido.docs].forEach((d) => {
+    const turma = d.data() as Turma;
+    porId.set(turma.id, turma);
+  });
+  return Array.from(porId.values());
 }
 
 // RF11: turmas em que o aluno está efetivamente matriculado

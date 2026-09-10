@@ -245,8 +245,16 @@ service cloud.firestore {
 
     // ---------- checkins (RF13, RF15, RN02, RN08) ----------
     match /checkins/{checkinId} {
+      // "resource == null ||" é o padrão documentado do Firestore pra "existence check": sem
+      // essa guarda, get() num checkin que AINDA NÃO EXISTE é negado (resource é null, e a
+      // regra nunca chega a avaliar resource.data) em vez de simplesmente não existir. Esse é
+      // o caso comum, não a exceção — é exatamente o que realizarCheckIn() verifica dentro da
+      // transação pra proteger RN02 (não permitir segundo check-in), então SEM essa guarda o
+      // primeiro check-in de qualquer aluno falhava sempre. A guarda só concede "provar que
+      // não existe"; um documento que EXISTE continua exigindo alunoId/responsavelId==meuId().
       allow read: if autenticado()
-                  && (resource.data.get('alunoId', '') == meuId()
+                  && (resource == null
+                      || resource.data.get('alunoId', '') == meuId()
                       || resource.data.get('responsavelId', '') == meuId());
       // RN02: o ID determinístico impede o segundo check-in, o create falha por documento existente.
       allow create: if autenticado()

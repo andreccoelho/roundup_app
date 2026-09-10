@@ -18,7 +18,7 @@ import { listarMatriculasPorTurma } from '../../services/matriculas';
 import { listarSessoesPorTurma, criarSessao } from '../../services/sessoes';
 import { buscarUsuario } from '../../services/usuarios';
 import { Matricula, Sessao, Turma } from '../../types';
-import { formatarDataHora, parseDataHora } from '../../utils/datas';
+import { combinarDataHora, formatarDataHora, gerarDatasRecorrentes, parseDataBr, semanaContendo } from '../../utils/datas';
 import { GestorStackParamList } from '../../navigation/types';
 
 type TurmaDetalheRoute = RouteProp<GestorStackParamList, 'TurmaDetalhe'>;
@@ -27,6 +27,17 @@ interface MatriculaComNome {
   matricula: Matricula;
   nomeAluno: string;
 }
+
+// RF12: dias da semana da grade, valor alinhado a Date#getDay() (0=domingo .. 6=sábado)
+const DIAS_SEMANA: { valor: number; rotulo: string }[] = [
+  { valor: 1, rotulo: 'Seg' },
+  { valor: 2, rotulo: 'Ter' },
+  { valor: 3, rotulo: 'Qua' },
+  { valor: 4, rotulo: 'Qui' },
+  { valor: 5, rotulo: 'Sex' },
+  { valor: 6, rotulo: 'Sáb' },
+  { valor: 0, rotulo: 'Dom' },
+];
 
 export default function TurmaDetalheScreen() {
   const { usuario } = useAuth();
@@ -41,23 +52,29 @@ export default function TurmaDetalheScreen() {
   const [sessoes, setSessoes] = useState<Sessao[]>([]);
 
   const [data, setData] = useState('');
+  const [diasSemana, setDiasSemana] = useState<number[]>([]);
   const [horaInicio, setHoraInicio] = useState('');
   const [horaFim, setHoraFim] = useState('');
   const [descricao, setDescricao] = useState('');
   const [criando, setCriando] = useState(false);
+
+  function alternarDiaSemana(valor: number) {
+    setDiasSemana(atual => (atual.includes(valor) ? atual.filter(d => d !== valor) : [...atual, valor]));
+  }
 
   useEffect(() => {
     carregarTudo();
   }, [turmaId]);
 
   async function carregarTudo() {
+    if (!usuario) return;
     setCarregando(true);
     setErro(null);
     try {
       const [turmaEncontrada, listaMatriculas, listaSessoes] = await Promise.all([
         buscarTurma(turmaId),
-        listarMatriculasPorTurma(turmaId),
-        listarSessoesPorTurma(turmaId),
+        listarMatriculasPorTurma(turmaId, usuario.id),
+        listarSessoesPorTurma(turmaId, usuario.id),
       ]);
       setTurma(turmaEncontrada);
       setSessoes(listaSessoes.sort((a, b) => b.inicio.toMillis() - a.inicio.toMillis()));
@@ -78,26 +95,52 @@ export default function TurmaDetalheScreen() {
     }
   }
 
+  // RF12: gera uma sessão por dia da semana selecionado, dentro da semana (segunda a domingo)
+  // que contém a data informada — "grade semanal" da RF12, não apenas uma sessão avulsa, sem
+  // exigir uma data final separada.
   async function handleCriarSessao() {
     if (!usuario) return;
-    const inicio = parseDataHora(data, horaInicio);
-    const fim = parseDataHora(data, horaFim);
-    if (!inicio || !fim) {
-      setErro('Preencha a data (AAAA-MM-DD) e os horários (HH:MM) corretamente.');
+
+    const referencia = parseDataBr(data);
+    if (!referencia) {
+      setErro('Preencha a data no formato DD/MM/AAAA.');
+      return;
+    }
+    if (diasSemana.length === 0) {
+      setErro('Selecione ao menos um dia da semana.');
+      return;
+    }
+
+    // toda semana (segunda a domingo) contém exatamente um dia para cada valor de getDay(),
+    // então `datas` sempre tem uma entrada por dia selecionado — no máximo 7.
+    const { inicio, fim } = semanaContendo(referencia);
+    const datas = gerarDatasRecorrentes(inicio, fim, diasSemana);
+
+    const inicios = datas.map(dia => combinarDataHora(dia, horaInicio));
+    const fins = datas.map(dia => combinarDataHora(dia, horaFim));
+    if (inicios.some(d => !d) || fins.some(d => !d)) {
+      setErro('Preencha os horários de início e fim no formato HH:MM.');
+      return;
+    }
+    if (inicios.some((ini, i) => fins[i]!.getTime() <= ini!.getTime())) {
+      setErro('O horário de término deve ser depois do horário de início.');
       return;
     }
 
     setCriando(true);
     setErro(null);
     try {
-      await criarSessao({
-        turmaId,
-        inicio,
-        fim,
-        descricao: descricao.trim() || undefined,
-        autorId: usuario.id,
-      });
+      for (let i = 0; i < datas.length; i++) {
+        await criarSessao({
+          turmaId,
+          inicio: inicios[i]!,
+          fim: fins[i]!,
+          descricao: descricao.trim() || undefined,
+          autorId: usuario.id,
+        });
+      }
       setData('');
+      setDiasSemana([]);
       setHoraInicio('');
       setHoraFim('');
       setDescricao('');
@@ -150,9 +193,21 @@ export default function TurmaDetalheScreen() {
       )}
 
       <Text style={styles.secaoTitulo}>Nova sessão</Text>
+      <Text style={styles.rotuloCampo}>Dias da semana</Text>
+      <View style={styles.linhaNiveis}>
+        {DIAS_SEMANA.map(({ valor, rotulo }) => (
+          <TouchableOpacity
+            key={valor}
+            style={[styles.chip, diasSemana.includes(valor) && styles.chipSelecionado]}
+            onPress={() => alternarDiaSemana(valor)}
+          >
+            <Text style={[styles.chipTexto, diasSemana.includes(valor) && styles.chipTextoSelecionado]}>{rotulo}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
       <TextInput
         style={styles.input}
-        placeholder="Data (AAAA-MM-DD)"
+        placeholder="Data (DD/MM/AAAA)"
         placeholderTextColor={Colors.cinzaClaro}
         value={data}
         onChangeText={setData}
@@ -214,6 +269,7 @@ const styles = StyleSheet.create({
   titulo: { fontSize: 22, fontWeight: 'bold', color: Colors.preto },
   subtitulo: { fontSize: 13, color: Colors.cinzaMedio, marginTop: 4 },
   secaoTitulo: { fontSize: 18, fontWeight: 'bold', color: Colors.preto, marginTop: 20, marginBottom: 8 },
+  rotuloCampo: { fontSize: 13, color: Colors.cinzaMedio, marginBottom: 4 },
   input: {
     borderWidth: 1,
     borderColor: Colors.cinzaBorda,
@@ -222,6 +278,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: Colors.preto,
   },
+  linhaNiveis: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 },
+  chip: {
+    borderWidth: 1,
+    borderColor: Colors.cinzaBorda,
+    borderRadius: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  chipSelecionado: { backgroundColor: Colors.preto, borderColor: Colors.preto },
+  chipTexto: { color: Colors.preto, fontSize: 12 },
+  chipTextoSelecionado: { color: Colors.branco },
   botaoPrimario: { backgroundColor: Colors.preto, borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
   botaoDesabilitado: { backgroundColor: Colors.cinzaClaro },
   textoBotaoPrimario: { color: Colors.branco, fontWeight: 'bold' },
