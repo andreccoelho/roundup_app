@@ -15,6 +15,7 @@ import VincularAlunoScreen from '../screens/aluno/VincularAlunoScreen';
 import PerfilScreen from '../screens/aluno/PerfilScreen';
 import MissoesScreen from '../screens/aluno/MissoesScreen';
 import ClassificacaoScreen from '../screens/aluno/ClassificacaoScreen';
+import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
 import { Cores } from '../theme';
 
 export type TreinarStackParamList = {
@@ -26,6 +27,7 @@ export type TreinarStackParamList = {
 export type PerfilAlunoStackParamList = {
   Perfil: undefined;
   VincularAluno: undefined;
+  PreferenciasNotificacao: undefined;
 };
 
 export type AlunoTabParamList = {
@@ -95,6 +97,11 @@ function PerfilNavigator() {
     <PerfilStack.Navigator screenOptions={{ headerShown: true }}>
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
       <PerfilStack.Screen name="VincularAluno" component={VincularAlunoScreen} options={{ title: 'Meus vínculos' }} />
+      <PerfilStack.Screen
+        name="PreferenciasNotificacao"
+        component={PreferenciasNotificacaoScreen}
+        options={{ title: 'Preferências de notificação' }}
+      />
     </PerfilStack.Navigator>
   );
 }
