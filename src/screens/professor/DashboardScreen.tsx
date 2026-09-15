@@ -4,9 +4,10 @@
 // ainda — RF23/RF25 são Ciclo 3, coleções `missoes`/`graduacoes` hoje bloqueadas em
 // firestore.rules.
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { Cores, Espacamento, Raios, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardProfessorNavigationProp } from '../../navigation/ProfessorTabs';
 import { listarTurmasDoProfessor } from '../../services/turmas';
@@ -19,6 +20,8 @@ import { formatarDataHora } from '../../utils/datas';
 import LinhaFina from '../../components/LinhaFina';
 import Botao from '../../components/ui/Botao';
 import Etiqueta from '../../components/ui/Etiqueta';
+import Avatar from '../../components/ui/Avatar';
+import SeloFaixa from '../../components/ui/SeloFaixa';
 
 interface ItemChamada {
   alunoId: string;
@@ -124,12 +127,39 @@ export default function DashboardScreen() {
 
   const total = chamada.length;
   const presentes = chamada.filter((c) => c.checkIn && c.checkIn.status !== 'rejeitado').length;
+  const modalidades = usuario?.modalidades ?? [];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+      {/* Banda full-bleed encosta no topo — ícones claros, igual ao Login/Dashboard do Aluno. */}
+      <StatusBar style="light" />
       <View style={styles.cabecalho}>
-        <Text style={styles.titulo}>Painel do Professor</Text>
+        {/* Marca invertida como textura de fundo — mesmo tratamento do Dashboard do Aluno. */}
+        <Image
+          source={require('../../../assets/roundup_logo_invertida.png')}
+          style={styles.marcaFundo}
+          resizeMode="contain"
+        />
+        <View style={styles.cabecalhoTopo}>
+          <Avatar nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={52} />
+          <Text style={styles.saudacaoNome} numberOfLines={1} adjustsFontSizeToFit>
+            {usuario?.nome ?? ''}
+          </Text>
+        </View>
+        {usuario?.graduacao ? (
+          <View style={styles.seloLinha}>
+            <SeloFaixa faixaOuGrau={usuario.graduacao} sobreEscuro />
+          </View>
+        ) : null}
       </View>
+
+      {modalidades.length > 0 ? (
+        <View style={styles.modalidadesLinha}>
+          {modalidades.map((modalidade) => (
+            <Etiqueta key={modalidade} texto={modalidade} />
+          ))}
+        </View>
+      ) : null}
 
       {erro ? (
         <Text style={styles.erro} accessibilityRole="alert">
@@ -225,13 +255,39 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Cores.branco },
   conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
 
+  // Banda full-bleed preta — mesmo tratamento de identidade do Dashboard do Aluno.
   cabecalho: {
+    backgroundColor: Cores.preto,
     paddingHorizontal: Espacamento.grande,
-    paddingTop: Espacamento.grande,
-    paddingBottom: Espacamento.medio,
+    paddingTop: Espacamento.extraGrande,
+    paddingBottom: Espacamento.grande,
+    overflow: 'hidden',
   },
-  titulo: { fontSize: TamanhoFonte.lg, fontWeight: '600', color: Cores.preto },
-  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginBottom: Espacamento.pequeno },
+  marcaFundo: {
+    position: 'absolute',
+    top: -40,
+    right: -70,
+    width: 220,
+    height: 220,
+    opacity: 0.12,
+  },
+  cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
+  saudacaoNome: {
+    flex: 1,
+    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontSize: TamanhoFonte.xxl,
+    color: Cores.branco,
+    letterSpacing: 1,
+  },
+  seloLinha: { marginTop: Espacamento.padrao },
+  modalidadesLinha: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Espacamento.pequeno,
+    paddingHorizontal: Espacamento.grande,
+    paddingTop: Espacamento.padrao,
+  },
+  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
   espacoTopo: { marginTop: Espacamento.padrao },
   espacoPequeno: { height: Espacamento.medio },
 
