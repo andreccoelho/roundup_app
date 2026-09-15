@@ -1,7 +1,7 @@
 // RF07, RF08, RN05, RN06: vínculos entre aluno, professor e academia
 // (RF09, gestão do vínculo pela academia, é Ciclo 3)
 import {
-  doc, setDoc, updateDoc, runTransaction, arrayUnion,
+  doc, setDoc, updateDoc, runTransaction, arrayUnion, arrayRemove,
   collection, query, where, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -86,8 +86,6 @@ export async function listarSolicitacoesPendentes(
 // Aceitar um vínculo professor-academia também derruba `autonomo` do professor (esse campo
 // continua no documento raiz — não é sensível do mesmo jeito que o grafo de vínculos).
 // As escritas (vínculo + privado + usuário) vão na mesma transação para nunca divergir.
-// "Encerramento" de vínculo (que removeria o id de `responsaveisIds` e reavaliaria
-// `autonomo`) é RF09, Ciclo 3 — não existe hoje nenhum fluxo para encerrar um vínculo aceito.
 export async function responderSolicitacao(
   vinculoId: string,
   resposta: 'aceito' | 'recusado',
@@ -116,6 +114,41 @@ export async function responderSolicitacao(
     if (vinculo.tipo === 'professor-academia') {
       transacao.update(doc(db, COLECAO_USUARIOS, vinculo.solicitanteId), {
         autonomo: false,
+        atualizadoEm: agora,
+      });
+    }
+  });
+}
+
+// RF09: inverso de responderSolicitacao() (ramo aceito) — só o destinatário encerra, e só a
+// partir de 'aceito' (firestore.rules trava as duas coisas). NÃO cascateia: matrículas,
+// check-ins e graduações já existentes ficam como histórico; só as checagens futuras de vínculo
+// ativo (tenhoVinculoAtivoCom/souResponsavelDoAluno) deixam de enxergar este vínculo — mesma
+// decisão de escopo mínimo tomada para RF29 (ver docs/DECISOES_PENDENTES.md). Encerrar um
+// vínculo professor-academia devolve `autonomo: true` ao professor.
+export async function encerrarVinculo(vinculoId: string): Promise<void> {
+  const vinculoRef = doc(db, COLECAO_VINCULOS, vinculoId);
+
+  await runTransaction(db, async (transacao) => {
+    const vinculoSnap = await transacao.get(vinculoRef);
+    if (!vinculoSnap.exists()) {
+      throw new Error('Vínculo não encontrado.');
+    }
+    const vinculo = vinculoSnap.data() as Vinculo;
+    if (vinculo.status !== 'aceito') {
+      throw new Error('Este vínculo não está mais ativo.');
+    }
+    const agora = agoraTimestamp();
+
+    transacao.update(vinculoRef, { status: 'encerrado', respondidoEm: agora });
+
+    const privadoRef = doc(db, COLECAO_USUARIOS, vinculo.solicitanteId, 'privado', 'vinculos');
+    const dadosPrivados: Partial<VinculosPrivado> = { responsaveisIds: arrayRemove(vinculo.destinatarioId) as unknown as string[] };
+    transacao.set(privadoRef, dadosPrivados, { merge: true });
+
+    if (vinculo.tipo === 'professor-academia') {
+      transacao.update(doc(db, COLECAO_USUARIOS, vinculo.solicitanteId), {
+        autonomo: true,
         atualizadoEm: agora,
       });
     }

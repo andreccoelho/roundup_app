@@ -14,7 +14,13 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { listarSolicitacoesPendentes, listarVinculosAceitosDaAcademia, responderSolicitacao } from '../../services/vinculos';
+import {
+  encerrarVinculo,
+  listarSolicitacoesPendentes,
+  listarVinculosAceitosDaAcademia,
+  responderSolicitacao,
+} from '../../services/vinculos';
+import { listarAlunoIdsMatriculados } from '../../services/matriculas';
 import { buscarUsuario } from '../../services/usuarios';
 import { PerfilSolicitante, Vinculo } from '../../types';
 import Botao from '../../components/ui/Botao';
@@ -22,6 +28,7 @@ import LinhaFina from '../../components/LinhaFina';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Esqueleto from '../../components/ui/Esqueleto';
+import Dialogo from '../../components/ui/Dialogo';
 
 interface SolicitacaoComSolicitante {
   vinculo: Vinculo;
@@ -29,8 +36,10 @@ interface SolicitacaoComSolicitante {
 }
 
 interface VinculadoComNome {
-  id: string;
+  vinculoId: string;
+  alunoId: string;
   nome: string;
+  matriculado?: boolean; // só preenchido na lista de alunos (perfilFiltro === 'aluno')
 }
 
 function rotuloFallback(vinculo: Vinculo): string {
@@ -48,6 +57,8 @@ export default function SolicitacoesScreen() {
   const [solicitacoes, setSolicitacoes] = useState<SolicitacaoComSolicitante[]>([]);
   const [vinculados, setVinculados] = useState<VinculadoComNome[]>([]);
   const [respondendoId, setRespondendoId] = useState<string | null>(null);
+  const [encerrandoId, setEncerrandoId] = useState<string | null>(null);
+  const [vinculoParaEncerrar, setVinculoParaEncerrar] = useState<VinculadoComNome | null>(null);
 
   const buscarDados = useCallback(async () => {
     if (!usuario) return;
@@ -61,10 +72,18 @@ export default function SolicitacoesScreen() {
         return { vinculo, nomeSolicitante: solicitante?.nome ?? rotuloFallback(vinculo) };
       }),
     );
+    // RF09: "situação da matrícula" só faz sentido para alunos — professores não se matriculam.
+    const idsMatriculados =
+      perfilFiltro === 'aluno' && aceitos.length > 0 ? await listarAlunoIdsMatriculados(usuario.id) : null;
     const comNome = await Promise.all(
       aceitos.map(async (vinculo) => {
         const solicitante = await buscarUsuario(vinculo.solicitanteId);
-        return { id: vinculo.solicitanteId, nome: solicitante?.nome ?? rotuloFallback(vinculo) };
+        return {
+          vinculoId: vinculo.id,
+          alunoId: vinculo.solicitanteId,
+          nome: solicitante?.nome ?? rotuloFallback(vinculo),
+          matriculado: idsMatriculados ? idsMatriculados.has(vinculo.solicitanteId) : undefined,
+        };
       }),
     );
     setSolicitacoes(comSolicitante);
@@ -104,6 +123,22 @@ export default function SolicitacoesScreen() {
       setErro(e.message);
     } finally {
       setRespondendoId(null);
+    }
+  }
+
+  async function handleEncerrar() {
+    if (!vinculoParaEncerrar) return;
+    const { vinculoId } = vinculoParaEncerrar;
+    setEncerrandoId(vinculoId);
+    setErro(null);
+    setVinculoParaEncerrar(null);
+    try {
+      await encerrarVinculo(vinculoId);
+      setVinculados((prev) => prev.filter((v) => v.vinculoId !== vinculoId));
+    } catch (e: any) {
+      setErro(e.message);
+    } finally {
+      setEncerrandoId(null);
     }
   }
 
@@ -162,9 +197,22 @@ export default function SolicitacoesScreen() {
             <Text style={styles.vazioVinculados}>Nenhum {rotuloPerfil} vinculado ainda.</Text>
           ) : (
             vinculados.map((vinculado, i) => (
-              <View key={vinculado.id}>
+              <View key={vinculado.vinculoId}>
                 <View style={styles.linha}>
-                  <Text style={styles.nome}>{vinculado.nome}</Text>
+                  <View style={styles.vinculadoTextos}>
+                    <Text style={styles.nome}>{vinculado.nome}</Text>
+                    {vinculado.matriculado !== undefined ? (
+                      <Text style={vinculado.matriculado ? styles.matriculado : styles.semMatricula}>
+                        {vinculado.matriculado ? 'Matriculado em uma turma' : 'Vinculado, sem matrícula ainda'}
+                      </Text>
+                    ) : null}
+                  </View>
+                  <Botao
+                    titulo="Excluir"
+                    variante="secundario"
+                    onPress={() => setVinculoParaEncerrar(vinculado)}
+                    carregando={encerrandoId === vinculado.vinculoId}
+                  />
                 </View>
                 {i < vinculados.length - 1 && <LinhaFina />}
               </View>
@@ -174,6 +222,21 @@ export default function SolicitacoesScreen() {
       ) : null}
 
       {erro ? <Text style={styles.erroInline}>{erro}</Text> : null}
+
+      <Dialogo
+        visivel={vinculoParaEncerrar !== null}
+        titulo={`Excluir vínculo com ${vinculoParaEncerrar?.nome ?? ''}?`}
+        mensagem={
+          perfilFiltro === 'aluno'
+            ? 'O aluno deixa de ter você como responsável. Matrículas e histórico já registrados não são apagados.'
+            : 'O professor deixa de ter você como academia e volta a atuar como autônomo. Turmas já criadas não são apagadas.'
+        }
+        tituloConfirmar="Excluir"
+        onConfirmar={handleEncerrar}
+        tituloCancelar="Cancelar"
+        onCancelar={() => setVinculoParaEncerrar(null)}
+        destrutivo
+      />
     </ScrollView>
   );
 }
@@ -193,5 +256,8 @@ const styles = StyleSheet.create({
   },
   nome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600', flexShrink: 1 },
   acoes: { flexDirection: 'row', gap: Espacamento.pequeno },
+  vinculadoTextos: { flex: 1 },
+  matriculado: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
+  semMatricula: { fontSize: TamanhoFonte.xs, color: Cores.cinzaClaro, marginTop: 2 },
   erroInline: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
 });
