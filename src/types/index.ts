@@ -81,6 +81,12 @@ export interface Turma {
   responsavelPerfil: 'academia' | 'professor';  // desnormalizado para as regras
   professorId?: string;             // professor que ministra, quando o responsável é academia
   descricao?: string;
+  // RF10: grade recorrente opcional, preenchida na criação — guardada aqui (não só usada para
+  // gerar as sessões iniciais) para a turma continuar sabendo sua própria grade depois, e
+  // permitir gerar mais semanas futuramente sem o gestor precisar redigitar dia/horário.
+  diasSemana?: number[];            // 0=domingo .. 6=sábado, igual a Date#getDay()
+  horarioInicio?: string;           // "HH:MM"
+  horarioFim?: string;              // "HH:MM"
   ativa: boolean;
   criadoEm: Timestamp;
   atualizadoEm: Timestamp;

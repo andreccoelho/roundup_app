@@ -12,6 +12,7 @@ import { buscarUsuario } from '../../services/usuarios';
 import { Matricula, Sessao, Turma } from '../../types';
 import { combinarDataHora, formatarDataHora, gerarDatasRecorrentes, parseDataBr, semanaContendo } from '../../utils/datas';
 import { GestorStackParamList } from '../../navigation/types';
+import { DIAS_SEMANA } from '../../constants/diasSemana';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Botao from '../../components/ui/Botao';
@@ -27,17 +28,6 @@ interface MatriculaComNome {
   nomeAluno: string;
 }
 
-// RF12: dias da semana da grade, valor alinhado a Date#getDay() (0=domingo .. 6=sábado)
-const DIAS_SEMANA: { valor: number; rotulo: string }[] = [
-  { valor: 1, rotulo: 'Seg' },
-  { valor: 2, rotulo: 'Ter' },
-  { valor: 3, rotulo: 'Qua' },
-  { valor: 4, rotulo: 'Qui' },
-  { valor: 5, rotulo: 'Sex' },
-  { valor: 6, rotulo: 'Sáb' },
-  { valor: 0, rotulo: 'Dom' },
-];
-
 export default function TurmaDetalheScreen() {
   const { usuario } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<GestorStackParamList, 'TurmaDetalhe'>>();
@@ -49,6 +39,7 @@ export default function TurmaDetalheScreen() {
   const [turma, setTurma] = useState<Turma | null>(null);
   const [matriculas, setMatriculas] = useState<MatriculaComNome[]>([]);
   const [sessoes, setSessoes] = useState<Sessao[]>([]);
+  const [nomeProfessor, setNomeProfessor] = useState<string | null>(null);
 
   const [data, setData] = useState('');
   const [diasSemana, setDiasSemana] = useState<number[]>([]);
@@ -74,6 +65,9 @@ export default function TurmaDetalheScreen() {
       ]);
       setTurma(turmaEncontrada);
       setSessoes(listaSessoes.sort((a, b) => b.inicio.toMillis() - a.inicio.toMillis()));
+      setNomeProfessor(
+        turmaEncontrada?.professorId ? (await buscarUsuario(turmaEncontrada.professorId))?.nome ?? 'Professor' : null,
+      );
 
       const comNome = await Promise.all(
         listaMatriculas
@@ -178,6 +172,16 @@ export default function TurmaDetalheScreen() {
       <Text style={styles.subtitulo}>
         {turma.modalidade} · {turma.nivel} · {turma.ativa ? 'ativa' : 'inativa'}
       </Text>
+      {nomeProfessor ? <Text style={styles.subtitulo}>Professor: {nomeProfessor}</Text> : null}
+      {turma.diasSemana && turma.diasSemana.length > 0 ? (
+        <Text style={styles.subtitulo}>
+          Grade:{' '}
+          {DIAS_SEMANA.filter((item) => turma.diasSemana!.includes(item.valor))
+            .map((item) => item.rotulo)
+            .join(', ')}
+          {turma.horarioInicio && turma.horarioFim ? ` às ${turma.horarioInicio}–${turma.horarioFim}` : ''}
+        </Text>
+      ) : null}
 
       <TouchableOpacity
         style={styles.linkRelatorioToque}
