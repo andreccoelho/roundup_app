@@ -10,6 +10,7 @@ import { listarClassificacao } from '../../services/classificacoes';
 import { buscarUsuario } from '../../services/usuarios';
 import { JANELA_RANKING } from '../../config/gamificacao';
 import LinhaClassificacao from '../../components/ui/LinhaClassificacao';
+import Podio from '../../components/ui/Podio';
 import LinhaFina from '../../components/LinhaFina';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
@@ -82,18 +83,42 @@ export default function ClassificacaoScreen() {
     );
   }
 
+  // script.md, item 4: top 3 vira pódio (2º-1º-3º, avatar maior), não só mais 3 linhas
+  // numeradas — o resto da lista (4ª posição em diante) continua LinhaClassificacao normal.
+  const top3 = linhas.slice(0, 3);
+  const resto = linhas.slice(3);
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
       <Text style={styles.legendaJanela}>Ranking {JANELA_RANKING}</Text>
-      {linhas.map((linha, i) => (
+
+      {top3.length > 0 ? (
+        <Podio
+          primeiro={{ posicao: 1, nome: top3[0].nome, pontos: top3[0].pontos, destaque: top3[0].alunoId === usuario?.id }}
+          segundo={
+            top3[1]
+              ? { posicao: 2, nome: top3[1].nome, pontos: top3[1].pontos, destaque: top3[1].alunoId === usuario?.id }
+              : undefined
+          }
+          terceiro={
+            top3[2]
+              ? { posicao: 3, nome: top3[2].nome, pontos: top3[2].pontos, destaque: top3[2].alunoId === usuario?.id }
+              : undefined
+          }
+        />
+      ) : null}
+
+      {resto.length > 0 ? <LinhaFina /> : null}
+
+      {resto.map((linha, i) => (
         <View key={linha.alunoId}>
           <LinhaClassificacao
-            posicao={i + 1}
+            posicao={i + 4}
             nome={linha.nome}
             pontos={linha.pontos}
             destaque={linha.alunoId === usuario?.id}
           />
-          {i < linhas.length - 1 && <LinhaFina />}
+          {i < resto.length - 1 && <LinhaFina />}
         </View>
       ))}
     </ScrollView>
