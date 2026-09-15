@@ -1,27 +1,35 @@
 // RF29: exclusão de conta — seção reaproveitada pelas 3 telas de Perfil (aluno/professor/
 // academia), mesmo fluxo de confirmação explícita nas três. Ver comentário em
 // AuthContext.tsx#excluirConta sobre a pendência de regra do Firestore que hoje faz a chamada
-// real falhar (allow delete: if false em usuarios).
+// real falhar (allow delete: if false em usuarios) — e por que essa falha, mesmo esperada, não
+// pode aparecer como o texto técnico do Firebase na tela: `e.message` de um erro de permissão
+// do Firestore é algo como "Missing or insufficient permissions", em inglês, que pra quem está
+// tentando excluir a própria conta lê como uma exceção crua, não como uma mensagem do produto.
+// Por isso a mensagem mostrada é sempre a mesma frase fixa em português, independente do que o
+// SDK devolveu — o erro real vai só pro console, para depuração.
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import Botao from '../../components/ui/Botao';
 import Dialogo from '../../components/ui/Dialogo';
+import Aviso from '../../components/ui/Aviso';
+
+const MENSAGEM_FALHA_EXCLUSAO = 'Não foi possível excluir sua conta agora.';
 
 export default function ExcluirContaSecao() {
   const { excluirConta } = useAuth();
   const [confirmando, setConfirmando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+  const [avisoVisivel, setAvisoVisivel] = useState(false);
 
   async function handleConfirmar() {
-    setErro(null);
     try {
       await excluirConta();
       // Sucesso desloga sozinho (Firebase Auth remove a sessão) — RootNavigator troca de raiz
       // sem navegação manual daqui.
-    } catch (e: any) {
-      setErro(e.message ?? 'Não foi possível excluir sua conta agora.');
+    } catch (e) {
+      console.warn('excluirConta() falhou:', e);
+      setAvisoVisivel(true);
     } finally {
       setConfirmando(false);
     }
@@ -31,11 +39,7 @@ export default function ExcluirContaSecao() {
     <View style={styles.container}>
       <Text style={styles.titulo}>Excluir conta</Text>
       <Text style={styles.descricao}>Remove sua conta e os dados pessoais associados. Esta ação não pode ser desfeita.</Text>
-      {erro ? (
-        <Text style={styles.erro} accessibilityRole="alert">
-          {erro}
-        </Text>
-      ) : null}
+
       <View style={styles.espaco} />
       <Botao titulo="Excluir minha conta" variante="destrutivo" onPress={() => setConfirmando(true)} />
 
@@ -49,6 +53,8 @@ export default function ExcluirContaSecao() {
         tituloCancelar="Cancelar"
         onCancelar={() => setConfirmando(false)}
       />
+
+      <Aviso mensagem={MENSAGEM_FALHA_EXCLUSAO} tipo="erro" visivel={avisoVisivel} onFechar={() => setAvisoVisivel(false)} />
     </View>
   );
 }
@@ -57,6 +63,5 @@ const styles = StyleSheet.create({
   container: { marginTop: Espacamento.grande },
   titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
   descricao: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
-  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
   espaco: { height: Espacamento.medio },
 });
