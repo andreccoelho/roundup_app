@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, Raios, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento, FamiliaFonte, Raios, Sombras, TamanhoFonte } from '../../theme';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import Botao from '../../components/ui/Botao';
 
@@ -73,7 +73,14 @@ export default function ConsentimentoLGPDScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Cores.branco },
   scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
-  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.padrao },
+  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
+  titulo: {
+    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontSize: TamanhoFonte.xxl,
+    color: Cores.preto,
+    marginTop: Espacamento.padrao,
+    ...Sombras.duraTitulo,
+  },
   subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
   politica: {
     borderWidth: 1,
