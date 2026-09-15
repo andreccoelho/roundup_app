@@ -11,6 +11,7 @@ import VincularProfessorScreen from '../screens/professor/VincularProfessorScree
 import PerfilScreen from '../screens/professor/PerfilScreen';
 import SolicitacoesScreen from '../screens/gestor/SolicitacoesScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
+import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
 import { IconeSino, IconeTatame, IconeFaixa, IconeBandeira, IconePerfil } from '../components/icones';
 import { opcoesHeader, opcoesTabBar } from './opcoesCasca';
@@ -19,6 +20,7 @@ export type HojeProfessorStackParamList = { Dashboard: undefined };
 
 export type PerfilProfessorStackParamList = {
   Perfil: undefined;
+  EditarPerfil: undefined;
   VincularProfessor: undefined;
   Solicitacoes: undefined;
   PreferenciasNotificacao: undefined;
@@ -52,6 +54,7 @@ function PerfilNavigator() {
   return (
     <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
+      <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: 'Editar perfil' }} />
       <PerfilStack.Screen
         name="VincularProfessor"
         component={VincularProfessorScreen}

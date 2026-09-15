@@ -8,7 +8,7 @@ import {
   deleteUser,
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import { buscarUsuario, criarUsuario, removerUsuario } from '../services/usuarios';
+import { atualizarUsuario, buscarUsuario, criarUsuario, removerUsuario } from '../services/usuarios';
 import { Usuario } from '../types';
 import { agoraTimestamp } from '../utils/datas';
 
@@ -24,6 +24,10 @@ interface AuthContextData {
   cadastrar: (email: string, senha: string, dadosPerfil: DadosPerfilCadastro) => Promise<Usuario>;
   logout: () => Promise<void>;
   excluirConta: () => Promise<void>;
+  // RF06: edição de perfil (nome, faixa/graduação, modalidades, foto) — nunca aceita mudar
+  // `perfil`, `email` ou `id` (firestore.rules trava perfil; email é RF separado, precisa
+  // reautenticação no Firebase Auth, fora de escopo aqui).
+  atualizarPerfil: (dados: Partial<Omit<Usuario, 'id' | 'email' | 'perfil' | 'criadoEm'>>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -100,8 +104,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await deleteUser(auth.currentUser);
   }
 
+  async function atualizarPerfil(
+    dados: Partial<Omit<Usuario, 'id' | 'email' | 'perfil' | 'criadoEm'>>
+  ): Promise<void> {
+    if (!usuario) {
+      throw new Error('Nenhum usuário autenticado.');
+    }
+    const comCarimbo = { ...dados, atualizadoEm: agoraTimestamp() };
+    await atualizarUsuario(usuario.id, comCarimbo);
+    setUsuario((atual) => (atual ? { ...atual, ...comCarimbo } : atual));
+  }
+
   return (
-    <AuthContext.Provider value={{ usuarioAuth, usuario, carregando, login, cadastrar, logout, excluirConta }}>
+    <AuthContext.Provider
+      value={{ usuarioAuth, usuario, carregando, login, cadastrar, logout, excluirConta, atualizarPerfil }}
+    >
       {children}
     </AuthContext.Provider>
   );

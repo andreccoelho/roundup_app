@@ -1,5 +1,5 @@
-// RF06: perfil do aluno. Hoje só leitura + vínculos + sair; edição de foto/faixa/modalidades é
-// RF06 mas ainda não foi construída como tela própria — chega no Passo 4.
+// RF06: perfil do aluno — leitura, edição (EditarPerfilScreen: nome, foto, faixa, modalidades),
+// vínculos e sair.
 // RF19: medalhas calculadas ao vivo a partir de check-ins e graduações do aluno — sem coleção
 // persistida, marcos e valores PROVISÓRIOS (ver docs/DECISOES_PENDENTES.md).
 import { useCallback, useEffect, useState } from 'react';
@@ -11,8 +11,8 @@ import { PerfilAlunoNavigationProp } from '../../navigation/AlunoTabs';
 import { listarHistoricoDoAluno } from '../../services/checkins';
 import { listarGraduacoesPorAluno } from '../../services/graduacoes';
 import { calcularMedalhas, calcularSequencia, MedalhaComEstado } from '../../utils/gamificacao';
+import Avatar from '../../components/ui/Avatar';
 import Botao from '../../components/ui/Botao';
-import EstadoVazio from '../../components/ui/EstadoVazio';
 import Medalha from '../../components/ui/Medalha';
 import ExcluirContaSecao from '../compartilhado/ExcluirContaSecao';
 
@@ -45,13 +45,21 @@ export default function PerfilScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <Text style={styles.nome}>{usuario?.nome}</Text>
-      <Text style={styles.detalhe}>
-        {usuario?.faixaOuGrau ?? 'Faixa não informada'}
-        {modalidades ? ` · ${modalidades}` : ''}
-      </Text>
-      <Text style={styles.email}>{usuario?.email}</Text>
+      <View style={styles.cabecalho}>
+        <Avatar nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={64} />
+        <View style={styles.cabecalhoTextos}>
+          <Text style={styles.nome}>{usuario?.nome}</Text>
+          <Text style={styles.detalhe}>
+            {usuario?.faixaOuGrau ?? 'Faixa não informada'}
+            {modalidades ? ` · ${modalidades}` : ''}
+          </Text>
+          <Text style={styles.email}>{usuario?.email}</Text>
+        </View>
+      </View>
 
+      <View style={styles.secaoPequena}>
+        <Botao titulo="Editar perfil" variante="secundario" onPress={() => navigation.navigate('EditarPerfil')} />
+      </View>
       <View style={styles.secao}>
         <Botao titulo="Meus vínculos" variante="secundario" onPress={() => navigation.navigate('VincularAluno')} />
       </View>
@@ -74,10 +82,6 @@ export default function PerfilScreen() {
         </View>
       ) : null}
 
-      <View style={styles.secao}>
-        <EstadoVazio titulo="Edição de perfil" descricao="Editar foto, faixa e modalidades chega no Passo 4." />
-      </View>
-
       <ExcluirContaSecao />
 
       <View style={styles.rodape}>
@@ -90,6 +94,8 @@ export default function PerfilScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Cores.branco },
   conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
+  cabecalho: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.padrao },
+  cabecalhoTextos: { flex: 1 },
   nome: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.preto },
   detalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
   email: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: 2 },
