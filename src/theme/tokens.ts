@@ -98,8 +98,11 @@ export const Sombras = {
 
 // script.md, item 1 (linguagem visual de combate): tamanho do corte diagonal usado nos cantos de
 // cards/selos de destaque — um valor só, reaproveitado em todo lugar que cortar, pra não virar
-// um ângulo diferente por componente. Implementado via SVG (react-native-svg, já no projeto),
-// não clip-path (RN não suporta) — ver componentes de UI que consomem isto.
+// um ângulo diferente por componente. É uma PORCENTAGEM do lado (0-100), não pixels: os
+// componentes desenham o corte num viewBox 0-100 de react-native-svg com
+// preserveAspectRatio="none" esticado pro tamanho real — proporcional funciona em qualquer
+// tamanho de card, sem precisar recalcular pixel por pixel. RN não tem clip-path nativo, por
+// isso SVG em vez de CSS puro.
 export const Geometria = {
   corteDiagonal: 14,
 } as const;
