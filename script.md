@@ -1,107 +1,84 @@
-# Prompt para o Claude Code: camada de interface do RoundUp
+# Prompt para Claude Code — Redesign de UI do RoundUp (identidade "cara de luta")
 
-> Cole o bloco abaixo inteiro no Claude Code, na raiz do repositório `roundup_app`, com a branch `dev` atualizada.
+Cole este prompt inteiro no Claude Code, rodando dentro do repositório `roundup_app`, branch `dev`.
 
 ---
 
 ## Contexto
 
-Você é o desenvolvedor de front-end responsável pela camada de interface do **RoundUp**, aplicativo mobile em **React Native + Expo (SDK 57) + TypeScript**, backend **Firebase (Auth, Firestore, Storage)**. O app é um sistema gamificado de engajamento e retenção para academias de Boxe e Muay Thai, com três perfis de ator: **Aluno**, **Professor** e **Academia** (Academia é uma generalização de Professor, ou seja, acumula as permissões de gestão).
+Você vai trabalhar no RoundUp, app mobile (React Native + Expo SDK 57, TypeScript) de gamificação para academias de Boxe e Muay Thai. A base funcional já está pronta (vínculos, check-ins, XP, missões, ranking). O problema agora é puramente visual: a interface está correta mas genérica. Falta personalidade de luta.
 
-O produto já tem lógica de negócio, serviços e regras do Firestore implementados. **Seu trabalho é a camada de apresentação**: design system, biblioteca de componentes, navegação e refatoração das telas existentes. Não reescreva serviços, hooks de dados nem regras de segurança.
+Antes de tocar em qualquer arquivo, leia:
+- `src/constants/colors.ts`
+- `src/constants/typography.ts`
+- `App.tsx` (carregamento de fontes)
+- Todas as telas em `src/screens/`
+- Todos os componentes reutilizáveis em `src/components/`
 
-## Passo 0: auditoria antes de qualquer código
+Não pule essa leitura. O redesign precisa nascer do que já existe, não substituir por um sistema novo.
 
-Leia o repositório inteiro antes de escrever uma linha. Em seguida entregue um arquivo `docs/AUDITORIA_UI.md` com:
+## O que NÃO pode mudar
 
-1. Árvore de diretórios relevante (`src/`, `app/`, componentes, telas, navegação, serviços).
-2. Inventário de telas existentes: caminho do arquivo, ator, requisito funcional que atende, estado atual (funcional, placeholder, morta).
-3. Inventário de componentes reutilizáveis já existentes e quais estão duplicados entre telas.
-4. Como a navegação está montada hoje (React Navigation ou Expo Router, quais stacks, como o perfil do usuário decide a rota).
-5. Contratos de dados: tipos e interfaces que as telas consomem (`Usuario`, `Vinculo`, `Turma`, `Sessao`, `CheckIn`, etc.), com o caminho de cada um.
-6. Dívidas visuais: estilos inline, cores hardcoded, magic numbers de espaçamento, ausência de estados de carregamento, erro e vazio.
-7. Itens de limpeza conhecidos, incluindo qualquer botão de teste temporário em `DashboardScreen.tsx`.
+- Paleta base: preto/branco/cinza com verde e vermelho como cores funcionais (sucesso/erro, positivo/negativo). Você pode ajustar tons, adicionar variações (ex: um cinza mais quente, um verde mais saturado para "hit"), mas não introduza uma paleta nova nem cores decorativas soltas.
+- Oswald continua sendo a fonte de placar, XP, sequência (streak) e classificação (ranking). Não substitua em nenhum desses contextos.
+- Homebase (`assets/fonts/homebase.ttf`) é fonte de marca: lettering "RNDP" e títulos de tela. Não a use em corpo de texto, XP, placar ou ranking.
+- Lógica de negócio, navegação, estado, chamadas ao Firestore: nada disso muda. É um trabalho de camada visual (estilos, componentes de apresentação, assets), não de arquitetura.
+- A proibição de cards uniformes do Design Brief continua valendo — na verdade é o ponto de partida de tudo abaixo.
 
-**Pare aqui e aguarde meu aval antes de seguir para o Passo 1.**
+## O que precisa mudar: dar "cara de luta"
 
-## Direção visual
+O app hoje parece um dashboard de produtividade. Precisa parecer o que é: uma ferramenta para quem treina luta. Direção de personalidade:
 
-Revogada por completo — a direção visual oficial deste projeto é `DESIGN_BRIEF.md` (raiz do repositório), já implementada em `src/constants/colors.ts` e `src/constants/typography.ts`. Ignore qualquer menção anterior nesta seção a fundo `#0C0C0D`, acento único `brass`, escala tipográfica 32/24/20/17/15/13 ou regra de cartão uniforme (raio 12, borda 1px em tudo) — nenhum desses valores está em vigor.
+**1. Linguagem visual de combate, não de app corporativo**
+- Trocar cards retangulares uniformes por formas com corte diagonal, bordas assimétricas, cantos vivos — como se fossem placas de ringue ou tags de luva.
+- Usar textura sutil de lona de ringue (canvas) como fundo em telas-chave (home, perfil), sem prejudicar legibilidade.
+- Divisores de seção podem imitar corda de ringue (linha dupla) em vez de linha reta simples.
+- Ícones customizados com tema de luta onde fizer sentido: luva, faixa/graduação, saco de pancada, bandeira de round — substituindo ícones genéricos de biblioteca (estrela, troféu padrão) sempre que houver equivalente temático.
 
-Releia `DESIGN_BRIEF.md` inteiro antes de qualquer decisão visual nos passos seguintes, em especial: a paleta preto/branco/cinza com verde e vermelho como únicas cores funcionais (nunca acento decorativo); os três papéis tipográficos — Oswald para números e headlines de placar (já implementado via `@expo-google-fonts/oswald`), Homebase (`assets/fonts/homebase.ttf`, carregada em `App.tsx`) só para o lettering "RNDP"/wordmark e títulos de tela — nunca em placar, nunca em corpo de texto —, e uma sans neutra do sistema para corpo de texto; e os "Anti-padrões a evitar", em especial a proibição de tratamento uniforme de cartão entre tipos de conteúdo diferentes.
+**2. Tipografia com impacto**
+- Títulos de tela (Homebase) podem ganhar leve distorção/inclinação ou efeito de "batida" (drop shadow duro, sem blur, deslocado — estilo cartaz de luta) em telas de destaque (home, resultado de sessão, subida de faixa).
+- Números de XP e placar (Oswald) ganham hierarquia mais agressiva: tamanho maior, peso mais pesado nos momentos de conquista, contraste alto.
 
-## Passo 1: fundação do design system
+**3. Motion e microinterações com peso**
+- Ao completar um check-in ou missão: uma animação curta de "impacto" (leve shake/punch + flash de cor funcional), não um fade suave genérico.
+- Subida de faixa/graduação: uma transição de tela ou selo com timing mais dramático (0.4–0.6s), sensação de conquista, não uma modal discreta.
+- Barra de XP/progresso: em vez de barra lisa padrão, considerar textura de "round" (segmentada por round, se fizer sentido no contexto de missões) ou efeito de preenchimento com leve vibração ao chegar perto do próximo nível.
+- Evite qualquer animação "fofa" (bounce suave, confete colorido genérico) — o tom é intenso, não infantil.
 
-Crie `src/theme/` com:
+**4. Badges e progressão como identidade visual central**
+- Badges de faixa (graduação) e conquistas devem parecer emblemas reais, não ícones planos — usar profundidade (leve gradiente metálico dentro da paleta preto/branco/cinza + cor funcional), silhueta de ringue já usada na logo pode reaparecer como moldura de badge.
+- Ranking/leaderboard: top 3 precisa se destacar visualmente de forma óbvia (não só numeração), como um pódio ou disposição assimétrica.
 
-- `tokens.ts`: cores, escala tipográfica, espaçamento (4, 8, 12, 16, 24, 32, 48), raios, duração de animação. Tudo tipado com `as const`.
-- `typography.ts`: estilos nomeados por papel (`display`, `titulo`, `subtitulo`, `corpo`, `legenda`, `numero`), nunca por tamanho.
-- `ThemeProvider.tsx` com hook `useTheme()`.
-- `index.ts` exportando a superfície pública.
+**5. Consistência com a logo**
+- A logo de silhueta de ringue com lettering RNDP é a referência de tom. Extraia dela: ângulos, espessura de linha, contraste puro preto/branco. Todo elemento novo deve parecer que poderia coexistir com essa logo, não competir com ela.
 
-Carregue as fontes com `expo-font` em um gate de splash. Zero cor ou espaçamento hardcoded a partir daqui: qualquer valor literal em `StyleSheet` é erro de revisão.
+## Escopo técnico de execução
 
-## Passo 2: biblioteca de componentes
+Trabalhe nesta ordem, tela por tela quando possível, com commits pequenos e descritivos:
 
-Crie `src/components/ui/`, um arquivo por componente, com props tipadas, estados de `pressed`, `disabled` e `loading`, `accessibilityRole` e `accessibilityLabel` em tudo que é tocável, e alvo de toque mínimo de 44x44.
+1. **Fundação de estilo**: revisar `colors.ts` e `typography.ts` para acomodar as variações descritas acima (novos tokens, não substituições da paleta base). Documentar cada token novo com comentário explicando o uso pretendido.
+2. **Componentes de base primeiro**: card genérico, botão primário/secundário, badge, barra de progresso, divisor. Esses componentes são reutilizados em todas as telas — acertar aqui evita retrabalho.
+3. **Tela Home** (aluno): primeira tela que o usuário vê, prioridade máxima de impacto.
+4. **Tela de check-in / conclusão de sessão**: momento de recompensa, prioridade alta para motion.
+5. **Perfil / graduação / badges**: onde a progressão fica visível.
+6. **Ranking**.
+7. **Telas de gestor (Professor/Academia)**: mesma linguagem visual, mas tom levemente mais "operacional" (menos motion, mais densidade de informação) — são telas de gestão, não de engajamento do aluno.
+8. **Onboarding compartilhado**: por último, já que é a tela mais nova e menos testada.
 
-Base: `Botao` (primário, secundário, fantasma, destrutivo), `Campo` (texto, senha, seleção), `Cartao`, `Etiqueta`, `Avatar`, `Divisor`, `Folha` (bottom sheet), `Dialogo`, `Aviso` (toast), `Abas`, `EstadoVazio`, `EstadoErro`, `Esqueleto` (shimmer de carregamento).
-
-Domínio: `BotaoCheckIn`, `BarraProgresso` (XP para o próximo nível), `CartaoSessao`, `CartaoMissao`, `Medalha`, `IndicadorSequencia`, `LinhaClassificacao`, `SeloFaixa`, `CartaoAluno` (nome, faixa, frequência recente), `IndicadorFrequencia`.
-
-Registre cada componente em uma rota de desenvolvimento `src/screens/dev/GaleriaScreen.tsx`, acessível só em `__DEV__`, mostrando todas as variantes e estados. É o que me permite revisar sem rodar cada fluxo.
-
-## Passo 3: navegação
-
-Duas raízes, espelhando a estrutura já validada no Figma:
-
-- **Visão do Aluno**, abas: Treinar (home com check-in), Agenda, Missões, Classificação, Perfil.
-- **Visão do Gestor**, usada por Professor e Academia, abas: Hoje, Turmas, Alunos, Missões, Perfil. O perfil Academia ganha, dentro dessa raiz, as telas adicionais de gestão de professores e visão consolidada.
-
-Antes das raízes, um fluxo compartilhado de onboarding: splash, login, cadastro por perfil, consentimento LGPD, criação ou aceite de vínculo. Respeite a RN05: aluno sem vínculo ativo cai em uma tela de bloqueio que só oferece o caminho de vinculação, nunca uma home vazia.
-
-A escolha da raiz vem do perfil do usuário autenticado, lida da fonte de verdade que já existe no projeto. Não duplique essa lógica.
-
-## Passo 4: telas, por ciclo
-
-Refatore ou implemente na ordem abaixo, sempre reaproveitando os componentes do Passo 2.
-
-**Ciclo 1, núcleo.** Cadastro por perfil (RF01), login e recuperação de senha (RF02), perfis de academia, professor e aluno (RF04, RF05, RF06), solicitação e aceite de vínculo nas duas pontas (RF07, RF08), criação e gestão de turmas (RF10), matrícula em turma (RF11), criação de sessões com recorrência (RF12), check-in do aluno (RF13, RN02, RN08), agenda de próximos treinos (RF14), histórico de presenças (RF15).
-
-**Ciclo 2, gamificação.** Nível e progresso de XP (RF17), missões ativas com progresso parcial (RF18), medalhas e marcos (RF19), classificação por escopo de vínculo com adesão opcional (RF20, RNF11), sequência de treinos consecutivos (RF21).
-
-**Ciclo 3, gestão.** Fila de validação de check-ins (RF22), criação de missão personalizada (RF23), lista de alunos com frequência (RF24), registro de graduação de faixa (RF25, sempre como decisão humana explícita), relatório de frequência por turma e período (RF26), visão consolidada da academia (RF27).
-
-**Ciclo 4.** Consentimento LGPD (RF28), exclusão de conta e dados (RF29), responsável legal para menores (RF30), preferências de notificação (RF31), sinalização de queda de frequência (RF32).
-
-Cada tela nasce com os quatro estados implementados: carregando (esqueleto, não spinner centralizado), vazio, erro com ação de repetir, e conteúdo.
-
-## Restrições técnicas
-
-- Não altere serviços, repositórios, hooks de dados, tipos de domínio nem regras do Firestore. Se a UI precisar de um dado que não existe, pare e me avise em vez de inventar o acesso.
-- Sem biblioteca de UI pronta. Nada de NativeBase, Tamagui, React Native Paper, gluestack. Componentes próprios sobre as primitivas do React Native.
-- Dependências novas só com justificativa explícita e aprovação. `expo-font`, `expo-haptics` e `react-native-svg` estão liberados.
-- `StyleSheet.create` sempre, estilo inline nunca.
-- Suporte a Android 8.0+ e iOS 14+ (RNF05). Telas principais carregam em até 3s em 4G (RNF02): liste e evite renderizações desnecessárias, use `FlatList` com `keyExtractor` e `getItemLayout` onde couber.
-- Ações offline preservam o estado visual otimista e indicam sincronização pendente (RNF06).
-- TypeScript estrito, zero `any`.
-
-## Fluxo de trabalho
-
-Trabalhe em `feat/ui-design-system` a partir de `dev`. Um commit por passo, em português, no formato `feat(ui): ...` ou `refactor(ui): ...`. Ao fim de cada passo, pare, resuma o que mudou, liste os arquivos tocados e aguarde meu aval antes do passo seguinte. Edições cirúrgicas sempre que possível: preserve o que já funciona.
+Para cada tela alterada, rode o app (Expo) e confirme visualmente antes de seguir para a próxima.
 
 ## Critérios de aceite
 
-- [ ] `docs/AUDITORIA_UI.md` entregue e aprovado antes de qualquer código.
-- [ ] Nenhuma cor, fonte ou espaçamento literal fora de `src/theme/tokens.ts`.
-- [ ] Galeria de componentes rodando em `__DEV__` com todas as variantes.
-- [ ] Check-in concluído em no máximo três toques a partir da home do aluno (RNF01).
-- [ ] Todas as telas com os quatro estados, sem exceção.
-- [ ] Todo elemento tocável com rótulo de acessibilidade e alvo de 44x44.
-- [ ] Contraste mínimo de 4,5:1 para texto, verificado nos tokens.
-- [ ] `npx tsc --noEmit` e o linter do projeto passando limpo.
-- [ ] `CHANGELOG_UI.md` com o registro de decisões visuais tomadas e pendências.
+- Nenhuma quebra de funcionalidade existente (navegação, dados, autenticação).
+- Paleta e fontes obrigatórias respeitadas em 100% das telas.
+- Nenhum card uniforme sobrevive ao redesign.
+- Pelo menos uma microinteração de "impacto" implementada em check-in e em subida de faixa.
+- Performance: nada de libs pesadas de animação só para um efeito pontual — priorize `react-native-reanimated` (se já no projeto) ou CSS/estilo nativo antes de adicionar dependência nova. Se precisar adicionar dependência, justifique antes de instalar.
 
-## Primeira resposta esperada
+## Entrega
 
-Execute apenas o Passo 0 e me mostre a auditoria. Se algo na direção visual conflitar com o que você encontrar no repositório, aponte o conflito com o caminho do arquivo em vez de resolver por conta própria.
+Ao final, gere um changelog curto (`docs/REDESIGN_LOG.md` ou append em log de desenvolvimento existente) listando:
+- Tokens novos adicionados e por quê
+- Componentes alterados
+- Telas concluídas nesta rodada vs. pendentes
+- Qualquer decisão de design que precise de validação do André antes de seguir (ex: se algo exigir ativo gráfico novo — ícone customizado, textura — sinalize em vez de gerar um placeholder genérico e seguir como se fosse final)

@@ -20,6 +20,12 @@ export const Cores = {
 
   checkinValidado: '#2E7D32', // único uso de verde: sucesso de check-in
   alerta: '#B3261E',          // único uso de vermelho: janela de check-in fechada / rejeitado
+
+  // script.md ("identidade de luta"): variante MAIS saturada do verde de sucesso, só para o
+  // instante do "impacto" (flash de check-in/missão concluída). checkinValidado continua sendo
+  // o verde de uso normal (rótulos, selos "Feito") — não é uma paleta nova, é o mesmo hit tingido
+  // mais forte por 1-2 frames, igual instrução do brief.
+  impacto: '#1B9E3E',
 } as const;
 
 // Os nomes abaixo precisam bater com as chaves registradas em useFonts (App.tsx).
@@ -68,11 +74,32 @@ export const Raios = {
   pilula: 20,
 } as const;
 
-// Nenhuma tela usa Animated hoje — não há valor espalhado para consolidar aqui, só o ponto de
-// partida tipado para quando telas futuras precisarem (ex.: confirmação de check-in, entrada de
-// folha modal).
+// script.md: check-in/missão usa `rapida`/`base` (shake+flash de impacto, tem que ser instantâneo
+// pra não atrapalhar o fluxo); `dramatica` é só para o momento de subida de faixa/graduação —
+// "timing mais dramático (0.4-0.6s), sensação de conquista, não uma modal discreta".
 export const DuracaoAnimacao = {
   rapida: 150,
   base: 200,
   lenta: 320,
+  dramatica: 500,
+} as const;
+
+// script.md, item 2 (tipografia com impacto): sombra dura (sem blur, deslocada) para títulos
+// Homebase em telas de destaque — nunca em corpo de texto nem em números de placar (Oswald já
+// carrega peso/contraste suficiente sozinho). Mapeia direto em textShadowOffset/textShadowColor/
+// textShadowRadius do RN — nenhuma lib nova, é estilo nativo.
+export const Sombras = {
+  duraTitulo: {
+    textShadowColor: Cores.preto,
+    textShadowOffset: { width: 3, height: 3 },
+    textShadowRadius: 0,
+  },
+} as const;
+
+// script.md, item 1 (linguagem visual de combate): tamanho do corte diagonal usado nos cantos de
+// cards/selos de destaque — um valor só, reaproveitado em todo lugar que cortar, pra não virar
+// um ângulo diferente por componente. Implementado via SVG (react-native-svg, já no projeto),
+// não clip-path (RN não suporta) — ver componentes de UI que consomem isto.
+export const Geometria = {
+  corteDiagonal: 14,
 } as const;
