@@ -4,6 +4,7 @@
 // mount, só ação de envio (já representada pelo `carregando` do próprio Botao "Entrar").
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
@@ -52,6 +53,8 @@ export default function LoginScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
+      {/* Banda preta encosta no topo da tela — ícones claros para não sumir contra o fundo escuro. */}
+      <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.banda}>
           <Text style={styles.wordmark}>RoundUp</Text>
