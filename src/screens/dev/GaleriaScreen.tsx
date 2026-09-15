@@ -40,6 +40,7 @@ import Medalha from '../../components/ui/Medalha';
 import CelebracaoGraduacao from '../../components/ui/CelebracaoGraduacao';
 import IndicadorSequencia from '../../components/ui/IndicadorSequencia';
 import LinhaClassificacao from '../../components/ui/LinhaClassificacao';
+import Podio from '../../components/ui/Podio';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import CartaoAluno from '../../components/ui/CartaoAluno';
 import IndicadorFrequencia from '../../components/ui/IndicadorFrequencia';
@@ -319,10 +320,18 @@ export default function GaleriaScreen() {
         <IndicadorSequencia dias={7} />
       </Secao>
 
-      <Secao titulo="LinhaClassificacao (Ciclo 2, sem consumidor real ainda)">
-        <LinhaClassificacao posicao={1} nome="Ana Beatriz" pontos={980} destaque />
+      <Secao titulo="Podio — top 3 do ranking (usado em ClassificacaoScreen)">
+        <Podio
+          primeiro={{ posicao: 1, nome: 'Ana Beatriz', pontos: 980, destaque: true }}
+          segundo={{ posicao: 2, nome: 'Carlos Eduardo', pontos: 860 }}
+          terceiro={{ posicao: 3, nome: 'João Pedro', pontos: 790 }}
+        />
+      </Secao>
+
+      <Secao titulo="LinhaClassificacao — 4ª posição em diante (Ciclo 2, sem consumidor real ainda)">
+        <LinhaClassificacao posicao={4} nome="Marina Costa" pontos={710} destaque />
         <LinhaFina />
-        <LinhaClassificacao posicao={2} nome="Carlos Eduardo" pontos={860} />
+        <LinhaClassificacao posicao={5} nome="Rafael Souza" pontos={640} />
       </Secao>
 
       <Secao titulo="SeloFaixa — usado na banda de topo do Dashboard do Aluno">
