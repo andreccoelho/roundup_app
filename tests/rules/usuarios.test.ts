@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, runTransaction } from 'firebase/firestore';
 import {
   iniciarAmbiente, encerrarAmbiente, limparDados,
   comoUsuario, semear, usuarioBase, vinculoBase, vinculosPrivadoBase, AGORA,
@@ -143,5 +143,69 @@ describe('usuarios', () => {
         );
       }));
     });
+
+    // RF09: contraparte de encerrarVinculo() — inverso do teste acima.
+    // souDestinatarioEncerrandoVinculo() exige o ANTES 'aceito' (get()) e o DEPOIS 'encerrado'
+    // (getAfter()) na mesma transação.
+    test('transação real: encerrar o vínculo e remover do documento privado juntos', async () => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+        await setDoc(doc(db, 'usuarios', 'academia1'), usuarioBase({ perfil: 'academia' }));
+        await setDoc(
+          doc(db, 'vinculos', 'aluno1_academia1'),
+          vinculoBase('aluno1', 'academia1', { tipo: 'aluno-academia', status: 'aceito', respondidoEm: AGORA }),
+        );
+        await setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'vinculos'), vinculosPrivadoBase(['academia1']));
+      });
+      const dbAcademia = comoUsuario('academia1');
+      await assertSucceeds(runTransaction(dbAcademia, async (transacao) => {
+        transacao.update(doc(dbAcademia, 'vinculos', 'aluno1_academia1'), { status: 'encerrado', respondidoEm: AGORA });
+        transacao.set(
+          doc(dbAcademia, 'usuarios', 'aluno1', 'privado', 'vinculos'),
+          { responsaveisIds: arrayRemove('academia1') },
+          { merge: true },
+        );
+      }));
+    });
+
+    test('sem vínculo aceito (já encerrado), destinatário não grava mais o documento privado', async () => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+        await setDoc(doc(db, 'usuarios', 'academia1'), usuarioBase({ perfil: 'academia' }));
+        await setDoc(
+          doc(db, 'vinculos', 'aluno1_academia1'),
+          vinculoBase('aluno1', 'academia1', { tipo: 'aluno-academia', status: 'encerrado', respondidoEm: AGORA }),
+        );
+      });
+      const dbAcademia = comoUsuario('academia1');
+      await assertFails(
+        setDoc(doc(dbAcademia, 'usuarios', 'aluno1', 'privado', 'vinculos'), { responsaveisIds: arrayUnion('academia1') }, { merge: true }),
+      );
+    });
+  });
+
+  // RF09, RN06: encerrar um vínculo professor-academia devolve autonomo: true ao professor —
+  // inverso do teste de aceite em "RN06: destinatário grava só autonomo/atualizadoEm do
+  // professor" (mais acima neste arquivo).
+  test('transação real: encerrar vínculo professor-academia devolve autonomo ao professor', async () => {
+    await semear(async (db) => {
+      await setDoc(doc(db, 'usuarios', 'professor1'), usuarioBase({ perfil: 'professor', autonomo: false }));
+      await setDoc(doc(db, 'usuarios', 'academia1'), usuarioBase({ perfil: 'academia' }));
+      await setDoc(
+        doc(db, 'vinculos', 'professor1_academia1'),
+        vinculoBase('professor1', 'academia1', { perfilSolicitante: 'professor', perfilDestinatario: 'academia', tipo: 'professor-academia', status: 'aceito', respondidoEm: AGORA }),
+      );
+      await setDoc(doc(db, 'usuarios', 'professor1', 'privado', 'vinculos'), vinculosPrivadoBase(['academia1']));
+    });
+    const dbAcademia = comoUsuario('academia1');
+    await assertSucceeds(runTransaction(dbAcademia, async (transacao) => {
+      transacao.update(doc(dbAcademia, 'vinculos', 'professor1_academia1'), { status: 'encerrado', respondidoEm: AGORA });
+      transacao.set(
+        doc(dbAcademia, 'usuarios', 'professor1', 'privado', 'vinculos'),
+        { responsaveisIds: arrayRemove('academia1') },
+        { merge: true },
+      );
+      transacao.update(doc(dbAcademia, 'usuarios', 'professor1'), { autonomo: true, atualizadoEm: AGORA });
+    }));
   });
 });
