@@ -3,7 +3,7 @@ import { doc, setDoc, updateDoc, collection, query, where, getDocs } from 'fireb
 import { db } from './firebase';
 import { Matricula } from '../types';
 import { agoraTimestamp } from '../utils/datas';
-import { buscarTurma } from './turmas';
+import { buscarTurma, listarTurmasPorResponsavel } from './turmas';
 import { existeVinculoAtivoEntre } from './vinculos';
 import { getDocSeguro } from './firestoreSeguro';
 
@@ -77,4 +77,20 @@ export async function listarMatriculasPorTurma(turmaId: string, responsavelId: s
   const q = query(collection(db, COLECAO), where('responsavelId', '==', responsavelId));
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as Matricula).filter(m => m.turmaId === turmaId);
+}
+
+// RF09: ids de aluno com matrícula ativa em alguma turma deste responsável — usado na Gestão de
+// alunos da academia para mostrar, ao lado de cada vínculo aceito, se o aluno já está
+// matriculado numa turma ou só vinculado (mesma varredura turma-a-turma de
+// listarAlunosComFrequencia() em services/frequencia.ts, sem a parte de check-in/frequência).
+export async function listarAlunoIdsMatriculados(responsavelId: string): Promise<Set<string>> {
+  const turmas = await listarTurmasPorResponsavel(responsavelId);
+  const matriculasPorTurma = await Promise.all(
+    turmas.map((turma) => listarMatriculasPorTurma(turma.id, responsavelId)),
+  );
+  const alunoIds = new Set<string>();
+  matriculasPorTurma.flat().forEach((m) => {
+    if (m.status === 'ativa') alunoIds.add(m.alunoId);
+  });
+  return alunoIds;
 }
