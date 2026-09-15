@@ -16,7 +16,8 @@ import PerfilScreen from '../screens/aluno/PerfilScreen';
 import MissoesScreen from '../screens/aluno/MissoesScreen';
 import ClassificacaoScreen from '../screens/aluno/ClassificacaoScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
-import { Cores } from '../theme';
+import { IconeLuva, IconeFichaTecnica, IconeBandeira, IconeCartaoPontuacao, IconePerfil } from '../components/icones';
+import { opcoesHeader, opcoesTabBar } from './opcoesCasca';
 
 export type TreinarStackParamList = {
   Dashboard: undefined;
@@ -49,7 +50,7 @@ export type PerfilAlunoNavigationProp = NativeStackNavigationProp<PerfilAlunoSta
 const TreinarStack = createNativeStackNavigator<TreinarStackParamList>();
 function TreinarNavigator() {
   return (
-    <TreinarStack.Navigator initialRouteName="Dashboard" screenOptions={{ headerShown: false }}>
+    <TreinarStack.Navigator initialRouteName="Dashboard" screenOptions={{ ...opcoesHeader, headerShown: false }}>
       <TreinarStack.Screen name="Dashboard" component={DashboardScreen} />
       <TreinarStack.Screen
         name="TurmasDisponiveis"
@@ -65,7 +66,7 @@ type AgendaStackParamList = { Agenda: undefined };
 const AgendaStack = createNativeStackNavigator<AgendaStackParamList>();
 function AgendaNavigator() {
   return (
-    <AgendaStack.Navigator screenOptions={{ headerShown: true }}>
+    <AgendaStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <AgendaStack.Screen name="Agenda" component={AgendaScreen} options={{ title: 'Agenda' }} />
     </AgendaStack.Navigator>
   );
@@ -75,7 +76,7 @@ type MissoesStackParamList = { Missoes: undefined };
 const MissoesStack = createNativeStackNavigator<MissoesStackParamList>();
 function MissoesNavigator() {
   return (
-    <MissoesStack.Navigator screenOptions={{ headerShown: true }}>
+    <MissoesStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <MissoesStack.Screen name="Missoes" component={MissoesScreen} options={{ title: 'Missões' }} />
     </MissoesStack.Navigator>
   );
@@ -85,7 +86,7 @@ type ClassificacaoStackParamList = { Classificacao: undefined };
 const ClassificacaoStack = createNativeStackNavigator<ClassificacaoStackParamList>();
 function ClassificacaoNavigator() {
   return (
-    <ClassificacaoStack.Navigator screenOptions={{ headerShown: true }}>
+    <ClassificacaoStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <ClassificacaoStack.Screen name="Classificacao" component={ClassificacaoScreen} options={{ title: 'Classificação' }} />
     </ClassificacaoStack.Navigator>
   );
@@ -94,7 +95,7 @@ function ClassificacaoNavigator() {
 const PerfilStack = createNativeStackNavigator<PerfilAlunoStackParamList>();
 function PerfilNavigator() {
   return (
-    <PerfilStack.Navigator screenOptions={{ headerShown: true }}>
+    <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
       <PerfilStack.Screen name="VincularAluno" component={VincularAlunoScreen} options={{ title: 'Meus vínculos' }} />
       <PerfilStack.Screen
@@ -110,21 +111,32 @@ const Tab = createBottomTabNavigator<AlunoTabParamList>();
 
 export function AlunoTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: Cores.preto,
-        // cinzaClaro sobre branco mede 2,10:1 — abaixo até do mínimo de 3:1 para componentes de
-        // UI (WCAG 1.4.11). cinzaMedio mede 5,33:1, passa também no limiar de texto (4,5:1).
-        tabBarInactiveTintColor: Cores.cinzaMedio,
-        tabBarStyle: { borderTopColor: Cores.cinzaBorda },
-      }}
-    >
-      <Tab.Screen name="Treinar" component={TreinarNavigator} />
-      <Tab.Screen name="Agenda" component={AgendaNavigator} />
-      <Tab.Screen name="Missoes" component={MissoesNavigator} options={{ title: 'Missões' }} />
-      <Tab.Screen name="Classificacao" component={ClassificacaoNavigator} options={{ title: 'Classificação' }} />
-      <Tab.Screen name="Perfil" component={PerfilNavigator} />
+    <Tab.Navigator screenOptions={opcoesTabBar}>
+      <Tab.Screen
+        name="Treinar"
+        component={TreinarNavigator}
+        options={{ tabBarIcon: ({ color, size }) => <IconeLuva tamanho={size} cor={color} /> }}
+      />
+      <Tab.Screen
+        name="Agenda"
+        component={AgendaNavigator}
+        options={{ tabBarIcon: ({ color, size }) => <IconeFichaTecnica tamanho={size} cor={color} /> }}
+      />
+      <Tab.Screen
+        name="Missoes"
+        component={MissoesNavigator}
+        options={{ title: 'Missões', tabBarIcon: ({ color, size }) => <IconeBandeira tamanho={size} cor={color} /> }}
+      />
+      <Tab.Screen
+        name="Classificacao"
+        component={ClassificacaoNavigator}
+        options={{ title: 'Classificação', tabBarIcon: ({ color, size }) => <IconeCartaoPontuacao tamanho={size} cor={color} /> }}
+      />
+      <Tab.Screen
+        name="Perfil"
+        component={PerfilNavigator}
+        options={{ tabBarIcon: ({ color, size }) => <IconePerfil tamanho={size} cor={color} /> }}
+      />
     </Tab.Navigator>
   );
 }
