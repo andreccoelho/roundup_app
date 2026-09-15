@@ -32,6 +32,22 @@
         { "fieldPath": "responsavelId", "order": "ASCENDING" },
         { "fieldPath": "ativa", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "missoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "responsavelId", "order": "ASCENDING" },
+        { "fieldPath": "ativa", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "classificacoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "responsavelId", "order": "ASCENDING" },
+        { "fieldPath": "pontos", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
