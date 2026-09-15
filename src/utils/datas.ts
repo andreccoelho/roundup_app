@@ -24,6 +24,12 @@ export function formatarDataHora(timestamp: Timestamp): string {
   });
 }
 
+// "Membro desde" no Perfil — mês por extenso, sem dia (criadoEm não precisa de precisão de
+// dia pra esse uso, só situar a antiguidade da conta).
+export function formatarMesAno(timestamp: Timestamp): string {
+  return timestamp.toDate().toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+}
+
 // Campos de texto simples "DD/MM/AAAA" (padrão brasileiro) + "HH:MM" — sem biblioteca de date
 // picker nesta rodada. new Date(ano, mes-1, dia, hora, minuto) interpreta no fuso LOCAL do
 // dispositivo (correto para RN08); nunca new Date(string ISO), que o JS interpreta como UTC
