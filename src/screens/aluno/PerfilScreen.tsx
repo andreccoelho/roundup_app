@@ -55,6 +55,13 @@ export default function PerfilScreen() {
       <View style={styles.secao}>
         <Botao titulo="Meus vínculos" variante="secundario" onPress={() => navigation.navigate('VincularAluno')} />
       </View>
+      <View style={styles.secaoPequena}>
+        <Botao
+          titulo="Preferências de notificação"
+          variante="secundario"
+          onPress={() => navigation.navigate('PreferenciasNotificacao')}
+        />
+      </View>
 
       {medalhas.length > 0 ? (
         <View style={styles.secao}>
@@ -87,6 +94,7 @@ const styles = StyleSheet.create({
   detalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
   email: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: 2 },
   secao: { marginTop: Espacamento.grande },
+  secaoPequena: { marginTop: Espacamento.pequeno },
   secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.medio },
   linhaMedalhas: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.medio },
   rodape: { alignItems: 'center', marginTop: Espacamento.grande },

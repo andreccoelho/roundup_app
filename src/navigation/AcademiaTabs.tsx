@@ -11,6 +11,7 @@ import DashboardScreen from '../screens/academia/DashboardScreen';
 import PerfilScreen from '../screens/academia/PerfilScreen';
 import VisaoConsolidadaScreen from '../screens/academia/VisaoConsolidadaScreen';
 import SolicitacoesScreen from '../screens/gestor/SolicitacoesScreen';
+import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
 import { Cores } from '../theme';
 
@@ -20,6 +21,7 @@ export type PerfilAcademiaStackParamList = {
   Perfil: undefined;
   Solicitacoes: undefined;
   VisaoConsolidada: undefined;
+  PreferenciasNotificacao: undefined;
 };
 
 export type AcademiaTabParamList = {
@@ -52,6 +54,11 @@ function PerfilNavigator() {
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
       <PerfilStack.Screen name="Solicitacoes" component={SolicitacoesScreen} options={{ title: 'Gestão de professores' }} />
       <PerfilStack.Screen name="VisaoConsolidada" component={VisaoConsolidadaScreen} options={{ title: 'Visão consolidada' }} />
+      <PerfilStack.Screen
+        name="PreferenciasNotificacao"
+        component={PreferenciasNotificacaoScreen}
+        options={{ title: 'Preferências de notificação' }}
+      />
     </PerfilStack.Navigator>
   );
 }
