@@ -1,5 +1,5 @@
 // RF04: perfil da academia — leitura, edição (EditarPerfilScreen: nome, foto, nome da academia,
-// endereço, modalidades), gestão de professores, visão consolidada e sair.
+// endereço, modalidades), gestão de professores, gestão de alunos, visão consolidada e sair.
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
@@ -31,7 +31,18 @@ export default function PerfilScreen() {
         <Botao titulo="Editar perfil" variante="secundario" onPress={() => navigation.navigate('EditarPerfil')} />
       </View>
       <View style={styles.secao}>
-        <Botao titulo="Gestão de professores" variante="secundario" onPress={() => navigation.navigate('Solicitacoes')} />
+        <Botao
+          titulo="Gestão de professores"
+          variante="secundario"
+          onPress={() => navigation.navigate('SolicitacoesProfessores', { perfilSolicitante: 'professor' })}
+        />
+      </View>
+      <View style={styles.secaoPequena}>
+        <Botao
+          titulo="Gestão de alunos"
+          variante="secundario"
+          onPress={() => navigation.navigate('SolicitacoesAlunos', { perfilSolicitante: 'aluno' })}
+        />
       </View>
       <View style={styles.secaoPequena}>
         <Botao titulo="Visão consolidada" variante="secundario" onPress={() => navigation.navigate('VisaoConsolidada')} />
