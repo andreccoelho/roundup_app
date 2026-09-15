@@ -7,6 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { PerfilProfessorNavigationProp } from '../../navigation/ProfessorTabs';
 import Avatar from '../../components/ui/Avatar';
 import Botao from '../../components/ui/Botao';
+import SeloFaixa from '../../components/ui/SeloFaixa';
 import ExcluirContaSecao from '../compartilhado/ExcluirContaSecao';
 
 export default function PerfilScreen() {
@@ -21,10 +22,16 @@ export default function PerfilScreen() {
         <Avatar nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={64} />
         <View style={styles.cabecalhoTextos}>
           <Text style={styles.nome}>{usuario?.nome}</Text>
-          <Text style={styles.detalhe}>
-            {usuario?.graduacao ?? 'Graduação não informada'}
-            {modalidades ? ` · ${modalidades}` : ''}
-          </Text>
+          {/* script.md, item 4: badge de graduação real, não texto solto — mesmo tratamento do
+              Perfil do Aluno. */}
+          {usuario?.graduacao ? (
+            <View style={styles.seloLinha}>
+              <SeloFaixa faixaOuGrau={usuario.graduacao} />
+            </View>
+          ) : (
+            <Text style={styles.detalhe}>Graduação não informada</Text>
+          )}
+          {modalidades ? <Text style={styles.detalhe}>{modalidades}</Text> : null}
           <Text style={styles.detalhe}>{usuario?.autonomo ? 'Atuação autônoma' : 'Vinculado a uma academia'}</Text>
           <Text style={styles.email}>{usuario?.email}</Text>
         </View>
@@ -66,6 +73,7 @@ const styles = StyleSheet.create({
   cabecalho: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.padrao },
   cabecalhoTextos: { flex: 1 },
   nome: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.preto },
+  seloLinha: { marginTop: Espacamento.minimo },
   detalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
   email: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: 2 },
   secao: { marginTop: Espacamento.grande },
