@@ -8,9 +8,12 @@ import { Cores } from '../../theme';
 
 interface TexturaLonaProps {
   opacidade?: number;
+  // Trama escura (padrão) para fundo claro; branca para usar sobre uma banda preta (ex.:
+  // Dashboard do Aluno) — nunca as duas juntas na mesma tela.
+  cor?: string;
 }
 
-export default function TexturaLona({ opacidade = 0.05 }: TexturaLonaProps) {
+export default function TexturaLona({ opacidade = 0.05, cor = Cores.preto }: TexturaLonaProps) {
   return (
     <Svg
       style={StyleSheet.absoluteFill}
@@ -19,9 +22,9 @@ export default function TexturaLona({ opacidade = 0.05 }: TexturaLonaProps) {
     >
       <Defs>
         <Pattern id="lona" width={16} height={16} patternUnits="userSpaceOnUse">
-          <Path d="M0,16 L16,0" stroke={Cores.preto} strokeWidth={1} opacity={opacidade} />
-          <Path d="M-4,4 L4,-4" stroke={Cores.preto} strokeWidth={1} opacity={opacidade} />
-          <Path d="M12,20 L20,12" stroke={Cores.preto} strokeWidth={1} opacity={opacidade} />
+          <Path d="M0,16 L16,0" stroke={cor} strokeWidth={1} opacity={opacidade} />
+          <Path d="M-4,4 L4,-4" stroke={cor} strokeWidth={1} opacity={opacidade} />
+          <Path d="M12,20 L20,12" stroke={cor} strokeWidth={1} opacity={opacidade} />
         </Pattern>
       </Defs>
       <Rect width="100%" height="100%" fill="url(#lona)" />
