@@ -65,6 +65,18 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId())).data.status == 'aceito';
     }
 
+    // RF09: contraparte de encerrarVinculo() — inverso de souDestinatarioDeVinculoAceito(): aqui
+    // o ANTES precisa ser 'aceito' (get(), não getAfter()) e o DEPOIS precisa ser 'encerrado'
+    // (getAfter()), provando uma transição aceito -> encerrado legítima, feita pelo destinatário,
+    // na mesma transação que grava vinculos.status = 'encerrado' e remove o id de
+    // usuarios/{solicitanteId}/privado/vinculos.responsaveisIds.
+    function souDestinatarioEncerrandoVinculo(solicitanteId) {
+      return exists(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId()))
+        && get(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId())).data.status == 'aceito'
+        && existsAfter(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId()))
+        && getAfter(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId())).data.status == 'encerrado';
+    }
+
     // RF14, RNF04: prova que a mudança em leitoresIds é exatamente "adicionar/remover o
     // próprio uid" — usadas pelo aluno se (des)matriculando, sem permitir que ele manipule
     // o id de outra pessoa nesse array.
@@ -99,6 +111,16 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/matriculas/$(turmaId + '_' + meuId())).data.status == 'ativa';
     }
 
+    // RF25, RF18 (missoesProgresso): inversa de tenhoVinculoAtivoCom() — usada quando o GESTOR
+    // escreve um documento SOBRE um aluno (graduacoes.create, missoesProgresso.create), para
+    // confirmar que esse aluno realmente tem esse gestor como responsável aceito, em vez de
+    // aceitar qualquer uid solto no campo alunoId. Segura pelo mesmo motivo de
+    // tenhoVinculoAtivoCom(): só usada em escrita de documento único, nunca em regra de list.
+    function souResponsavelDoAluno(alunoId) {
+      return exists(/databases/$(database)/documents/usuarios/$(alunoId)/privado/vinculos)
+        && meuId() in get(/databases/$(database)/documents/usuarios/$(alunoId)/privado/vinculos).data.get('responsaveisIds', []);
+    }
+
     // ---------- usuarios (RF01 a RF06) ----------
     match /usuarios/{usuarioId} {
       // leitura ampla é necessária para as consultas de descoberta de academias e professores
@@ -108,10 +130,11 @@ service cloud.firestore {
                     && request.resource.data.perfil in ['aluno', 'professor', 'academia'];
       allow update: if autenticado()
                     && ((usuarioId == meuId() && request.resource.data.perfil == resource.data.perfil)
-                        // RN06: o destinatário de um vínculo professor-academia aceito grava só
-                        // autonomo/atualizadoEm do professor — contraparte de responderSolicitacao().
+                        // RN06: o destinatário de um vínculo professor-academia aceito ou recém
+                        // encerrado grava só autonomo/atualizadoEm do professor — contraparte de
+                        // responderSolicitacao() (vira false) e encerrarVinculo() (volta a true).
                         // vinculosAtivos saiu daqui na Fase 1 desta rodada (ver usuarios/privado abaixo).
-                        || (souDestinatarioDeVinculoAceito(usuarioId)
+                        || ((souDestinatarioDeVinculoAceito(usuarioId) || souDestinatarioEncerrandoVinculo(usuarioId))
                             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autonomo', 'atualizadoEm'])));
       allow delete: if false;  // exclusão é RF29, Ciclo 4
     }
@@ -124,12 +147,13 @@ service cloud.firestore {
     match /usuarios/{usuarioId}/privado/{doc} {
       allow read: if autenticado() && usuarioId == meuId();
       // O dono nunca escreve isto diretamente; quem escreve é o DESTINATÁRIO de um vínculo
-      // que está aceitando (responderSolicitacao roda como o destinatário, gravando no
-      // documento do solicitante). "usuarioId == meuId()" fica como via de escape caso um
-      // fluxo futuro do próprio dono precise editar — hoje nenhum código faz isso.
+      // que está aceitando (responderSolicitacao) ou encerrando (encerrarVinculo), gravando no
+      // documento do solicitante nos dois casos. "usuarioId == meuId()" fica como via de escape
+      // caso um fluxo futuro do próprio dono precise editar — hoje nenhum código faz isso.
       allow write: if autenticado()
                    && (usuarioId == meuId()
-                       || (doc == 'vinculos' && souDestinatarioDeVinculoAceito(usuarioId)));
+                       || (doc == 'vinculos'
+                           && (souDestinatarioDeVinculoAceito(usuarioId) || souDestinatarioEncerrandoVinculo(usuarioId))));
     }
 
     // ---------- vinculos (RF07, RF08, RN05, RN06) ----------
@@ -149,11 +173,14 @@ service cloud.firestore {
                     && vinculoId == request.resource.data.solicitanteId + '_' + request.resource.data.destinatarioId
                     && request.resource.data.status == 'pendente'
                     && tipoBateComPerfis();
-      // aceite ou recusa cabe apenas ao destinatário — StatusVinculo real é
-      // 'pendente' | 'aceito' | 'recusado', não 'ativo'/'inativo'
+      // Só duas transições cabem ao destinatário: responder um pendente (vira aceito/recusado,
+      // responderSolicitacao()) ou encerrar um vínculo já aceito (vira encerrado,
+      // encerrarVinculo() — RF09). Qualquer outra transição (ex.: reabrir um recusado, ou pular
+      // direto de pendente para encerrado) fica de fora.
       allow update: if autenticado()
                     && resource.data.destinatarioId == meuId()
-                    && request.resource.data.status in ['aceito', 'recusado'];
+                    && ((resource.data.status == 'pendente' && request.resource.data.status in ['aceito', 'recusado'])
+                        || (resource.data.status == 'aceito' && request.resource.data.status == 'encerrado'));
       allow delete: if false;
     }
 
@@ -271,11 +298,102 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // ---------- missoes (RF18, RF23) ----------
+    // PROVISÓRIO: leitura de missão ativa aberta a qualquer autenticado, mesmo padrão já aceito
+    // para turmas ativas (checagem cruzada "aluno tem vínculo com este responsavelId" é
+    // impossível numa regra de list — ver nota em tenhoVinculoAtivoCom() e
+    // docs/decisoes-tecnicas.md). Dado não sensível (título, descrição, meta, pontos,
+    // responsável), mesmo raciocínio de turmas. Ver docs/DECISOES_PENDENTES.md.
+    match /missoes/{missaoId} {
+      allow read: if autenticado()
+                  && (resource.data.get('ativa', false) == true
+                      || resource.data.get('responsavelId', '') == meuId());
+      allow create: if autenticado()
+                    && souGestor()
+                    && request.resource.data.responsavelId == meuId();
+      allow update: if autenticado()
+                    && resource.data.responsavelId == meuId()
+                    && request.resource.data.responsavelId == resource.data.responsavelId;
+      allow delete: if autenticado() && resource.data.responsavelId == meuId();
+    }
+
+    // ---------- missoesProgresso (RF18) ----------
+    // PROVISÓRIO: decisão de produto — só o responsável (professor/academia) escreve progresso,
+    // nunca o aluno, mesmo espírito de RN01 (evitar progresso autodeclarado/"driblável"). Ver
+    // docs/DECISOES_PENDENTES.md. `responsavelId` é desnormalizado da missão na escrita (não há
+    // get() cruzado dentro da regra de leitura, list-safe).
+    match /missoesProgresso/{progressoId} {
+      allow read: if autenticado()
+                  && (resource.data.get('alunoId', '') == meuId()
+                      || resource.data.get('responsavelId', '') == meuId());
+      allow create: if autenticado()
+                    && souGestor()
+                    && request.resource.data.responsavelId == meuId()
+                    && souResponsavelDoAluno(request.resource.data.alunoId);
+      allow update: if autenticado()
+                    && resource.data.responsavelId == meuId()
+                    && request.resource.data.alunoId == resource.data.alunoId
+                    && request.resource.data.missaoId == resource.data.missaoId
+                    && request.resource.data.responsavelId == resource.data.responsavelId;
+      allow delete: if autenticado() && resource.data.responsavelId == meuId();
+    }
+
+    // ---------- graduacoes (RF25, RN03) ----------
+    match /graduacoes/{graduacaoId} {
+      allow read: if autenticado()
+                  && (resource.data.get('alunoId', '') == meuId()
+                      || resource.data.get('responsavelId', '') == meuId());
+      // RN03: graduação é sempre decisão humana do responsável — nenhum outro caminho de
+      // escrita existe (sem Cloud Function, sem trigger algorítmico). souResponsavelDoAluno()
+      // garante que o aluno graduado é de fato alguém vinculado a este responsável, não
+      // qualquer uid.
+      allow create: if autenticado()
+                    && souGestor()
+                    && request.resource.data.responsavelId == meuId()
+                    && souResponsavelDoAluno(request.resource.data.alunoId);
+      // PROVISÓRIO: decidido pela opção mais simples — histórico imutável após criado, mesmo
+      // padrão de consentimentosLGPD, em vez de permitir correção de um lançamento errado. Ver
+      // docs/DECISOES_PENDENTES.md.
+      allow update, delete: if false;
+    }
+
+    // ---------- classificacoes (RF20, RN04, RN09) ----------
+    // RN01: pontos só podem mudar em exatamente ±XP_POR_CHECKIN_VALIDADO por escrita — crédito
+    // (create ou update) ou estorno (update) de UM check-in por vez, nunca um valor arbitrário.
+    // O NÚMERO 10 abaixo é PROVISÓRIO (== src/config/gamificacao.ts, XP_POR_CHECKIN_VALIDADO;
+    // Firestore Rules não importa TS, mantenha os dois em sincronia manual se mudar); a TRAVA em
+    // si — só um delta fixo por escrita, nunca um valor livre — não é provisória, é RN01.
+    // Demais pontos PROVISÓRIOS, ver docs/DECISOES_PENDENTES.md:
+    // - leitura aberta a qualquer autenticado (mesmo padrão de turmas/missoes ativas) — RN09
+    //   (escopo por vínculo) é garantido só pelo filtro que o client aplica na consulta
+    //   (where('responsavelId','==', escopo)), não pela regra;
+    // - RN04 (janela de tempo) não é aplicada aqui — não há campo de período, a pontuação é
+    //   cumulativa desde sempre.
+    match /classificacoes/{classificacaoId} {
+      allow read: if autenticado();
+      // Só existe um caminho de create: o primeiro crédito de XP deste aluno neste escopo.
+      allow create: if autenticado()
+                    && souGestor()
+                    && request.resource.data.responsavelId == meuId()
+                    && souResponsavelDoAluno(request.resource.data.alunoId)
+                    && classificacaoId == request.resource.data.alunoId + '_' + request.resource.data.responsavelId
+                    && request.resource.data.pontos == 10;
+      allow update: if autenticado()
+                    && resource.data.responsavelId == meuId()
+                    && request.resource.data.alunoId == resource.data.alunoId
+                    && request.resource.data.responsavelId == resource.data.responsavelId
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pontos', 'atualizadoEm'])
+                    && request.resource.data.pontos >= 0
+                    && (request.resource.data.pontos == resource.data.pontos + 10
+                        || request.resource.data.pontos == resource.data.pontos - 10);
+      allow delete: if false;
+    }
+
     // ---------- Coleções de ciclos posteriores ----------
-    // Bloqueio explícito enquanto não modeladas, evita coleção aberta em produção.
-    match /missoes/{doc}                  { allow read, write: if false; }  // RF23, Ciclo 3
-    match /missoesProgresso/{doc}         { allow read, write: if false; }  // RF18, Ciclo 2
-    match /graduacoes/{doc}               { allow read, write: if false; }  // RF25, Ciclo 3
+    // Bloqueio explícito enquanto não modeladas, evita coleção aberta em produção. RF33 segue
+    // bloqueada porque nenhum código lê/escreve nela ainda — src/config/gamificacao.ts usa
+    // valores fixos no lugar (ver docs/DECISOES_PENDENTES.md); RF33 de verdade é ligar essa
+    // coleção no lugar do arquivo fixo, ainda não feito.
     match /configuracoesGamificacao/{doc} { allow read, write: if false; }  // RF33, Ciclo 3
 
     // RF28, RNF10: consentimento é registro de auditoria, imutável após criação

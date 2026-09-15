@@ -72,4 +72,67 @@ describe('vinculos', () => {
     const dbTerceiro = comoUsuario('academia2');
     await assertFails(getDoc(doc(dbTerceiro, 'vinculos', 'aluno1_academia1')));
   });
+
+  // RF09: encerrarVinculo() — destinatário encerra um vínculo já aceito.
+  describe('encerramento (RF09)', () => {
+    test('destinatário encerra um vínculo aceito', async () => {
+      await semearAtores();
+      await semear(async (db) => {
+        await setDoc(
+          doc(db, 'vinculos', 'aluno1_academia1'),
+          vinculoBase('aluno1', 'academia1', { perfilSolicitante: 'aluno', perfilDestinatario: 'academia', tipo: 'aluno-academia', status: 'aceito', respondidoEm: AGORA }),
+        );
+      });
+      const dbAcademia = comoUsuario('academia1');
+      await assertSucceeds(updateDoc(doc(dbAcademia, 'vinculos', 'aluno1_academia1'), {
+        status: 'encerrado',
+        respondidoEm: AGORA,
+      }));
+    });
+
+    test('destinatário não pula de pendente direto para encerrado', async () => {
+      await semearAtores();
+      await semear(async (db) => {
+        await setDoc(
+          doc(db, 'vinculos', 'aluno1_academia1'),
+          vinculoBase('aluno1', 'academia1', { perfilSolicitante: 'aluno', perfilDestinatario: 'academia', tipo: 'aluno-academia', status: 'pendente' }),
+        );
+      });
+      const dbAcademia = comoUsuario('academia1');
+      await assertFails(updateDoc(doc(dbAcademia, 'vinculos', 'aluno1_academia1'), {
+        status: 'encerrado',
+        respondidoEm: AGORA,
+      }));
+    });
+
+    test('destinatário não reabre um vínculo recusado', async () => {
+      await semearAtores();
+      await semear(async (db) => {
+        await setDoc(
+          doc(db, 'vinculos', 'aluno1_academia1'),
+          vinculoBase('aluno1', 'academia1', { perfilSolicitante: 'aluno', perfilDestinatario: 'academia', tipo: 'aluno-academia', status: 'recusado', respondidoEm: AGORA }),
+        );
+      });
+      const dbAcademia = comoUsuario('academia1');
+      await assertFails(updateDoc(doc(dbAcademia, 'vinculos', 'aluno1_academia1'), {
+        status: 'aceito',
+        respondidoEm: AGORA,
+      }));
+    });
+
+    test('não-destinatário não encerra o vínculo', async () => {
+      await semearAtores();
+      await semear(async (db) => {
+        await setDoc(
+          doc(db, 'vinculos', 'aluno1_academia1'),
+          vinculoBase('aluno1', 'academia1', { perfilSolicitante: 'aluno', perfilDestinatario: 'academia', tipo: 'aluno-academia', status: 'aceito', respondidoEm: AGORA }),
+        );
+      });
+      const dbTerceiro = comoUsuario('academia2');
+      await assertFails(updateDoc(doc(dbTerceiro, 'vinculos', 'aluno1_academia1'), {
+        status: 'encerrado',
+        respondidoEm: AGORA,
+      }));
+    });
+  });
 });
