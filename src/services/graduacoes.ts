@@ -1,5 +1,5 @@
-// Adiado para o Ciclo 3 (RF25, RN03: registro de graduações).
-// Esqueleto mantido; a coleção segue bloqueada em firestore.rules até ser modelada.
+// RF25, RN03: registro de graduações — sempre decisão humana do responsável, nunca automática
+// (ver firestore.rules: graduacoes.update/delete são sempre negados, histórico imutável).
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, getDocs,
@@ -9,8 +9,13 @@ import { Graduacao } from '../types';
 
 const COLECAO = 'graduacoes';
 
-export async function criarGraduacao(graduacao: Graduacao): Promise<void> {
-  await setDoc(doc(db, COLECAO, graduacao.id), graduacao);
+// Mesmo padrão de criarTurma()/criarMissao(): gera id e criadoEm aqui, o caller só passa os
+// campos de negócio. Primeiro consumidor real desta função.
+export async function criarGraduacao(dados: Omit<Graduacao, 'id' | 'criadoEm'>): Promise<Graduacao> {
+  const ref = doc(collection(db, COLECAO));
+  const graduacao: Graduacao = { id: ref.id, criadoEm: new Date(), ...dados };
+  await setDoc(ref, graduacao);
+  return graduacao;
 }
 
 export async function buscarGraduacao(id: string): Promise<Graduacao | null> {

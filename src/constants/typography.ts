@@ -1,22 +1,7 @@
-// Dois registros tipográficos, ver DESIGN_BRIEF.md:
+// Três registros tipográficos, ver DESIGN_BRIEF.md:
 // - placar: grotesco condensado (Oswald) para números e headlines de placar (XP, %, contagens)
-// - corpo: sans neutro do sistema (Homebase Regular entra aqui quando o asset existir)
-export const FontFamily = {
-  regular: undefined as string | undefined,
-  // homebaseRegular: 'HomebaseRegular', // descomentar após adicionar o arquivo de fonte
-
-  placarRegular: 'Oswald_400Regular',
-  placarSemiBold: 'Oswald_600SemiBold',
-  placarBold: 'Oswald_700Bold',
-} as const;
-
-export const FontSize = {
-  xs: 12,
-  sm: 14,
-  md: 16,
-  lg: 20,
-  xl: 24,
-  xxl: 32,
-  placar: 48,     // números grandes de placar (XP, sequência)
-  placarLg: 64,   // hero de faixa/graduação
-} as const;
+// - display: Homebase (fonte da marca), só lettering "RNDP"/wordmark e título de tela
+// - corpo: sans neutro do sistema — nem Oswald nem Homebase aparecem aqui
+// Fonte única dos valores: src/theme/tokens.ts — este arquivo só reexporta, para não quebrar os
+// imports já existentes (`import { FontFamily, FontSize } from '../constants/typography'`).
+export { FamiliaFonte as FontFamily, TamanhoFonte as FontSize } from '../theme/tokens';

@@ -4,13 +4,15 @@ import {
   collection, query, where, orderBy, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { CheckIn, Sessao, Matricula } from '../types';
+import { CheckIn, Sessao, Matricula, Classificacao } from '../types';
 import { agoraTimestamp } from '../utils/datas';
 import { getDocSeguro } from './firestoreSeguro';
+import { XP_POR_CHECKIN_VALIDADO } from '../config/gamificacao';
 
 const COLECAO = 'checkins';
 const COLECAO_SESSOES = 'sessoes';
 const COLECAO_MATRICULAS = 'matriculas';
+const COLECAO_CLASSIFICACOES = 'classificacoes';
 
 // RF13, RN02, RN08: o ID `${sessaoId}_${alunoId}` garante RN02 por construção;
 // a transação evita a corrida entre a checagem e a gravação
@@ -76,6 +78,15 @@ export async function listarCheckInsPorSessao(sessaoId: string, responsavelId: s
   return snap.docs.map(d => d.data() as CheckIn).filter(c => c.sessaoId === sessaoId);
 }
 
+// RF24, RF26: todos os check-ins do responsável, sem filtrar por sessão — base para as
+// agregações de frequência em src/services/frequencia.ts. Mesma consulta de
+// listarCheckInsPorSessao, só sem o filtro em memória por sessaoId.
+export async function listarCheckInsPorResponsavel(responsavelId: string): Promise<CheckIn[]> {
+  const q = query(collection(db, COLECAO), where('responsavelId', '==', responsavelId));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as CheckIn);
+}
+
 // RF15
 export async function listarHistoricoDoAluno(alunoId: string): Promise<CheckIn[]> {
   const q = query(
@@ -99,14 +110,64 @@ export async function buscarCheckInDaSessao(sessaoId: string, alunoId: string): 
 // UPDATE — o responsável não pode CRIAR um check-in em nome do aluno (create exige
 // `souAluno() && alunoId == meuId()`). Por isso a "chamada" só alterna presença de quem já fez
 // o próprio check-in; quem ainda não fez aparece como pendente, sem toggle.
+//
+// RF16, RN01 (PROVISÓRIO, ver docs/DECISOES_PENDENTES.md): validar credita
+// XP_POR_CHECKIN_VALIDADO em checkins.pontos e em classificacoes/{alunoId}_{responsavelId};
+// desfazer a validação estorna o mesmo valor. `checkin.pontos > 0` guarda contra creditar duas
+// vezes se o professor alternar o toggle repetidamente.
+//
+// Escreve o valor de `pontos` já somado (literal), não `increment()`: a regra de
+// `classificacoes` valida `request.resource.data.pontos == resource.data.pontos ± 10`
+// exatamente para travar o delta (RN01) — depender de `increment()` deixaria a regra refém de
+// como o motor de regras resolve transforms, então lemos o valor atual dentro da própria
+// transação e calculamos o novo valor no client. Todos os `transacao.get()` (checkin e
+// classificação) vêm antes de qualquer `transacao.update()/set()`, como o SDK exige.
 export async function validarCheckIn(
   checkinId: string,
   responsavelId: string,
   novoStatus: 'validado' | 'pendente',
 ): Promise<void> {
-  await updateDoc(doc(db, COLECAO, checkinId), {
-    status: novoStatus,
-    validadoPor: responsavelId,
-    validadoEm: agoraTimestamp(),
+  const checkinRef = doc(db, COLECAO, checkinId);
+
+  await runTransaction(db, async (transacao) => {
+    const checkinSnap = await transacao.get(checkinRef);
+    if (!checkinSnap.exists()) {
+      throw new Error('Check-in não encontrado.');
+    }
+    const checkin = checkinSnap.data() as CheckIn;
+
+    const vaiCreditar = novoStatus === 'validado' && checkin.pontos === 0;
+    const vaiEstornar = novoStatus === 'pendente' && checkin.pontos > 0;
+
+    const classificacaoId = `${checkin.alunoId}_${checkin.responsavelId}`;
+    const classificacaoRef = doc(db, COLECAO_CLASSIFICACOES, classificacaoId);
+
+    let pontosAtuais = 0;
+    if (vaiCreditar || vaiEstornar) {
+      const classificacaoSnap = await transacao.get(classificacaoRef);
+      pontosAtuais = classificacaoSnap.exists() ? (classificacaoSnap.data() as Classificacao).pontos : 0;
+    }
+
+    transacao.update(checkinRef, {
+      status: novoStatus,
+      pontos: vaiCreditar ? XP_POR_CHECKIN_VALIDADO : vaiEstornar ? 0 : checkin.pontos,
+      validadoPor: responsavelId,
+      validadoEm: agoraTimestamp(),
+    });
+
+    if (vaiCreditar || vaiEstornar) {
+      const delta = vaiCreditar ? XP_POR_CHECKIN_VALIDADO : -XP_POR_CHECKIN_VALIDADO;
+      transacao.set(
+        classificacaoRef,
+        {
+          id: classificacaoId,
+          alunoId: checkin.alunoId,
+          responsavelId: checkin.responsavelId,
+          pontos: pontosAtuais + delta,
+          atualizadoEm: agoraTimestamp(),
+        },
+        { merge: true },
+      );
+    }
   });
 }

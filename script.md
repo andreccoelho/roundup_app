@@ -1,64 +1,107 @@
-# RoundUp — Cloud Function para sincronizar leitoresIds na matrícula
+# Prompt para o Claude Code: camada de interface do RoundUp
 
-## Problema
+> Cole o bloco abaixo inteiro no Claude Code, na raiz do repositório `roundup_app`, com a branch `dev` atualizada.
 
-`matriculas.create` não consegue adicionar o aluno a `leitoresIds` de sessões já existentes da turma: para isso precisaria consultar essas sessões, e a consulta só passa na regra se o aluno já estiver em `leitoresIds`, o que ainda não está. Paradoxo de ordem, sem solução no cliente. RF14 fica quebrado para quem se matricula em turma já em andamento.
+---
 
-## Solução
+## Contexto
 
-Cloud Function com Admin SDK, que ignora as regras de segurança e resolve o paradoxo.
+Você é o desenvolvedor de front-end responsável pela camada de interface do **RoundUp**, aplicativo mobile em **React Native + Expo (SDK 57) + TypeScript**, backend **Firebase (Auth, Firestore, Storage)**. O app é um sistema gamificado de engajamento e retenção para academias de Boxe e Muay Thai, com três perfis de ator: **Aluno**, **Professor** e **Academia** (Academia é uma generalização de Professor, ou seja, acumula as permissões de gestão).
 
-**Aviso ao usuário antes de começar:** isso exige o plano Blaze (pay-as-you-go) no projeto Firebase. O gatilho em si tem cota gratuita generosa (2 milhões de invocações/mês), mas o plano Spark não permite Cloud Functions. Confirme que o projeto já está no Blaze antes de fazer deploy; se não estiver, pare e avise.
+O produto já tem lógica de negócio, serviços e regras do Firestore implementados. **Seu trabalho é a camada de apresentação**: design system, biblioteca de componentes, navegação e refatoração das telas existentes. Não reescreva serviços, hooks de dados nem regras de segurança.
 
-## Implementação
+## Passo 0: auditoria antes de qualquer código
 
-**1.** Inicialize `functions/` com `firebase init functions`, TypeScript, se ainda não existir.
+Leia o repositório inteiro antes de escrever uma linha. Em seguida entregue um arquivo `docs/AUDITORIA_UI.md` com:
 
-**2.** `functions/src/index.ts`, gatilho `onDocumentCreated` em `matriculas/{matriculaId}`:
+1. Árvore de diretórios relevante (`src/`, `app/`, componentes, telas, navegação, serviços).
+2. Inventário de telas existentes: caminho do arquivo, ator, requisito funcional que atende, estado atual (funcional, placeholder, morta).
+3. Inventário de componentes reutilizáveis já existentes e quais estão duplicados entre telas.
+4. Como a navegação está montada hoje (React Navigation ou Expo Router, quais stacks, como o perfil do usuário decide a rota).
+5. Contratos de dados: tipos e interfaces que as telas consomem (`Usuario`, `Vinculo`, `Turma`, `Sessao`, `CheckIn`, etc.), com o caminho de cada um.
+6. Dívidas visuais: estilos inline, cores hardcoded, magic numbers de espaçamento, ausência de estados de carregamento, erro e vazio.
+7. Itens de limpeza conhecidos, incluindo qualquer botão de teste temporário em `DashboardScreen.tsx`.
 
-```ts
-export const sincronizarLeitorNaMatricula = onDocumentCreated(
-  'matriculas/{matriculaId}',
-  async (event) => {
-    const matricula = event.data?.data();
-    if (!matricula || matricula.status !== 'ativa') return;
+**Pare aqui e aguarde meu aval antes de seguir para o Passo 1.**
 
-    const agora = Timestamp.now();
-    const sessoesSnap = await db.collection('sessoes')
-      .where('turmaId', '==', matricula.turmaId)
-      .where('inicio', '>=', agora)
-      .where('status', 'in', ['agendada', 'aberta'])
-      .get();
+## Direção visual
 
-    const batch = db.batch();
-    sessoesSnap.docs.forEach((doc) => {
-      batch.update(doc.ref, {
-        leitoresIds: FieldValue.arrayUnion(matricula.alunoId),
-      });
-    });
-    await batch.commit();
-  }
-);
-```
+Revogada por completo — a direção visual oficial deste projeto é `DESIGN_BRIEF.md` (raiz do repositório), já implementada em `src/constants/colors.ts` e `src/constants/typography.ts`. Ignore qualquer menção anterior nesta seção a fundo `#0C0C0D`, acento único `brass`, escala tipográfica 32/24/20/17/15/13 ou regra de cartão uniforme (raio 12, borda 1px em tudo) — nenhum desses valores está em vigor.
 
-Sem `limit`: se a turma tiver centenas de sessões futuras, fatie em lotes de 500 (limite do `batch`). Log de erro claro se isso acontecer, não falhe silenciosamente.
+Releia `DESIGN_BRIEF.md` inteiro antes de qualquer decisão visual nos passos seguintes, em especial: a paleta preto/branco/cinza com verde e vermelho como únicas cores funcionais (nunca acento decorativo); os três papéis tipográficos — Oswald para números e headlines de placar (já implementado via `@expo-google-fonts/oswald`), Homebase (`assets/fonts/homebase.ttf`, carregada em `App.tsx`) só para o lettering "RNDP"/wordmark e títulos de tela — nunca em placar, nunca em corpo de texto —, e uma sans neutra do sistema para corpo de texto; e os "Anti-padrões a evitar", em especial a proibição de tratamento uniforme de cartão entre tipos de conteúdo diferentes.
 
-**3.** Espelhe o mesmo gatilho para `onDocumentUpdated`, cobrindo `cancelarMatricula` (status vira `'inativa'`): usa `arrayRemove` em vez de `arrayUnion`, mesmo filtro de sessões futuras.
+## Passo 1: fundação do design system
 
-**4.** Em `src/services/matriculas.ts`, remova a chamada direta a `atualizarLeitoresDasSessoesFuturas` que hoje engole o erro — a sincronização passa a ser responsabilidade exclusiva da function. Deixe o service apenas criar/atualizar o documento de matrícula.
+Crie `src/theme/` com:
 
-**5.** Teste no emulador: `firebase emulators:start --only functions,firestore`, crie uma matrícula em turma com sessão futura já cadastrada, confirme que `leitoresIds` foi atualizado. Adicione um teste de integração em `tests/functions/sincronizacao-leitores.test.ts` cobrindo matrícula e cancelamento.
+- `tokens.ts`: cores, escala tipográfica, espaçamento (4, 8, 12, 16, 24, 32, 48), raios, duração de animação. Tudo tipado com `as const`.
+- `typography.ts`: estilos nomeados por papel (`display`, `titulo`, `subtitulo`, `corpo`, `legenda`, `numero`), nunca por tamanho.
+- `ThemeProvider.tsx` com hook `useTheme()`.
+- `index.ts` exportando a superfície pública.
 
-**6.** Atualize `docs/decisoes-tecnicas.md`: substitua a entrada de limitação conhecida por uma entrada de decisão, explicando por que a sincronização saiu do cliente e foi para Cloud Function.
+Carregue as fontes com `expo-font` em um gate de splash. Zero cor ou espaçamento hardcoded a partir daqui: qualquer valor literal em `StyleSheet` é erro de revisão.
 
-## Verificação
+## Passo 2: biblioteca de componentes
 
-- `npx tsc --noEmit` em `functions/` e no app.
-- Teste de integração da function passando no emulador.
-- `npm run test:rules` continua 100% (nenhuma regra muda nesta rodada).
-- Comando de deploy, sem executar: `firebase deploy --only functions,firestore:rules,firestore:indexes`.
+Crie `src/components/ui/`, um arquivo por componente, com props tipadas, estados de `pressed`, `disabled` e `loading`, `accessibilityRole` e `accessibilityLabel` em tudo que é tocável, e alvo de toque mínimo de 44x44.
 
-## Não fazer
+Base: `Botao` (primário, secundário, fantasma, destrutivo), `Campo` (texto, senha, seleção), `Cartao`, `Etiqueta`, `Avatar`, `Divisor`, `Folha` (bottom sheet), `Dialogo`, `Aviso` (toast), `Abas`, `EstadoVazio`, `EstadoErro`, `Esqueleto` (shimmer de carregamento).
 
-- Não alterar `firestore.rules`. O problema era de fluxo de escrita, não de regra.
-- Não implementar retry ou fila; se o batch falhar, logar e seguir — cobertura de falha fica para o Ciclo 4.
+Domínio: `BotaoCheckIn`, `BarraProgresso` (XP para o próximo nível), `CartaoSessao`, `CartaoMissao`, `Medalha`, `IndicadorSequencia`, `LinhaClassificacao`, `SeloFaixa`, `CartaoAluno` (nome, faixa, frequência recente), `IndicadorFrequencia`.
+
+Registre cada componente em uma rota de desenvolvimento `src/screens/dev/GaleriaScreen.tsx`, acessível só em `__DEV__`, mostrando todas as variantes e estados. É o que me permite revisar sem rodar cada fluxo.
+
+## Passo 3: navegação
+
+Duas raízes, espelhando a estrutura já validada no Figma:
+
+- **Visão do Aluno**, abas: Treinar (home com check-in), Agenda, Missões, Classificação, Perfil.
+- **Visão do Gestor**, usada por Professor e Academia, abas: Hoje, Turmas, Alunos, Missões, Perfil. O perfil Academia ganha, dentro dessa raiz, as telas adicionais de gestão de professores e visão consolidada.
+
+Antes das raízes, um fluxo compartilhado de onboarding: splash, login, cadastro por perfil, consentimento LGPD, criação ou aceite de vínculo. Respeite a RN05: aluno sem vínculo ativo cai em uma tela de bloqueio que só oferece o caminho de vinculação, nunca uma home vazia.
+
+A escolha da raiz vem do perfil do usuário autenticado, lida da fonte de verdade que já existe no projeto. Não duplique essa lógica.
+
+## Passo 4: telas, por ciclo
+
+Refatore ou implemente na ordem abaixo, sempre reaproveitando os componentes do Passo 2.
+
+**Ciclo 1, núcleo.** Cadastro por perfil (RF01), login e recuperação de senha (RF02), perfis de academia, professor e aluno (RF04, RF05, RF06), solicitação e aceite de vínculo nas duas pontas (RF07, RF08), criação e gestão de turmas (RF10), matrícula em turma (RF11), criação de sessões com recorrência (RF12), check-in do aluno (RF13, RN02, RN08), agenda de próximos treinos (RF14), histórico de presenças (RF15).
+
+**Ciclo 2, gamificação.** Nível e progresso de XP (RF17), missões ativas com progresso parcial (RF18), medalhas e marcos (RF19), classificação por escopo de vínculo com adesão opcional (RF20, RNF11), sequência de treinos consecutivos (RF21).
+
+**Ciclo 3, gestão.** Fila de validação de check-ins (RF22), criação de missão personalizada (RF23), lista de alunos com frequência (RF24), registro de graduação de faixa (RF25, sempre como decisão humana explícita), relatório de frequência por turma e período (RF26), visão consolidada da academia (RF27).
+
+**Ciclo 4.** Consentimento LGPD (RF28), exclusão de conta e dados (RF29), responsável legal para menores (RF30), preferências de notificação (RF31), sinalização de queda de frequência (RF32).
+
+Cada tela nasce com os quatro estados implementados: carregando (esqueleto, não spinner centralizado), vazio, erro com ação de repetir, e conteúdo.
+
+## Restrições técnicas
+
+- Não altere serviços, repositórios, hooks de dados, tipos de domínio nem regras do Firestore. Se a UI precisar de um dado que não existe, pare e me avise em vez de inventar o acesso.
+- Sem biblioteca de UI pronta. Nada de NativeBase, Tamagui, React Native Paper, gluestack. Componentes próprios sobre as primitivas do React Native.
+- Dependências novas só com justificativa explícita e aprovação. `expo-font`, `expo-haptics` e `react-native-svg` estão liberados.
+- `StyleSheet.create` sempre, estilo inline nunca.
+- Suporte a Android 8.0+ e iOS 14+ (RNF05). Telas principais carregam em até 3s em 4G (RNF02): liste e evite renderizações desnecessárias, use `FlatList` com `keyExtractor` e `getItemLayout` onde couber.
+- Ações offline preservam o estado visual otimista e indicam sincronização pendente (RNF06).
+- TypeScript estrito, zero `any`.
+
+## Fluxo de trabalho
+
+Trabalhe em `feat/ui-design-system` a partir de `dev`. Um commit por passo, em português, no formato `feat(ui): ...` ou `refactor(ui): ...`. Ao fim de cada passo, pare, resuma o que mudou, liste os arquivos tocados e aguarde meu aval antes do passo seguinte. Edições cirúrgicas sempre que possível: preserve o que já funciona.
+
+## Critérios de aceite
+
+- [ ] `docs/AUDITORIA_UI.md` entregue e aprovado antes de qualquer código.
+- [ ] Nenhuma cor, fonte ou espaçamento literal fora de `src/theme/tokens.ts`.
+- [ ] Galeria de componentes rodando em `__DEV__` com todas as variantes.
+- [ ] Check-in concluído em no máximo três toques a partir da home do aluno (RNF01).
+- [ ] Todas as telas com os quatro estados, sem exceção.
+- [ ] Todo elemento tocável com rótulo de acessibilidade e alvo de 44x44.
+- [ ] Contraste mínimo de 4,5:1 para texto, verificado nos tokens.
+- [ ] `npx tsc --noEmit` e o linter do projeto passando limpo.
+- [ ] `CHANGELOG_UI.md` com o registro de decisões visuais tomadas e pendências.
+
+## Primeira resposta esperada
+
+Execute apenas o Passo 0 e me mostre a auditoria. Se algo na direção visual conflitar com o que você encontrar no repositório, aponte o conflito com o caminho do arquivo em vez de resolver por conta própria.

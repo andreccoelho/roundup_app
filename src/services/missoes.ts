@@ -1,5 +1,5 @@
-// Adiado para o Ciclo 2 (RF18, progresso de missões) e Ciclo 3 (RF23, criação de missões).
-// Esqueleto mantido; a coleção segue bloqueada em firestore.rules até ser modelada.
+// RF18 (Ciclo 2, progresso de missões) e RF23 (Ciclo 3, criação de missões — a tela de criação
+// ainda não existe, fica para quando RF23 for construído).
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, getDocs,
@@ -12,8 +12,14 @@ const COLECAO_PROGRESSO = 'missoesProgresso';
 
 // ── Missões ──────────────────────────────────────────────────────────────────
 
-export async function criarMissao(missao: Missao): Promise<void> {
-  await setDoc(doc(db, COLECAO_MISSOES, missao.id), missao);
+// RF23: mesmo padrão de criarTurma() — gera id e timestamps aqui, o caller só passa os campos
+// de negócio. Primeiro consumidor real desta função (antes só o esqueleto existia).
+export async function criarMissao(dados: Omit<Missao, 'id' | 'criadoEm' | 'atualizadoEm'>): Promise<Missao> {
+  const ref = doc(collection(db, COLECAO_MISSOES));
+  const agora = new Date();
+  const missao: Missao = { id: ref.id, criadoEm: agora, atualizadoEm: agora, ...dados };
+  await setDoc(ref, missao);
+  return missao;
 }
 
 export async function buscarMissao(id: string): Promise<Missao | null> {
@@ -31,6 +37,19 @@ export async function removerMissao(id: string): Promise<void> {
 
 export async function listarMissoesPorResponsavel(responsavelId: string): Promise<Missao[]> {
   const q = query(collection(db, COLECAO_MISSOES), where('responsavelId', '==', responsavelId));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as Missao);
+}
+
+// RF18: missões ativas do escopo do aluno — chamada com o responsavelId do vínculo dele, não o
+// próprio id. A regra de leitura permite (missão ativa é legível por qualquer autenticado,
+// mesmo padrão de turmas ativas — ver docs/DECISOES_PENDENTES.md).
+export async function listarMissoesAtivasDoResponsavel(responsavelId: string): Promise<Missao[]> {
+  const q = query(
+    collection(db, COLECAO_MISSOES),
+    where('responsavelId', '==', responsavelId),
+    where('ativa', '==', true),
+  );
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as Missao);
 }
