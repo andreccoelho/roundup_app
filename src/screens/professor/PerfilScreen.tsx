@@ -1,12 +1,12 @@
-// RF05: perfil do professor. Hoje só leitura + vínculo com academia + sair; edição chega no
-// Passo 4.
+// RF05: perfil do professor — leitura, edição (EditarPerfilScreen: nome, foto, graduação,
+// modalidades), vínculo com academia e sair.
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { PerfilProfessorNavigationProp } from '../../navigation/ProfessorTabs';
+import Avatar from '../../components/ui/Avatar';
 import Botao from '../../components/ui/Botao';
-import EstadoVazio from '../../components/ui/EstadoVazio';
 import ExcluirContaSecao from '../compartilhado/ExcluirContaSecao';
 
 export default function PerfilScreen() {
@@ -17,14 +17,22 @@ export default function PerfilScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <Text style={styles.nome}>{usuario?.nome}</Text>
-      <Text style={styles.detalhe}>
-        {usuario?.graduacao ?? 'Graduação não informada'}
-        {modalidades ? ` · ${modalidades}` : ''}
-      </Text>
-      <Text style={styles.detalhe}>{usuario?.autonomo ? 'Atuação autônoma' : 'Vinculado a uma academia'}</Text>
-      <Text style={styles.email}>{usuario?.email}</Text>
+      <View style={styles.cabecalho}>
+        <Avatar nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={64} />
+        <View style={styles.cabecalhoTextos}>
+          <Text style={styles.nome}>{usuario?.nome}</Text>
+          <Text style={styles.detalhe}>
+            {usuario?.graduacao ?? 'Graduação não informada'}
+            {modalidades ? ` · ${modalidades}` : ''}
+          </Text>
+          <Text style={styles.detalhe}>{usuario?.autonomo ? 'Atuação autônoma' : 'Vinculado a uma academia'}</Text>
+          <Text style={styles.email}>{usuario?.email}</Text>
+        </View>
+      </View>
 
+      <View style={styles.secaoPequena}>
+        <Botao titulo="Editar perfil" variante="secundario" onPress={() => navigation.navigate('EditarPerfil')} />
+      </View>
       <View style={styles.secao}>
         <Botao
           titulo="Vincular-se a uma academia"
@@ -43,10 +51,6 @@ export default function PerfilScreen() {
         />
       </View>
 
-      <View style={styles.secao}>
-        <EstadoVazio titulo="Edição de perfil" descricao="Editar modalidades e graduação chega no Passo 4." />
-      </View>
-
       <ExcluirContaSecao />
 
       <View style={styles.rodape}>
@@ -59,6 +63,8 @@ export default function PerfilScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Cores.branco },
   conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
+  cabecalho: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.padrao },
+  cabecalhoTextos: { flex: 1 },
   nome: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.preto },
   detalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
   email: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: 2 },

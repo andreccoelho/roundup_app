@@ -16,6 +16,7 @@ import PerfilScreen from '../screens/aluno/PerfilScreen';
 import MissoesScreen from '../screens/aluno/MissoesScreen';
 import ClassificacaoScreen from '../screens/aluno/ClassificacaoScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
+import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import { IconeLuva, IconeFichaTecnica, IconeBandeira, IconeCartaoPontuacao, IconePerfil } from '../components/icones';
 import { opcoesHeader, opcoesTabBar } from './opcoesCasca';
 
@@ -27,6 +28,7 @@ export type TreinarStackParamList = {
 
 export type PerfilAlunoStackParamList = {
   Perfil: undefined;
+  EditarPerfil: undefined;
   VincularAluno: undefined;
   PreferenciasNotificacao: undefined;
 };
@@ -97,6 +99,7 @@ function PerfilNavigator() {
   return (
     <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
+      <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: 'Editar perfil' }} />
       <PerfilStack.Screen name="VincularAluno" component={VincularAlunoScreen} options={{ title: 'Meus vínculos' }} />
       <PerfilStack.Screen
         name="PreferenciasNotificacao"

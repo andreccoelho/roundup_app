@@ -12,6 +12,7 @@ import PerfilScreen from '../screens/academia/PerfilScreen';
 import VisaoConsolidadaScreen from '../screens/academia/VisaoConsolidadaScreen';
 import SolicitacoesScreen from '../screens/gestor/SolicitacoesScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
+import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
 import { IconeSino, IconeTatame, IconeFaixa, IconeBandeira, IconePerfil } from '../components/icones';
 import { opcoesHeader, opcoesTabBar } from './opcoesCasca';
@@ -20,6 +21,7 @@ export type HojeAcademiaStackParamList = { Dashboard: undefined };
 
 export type PerfilAcademiaStackParamList = {
   Perfil: undefined;
+  EditarPerfil: undefined;
   Solicitacoes: undefined;
   VisaoConsolidada: undefined;
   PreferenciasNotificacao: undefined;
@@ -53,6 +55,7 @@ function PerfilNavigator() {
   return (
     <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
+      <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: 'Editar perfil' }} />
       <PerfilStack.Screen name="Solicitacoes" component={SolicitacoesScreen} options={{ title: 'Gestão de professores' }} />
       <PerfilStack.Screen name="VisaoConsolidada" component={VisaoConsolidadaScreen} options={{ title: 'Visão consolidada' }} />
       <PerfilStack.Screen
