@@ -10,6 +10,7 @@ import DashboardScreen from '../screens/professor/DashboardScreen';
 import VincularProfessorScreen from '../screens/professor/VincularProfessorScreen';
 import PerfilScreen from '../screens/professor/PerfilScreen';
 import SolicitacoesScreen from '../screens/gestor/SolicitacoesScreen';
+import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
 import { Cores } from '../theme';
 
@@ -19,6 +20,7 @@ export type PerfilProfessorStackParamList = {
   Perfil: undefined;
   VincularProfessor: undefined;
   Solicitacoes: undefined;
+  PreferenciasNotificacao: undefined;
 };
 
 export type ProfessorTabParamList = {
@@ -55,6 +57,11 @@ function PerfilNavigator() {
         options={{ title: 'Vincular-se a uma academia' }}
       />
       <PerfilStack.Screen name="Solicitacoes" component={SolicitacoesScreen} options={{ title: 'Solicitações pendentes' }} />
+      <PerfilStack.Screen
+        name="PreferenciasNotificacao"
+        component={PreferenciasNotificacaoScreen}
+        options={{ title: 'Preferências de notificação' }}
+      />
     </PerfilStack.Navigator>
   );
 }

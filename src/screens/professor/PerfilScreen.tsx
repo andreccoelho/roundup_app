@@ -35,6 +35,13 @@ export default function PerfilScreen() {
       <View style={styles.secaoPequena}>
         <Botao titulo="Solicitações pendentes" variante="secundario" onPress={() => navigation.navigate('Solicitacoes')} />
       </View>
+      <View style={styles.secaoPequena}>
+        <Botao
+          titulo="Preferências de notificação"
+          variante="secundario"
+          onPress={() => navigation.navigate('PreferenciasNotificacao')}
+        />
+      </View>
 
       <View style={styles.secao}>
         <EstadoVazio titulo="Edição de perfil" descricao="Editar modalidades e graduação chega no Passo 4." />

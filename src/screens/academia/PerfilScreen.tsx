@@ -28,6 +28,13 @@ export default function PerfilScreen() {
       <View style={styles.secaoPequena}>
         <Botao titulo="Visão consolidada" variante="secundario" onPress={() => navigation.navigate('VisaoConsolidada')} />
       </View>
+      <View style={styles.secaoPequena}>
+        <Botao
+          titulo="Preferências de notificação"
+          variante="secundario"
+          onPress={() => navigation.navigate('PreferenciasNotificacao')}
+        />
+      </View>
 
       <View style={styles.secao}>
         <EstadoVazio titulo="Edição de perfil" descricao="Editar dados da academia chega no Passo 4." />
