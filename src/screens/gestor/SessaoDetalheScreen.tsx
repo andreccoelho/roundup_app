@@ -1,9 +1,9 @@
 // RF13: janela de check-in calculada e lista de check-ins recebidos. Sem validação
 // de check-in ainda — isso é RF22 no Ciclo 3.
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { Colors } from '../../constants/colors';
+import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { buscarSessao, abrirSessao, encerrarSessao } from '../../services/sessoes';
 import { listarCheckInsPorSessao } from '../../services/checkins';
@@ -11,6 +11,11 @@ import { buscarUsuario } from '../../services/usuarios';
 import { CheckIn, Sessao } from '../../types';
 import { formatarDataHora } from '../../utils/datas';
 import { GestorStackParamList } from '../../navigation/types';
+import Botao from '../../components/ui/Botao';
+import Cartao from '../../components/ui/Cartao';
+import Esqueleto from '../../components/ui/Esqueleto';
+import EstadoVazio from '../../components/ui/EstadoVazio';
+import EstadoErro from '../../components/ui/EstadoErro';
 
 type SessaoDetalheRoute = RouteProp<GestorStackParamList, 'SessaoDetalhe'>;
 
@@ -27,14 +32,11 @@ export default function SessaoDetalheScreen() {
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [processando, setProcessando] = useState(false);
+  const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [sessao, setSessao] = useState<Sessao | null>(null);
   const [checkIns, setCheckIns] = useState<CheckInComNome[]>([]);
 
-  useEffect(() => {
-    carregarTudo();
-  }, [sessaoId]);
-
-  async function carregarTudo() {
+  const carregarTudo = useCallback(async () => {
     if (!usuario) return;
     setCarregando(true);
     setErro(null);
@@ -56,16 +58,20 @@ export default function SessaoDetalheScreen() {
     } finally {
       setCarregando(false);
     }
-  }
+  }, [usuario, sessaoId]);
+
+  useEffect(() => {
+    carregarTudo();
+  }, [carregarTudo]);
 
   async function handleAbrir() {
     setProcessando(true);
-    setErro(null);
+    setErroAcao(null);
     try {
       await abrirSessao(sessaoId);
       await carregarTudo();
     } catch (e: any) {
-      setErro(e.message);
+      setErroAcao(e.message);
     } finally {
       setProcessando(false);
     }
@@ -73,12 +79,12 @@ export default function SessaoDetalheScreen() {
 
   async function handleEncerrar() {
     setProcessando(true);
-    setErro(null);
+    setErroAcao(null);
     try {
       await encerrarSessao(sessaoId);
       await carregarTudo();
     } catch (e: any) {
-      setErro(e.message);
+      setErroAcao(e.message);
     } finally {
       setProcessando(false);
     }
@@ -86,16 +92,20 @@ export default function SessaoDetalheScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.centro}>
-        <ActivityIndicator color={Colors.preto} />
+      <View style={styles.container}>
+        <Esqueleto altura={64} repeticoes={3} />
       </View>
     );
   }
 
+  if (erro) {
+    return <EstadoErro mensagem={erro} onTentarNovamente={carregarTudo} />;
+  }
+
   if (!sessao) {
     return (
-      <View style={styles.centro}>
-        <Text style={styles.erro}>{erro ?? 'Sessão não encontrada.'}</Text>
+      <View style={styles.container}>
+        <EstadoVazio titulo="Sessão não encontrada" descricao="Ela pode ter sido removida ou você não tem mais acesso a ela." />
       </View>
     );
   }
@@ -109,33 +119,27 @@ export default function SessaoDetalheScreen() {
       </Text>
 
       <View style={styles.linhaBotoes}>
-        <TouchableOpacity
-          style={[styles.botao, (processando || sessao.status !== 'agendada') && styles.botaoDesabilitado]}
-          disabled={processando || sessao.status !== 'agendada'}
-          onPress={handleAbrir}
-        >
-          <Text style={styles.textoBotao}>Abrir sessão</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.botao, (processando || sessao.status !== 'aberta') && styles.botaoDesabilitado]}
-          disabled={processando || sessao.status !== 'aberta'}
-          onPress={handleEncerrar}
-        >
-          <Text style={styles.textoBotao}>Encerrar sessão</Text>
-        </TouchableOpacity>
+        <Botao titulo="Abrir sessão" variante="secundario" desabilitado={processando || sessao.status !== 'agendada'} onPress={handleAbrir} />
+        <Botao titulo="Encerrar sessão" variante="secundario" desabilitado={processando || sessao.status !== 'aberta'} onPress={handleEncerrar} />
       </View>
 
-      {erro && <Text style={styles.erro}>{erro}</Text>}
+      {erroAcao ? (
+        <Text style={styles.erroAcao} accessibilityRole="alert">
+          {erroAcao}
+        </Text>
+      ) : null}
 
       <Text style={styles.secaoTitulo}>Check-ins recebidos</Text>
       {checkIns.length === 0 ? (
         <Text style={styles.vazio}>Nenhum check-in recebido ainda.</Text>
       ) : (
         checkIns.map(({ checkIn, nomeAluno }) => (
-          <View key={checkIn.id} style={styles.item}>
+          <Cartao key={checkIn.id} style={styles.item}>
             <Text style={styles.itemNome}>{nomeAluno}</Text>
-            <Text style={styles.itemDetalhe}>{formatarDataHora(checkIn.dataHora)} · status: {checkIn.status}</Text>
-          </View>
+            <Text style={styles.itemDetalhe}>
+              {formatarDataHora(checkIn.dataHora)} · status: {checkIn.status}
+            </Text>
+          </Cartao>
         ))
       )}
     </ScrollView>
@@ -143,26 +147,15 @@ export default function SessaoDetalheScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.branco },
-  conteudo: { padding: 16 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.branco, padding: 16 },
-  titulo: { fontSize: 22, fontWeight: 'bold', color: Colors.preto },
-  subtitulo: { fontSize: 13, color: Colors.cinzaMedio, marginTop: 4 },
-  secaoTitulo: { fontSize: 18, fontWeight: 'bold', color: Colors.preto, marginTop: 20, marginBottom: 8 },
-  linhaBotoes: { flexDirection: 'row', marginTop: 16 },
-  botao: {
-    flex: 1,
-    backgroundColor: Colors.preto,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  botaoDesabilitado: { backgroundColor: Colors.cinzaClaro },
-  textoBotao: { color: Colors.branco, fontWeight: 'bold' },
-  erro: { color: Colors.preto, marginTop: 8, fontWeight: 'bold' },
-  vazio: { color: Colors.cinzaMedio },
-  item: { borderWidth: 1, borderColor: Colors.cinzaBorda, borderRadius: 8, padding: 12, marginBottom: 8 },
-  itemNome: { fontSize: 16, fontWeight: 'bold', color: Colors.preto },
-  itemDetalhe: { fontSize: 12, color: Colors.cinzaMedio, marginTop: 4 },
+  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  conteudo: { paddingBottom: Espacamento.enorme },
+  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
+  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.grande, marginBottom: Espacamento.pequeno },
+  linhaBotoes: { flexDirection: 'row', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
+  erroAcao: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
+  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  item: { marginBottom: Espacamento.pequeno },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
+  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
 });
