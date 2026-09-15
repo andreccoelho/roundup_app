@@ -1,12 +1,13 @@
 // RF01, RF05: cadastro do perfil Professor — nome, e-mail, senha, modalidade(s) lecionada(s),
 // graduação, indicação inicial de atuação autônoma ou vinculada (RN06: nasce autônomo por
 // padrão; o vínculo de fato com uma academia é RF07, feito depois via VincularProfessorScreen).
+// Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
+// ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores, Espacamento, Raios, TamanhoFonte } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
@@ -89,7 +90,11 @@ export default function CadastroProfessorScreen() {
         <Text style={styles.titulo}>Cadastro</Text>
         <Text style={styles.subtitulo}>Professor</Text>
 
-        {erroConta ? <Text style={styles.erroConta}>{erroConta}</Text> : null}
+        {erroConta ? (
+          <Text style={styles.erroConta} accessibilityRole="alert">
+            {erroConta}
+          </Text>
+        ) : null}
 
         <CampoTexto rotulo="Nome" placeholder="Seu nome completo" valor={nome} onAlterar={setNome} erro={erros.nome} />
         <CampoTexto
@@ -131,16 +136,22 @@ export default function CadastroProfessorScreen() {
 
         <View style={styles.campoToggle}>
           <Text style={styles.rotuloToggle}>Atuação</Text>
-          <View style={styles.toggle}>
+          <View style={styles.toggle} accessibilityRole="tablist">
             <TouchableOpacity
               style={[styles.opcaoToggle, autonomo && styles.opcaoToggleAtiva, semAnelDeFoco]}
               onPress={() => setAutonomo(true)}
+              accessibilityRole="tab"
+              accessibilityLabel="Autônomo"
+              accessibilityState={{ selected: autonomo }}
             >
               <Text style={[styles.textoToggle, autonomo && styles.textoToggleAtivo]}>Autônomo</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.opcaoToggle, !autonomo && styles.opcaoToggleAtiva, semAnelDeFoco]}
               onPress={() => setAutonomo(false)}
+              accessibilityRole="tab"
+              accessibilityLabel="Vinculado a academia"
+              accessibilityState={{ selected: !autonomo }}
             >
               <Text style={[styles.textoToggle, !autonomo && styles.textoToggleAtivo]}>Vinculado a academia</Text>
             </TouchableOpacity>
@@ -165,20 +176,31 @@ export default function CadastroProfessorScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Colors.branco },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 },
-  titulo: { fontSize: FontSize.xxl, fontWeight: '700', color: Colors.preto, marginTop: 16 },
-  subtitulo: { fontSize: FontSize.md, color: Colors.cinzaMedio, marginTop: 2, marginBottom: 28 },
-  erroConta: { color: Colors.alerta, fontSize: FontSize.sm, marginBottom: 16 },
-  campoToggle: { marginBottom: 20 },
-  rotuloToggle: { fontSize: FontSize.sm, color: Colors.cinzaMedio, marginBottom: 8 },
-  toggle: { flexDirection: 'row', borderWidth: 1, borderColor: Colors.cinzaEscuro, borderRadius: 20, overflow: 'hidden' },
-  opcaoToggle: { flex: 1, paddingVertical: 10, alignItems: 'center' },
-  opcaoToggleAtiva: { backgroundColor: Colors.preto },
-  textoToggle: { fontSize: FontSize.sm, color: Colors.cinzaEscuro },
-  textoToggleAtivo: { color: Colors.branco, fontWeight: '600' },
-  ajudaToggle: { fontSize: FontSize.xs, color: Colors.cinzaMedio, marginTop: 8 },
-  espaco: { height: 8 },
-  rodape: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 20 },
-  rodapeTexto: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  flex: { flex: 1, backgroundColor: Cores.branco },
+  scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
+  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.padrao },
+  subtitulo: {
+    fontSize: TamanhoFonte.md,
+    color: Cores.cinzaMedio,
+    marginTop: Espacamento.minimo / 2,
+    marginBottom: Espacamento.grande + Espacamento.minimo,
+  },
+  erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  campoToggle: { marginBottom: Espacamento.padrao },
+  rotuloToggle: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.pequeno },
+  toggle: { flexDirection: 'row', borderWidth: 1, borderColor: Cores.cinzaEscuro, borderRadius: Raios.pilula, overflow: 'hidden' },
+  opcaoToggle: {
+    flex: 1,
+    paddingVertical: Espacamento.medio - Espacamento.minimo / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 44,
+  },
+  opcaoToggleAtiva: { backgroundColor: Cores.preto },
+  textoToggle: { fontSize: TamanhoFonte.sm, color: Cores.cinzaEscuro },
+  textoToggleAtivo: { color: Cores.branco, fontWeight: '600' },
+  ajudaToggle: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.pequeno },
+  espaco: { height: Espacamento.pequeno },
+  rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
+  rodapeTexto: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
 });
