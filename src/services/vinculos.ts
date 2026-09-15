@@ -60,12 +60,20 @@ export async function solicitarVinculo(
   await setDoc(doc(db, COLECAO_VINCULOS, vinculo.id), vinculo);
 }
 
-export async function listarSolicitacoesPendentes(destinatarioId: string): Promise<Vinculo[]> {
-  const q = query(
-    collection(db, COLECAO_VINCULOS),
+// RF07, RF09: `perfilSolicitante` é opcional — o professor só recebe solicitação de aluno
+// (sem ambiguidade, chama sem filtro), mas a academia recebe tanto de aluno quanto de professor
+// e precisava desse filtro para não misturar os dois em "Gestão de professores"
+// (SolicitacoesScreen antes não distinguia, RF09).
+export async function listarSolicitacoesPendentes(
+  destinatarioId: string,
+  perfilSolicitante?: PerfilSolicitante,
+): Promise<Vinculo[]> {
+  const filtros = [
     where('destinatarioId', '==', destinatarioId),
     where('status', '==', 'pendente'),
-  );
+  ];
+  if (perfilSolicitante) filtros.push(where('perfilSolicitante', '==', perfilSolicitante));
+  const q = query(collection(db, COLECAO_VINCULOS), ...filtros);
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as Vinculo);
 }
