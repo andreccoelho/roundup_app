@@ -4,17 +4,20 @@
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
+import { criarConsentimento } from '../../services/consentimentosLGPD';
 import { emailValido, senhaValida, resolverModalidades, TAMANHO_MINIMO_SENHA } from '../../utils/validacaoCadastro';
 import { ehErroDeAutenticacao, mensagemErroAutenticacao, MENSAGEM_ERRO_PERSISTENCIA } from '../../utils/mensagensErro';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
 import ModalitySelector from '../../components/ui/ModalitySelector';
+
+type Rota = RouteProp<AuthStackParamList, 'CadastroAluno'>;
 
 interface Erros {
   nome?: string;
@@ -28,6 +31,7 @@ interface Erros {
 export default function CadastroAlunoScreen() {
   const { cadastrar } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'CadastroAluno'>>();
+  const { consentimentoAceito, versaoConsentimento } = useRoute<Rota>().params;
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -62,12 +66,25 @@ export default function CadastroAlunoScreen() {
     if (!validar()) return;
     setCarregando(true);
     try {
-      await cadastrar(email.trim(), senha, {
+      const novoUsuario = await cadastrar(email.trim(), senha, {
         nome: nome.trim(),
         perfil: 'aluno',
         modalidades: resolverModalidades(modalidades, outraModalidade, MODALIDADE_OUTRA),
         faixaOuGrau: faixaOuGrau.trim(),
       });
+      // RF28: registro de consentimento só é possível aqui — é o primeiro momento do fluxo em
+      // que existe um uid autenticado (ver ConsentimentoLGPDScreen.tsx). Falha aqui não desfaz
+      // a conta já criada; só fica sem o registro de auditoria — risco aceito nesta rodada.
+      try {
+        await criarConsentimento({
+          usuarioId: novoUsuario.id,
+          versao: versaoConsentimento,
+          aceito: consentimentoAceito,
+        });
+      } catch {
+        // Silencioso de propósito: a conta já existe, não há como voltar o fluxo pro
+        // consentimento sem duplicar o cadastro.
+      }
     } catch (erro: any) {
       setErroConta(
         ehErroDeAutenticacao(erro) ? mensagemErroAutenticacao(erro?.code) : MENSAGEM_ERRO_PERSISTENCIA

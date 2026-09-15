@@ -57,7 +57,7 @@ export default function SelecaoPerfilScreen() {
           <View key={destino}>
             <TouchableOpacity
               style={[styles.linha, semAnelDeFoco]}
-              onPress={() => navigation.navigate(destino)}
+              onPress={() => navigation.navigate('ConsentimentoLGPD', { destino })}
               accessibilityRole="button"
               accessibilityLabel={`${titulo}. ${descricao}`}
             >

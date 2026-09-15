@@ -5,17 +5,20 @@
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
+import { criarConsentimento } from '../../services/consentimentosLGPD';
 import { emailValido, senhaValida, resolverModalidades, TAMANHO_MINIMO_SENHA } from '../../utils/validacaoCadastro';
 import { ehErroDeAutenticacao, mensagemErroAutenticacao, MENSAGEM_ERRO_PERSISTENCIA } from '../../utils/mensagensErro';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
 import ModalitySelector from '../../components/ui/ModalitySelector';
+
+type Rota = RouteProp<AuthStackParamList, 'CadastroAcademia'>;
 
 interface Erros {
   nome?: string;
@@ -30,6 +33,7 @@ interface Erros {
 export default function CadastroAcademiaScreen() {
   const { cadastrar } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'CadastroAcademia'>>();
+  const { consentimentoAceito, versaoConsentimento } = useRoute<Rota>().params;
 
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -66,13 +70,23 @@ export default function CadastroAcademiaScreen() {
     if (!validar()) return;
     setCarregando(true);
     try {
-      await cadastrar(email.trim(), senha, {
+      const novoUsuario = await cadastrar(email.trim(), senha, {
         nome: nome.trim(),
         perfil: 'academia',
         nomeAcademia: nomeAcademia.trim(),
         endereco: endereco.trim(),
         modalidades: resolverModalidades(modalidades, outraModalidade, MODALIDADE_OUTRA),
       });
+      // RF28: ver comentário equivalente em CadastroAlunoScreen.tsx.
+      try {
+        await criarConsentimento({
+          usuarioId: novoUsuario.id,
+          versao: versaoConsentimento,
+          aceito: consentimentoAceito,
+        });
+      } catch {
+        // Silencioso de propósito — ver CadastroAlunoScreen.tsx.
+      }
     } catch (erro: any) {
       setErroConta(
         ehErroDeAutenticacao(erro) ? mensagemErroAutenticacao(erro?.code) : MENSAGEM_ERRO_PERSISTENCIA
