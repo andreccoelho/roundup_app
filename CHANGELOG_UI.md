@@ -77,3 +77,16 @@ Um commit por RF, path isolado. Suíte completa (`tsc`/`test:rules`) rodada depo
 - **RF32, queda de frequência**: `QUEDA_FREQUENCIA` (janela, mínimo de presenças) em `src/config/gamificacao.ts`, marcado provisório — critério simples (menos de N presenças nas últimas M sessões), não compara com histórico mais antigo nem considera se houve sessão agendada no intervalo. `listarAlunosComFrequencia()` calcula a flag; `CartaoAluno` ganhou prop opcional `alerta` (rótulo curto, sem variante visual nova) exibido na aba Alunos do gestor. Sem coleção nem regra nova — mesma composição de dados já usada em RF24/RF26/RF27.
 
 **Incidente de processo, sinalizado na hora**: o tipo `PreferenciasNotificacao` (RF31) foi adicionado em `types/index.ts` na mesma janela de edição do commit de RF30 (que também mexeu nesse arquivo, para `dataNascimento`/`responsavelLegal`) — os dois RFs ficaram no mesmo commit nesse único arquivo, não isolados por path como pedido. Conteúdo correto, só a granularidade do commit não seguiu a regra à risca.
+
+---
+
+## Retomada do passo pulado — contraste, professor/DashboardScreen, 3 telas de gestor, RF29
+
+Quatro itens, um commit cada (as 3 telas de gestor formaram um único commit, tratadas como um item):
+
+1. **`Cores.cinzaClaro` escurecido na fonte** (`src/theme/tokens.ts`): de `#B3B3B3` (2,10:1 sobre branco) para `#757575` (4,61:1) — muda o valor no token, não um consumo isolado; todo lugar que referencia `Cores.cinzaClaro` (direto ou via `constants/colors.ts`) fica corrigido junto. **Efeito colateral aceito, documentado no próprio token**: `cinzaClaro` fica visualmente muito perto de `cinzaMedio` (5,33:1) — não há espaço para um terceiro tom mais claro que ainda passe 4,5:1 nesta paleta específica; a hierarquia de 3 níveis de cinza para texto efetivamente colapsa para 2.
+2. **`professor/DashboardScreen.tsx`**: imports trocados para `src/theme` direto (confirma que `statusAguardando`, o achado do checkpoint anterior, já usa o token corrigido), espaçamento tokenizado, botão de presença ganhou acessibilidade. Sem reconstrução dos 4 estados — fora do escopo deste item específico.
+3. **3 telas de gestor fechadas** (`TurmasScreen`, `TurmaDetalheScreen`, `SessaoDetalheScreen`): mesmo tratamento das demais telas do Ciclo 1 já fechadas — tokens, `Esqueleto`/`EstadoVazio`/`EstadoErro`, `CampoTexto`/`Botao`/`Cartao` no lugar de `TextInput`/`TouchableOpacity`/borda solta, erro de ação separado do erro de carregamento de página (as 3 reaproveitavam o mesmo estado para os dois casos antes).
+4. **RF29 — falha real vira `Aviso` legível**: `ExcluirContaSecao.tsx` mostrava `e.message` cru em caso de falha — o texto técnico do Firestore (em inglês) lia como exceção crua. Passa a mostrar sempre a mesma frase fixa em português via `Aviso`, independente do que o SDK devolveu; o erro real vai só pro `console.warn`. `docs/DECISOES_PENDENTES.md` ganhou a seção **"Bloqueios de backend"**, deliberadamente separada da lista numerada de decisões de métrica de gamificação — documenta que RF29 falha por dois motivos empilhados (regra negada + falta de limpeza em cascata em 5 coleções) e que a Cloud Function correspondente fica fora do escopo desta sessão, marcada como bloqueio antes da entrega final.
+
+Suíte completa (`tsc`/`test:rules`) rodada depois de cada item e no fechamento — sem regressão.
