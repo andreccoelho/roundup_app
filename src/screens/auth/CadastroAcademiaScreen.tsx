@@ -1,12 +1,13 @@
 // RF01, RF04: cadastro do perfil Academia — nome do contato, e-mail, senha, nome da
 // academia, endereço, modalidade(s) oferecida(s). `nome` (contato) e `nomeAcademia`
 // (institucional) são campos distintos — ver types/index.ts.
+// Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
+// ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
@@ -89,7 +90,11 @@ export default function CadastroAcademiaScreen() {
         <Text style={styles.titulo}>Cadastro</Text>
         <Text style={styles.subtitulo}>Academia</Text>
 
-        {erroConta ? <Text style={styles.erroConta}>{erroConta}</Text> : null}
+        {erroConta ? (
+          <Text style={styles.erroConta} accessibilityRole="alert">
+            {erroConta}
+          </Text>
+        ) : null}
 
         <CampoTexto rotulo="Nome do responsável" placeholder="Quem está cadastrando" valor={nome} onAlterar={setNome} erro={erros.nome} />
         <CampoTexto
@@ -149,12 +154,17 @@ export default function CadastroAcademiaScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Colors.branco },
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32 },
-  titulo: { fontSize: FontSize.xxl, fontWeight: '700', color: Colors.preto, marginTop: 16 },
-  subtitulo: { fontSize: FontSize.md, color: Colors.cinzaMedio, marginTop: 2, marginBottom: 28 },
-  erroConta: { color: Colors.alerta, fontSize: FontSize.sm, marginBottom: 16 },
-  espaco: { height: 8 },
-  rodape: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 20 },
-  rodapeTexto: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  flex: { flex: 1, backgroundColor: Cores.branco },
+  scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
+  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.padrao },
+  subtitulo: {
+    fontSize: TamanhoFonte.md,
+    color: Cores.cinzaMedio,
+    marginTop: Espacamento.minimo / 2,
+    marginBottom: Espacamento.grande + Espacamento.minimo,
+  },
+  erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  espaco: { height: Espacamento.pequeno },
+  rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
+  rodapeTexto: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
 });
