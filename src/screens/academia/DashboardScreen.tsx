@@ -3,17 +3,18 @@
 // duas coleções já reais). Frequência geral NÃO entra nesta tela ainda — RF26, Ciclo 3, exige
 // uma agregação de check-ins por período que ainda não existe.
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { AcademiaStackParamList } from '../../navigation/AcademiaStack';
+import { DashboardAcademiaNavigationProp } from '../../navigation/AcademiaTabs';
 import { listarTurmasPorResponsavel } from '../../services/turmas';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
 import { buscarUsuario } from '../../services/usuarios';
 import LinhaFina from '../../components/LinhaFina';
+import Avatar from '../../components/ui/Avatar';
+import Etiqueta from '../../components/ui/Etiqueta';
 
 interface ProfessorVinculado {
   id: string;
@@ -22,8 +23,8 @@ interface ProfessorVinculado {
 }
 
 export default function DashboardScreen() {
-  const { usuario, logout } = useAuth();
-  const navigation = useNavigation<NativeStackNavigationProp<AcademiaStackParamList, 'Dashboard'>>();
+  const { usuario } = useAuth();
+  const navigation = useNavigation<DashboardAcademiaNavigationProp>();
 
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -67,19 +68,40 @@ export default function DashboardScreen() {
   if (carregando) {
     return (
       <View style={styles.centro}>
-        <ActivityIndicator color={Colors.preto} />
+        <ActivityIndicator color={Cores.preto} />
       </View>
     );
   }
 
+  const modalidades = usuario?.modalidades ?? [];
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+      {/* Banda full-bleed encosta no topo — ícones claros, igual ao Login/Dashboard do Aluno. */}
+      <StatusBar style="light" />
       <View style={styles.cabecalho}>
-        <Text style={styles.titulo}>{usuario?.nomeAcademia ?? 'Painel da Academia'}</Text>
-        <TouchableOpacity onPress={logout}>
-          <Text style={styles.linkSair}>Sair</Text>
-        </TouchableOpacity>
+        {/* Marca invertida como textura de fundo — mesmo tratamento do Dashboard do Aluno. */}
+        <Image
+          source={require('../../../assets/roundup_logo_invertida.png')}
+          style={styles.marcaFundo}
+          resizeMode="contain"
+        />
+        <View style={styles.cabecalhoTopo}>
+          <Avatar nome={usuario?.nomeAcademia ?? usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={52} />
+          <Text style={styles.saudacaoNome} numberOfLines={1} adjustsFontSizeToFit>
+            {usuario?.nomeAcademia ?? 'Painel da Academia'}
+          </Text>
+        </View>
+        {usuario?.endereco ? <Text style={styles.enderecoTexto}>{usuario.endereco}</Text> : null}
       </View>
+
+      {modalidades.length > 0 ? (
+        <View style={styles.modalidadesLinha}>
+          {modalidades.map((modalidade) => (
+            <Etiqueta key={modalidade} texto={modalidade} />
+          ))}
+        </View>
+      ) : null}
 
       {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
@@ -116,9 +138,6 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.rodape}>
-        <TouchableOpacity onPress={() => navigation.navigate('SolicitacoesAcademia')}>
-          <Text style={styles.linkRodape}>Solicitações pendentes</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Turmas')}>
           <Text style={styles.linkRodape}>Gerenciar turmas</Text>
         </TouchableOpacity>
@@ -128,35 +147,58 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.branco },
-  conteudo: { paddingBottom: 32, flexGrow: 1 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.branco },
+  container: { flex: 1, backgroundColor: Cores.branco },
+  conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Cores.branco },
 
+  // Banda full-bleed preta — mesmo tratamento de identidade do Dashboard do Aluno/Professor.
+  // A "identidade" aqui é a academia (nomeAcademia), não a pessoa de contato.
   cabecalho: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
+    backgroundColor: Cores.preto,
+    paddingHorizontal: Espacamento.grande,
+    paddingTop: Espacamento.extraGrande,
+    paddingBottom: Espacamento.grande,
+    overflow: 'hidden',
   },
-  titulo: { fontSize: FontSize.lg, fontWeight: '600', color: Colors.preto, flexShrink: 1, marginRight: 12 },
-  linkSair: { fontSize: FontSize.sm, color: Colors.cinzaMedio },
-  erro: { color: Colors.alerta, fontSize: FontSize.sm, marginHorizontal: 20, marginBottom: 8 },
+  marcaFundo: {
+    position: 'absolute',
+    top: -40,
+    right: -70,
+    width: 220,
+    height: 220,
+    opacity: 0.12,
+  },
+  cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
+  saudacaoNome: {
+    flex: 1,
+    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontSize: TamanhoFonte.xxl,
+    color: Cores.branco,
+    letterSpacing: 1,
+  },
+  enderecoTexto: { color: Cores.cinzaClaro, fontSize: TamanhoFonte.sm, marginTop: Espacamento.padrao },
+  modalidadesLinha: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Espacamento.pequeno,
+    paddingHorizontal: Espacamento.grande,
+    paddingTop: Espacamento.padrao,
+  },
+  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
 
-  contadoresLinha: { flexDirection: 'row', paddingHorizontal: 20, gap: 24, marginTop: 8 },
+  contadoresLinha: { flexDirection: 'row', paddingHorizontal: Espacamento.grande, gap: Espacamento.grande, marginTop: Espacamento.padrao },
   contadorItem: { flex: 1 },
-  contadorValor: { fontSize: FontSize.xxl, fontWeight: '700', color: Colors.preto },
-  contadorRotulo: { fontSize: FontSize.xs, color: Colors.cinzaMedio, marginTop: 2 },
+  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
+  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
 
-  secao: { paddingHorizontal: 20, marginTop: 24 },
-  secaoTitulo: { fontSize: FontSize.md, fontWeight: '600', color: Colors.preto, marginBottom: 8 },
-  vazio: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.pequeno },
+  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
 
-  linhaSimples: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12 },
-  itemNome: { fontSize: FontSize.md, color: Colors.preto, fontWeight: '600' },
-  itemDetalhe: { fontSize: FontSize.sm, color: Colors.cinzaMedio },
+  linhaSimples: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Espacamento.medio },
+  itemNome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600' },
+  itemDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },
 
-  rodape: { paddingHorizontal: 20, gap: 12, marginTop: 28, paddingTop: 16 },
-  linkRodape: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  rodape: { paddingHorizontal: Espacamento.grande, gap: Espacamento.medio, marginTop: Espacamento.grande + Espacamento.minimo, paddingTop: Espacamento.padrao },
+  linkRodape: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
 });
