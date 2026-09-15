@@ -1,25 +1,32 @@
-// Home do Aluno — RF14 (agenda + check-in inline). Dado real: faixa/grau e modalidades (de
-// `usuarios`), próximas sessões e estado de check-in (de `sessoes`/`checkins`, mesma lógica de
-// AgendaScreen/statusCheckIn). XP, sequência, missões e ranking NÃO entram nesta tela ainda —
-// RF16/RF21 são Ciclo 2, RF18/RF23/RF20 dependem de `missoes`/`missoesProgresso`, hoje
-// bloqueadas em firestore.rules.
+// Home do Aluno — RF14 (agenda + check-in inline), RF17/RF21 (nível e sequência, tira de
+// progresso abaixo do cabeçalho). Dado real: faixa/grau e modalidades (de `usuarios`),
+// próximas sessões e estado de check-in (de `sessoes`/`checkins`, mesma lógica de
+// AgendaScreen/statusCheckIn), pontos totais (`classificacoes`, somados entre todos os
+// vínculos) e sequência (histórico de check-ins). Base de pontuação é PROVISÓRIA — ver
+// docs/DECISOES_PENDENTES.md. Missões e ranking têm telas próprias (abas Missões/Classificação).
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { AlunoStackParamList } from '../../navigation/AlunoStack';
+import { DashboardAlunoNavigationProp } from '../../navigation/AlunoTabs';
 import { listarProximasSessoesDoAluno } from '../../services/sessoes';
-import { realizarCheckIn, buscarCheckInDaSessao } from '../../services/checkins';
+import { realizarCheckIn, buscarCheckInDaSessao, listarHistoricoDoAluno } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
+import { listarClassificacoesDoAluno } from '../../services/classificacoes';
 import { Sessao } from '../../types';
 import { formatarDataHora } from '../../utils/datas';
 import { estadoCheckIn, motivoJanelaFechada, EstadoCheckIn } from '../../utils/statusCheckIn';
-import { IconeLuva, IconeCadeado, IconeCheck } from '../../components/icones';
+import { calcularProgressoNivel, calcularSequencia, ProgressoNivel } from '../../utils/gamificacao';
 import LinhaFina from '../../components/LinhaFina';
-import Botao from '../../components/ui/Botao';
+import CartaoSessao from '../../components/ui/CartaoSessao';
+import BarraProgresso from '../../components/ui/BarraProgresso';
+import IndicadorSequencia from '../../components/ui/IndicadorSequencia';
+import Avatar from '../../components/ui/Avatar';
+import SeloFaixa from '../../components/ui/SeloFaixa';
+import Etiqueta from '../../components/ui/Etiqueta';
+import { IconeCorda } from '../../components/icones';
 
 const MAXIMO_SESSOES_EXIBIDAS = 4;
 
@@ -30,13 +37,16 @@ interface ItemSessao {
 }
 
 export default function DashboardScreen() {
-  const { usuario, logout } = useAuth();
-  const navigation = useNavigation<NativeStackNavigationProp<AlunoStackParamList, 'Dashboard'>>();
+  const { usuario } = useAuth();
+  const navigation = useNavigation<DashboardAlunoNavigationProp>();
 
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [itens, setItens] = useState<ItemSessao[]>([]);
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
+
+  const [progresso, setProgresso] = useState<ProgressoNivel | null>(null);
+  const [sequencia, setSequencia] = useState(0);
 
   const carregar = useCallback(async () => {
     if (!usuario) return;
@@ -69,6 +79,22 @@ export default function DashboardScreen() {
     carregar();
   }, [carregar]);
 
+  useEffect(() => {
+    if (!usuario) return;
+    // Tira de progresso é conteúdo secundário desta tela — falha aqui não deve bloquear o
+    // check-in, que é a RNF01. Em erro, mostra nível 1 / sequência 0 em vez de estado de erro.
+    Promise.all([listarClassificacoesDoAluno(usuario.id), listarHistoricoDoAluno(usuario.id)])
+      .then(([classificacoes, historico]) => {
+        const pontosTotais = classificacoes.reduce((soma, c) => soma + c.pontos, 0);
+        setProgresso(calcularProgressoNivel(pontosTotais));
+        setSequencia(calcularSequencia(historico));
+      })
+      .catch(() => {
+        setProgresso(calcularProgressoNivel(0));
+        setSequencia(0);
+      });
+  }, [usuario]);
+
   async function handleCheckIn(sessaoId: string) {
     if (!usuario) return;
     setEnviandoId(sessaoId);
@@ -83,22 +109,46 @@ export default function DashboardScreen() {
     }
   }
 
-  const modalidades = usuario?.modalidades?.join(', ');
+  const modalidades = usuario?.modalidades ?? [];
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+      {/* Banda full-bleed encosta no topo, igual à do LoginScreen — ícones da status bar claros. */}
+      <StatusBar style="light" />
+      {/* Banda full-bleed, não card — ficha de pesagem, não dashboard de SaaS (DESIGN_BRIEF.md). */}
       <View style={styles.cabecalho}>
-        <View>
-          <Text style={styles.saudacao}>{usuario?.nome ?? ''}</Text>
-          <Text style={styles.faixa}>
-            {usuario?.faixaOuGrau ?? 'Faixa não informada'}
-            {modalidades ? ` · ${modalidades}` : ''}
+        <View style={styles.motivoCorda} pointerEvents="none">
+          <IconeCorda tamanho={64} cor={Cores.cinzaEscuro} espessura={1} />
+        </View>
+        <View style={styles.cabecalhoTopo}>
+          <Avatar nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={52} />
+          <Text style={styles.saudacaoNome} numberOfLines={1} adjustsFontSizeToFit>
+            {usuario?.nome ?? ''}
           </Text>
         </View>
-        <TouchableOpacity onPress={logout}>
-          <Text style={styles.linkSair}>Sair</Text>
-        </TouchableOpacity>
+        <View style={styles.seloLinha}>
+          <SeloFaixa faixaOuGrau={usuario?.faixaOuGrau ?? 'Faixa não informada'} sobreEscuro />
+        </View>
       </View>
+
+      {modalidades.length > 0 ? (
+        <View style={styles.modalidadesLinha}>
+          {modalidades.map((modalidade) => (
+            <Etiqueta key={modalidade} texto={modalidade} />
+          ))}
+        </View>
+      ) : null}
+
+      {progresso ? (
+        <View style={styles.secaoProgresso}>
+          <BarraProgresso nivel={progresso.nivel} xpAtual={progresso.xpAtual} xpProximoNivel={progresso.xpProximoNivel} />
+          {sequencia > 0 ? (
+            <View style={styles.sequenciaLinha}>
+              <IndicadorSequencia dias={sequencia} />
+            </View>
+          ) : null}
+        </View>
+      ) : null}
 
       <View style={styles.secao}>
         <View style={styles.secaoCabecalho}>
@@ -111,18 +161,18 @@ export default function DashboardScreen() {
         {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
         {carregando ? (
-          <ActivityIndicator color={Colors.preto} style={styles.carregandoLista} />
+          <ActivityIndicator color={Cores.preto} style={styles.carregandoLista} />
         ) : itens.length === 0 ? (
           <Text style={styles.vazio}>Nenhuma sessão agendada nas suas turmas.</Text>
         ) : (
           itens.map(({ sessao, nomeTurma, estado }, i) => (
             <View key={sessao.id}>
-              <CardCheckIn
+              <CartaoSessao
                 nomeTurma={nomeTurma}
-                dataHora={formatarDataHora(sessao.inicio)}
+                detalhe={formatarDataHora(sessao.inicio)}
                 estado={estado}
-                enviando={enviandoId === sessao.id}
-                onPressar={() => handleCheckIn(sessao.id)}
+                carregando={enviandoId === sessao.id}
+                onCheckIn={() => handleCheckIn(sessao.id)}
                 motivo={estado === 'foraDaJanela' ? motivoJanelaFechada(sessao) : undefined}
               />
               {i < itens.length - 1 && <LinhaFina />}
@@ -135,9 +185,6 @@ export default function DashboardScreen() {
         <TouchableOpacity onPress={() => navigation.navigate('TurmasDisponiveis')}>
           <Text style={styles.linkRodape}>Turmas disponíveis</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('VincularAluno')}>
-          <Text style={styles.linkRodape}>Meus vínculos</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Historico')}>
           <Text style={styles.linkRodape}>Histórico</Text>
         </TouchableOpacity>
@@ -146,93 +193,56 @@ export default function DashboardScreen() {
   );
 }
 
-function CardCheckIn({
-  nomeTurma,
-  dataHora,
-  estado,
-  enviando,
-  onPressar,
-  motivo,
-}: {
-  nomeTurma: string;
-  dataHora: string;
-  estado: EstadoCheckIn;
-  enviando: boolean;
-  onPressar: () => void;
-  motivo?: string;
-}) {
-  if (estado === 'realizado') {
-    return (
-      <View style={styles.linhaSessao}>
-        <IconeCheck cor={Colors.checkinValidado} tamanho={20} />
-        <View style={styles.linhaSessaoTextos}>
-          <Text style={styles.itemTitulo}>{nomeTurma}</Text>
-          <Text style={styles.itemDetalhe}>{dataHora}</Text>
-        </View>
-        <Text style={styles.seloRealizado}>Feito</Text>
-      </View>
-    );
-  }
-
-  if (estado === 'foraDaJanela') {
-    return (
-      <View style={styles.linhaSessao}>
-        <IconeCadeado cor={Colors.alerta} tamanho={20} />
-        <View style={styles.linhaSessaoTextos}>
-          <Text style={styles.itemTitulo}>{nomeTurma}</Text>
-          <Text style={styles.itemDetalhe}>{dataHora}</Text>
-        </View>
-        <Text style={styles.seloFechado}>{motivo}</Text>
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.linhaSessao}>
-      <IconeLuva cor={Colors.preto} tamanho={20} />
-      <View style={styles.linhaSessaoTextos}>
-        <Text style={styles.itemTitulo}>{nomeTurma}</Text>
-        <Text style={styles.itemDetalhe}>{dataHora}</Text>
-      </View>
-      <View style={styles.botaoCheckIn}>
-        <Botao titulo={enviando ? 'Enviando...' : 'Check-in'} onPress={onPressar} carregando={enviando} />
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.branco },
-  conteudo: { paddingBottom: 32, flexGrow: 1 },
+  container: { flex: 1, backgroundColor: Cores.branco },
+  conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
 
+  // Banda full-bleed preta — hero de identidade do aluno, não um card branco a mais (anti-padrão
+  // "kit de card de SaaS" do DESIGN_BRIEF.md). overflow hidden para a corda decorativa não
+  // vazar do recorte.
   cabecalho: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
+    backgroundColor: Cores.preto,
+    paddingHorizontal: Espacamento.grande,
+    paddingTop: Espacamento.extraGrande,
+    paddingBottom: Espacamento.grande,
+    overflow: 'hidden',
   },
-  saudacao: { fontSize: FontSize.lg, fontWeight: '600', color: Colors.preto },
-  faixa: { fontSize: FontSize.sm, color: Colors.cinzaMedio, marginTop: 4 },
-  linkSair: { fontSize: FontSize.sm, color: Colors.cinzaMedio },
+  // Motivo assinatura (corda do ringue), usado uma única vez nesta tela — DESIGN_BRIEF.md.
+  // Recorte no canto, bem apagado (cinzaEscuro sobre preto), textura e não decoração central.
+  motivoCorda: { position: 'absolute', top: -8, right: -10, opacity: 0.6 },
+  cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
+  saudacaoNome: {
+    flex: 1,
+    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontSize: TamanhoFonte.xxl,
+    color: Cores.branco,
+  },
+  seloLinha: { marginTop: Espacamento.padrao },
 
-  secao: { paddingHorizontal: 20, marginTop: 20 },
+  modalidadesLinha: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Espacamento.pequeno,
+    paddingHorizontal: Espacamento.grande,
+    paddingTop: Espacamento.padrao,
+  },
+
+  secaoProgresso: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.padrao },
+  sequenciaLinha: { marginTop: Espacamento.medio },
+
+  secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
   secaoCabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  secaoTitulo: { fontSize: FontSize.md, fontWeight: '600', color: Colors.preto },
-  linkVerMais: { fontSize: FontSize.sm, color: Colors.cinzaMedio },
-  carregandoLista: { marginTop: 12 },
-  vazio: { color: Colors.cinzaMedio, fontSize: FontSize.sm, marginTop: 12 },
-  erro: { color: Colors.alerta, fontSize: FontSize.sm, marginTop: 8 },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
+  linkVerMais: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },
+  carregandoLista: { marginTop: Espacamento.medio },
+  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
+  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.pequeno },
 
-  linhaSessao: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, gap: 12 },
-  linhaSessaoTextos: { flex: 1 },
-  itemTitulo: { fontSize: FontSize.md, fontWeight: '600', color: Colors.preto },
-  itemDetalhe: { fontSize: FontSize.xs, color: Colors.cinzaMedio, marginTop: 2 },
-  botaoCheckIn: { minWidth: 110 },
-  seloRealizado: { color: Colors.checkinValidado, fontSize: FontSize.xs, fontWeight: '600' },
-  seloFechado: { color: Colors.alerta, fontSize: FontSize.xs, maxWidth: 110, textAlign: 'right' },
-
-  rodape: { paddingHorizontal: 20, gap: 12, marginTop: 28, paddingTop: 16 },
-  linkRodape: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  rodape: {
+    paddingHorizontal: Espacamento.grande,
+    gap: Espacamento.medio,
+    marginTop: Espacamento.grande + Espacamento.minimo,
+    paddingTop: Espacamento.padrao,
+  },
+  linkRodape: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
 });

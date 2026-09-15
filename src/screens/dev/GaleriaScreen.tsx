@@ -4,7 +4,7 @@
 // real (ver SCRIPT.md, Passo 2).
 import { useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
 
 import {
   IconeLuva,
@@ -286,8 +286,11 @@ export default function GaleriaScreen() {
         <LinhaClassificacao posicao={2} nome="Carlos Eduardo" pontos={860} />
       </Secao>
 
-      <Secao titulo="SeloFaixa (sem consumidor real ainda)">
+      <Secao titulo="SeloFaixa — usado na banda de topo do Dashboard do Aluno">
         <SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" />
+        <View style={styles.amostraEscura}>
+          <SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" sobreEscuro />
+        </View>
       </Secao>
 
       <Secao titulo="CartaoAluno (Ciclo 3, sem consumidor real ainda)">
@@ -318,4 +321,12 @@ const styles = StyleSheet.create({
   rotuloIcone: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, textAlign: 'center' },
 
   tituloScreenHomebase: { fontFamily: FamiliaFonte.homebaseDisplay, fontSize: TamanhoFonte.xxl, color: Cores.preto },
+
+  amostraEscura: {
+    backgroundColor: Cores.preto,
+    borderRadius: Raios.medio,
+    padding: Espacamento.padrao,
+    marginTop: Espacamento.pequeno,
+    alignItems: 'flex-start',
+  },
 });
