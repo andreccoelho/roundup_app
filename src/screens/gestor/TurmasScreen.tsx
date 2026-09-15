@@ -1,21 +1,20 @@
 // RF10: lista as turmas do responsável e permite criar uma nova
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors } from '../../constants/colors';
+import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { criarTurma, listarTurmasPorResponsavel } from '../../services/turmas';
 import { NivelTurma, Turma } from '../../types';
 import { GestorStackParamList } from '../../navigation/types';
+import CampoTexto from '../../components/ui/CampoTexto';
+import Etiqueta from '../../components/ui/Etiqueta';
+import Botao from '../../components/ui/Botao';
+import Cartao from '../../components/ui/Cartao';
+import Esqueleto from '../../components/ui/Esqueleto';
+import EstadoVazio from '../../components/ui/EstadoVazio';
+import EstadoErro from '../../components/ui/EstadoErro';
 
 const NIVEIS: NivelTurma[] = ['iniciante', 'intermediario', 'avancado'];
 
@@ -31,29 +30,29 @@ export default function TurmasScreen() {
   const [modalidade, setModalidade] = useState('');
   const [nivel, setNivel] = useState<NivelTurma>('iniciante');
   const [criando, setCriando] = useState(false);
+  const [erroForm, setErroForm] = useState<string | null>(null);
 
-  useEffect(() => {
-    carregarTurmas();
-  }, []);
-
-  async function carregarTurmas() {
+  const carregarTurmas = useCallback(async () => {
     if (!usuario) return;
     setCarregando(true);
     setErro(null);
     try {
-      const lista = await listarTurmasPorResponsavel(usuario.id);
-      setTurmas(lista);
+      setTurmas(await listarTurmasPorResponsavel(usuario.id));
     } catch (e: any) {
       setErro(e.message);
     } finally {
       setCarregando(false);
     }
-  }
+  }, [usuario]);
+
+  useEffect(() => {
+    carregarTurmas();
+  }, [carregarTurmas]);
 
   async function handleCriar() {
     if (!usuario || !nome.trim() || !modalidade.trim()) return;
     setCriando(true);
-    setErro(null);
+    setErroForm(null);
     try {
       await criarTurma({
         nome: nome.trim(),
@@ -67,7 +66,7 @@ export default function TurmasScreen() {
       setNivel('iniciante');
       await carregarTurmas();
     } catch (e: any) {
-      setErro(e.message);
+      setErroForm(e.message);
     } finally {
       setCriando(false);
     }
@@ -76,55 +75,46 @@ export default function TurmasScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
       <Text style={styles.secaoTitulo}>Nova turma</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Nome da turma"
-        placeholderTextColor={Colors.cinzaClaro}
-        value={nome}
-        onChangeText={setNome}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Modalidade"
-        placeholderTextColor={Colors.cinzaClaro}
-        value={modalidade}
-        onChangeText={setModalidade}
-      />
+      <CampoTexto rotulo="Nome da turma" placeholder="Ex.: Muay Thai — Turma A" valor={nome} onAlterar={setNome} />
+      <CampoTexto rotulo="Modalidade" placeholder="Ex.: Muay Thai" valor={modalidade} onAlterar={setModalidade} />
+
+      <Text style={styles.rotuloCampo}>Nível</Text>
       <View style={styles.linhaNiveis}>
-        {NIVEIS.map(opcao => (
-          <TouchableOpacity
-            key={opcao}
-            style={[styles.chip, nivel === opcao && styles.chipSelecionado]}
-            onPress={() => setNivel(opcao)}
-          >
-            <Text style={[styles.chipTexto, nivel === opcao && styles.chipTextoSelecionado]}>{opcao}</Text>
-          </TouchableOpacity>
+        {NIVEIS.map((opcao) => (
+          <Etiqueta key={opcao} texto={opcao} selecionada={nivel === opcao} onPress={() => setNivel(opcao)} />
         ))}
       </View>
-      <TouchableOpacity
-        style={[styles.botaoPrimario, (!nome.trim() || !modalidade.trim() || criando) && styles.botaoDesabilitado]}
-        disabled={!nome.trim() || !modalidade.trim() || criando}
-        onPress={handleCriar}
-      >
-        <Text style={styles.textoBotaoPrimario}>{criando ? 'Criando...' : 'Criar turma'}</Text>
-      </TouchableOpacity>
 
-      {erro && <Text style={styles.erro}>{erro}</Text>}
+      {erroForm ? (
+        <Text style={styles.erroForm} accessibilityRole="alert">
+          {erroForm}
+        </Text>
+      ) : null}
 
-      <Text style={styles.secaoTitulo}>Minhas turmas</Text>
+      <View style={styles.espaco} />
+      <Botao titulo="Criar turma" onPress={handleCriar} carregando={criando} desabilitado={!nome.trim() || !modalidade.trim()} />
+
+      <Text style={[styles.secaoTitulo, styles.secaoListaTitulo]}>Minhas turmas</Text>
       {carregando ? (
-        <ActivityIndicator color={Colors.preto} />
+        <Esqueleto altura={64} repeticoes={3} />
+      ) : erro ? (
+        <EstadoErro mensagem={erro} onTentarNovamente={carregarTurmas} />
       ) : turmas.length === 0 ? (
-        <Text style={styles.vazio}>Nenhuma turma criada ainda.</Text>
+        <EstadoVazio titulo="Nenhuma turma criada ainda" descricao="Crie sua primeira turma no formulário acima." />
       ) : (
-        turmas.map(turma => (
+        turmas.map((turma) => (
           <TouchableOpacity
             key={turma.id}
-            style={styles.item}
             onPress={() => navigation.navigate('TurmaDetalhe', { turmaId: turma.id })}
+            accessibilityRole="button"
+            accessibilityLabel={`${turma.nome}, ${turma.modalidade}, ${turma.nivel}, ${turma.ativa ? 'ativa' : 'inativa'}`}
           >
-            <Text style={styles.itemNome}>{turma.nome}</Text>
-            <Text style={styles.itemDetalhe}>{turma.modalidade} · {turma.nivel} · {turma.ativa ? 'ativa' : 'inativa'}</Text>
+            <Cartao style={styles.item}>
+              <Text style={styles.itemNome}>{turma.nome}</Text>
+              <Text style={styles.itemDetalhe}>
+                {turma.modalidade} · {turma.nivel} · {turma.ativa ? 'ativa' : 'inativa'}
+              </Text>
+            </Cartao>
           </TouchableOpacity>
         ))
       )}
@@ -133,41 +123,15 @@ export default function TurmasScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.branco },
-  conteudo: { padding: 16 },
-  secaoTitulo: { fontSize: 18, fontWeight: 'bold', color: Colors.preto, marginTop: 16, marginBottom: 8 },
-  input: {
-    borderWidth: 1,
-    borderColor: Colors.cinzaBorda,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    color: Colors.preto,
-  },
-  linhaNiveis: { flexDirection: 'row', marginBottom: 12 },
-  chip: {
-    borderWidth: 1,
-    borderColor: Colors.cinzaBorda,
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginRight: 8,
-  },
-  chipSelecionado: { backgroundColor: Colors.preto, borderColor: Colors.preto },
-  chipTexto: { color: Colors.preto, fontSize: 12 },
-  chipTextoSelecionado: { color: Colors.branco },
-  botaoPrimario: { backgroundColor: Colors.preto, borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
-  botaoDesabilitado: { backgroundColor: Colors.cinzaClaro },
-  textoBotaoPrimario: { color: Colors.branco, fontWeight: 'bold' },
-  erro: { color: Colors.preto, marginTop: 8, fontWeight: 'bold' },
-  vazio: { color: Colors.cinzaMedio },
-  item: {
-    borderWidth: 1,
-    borderColor: Colors.cinzaBorda,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  itemNome: { fontSize: 16, fontWeight: 'bold', color: Colors.preto },
-  itemDetalhe: { fontSize: 12, color: Colors.cinzaMedio, marginTop: 4 },
+  container: { flex: 1, backgroundColor: Cores.branco },
+  conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
+  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.preto, marginBottom: Espacamento.pequeno },
+  secaoListaTitulo: { marginTop: Espacamento.grande },
+  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.pequeno },
+  linhaNiveis: { flexDirection: 'row', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  erroForm: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
+  espaco: { height: Espacamento.minimo },
+  item: { marginBottom: Espacamento.pequeno },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
+  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
 });
