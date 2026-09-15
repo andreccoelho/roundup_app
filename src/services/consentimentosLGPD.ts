@@ -1,5 +1,5 @@
-// Adiado para o Ciclo 4 (RF28, RNF10: consentimento LGPD registrado no cadastro).
-// Esqueleto mantido; firestore.rules já publica a regra final (é registro de auditoria imutável).
+// RF28, RNF10: consentimento LGPD registrado no cadastro. Registro de auditoria imutável —
+// firestore.rules nega update/delete para qualquer um, inclusive o dono.
 import {
   doc, getDoc, setDoc, updateDoc, deleteDoc,
   collection, query, where, getDocs,
@@ -9,8 +9,13 @@ import { ConsentimentoLGPD } from '../types';
 
 const COLECAO = 'consentimentosLGPD';
 
-export async function criarConsentimento(consentimento: ConsentimentoLGPD): Promise<void> {
-  await setDoc(doc(db, COLECAO, consentimento.id), consentimento);
+// Mesmo padrão de criarTurma()/criarMissao()/criarGraduacao(): gera id e dataHora aqui, o
+// caller só passa os campos de negócio. Primeiro consumidor real desta função.
+export async function criarConsentimento(dados: Omit<ConsentimentoLGPD, 'id' | 'dataHora'>): Promise<ConsentimentoLGPD> {
+  const ref = doc(collection(db, COLECAO));
+  const consentimento: ConsentimentoLGPD = { id: ref.id, dataHora: new Date(), ...dados };
+  await setDoc(ref, consentimento);
+  return consentimento;
 }
 
 export async function buscarConsentimento(id: string): Promise<ConsentimentoLGPD | null> {
