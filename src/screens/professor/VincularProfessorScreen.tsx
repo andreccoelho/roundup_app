@@ -1,122 +1,104 @@
-import { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Colors } from '../../constants/colors';
+// RF07: professor solicita vínculo com uma academia
+import { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarAcademiasDisponiveis, solicitarVinculo } from '../../services/vinculos';
 import { Usuario } from '../../types';
+import Cartao from '../../components/ui/Cartao';
+import Botao from '../../components/ui/Botao';
+import Esqueleto from '../../components/ui/Esqueleto';
+import EstadoVazio from '../../components/ui/EstadoVazio';
+import EstadoErro from '../../components/ui/EstadoErro';
 
 export default function VincularProfessorScreen() {
   const { usuario } = useAuth();
   const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
   const [academias, setAcademias] = useState<Usuario[]>([]);
   const [solicitados, setSolicitados] = useState<Set<string>>(new Set());
+  const [erroSolicitacao, setErroSolicitacao] = useState<string | null>(null);
 
-  useEffect(() => {
-    carregarAcademias();
-  }, []);
-
-  async function carregarAcademias() {
+  const carregarAcademias = useCallback(async () => {
     setCarregando(true);
+    setErro(null);
     try {
-      const lista = await listarAcademiasDisponiveis();
-      setAcademias(lista);
-    } catch (erro: any) {
-      Alert.alert('Erro ao carregar academias', erro.message);
+      setAcademias(await listarAcademiasDisponiveis());
+    } catch (e: any) {
+      setErro(e.message);
     } finally {
       setCarregando(false);
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    carregarAcademias();
+  }, [carregarAcademias]);
 
   async function handleSolicitar(academia: Usuario) {
     if (!usuario) return;
+    setErroSolicitacao(null);
     try {
       await solicitarVinculo(usuario.id, academia.id, 'professor', 'academia');
-      setSolicitados(prev => new Set(prev).add(academia.id));
-    } catch (erro: any) {
-      Alert.alert('Erro ao solicitar vínculo', erro.message);
+      setSolicitados((prev) => new Set(prev).add(academia.id));
+    } catch (e: any) {
+      setErroSolicitacao(e.message);
     }
   }
 
   if (carregando) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator color={Colors.preto} />
+        <Esqueleto altura={64} repeticoes={4} />
+      </View>
+    );
+  }
+
+  if (erro) {
+    return <EstadoErro mensagem={erro} onTentarNovamente={carregarAcademias} />;
+  }
+
+  if (academias.length === 0) {
+    return (
+      <View style={styles.container}>
+        <EstadoVazio titulo="Nenhuma academia disponível" descricao="Ainda não há academias cadastradas para se vincular." />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.lista}>
-        {academias.length === 0 && <Text style={styles.vazio}>Nenhuma academia disponível.</Text>}
-        {academias.map(academia => {
-          const jaSolicitado = solicitados.has(academia.id);
-          return (
-            <View key={academia.id} style={styles.item}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+      {erroSolicitacao ? (
+        <Text style={styles.erroInline} accessibilityRole="alert">
+          {erroSolicitacao}
+        </Text>
+      ) : null}
+
+      {academias.map((academia) => {
+        const jaSolicitado = solicitados.has(academia.id);
+        return (
+          <Cartao key={academia.id} style={styles.item}>
+            <View style={styles.itemLinha}>
               <Text style={styles.itemNome}>{academia.nome}</Text>
-              <TouchableOpacity
-                style={[styles.botaoSolicitar, jaSolicitado && styles.botaoSolicitarDesabilitado]}
-                disabled={jaSolicitado}
+              <Botao
+                titulo={jaSolicitado ? 'Solicitado' : 'Solicitar vínculo'}
+                variante={jaSolicitado ? 'secundario' : 'primario'}
+                desabilitado={jaSolicitado}
                 onPress={() => handleSolicitar(academia)}
-              >
-                <Text style={styles.textoBotaoSolicitar}>{jaSolicitado ? 'Solicitado' : 'Solicitar vínculo'}</Text>
-              </TouchableOpacity>
+              />
             </View>
-          );
-        })}
-      </ScrollView>
-    </View>
+          </Cartao>
+        );
+      })}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.branco,
-  },
-  lista: {
-    padding: 16,
-  },
-  vazio: {
-    color: Colors.cinzaMedio,
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: Colors.cinzaBorda,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-  },
-  itemNome: {
-    fontSize: 16,
-    color: Colors.preto,
-    fontWeight: 'bold',
-    flex: 1,
-    marginRight: 12,
-  },
-  botaoSolicitar: {
-    backgroundColor: Colors.preto,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  botaoSolicitarDesabilitado: {
-    backgroundColor: Colors.cinzaClaro,
-  },
-  textoBotaoSolicitar: {
-    color: Colors.branco,
-    fontWeight: 'bold',
-    fontSize: 12,
-  },
+  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  conteudo: { paddingBottom: Espacamento.enorme },
+  erroInline: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  item: { marginBottom: Espacamento.pequeno },
+  itemLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Espacamento.medio },
+  itemNome: { flex: 1, fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
 });
