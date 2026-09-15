@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// RF06: foto de perfil. Caminho fixo por usuário — só o dono escreve/apaga a própria foto;
+// leitura aberta a qualquer autenticado (mesmo padrão de usuarios/{uid} no firestore.rules:
+// necessário para exibir foto de outros usuários em listas — CartaoAluno, LinhaClassificacao).
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /usuarios/{usuarioId}/foto.jpg {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.uid == usuarioId
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == usuarioId;
+    }
+  }
+}
