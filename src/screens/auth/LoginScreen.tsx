@@ -1,11 +1,12 @@
 // RF02: login por e-mail/senha, autenticação delegada ao Firebase; recuperação de senha e
 // cadastro vivem em telas próprias (RecuperarSenhaScreen, SelecaoPerfilScreen).
+// Sem os 4 estados de carregando/vazio/erro/conteúdo: é um formulário sem busca de dados no
+// mount, só ação de envio (já representada pelo `carregando` do próprio Botao "Entrar").
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { emailValido } from '../../utils/validacaoCadastro';
@@ -55,11 +56,15 @@ export default function LoginScreen() {
         <View style={styles.banda}>
           <Text style={styles.wordmark}>RoundUp</Text>
           <Text style={styles.tagline}>Treine. Evolua. Suba de nível.</Text>
-          <IconeCorda tamanho={32} cor={Colors.cinzaClaro} espessura={1.2} />
+          <IconeCorda tamanho={32} cor={Cores.cinzaClaro} espessura={1.2} />
         </View>
 
         <View style={styles.corpo}>
-          {erroConta ? <Text style={styles.erroConta}>{erroConta}</Text> : null}
+          {erroConta ? (
+            <Text style={styles.erroConta} accessibilityRole="alert">
+              {erroConta}
+            </Text>
+          ) : null}
 
           <CampoTexto
             rotulo="E-mail"
@@ -98,6 +103,12 @@ export default function LoginScreen() {
               onPress={() => navigation.navigate('SelecaoPerfil')}
             />
           </View>
+
+          {__DEV__ ? (
+            <View style={styles.rodapeDev}>
+              <Botao titulo="Galeria de componentes (dev)" variante="texto" onPress={() => navigation.navigate('Galeria')} />
+            </View>
+          ) : null}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -105,19 +116,20 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Colors.branco },
+  flex: { flex: 1, backgroundColor: Cores.branco },
   scroll: { flexGrow: 1 },
   banda: {
-    backgroundColor: Colors.preto,
-    paddingTop: 96,
-    paddingBottom: 40,
+    backgroundColor: Cores.preto,
+    paddingTop: Espacamento.enorme * 2,
+    paddingBottom: Espacamento.extraGrande + Espacamento.pequeno,
     alignItems: 'center',
   },
-  wordmark: { color: Colors.branco, fontSize: FontSize.xxl, fontWeight: '700', letterSpacing: 1 },
-  tagline: { color: Colors.cinzaClaro, fontSize: FontSize.sm, marginTop: 8, marginBottom: 20 },
-  corpo: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 24 },
-  erroConta: { color: Colors.alerta, fontSize: FontSize.sm, marginBottom: 16 },
-  linhaEsqueci: { alignItems: 'flex-end', marginBottom: 24, marginTop: -8 },
-  rodape: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginTop: 20 },
-  rodapeTexto: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  wordmark: { color: Cores.branco, fontSize: TamanhoFonte.xxl, fontWeight: '700', letterSpacing: 1 },
+  tagline: { color: Cores.cinzaClaro, fontSize: TamanhoFonte.sm, marginTop: Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  corpo: { paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.extraGrande, paddingBottom: Espacamento.grande },
+  erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  linhaEsqueci: { alignItems: 'flex-end', marginBottom: Espacamento.grande, marginTop: -Espacamento.pequeno },
+  rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
+  rodapeTexto: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  rodapeDev: { alignItems: 'center', marginTop: Espacamento.extraGrande },
 });
