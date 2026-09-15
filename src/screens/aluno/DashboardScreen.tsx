@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
     fontFamily: FamiliaFonte.homebaseDisplay,
     fontSize: TamanhoFonte.xxl,
     color: Cores.branco,
+    letterSpacing: 1,
   },
   seloLinha: { marginTop: Espacamento.padrao },
 
