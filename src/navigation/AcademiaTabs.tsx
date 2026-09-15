@@ -1,7 +1,8 @@
 // Raiz "Visão do Gestor" para Academia (SCRIPT.md, Passo 3): mesmas abas Hoje, Turmas, Alunos,
 // Missões, Perfil de ProfessorTabs.tsx (Turmas/Alunos/Missões compartilhadas via
 // GestorTabsCompartilhado.tsx). A academia ganha, dentro da aba Perfil, "Gestão de professores"
-// (reaproveita SolicitacoesScreen, RF07 lado destinatário) e "Visão consolidada" (RF27).
+// e "Gestão de alunos" (as duas reaproveitam SolicitacoesScreen, RF07/RF09 lado destinatário,
+// cada uma com seu perfilSolicitante) e "Visão consolidada" (RF27).
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -22,7 +23,11 @@ export type HojeAcademiaStackParamList = { Dashboard: undefined };
 export type PerfilAcademiaStackParamList = {
   Perfil: undefined;
   EditarPerfil: undefined;
-  Solicitacoes: undefined;
+  // RF09: a academia recebe vínculo de aluno e de professor — duas rotas para a mesma
+  // SolicitacoesScreen, cada uma passando seu perfilSolicitante, para não misturar os dois numa
+  // lista só (era o bug: pedido de aluno aparecia dentro de "Gestão de professores").
+  SolicitacoesProfessores: { perfilSolicitante: 'professor' };
+  SolicitacoesAlunos: { perfilSolicitante: 'aluno' };
   VisaoConsolidada: undefined;
   PreferenciasNotificacao: undefined;
 };
@@ -56,7 +61,18 @@ function PerfilNavigator() {
     <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
       <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: 'Editar perfil' }} />
-      <PerfilStack.Screen name="Solicitacoes" component={SolicitacoesScreen} options={{ title: 'Gestão de professores' }} />
+      <PerfilStack.Screen
+        name="SolicitacoesProfessores"
+        component={SolicitacoesScreen}
+        initialParams={{ perfilSolicitante: 'professor' }}
+        options={{ title: 'Gestão de professores' }}
+      />
+      <PerfilStack.Screen
+        name="SolicitacoesAlunos"
+        component={SolicitacoesScreen}
+        initialParams={{ perfilSolicitante: 'aluno' }}
+        options={{ title: 'Gestão de alunos' }}
+      />
       <PerfilStack.Screen name="VisaoConsolidada" component={VisaoConsolidadaScreen} options={{ title: 'Visão consolidada' }} />
       <PerfilStack.Screen
         name="PreferenciasNotificacao"
