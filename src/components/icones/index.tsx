@@ -134,3 +134,85 @@ export function IconePoste({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: I
     </Svg>
   );
 }
+
+// Ícones da casca de navegação (tab bar) — uma metáfora por aba, mesmo vocabulário visual do
+// DESIGN_BRIEF.md (ficha técnica, cartão de pontuação do juiz, tatame), não ícone de estoque
+// genérico. IconeLuva (Treinar), IconeSino (Hoje) e IconeFaixa (Alunos) já existiam acima e são
+// reaproveitados nas abas correspondentes — ver AlunoTabs.tsx/ProfessorTabs.tsx/AcademiaTabs.tsx.
+
+// RF14: ficha técnica (fight card) — lista de próximos compromissos, para a aba Agenda
+export function IconeFichaTecnica({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M7 4.5h10a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"
+        stroke={cor}
+        strokeWidth={espessura}
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M9.5 3.5h5a1 1 0 0 1 1 1v1h-7v-1a1 1 0 0 1 1-1Z"
+        stroke={cor}
+        strokeWidth={espessura}
+        strokeLinejoin="round"
+      />
+      <Line x1="8.5" y1="10" x2="15.5" y2="10" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Line x1="8.5" y1="13.5" x2="15.5" y2="13.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Line x1="8.5" y1="17" x2="12.5" y2="17" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// RF18: bandeira de checkpoint — objetivo/meta, para a aba Missões (aluno e gestor)
+export function IconeBandeira({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Line x1="6" y1="3.5" x2="6" y2="20.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Path
+        d="M6 4.5h10.5c.9 0 1.3 1 .7 1.7l-2.6 2.8 2.6 2.8c.6.7.2 1.7-.7 1.7H6V4.5Z"
+        stroke={cor}
+        strokeWidth={espessura}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// RF20: cartão de pontuação do juiz — ranking, para a aba Classificação
+export function IconeCartaoPontuacao({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 5.5h14a1 1 0 0 1 1 1V17a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"
+        stroke={cor}
+        strokeWidth={espessura}
+        strokeLinejoin="round"
+      />
+      <Line x1="4" y1="9.5" x2="20" y2="9.5" stroke={cor} strokeWidth={espessura} />
+      <Line x1="8" y1="13" x2="8" y2="14.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Line x1="12" y1="13" x2="12" y2="14.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Line x1="16" y1="13" x2="16" y2="14.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// RF06: silhueta simples — perfil/conta, para a aba Perfil (aluno e gestor)
+export function IconePerfil({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="8" r="3.2" stroke={cor} strokeWidth={espessura} />
+      <Path d="M5.5 20c.6-3.6 3.4-6 6.5-6s5.9 2.4 6.5 6" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// RF10: tatame visto de cima (piso dividido em módulos) — turmas, para a aba Turmas do gestor
+export function IconeTatame({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M4 4h16v16H4V4Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
+      <Line x1="4" y1="12" x2="20" y2="12" stroke={cor} strokeWidth={espessura} />
+      <Line x1="12" y1="4" x2="12" y2="20" stroke={cor} strokeWidth={espessura} />
+    </Svg>
+  );
+}
