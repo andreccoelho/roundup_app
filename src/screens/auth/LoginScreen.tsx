@@ -3,8 +3,7 @@
 // Sem os 4 estados de carregando/vazio/erro/conteúdo: é um formulário sem busca de dados no
 // mount, só ação de envio (já representada pelo `carregando` do próprio Botao "Entrar").
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
@@ -14,7 +13,6 @@ import { emailValido } from '../../utils/validacaoCadastro';
 import { mensagemErroAutenticacao } from '../../utils/mensagensErro';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
-import { IconeCorda } from '../../components/icones';
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -53,13 +51,16 @@ export default function LoginScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Banda preta encosta no topo da tela — ícones claros para não sumir contra o fundo escuro. */}
-      <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.banda}>
-          <Text style={styles.wordmark}>RoundUp</Text>
+          <Image
+            source={require('../../../assets/roundup_logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+            accessibilityRole="image"
+            accessibilityLabel="RoundUp"
+          />
           <Text style={styles.tagline}>Treine. Evolua. Suba de nível.</Text>
-          <IconeCorda tamanho={32} cor={Cores.cinzaClaro} espessura={1.2} />
         </View>
 
         <View style={styles.corpo}>
@@ -121,14 +122,16 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Cores.branco },
   scroll: { flexGrow: 1 },
+  // Tela toda clara — a marca (assets/roundup_logo.png) é desenhada em preto, precisa de fundo
+  // claro para aparecer. Sem banda escura aqui, ao contrário do Dashboard do Aluno.
   banda: {
-    backgroundColor: Cores.preto,
-    paddingTop: Espacamento.enorme * 2,
-    paddingBottom: Espacamento.extraGrande + Espacamento.pequeno,
+    backgroundColor: Cores.branco,
+    paddingTop: Espacamento.enorme,
+    paddingBottom: Espacamento.grande,
     alignItems: 'center',
   },
-  wordmark: { color: Cores.branco, fontSize: TamanhoFonte.xxl, fontWeight: '700', letterSpacing: 1 },
-  tagline: { color: Cores.cinzaClaro, fontSize: TamanhoFonte.sm, marginTop: Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  logo: { width: 180, height: 180 },
+  tagline: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, marginTop: -Espacamento.padrao },
   corpo: { paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.extraGrande, paddingBottom: Espacamento.grande },
   erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
   linhaEsqueci: { alignItems: 'flex-end', marginBottom: Espacamento.grande, marginTop: -Espacamento.pequeno },
