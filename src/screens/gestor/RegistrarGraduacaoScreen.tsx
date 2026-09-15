@@ -11,7 +11,7 @@ import { criarGraduacao } from '../../services/graduacoes';
 import { AlunosStackParamList } from '../../navigation/GestorTabsCompartilhado';
 import Botao from '../../components/ui/Botao';
 import Dialogo from '../../components/ui/Dialogo';
-import Aviso from '../../components/ui/Aviso';
+import CelebracaoGraduacao from '../../components/ui/CelebracaoGraduacao';
 
 type Rota = RouteProp<AlunosStackParamList, 'RegistrarGraduacao'>;
 
@@ -26,7 +26,7 @@ export default function RegistrarGraduacaoScreen() {
   const [erro, setErro] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
   const [salvando, setSalvando] = useState(false);
-  const [avisoVisivel, setAvisoVisivel] = useState(false);
+  const [graduacaoRegistrada, setGraduacaoRegistrada] = useState<{ grau: string; modalidade: string } | null>(null);
 
   function handlePedirConfirmacao() {
     setErro(null);
@@ -41,16 +41,18 @@ export default function RegistrarGraduacaoScreen() {
     if (!usuario) return;
     setSalvando(true);
     try {
+      const grauConfirmado = grau.trim();
+      const modalidadeConfirmada = modalidade.trim();
       await criarGraduacao({
         alunoId,
         responsavelId: usuario.id,
-        modalidade: modalidade.trim(),
-        grau: grau.trim(),
+        modalidade: modalidadeConfirmada,
+        grau: grauConfirmado,
         dataGraduacao: new Date(),
         ...(observacoes.trim() ? { observacoes: observacoes.trim() } : {}),
       });
       setConfirmando(false);
-      setAvisoVisivel(true);
+      setGraduacaoRegistrada({ grau: grauConfirmado, modalidade: modalidadeConfirmada });
       setModalidade('');
       setGrau('');
       setObservacoes('');
@@ -93,14 +95,18 @@ export default function RegistrarGraduacaoScreen() {
         onCancelar={() => setConfirmando(false)}
       />
 
-      <Aviso
-        mensagem="Graduação registrada."
-        visivel={avisoVisivel}
-        onFechar={() => {
-          setAvisoVisivel(false);
-          navigation.goBack();
-        }}
-      />
+      {graduacaoRegistrada ? (
+        <CelebracaoGraduacao
+          visivel
+          nomeAluno={nomeAluno}
+          grau={graduacaoRegistrada.grau}
+          modalidade={graduacaoRegistrada.modalidade}
+          onFechar={() => {
+            setGraduacaoRegistrada(null);
+            navigation.goBack();
+          }}
+        />
+      ) : null}
     </KeyboardAvoidingView>
   );
 }
