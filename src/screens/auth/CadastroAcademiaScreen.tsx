@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
@@ -170,7 +170,14 @@ export default function CadastroAcademiaScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Cores.branco },
   scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
-  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.padrao },
+  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
+  titulo: {
+    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontSize: TamanhoFonte.xxl,
+    color: Cores.preto,
+    marginTop: Espacamento.padrao,
+    ...Sombras.duraTitulo,
+  },
   subtitulo: {
     fontSize: TamanhoFonte.md,
     color: Cores.cinzaMedio,

@@ -6,7 +6,7 @@ import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } fr
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
 import { auth } from '../../services/firebase';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { emailValido } from '../../utils/validacaoCadastro';
@@ -88,7 +88,14 @@ export default function RecuperarSenhaScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: Cores.branco },
   scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.grande },
-  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.padrao },
+  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
+  titulo: {
+    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontSize: TamanhoFonte.xxl,
+    color: Cores.preto,
+    marginTop: Espacamento.padrao,
+    ...Sombras.duraTitulo,
+  },
   subtitulo: {
     fontSize: TamanhoFonte.sm,
     color: Cores.cinzaMedio,
