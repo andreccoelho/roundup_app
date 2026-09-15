@@ -13,11 +13,25 @@ import { AuthStackParamList } from '../../navigation/AuthStack';
 import { criarConsentimento } from '../../services/consentimentosLGPD';
 import { emailValido, senhaValida, resolverModalidades, TAMANHO_MINIMO_SENHA } from '../../utils/validacaoCadastro';
 import { ehErroDeAutenticacao, mensagemErroAutenticacao, MENSAGEM_ERRO_PERSISTENCIA } from '../../utils/mensagensErro';
+import { parseDataBr, paraTimestamp } from '../../utils/datas';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
 import ModalitySelector from '../../components/ui/ModalitySelector';
 
 type Rota = RouteProp<AuthStackParamList, 'CadastroAluno'>;
+
+const IDADE_MINIMA_SEM_RESPONSAVEL = 18;
+
+// RF30: idade em anos completos na data de hoje, a partir da data de nascimento.
+function calcularIdade(nascimento: Date): number {
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nascimento.getFullYear();
+  const aindaNaoFezAniversarioEsteAno =
+    hoje.getMonth() < nascimento.getMonth() ||
+    (hoje.getMonth() === nascimento.getMonth() && hoje.getDate() < nascimento.getDate());
+  if (aindaNaoFezAniversarioEsteAno) idade -= 1;
+  return idade;
+}
 
 interface Erros {
   nome?: string;
@@ -26,6 +40,9 @@ interface Erros {
   confirmarSenha?: string;
   modalidades?: string;
   faixaOuGrau?: string;
+  dataNascimento?: string;
+  nomeResponsavel?: string;
+  contatoResponsavel?: string;
 }
 
 export default function CadastroAlunoScreen() {
@@ -40,10 +57,16 @@ export default function CadastroAlunoScreen() {
   const [modalidades, setModalidades] = useState<string[]>([]);
   const [outraModalidade, setOutraModalidade] = useState('');
   const [faixaOuGrau, setFaixaOuGrau] = useState('');
+  const [dataNascimento, setDataNascimento] = useState('');
+  const [nomeResponsavel, setNomeResponsavel] = useState('');
+  const [contatoResponsavel, setContatoResponsavel] = useState('');
 
   const [erros, setErros] = useState<Erros>({});
   const [erroConta, setErroConta] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+
+  const nascimento = parseDataBr(dataNascimento);
+  const ehMenorDeIdade = nascimento !== null && calcularIdade(nascimento) < IDADE_MINIMA_SEM_RESPONSAVEL;
 
   function validar(): boolean {
     const novosErros: Erros = {};
@@ -56,6 +79,14 @@ export default function CadastroAlunoScreen() {
       novosErros.modalidades = 'Selecione ao menos uma modalidade.';
     }
     if (!faixaOuGrau.trim()) novosErros.faixaOuGrau = 'Informe sua faixa ou grau atual.';
+    if (!dataNascimento.trim()) novosErros.dataNascimento = 'Informe sua data de nascimento.';
+    else if (!nascimento) novosErros.dataNascimento = 'Data inválida. Use o formato DD/MM/AAAA.';
+
+    // RF30: responsável legal é obrigatório quando o aluno é menor de 18 anos
+    if (ehMenorDeIdade) {
+      if (!nomeResponsavel.trim()) novosErros.nomeResponsavel = 'Informe o nome do responsável legal.';
+      if (!contatoResponsavel.trim()) novosErros.contatoResponsavel = 'Informe um contato do responsável legal.';
+    }
 
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
@@ -71,6 +102,10 @@ export default function CadastroAlunoScreen() {
         perfil: 'aluno',
         modalidades: resolverModalidades(modalidades, outraModalidade, MODALIDADE_OUTRA),
         faixaOuGrau: faixaOuGrau.trim(),
+        dataNascimento: paraTimestamp(nascimento!),
+        ...(ehMenorDeIdade
+          ? { responsavelLegal: { nome: nomeResponsavel.trim(), contato: contatoResponsavel.trim() } }
+          : {}),
       });
       // RF28: registro de consentimento só é possível aqui — é o primeiro momento do fluxo em
       // que existe um uid autenticado (ver ConsentimentoLGPDScreen.tsx). Falha aqui não desfaz
@@ -146,6 +181,37 @@ export default function CadastroAlunoScreen() {
           erro={erros.faixaOuGrau}
         />
 
+        <CampoTexto
+          rotulo="Data de nascimento"
+          placeholder="DD/MM/AAAA"
+          keyboardType="number-pad"
+          valor={dataNascimento}
+          onAlterar={setDataNascimento}
+          erro={erros.dataNascimento}
+        />
+
+        {ehMenorDeIdade ? (
+          <View style={styles.blocoResponsavel}>
+            {/* RF30: obrigatório para menores de 18 anos — identificação do responsável legal */}
+            <Text style={styles.rotuloBloco}>Responsável legal</Text>
+            <Text style={styles.ajudaBloco}>Como você é menor de 18 anos, precisamos dos dados de um responsável.</Text>
+            <CampoTexto
+              rotulo="Nome do responsável"
+              placeholder="Nome completo"
+              valor={nomeResponsavel}
+              onAlterar={setNomeResponsavel}
+              erro={erros.nomeResponsavel}
+            />
+            <CampoTexto
+              rotulo="Contato do responsável"
+              placeholder="E-mail ou telefone"
+              valor={contatoResponsavel}
+              onAlterar={setContatoResponsavel}
+              erro={erros.contatoResponsavel}
+            />
+          </View>
+        ) : null}
+
         <View style={styles.espaco} />
         <Botao titulo="Criar conta" onPress={handleCadastrar} carregando={carregando} />
 
@@ -169,6 +235,9 @@ const styles = StyleSheet.create({
     marginBottom: Espacamento.grande + Espacamento.minimo,
   },
   erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  blocoResponsavel: { marginTop: Espacamento.minimo, marginBottom: Espacamento.padrao },
+  rotuloBloco: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
+  ajudaBloco: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo, marginBottom: Espacamento.medio },
   espaco: { height: Espacamento.pequeno },
   rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
   rodapeTexto: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
