@@ -5,12 +5,10 @@
 // firestore.rules.
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores, Espacamento, Raios, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { ProfessorStackParamList } from '../../navigation/ProfessorStack';
+import { DashboardProfessorNavigationProp } from '../../navigation/ProfessorTabs';
 import { listarTurmasDoProfessor } from '../../services/turmas';
 import { listarMatriculasPorTurma } from '../../services/matriculas';
 import { listarSessoesPorTurma } from '../../services/sessoes';
@@ -20,6 +18,7 @@ import { CheckIn, Sessao, Turma } from '../../types';
 import { formatarDataHora } from '../../utils/datas';
 import LinhaFina from '../../components/LinhaFina';
 import Botao from '../../components/ui/Botao';
+import Etiqueta from '../../components/ui/Etiqueta';
 
 interface ItemChamada {
   alunoId: string;
@@ -44,8 +43,8 @@ function selecionarSessaoDeHoje(sessoes: Sessao[]): Sessao | null {
 }
 
 export default function DashboardScreen() {
-  const { usuario, logout } = useAuth();
-  const navigation = useNavigation<NativeStackNavigationProp<ProfessorStackParamList, 'Dashboard'>>();
+  const { usuario } = useAuth();
+  const navigation = useNavigation<DashboardProfessorNavigationProp>();
 
   const [carregandoTurmas, setCarregandoTurmas] = useState(true);
   const [turmas, setTurmas] = useState<Turma[]>([]);
@@ -130,15 +129,16 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
       <View style={styles.cabecalho}>
         <Text style={styles.titulo}>Painel do Professor</Text>
-        <TouchableOpacity onPress={logout}>
-          <Text style={styles.linkSair}>Sair</Text>
-        </TouchableOpacity>
       </View>
 
-      {erro ? <Text style={styles.erro}>{erro}</Text> : null}
+      {erro ? (
+        <Text style={styles.erro} accessibilityRole="alert">
+          {erro}
+        </Text>
+      ) : null}
 
       {carregandoTurmas ? (
-        <ActivityIndicator color={Colors.preto} style={styles.espacoTopo} />
+        <ActivityIndicator color={Cores.preto} style={styles.espacoTopo} />
       ) : turmas.length === 0 ? (
         <View style={styles.secao}>
           <Text style={styles.vazio}>Você ainda não tem turmas.</Text>
@@ -150,13 +150,12 @@ export default function DashboardScreen() {
           {turmas.length > 1 && (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsLinha} contentContainerStyle={styles.chipsConteudo}>
               {turmas.map((turma) => (
-                <TouchableOpacity
+                <Etiqueta
                   key={turma.id}
-                  style={[styles.chip, turmaSelecionadaId === turma.id && styles.chipAtivo]}
+                  texto={turma.nome}
+                  selecionada={turmaSelecionadaId === turma.id}
                   onPress={() => setTurmaSelecionadaId(turma.id)}
-                >
-                  <Text style={[styles.chipTexto, turmaSelecionadaId === turma.id && styles.chipTextoAtivo]}>{turma.nome}</Text>
-                </TouchableOpacity>
+                />
               ))}
             </ScrollView>
           )}
@@ -178,7 +177,7 @@ export default function DashboardScreen() {
           <View style={styles.secao}>
             <Text style={styles.secaoTitulo}>Chamada de hoje</Text>
             {carregandoPainel ? (
-              <ActivityIndicator color={Colors.preto} style={styles.espacoTopo} />
+              <ActivityIndicator color={Cores.preto} style={styles.espacoTopo} />
             ) : !sessaoHoje ? (
               <Text style={styles.vazio}>Sem sessão hoje — nada para chamar.</Text>
             ) : chamada.length === 0 ? (
@@ -195,6 +194,9 @@ export default function DashboardScreen() {
                         style={[styles.botaoPresenca, item.checkIn.status === 'validado' && styles.botaoPresencaAtivo]}
                         onPress={() => handleTogglePresenca(item)}
                         disabled={processandoAlunoId === item.alunoId}
+                        accessibilityRole="button"
+                        accessibilityLabel={`${item.checkIn.status === 'validado' ? 'Presente' : 'Confirmar presença'} de ${item.nome}`}
+                        accessibilityState={{ selected: item.checkIn.status === 'validado', disabled: processandoAlunoId === item.alunoId }}
                       >
                         <Text style={[styles.textoPresenca, item.checkIn.status === 'validado' && styles.textoPresencaAtivo]}>
                           {processandoAlunoId === item.alunoId ? '...' : item.checkIn.status === 'validado' ? 'Presente' : 'Confirmar'}
@@ -211,12 +213,6 @@ export default function DashboardScreen() {
       )}
 
       <View style={styles.rodape}>
-        <TouchableOpacity onPress={() => navigation.navigate('VincularProfessor')}>
-          <Text style={styles.linkRodape}>Vincular-se a uma academia</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('SolicitacoesProfessor')}>
-          <Text style={styles.linkRodape}>Solicitações pendentes</Text>
-        </TouchableOpacity>
         <TouchableOpacity onPress={() => navigation.navigate('Turmas')}>
           <Text style={styles.linkRodape}>Gerenciar turmas</Text>
         </TouchableOpacity>
@@ -226,48 +222,50 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.branco },
-  conteudo: { paddingBottom: 32, flexGrow: 1 },
+  container: { flex: 1, backgroundColor: Cores.branco },
+  conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
 
   cabecalho: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 12,
+    paddingHorizontal: Espacamento.grande,
+    paddingTop: Espacamento.grande,
+    paddingBottom: Espacamento.medio,
   },
-  titulo: { fontSize: FontSize.lg, fontWeight: '600', color: Colors.preto },
-  linkSair: { fontSize: FontSize.sm, color: Colors.cinzaMedio },
-  erro: { color: Colors.alerta, fontSize: FontSize.sm, marginHorizontal: 20, marginBottom: 8 },
-  espacoTopo: { marginTop: 16 },
-  espacoPequeno: { height: 12 },
+  titulo: { fontSize: TamanhoFonte.lg, fontWeight: '600', color: Cores.preto },
+  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginBottom: Espacamento.pequeno },
+  espacoTopo: { marginTop: Espacamento.padrao },
+  espacoPequeno: { height: Espacamento.medio },
 
-  chipsLinha: { marginTop: 4, marginBottom: 4 },
-  chipsConteudo: { paddingHorizontal: 20, gap: 8 },
-  chip: { borderWidth: 1, borderColor: Colors.cinzaEscuro, borderRadius: 16, paddingVertical: 6, paddingHorizontal: 14 },
-  chipAtivo: { backgroundColor: Colors.preto, borderColor: Colors.preto },
-  chipTexto: { color: Colors.cinzaEscuro, fontSize: FontSize.sm },
-  chipTextoAtivo: { color: Colors.branco, fontWeight: '600' },
+  chipsLinha: { marginTop: Espacamento.minimo, marginBottom: Espacamento.minimo },
+  chipsConteudo: { paddingHorizontal: Espacamento.grande, gap: Espacamento.pequeno },
 
-  secao: { paddingHorizontal: 20, marginTop: 20 },
-  secaoTitulo: { fontSize: FontSize.md, fontWeight: '600', color: Colors.preto, marginBottom: 4 },
-  vazio: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.minimo },
+  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
 
-  turmaNome: { fontSize: FontSize.xl, fontWeight: '700', color: Colors.preto },
-  turmaDetalhe: { fontSize: FontSize.sm, color: Colors.cinzaMedio, marginTop: 4 },
-  contadoresLinha: { flexDirection: 'row', marginTop: 16 },
-  contadorValor: { fontSize: FontSize.xxl, fontWeight: '700', color: Colors.preto },
-  contadorRotulo: { fontSize: FontSize.xs, color: Colors.cinzaMedio, marginTop: 2 },
+  turmaNome: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.preto },
+  turmaDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  contadoresLinha: { flexDirection: 'row', marginTop: Espacamento.padrao },
+  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
+  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
 
-  linhaChamada: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12 },
-  itemNome: { fontSize: FontSize.md, color: Colors.preto, fontWeight: '600' },
-  statusAguardando: { fontSize: FontSize.xs, color: Colors.cinzaClaro },
-  botaoPresenca: { borderWidth: 1, borderColor: Colors.cinzaEscuro, borderRadius: 16, paddingVertical: 6, paddingHorizontal: 14 },
-  botaoPresencaAtivo: { backgroundColor: Colors.checkinValidado, borderColor: Colors.checkinValidado },
-  textoPresenca: { fontSize: FontSize.sm, color: Colors.cinzaEscuro },
-  textoPresencaAtivo: { color: Colors.branco, fontWeight: '600' },
+  linhaChamada: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Espacamento.medio },
+  itemNome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600' },
+  // Cores.cinzaClaro corrigido na fonte (src/theme/tokens.ts) para 4,61:1 sobre branco — este
+  // rótulo passou a valer 4,5:1 sem precisar de nenhuma mudança aqui além do import direto.
+  statusAguardando: { fontSize: TamanhoFonte.xs, color: Cores.cinzaClaro },
+  botaoPresenca: {
+    borderWidth: 1,
+    borderColor: Cores.cinzaEscuro,
+    borderRadius: Raios.grande,
+    paddingVertical: Espacamento.pequeno,
+    paddingHorizontal: Espacamento.padrao,
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  botaoPresencaAtivo: { backgroundColor: Cores.checkinValidado, borderColor: Cores.checkinValidado },
+  textoPresenca: { fontSize: TamanhoFonte.sm, color: Cores.cinzaEscuro },
+  textoPresencaAtivo: { color: Cores.branco, fontWeight: '600' },
 
-  rodape: { paddingHorizontal: 20, gap: 12, marginTop: 28, paddingTop: 16 },
-  linkRodape: { color: Colors.cinzaMedio, fontSize: FontSize.sm },
+  rodape: { paddingHorizontal: Espacamento.grande, gap: Espacamento.medio, marginTop: Espacamento.grande + Espacamento.minimo, paddingTop: Espacamento.padrao },
+  linkRodape: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
 });
