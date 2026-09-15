@@ -37,6 +37,7 @@ import CartaoSessao from '../../components/ui/CartaoSessao';
 import BarraProgresso from '../../components/ui/BarraProgresso';
 import CartaoMissao from '../../components/ui/CartaoMissao';
 import Medalha from '../../components/ui/Medalha';
+import CelebracaoGraduacao from '../../components/ui/CelebracaoGraduacao';
 import IndicadorSequencia from '../../components/ui/IndicadorSequencia';
 import LinhaClassificacao from '../../components/ui/LinhaClassificacao';
 import SeloFaixa from '../../components/ui/SeloFaixa';
@@ -65,6 +66,8 @@ export default function GaleriaScreen() {
   const [dialogoAberto, setDialogoAberto] = useState(false);
   const [avisoVisivel, setAvisoVisivel] = useState(false);
   const [aba, setAba] = useState<'em-curso' | 'concluidas'>('em-curso');
+  const [checkInDemoFeito, setCheckInDemoFeito] = useState(false);
+  const [celebracaoAberta, setCelebracaoAberta] = useState(false);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
@@ -261,6 +264,19 @@ export default function GaleriaScreen() {
         <BotaoCheckIn estado="foraDaJanela" motivo="Check-in ainda não abriu" />
         <View style={styles.espaco} />
         <BotaoCheckIn estado="realizado" />
+        <View style={styles.espaco} />
+        <Text style={styles.notaTecnica}>
+          Abaixo, um toque real dispara a transição pra "realizado" — é só nessa transição que o
+          shake/flash de impacto (script.md, item 3) aparece; o de cima já nasce "realizado", sem
+          transição, por isso fica parado.
+        </Text>
+        <BotaoCheckIn
+          estado={checkInDemoFeito ? 'realizado' : 'disponivel'}
+          onPress={() => setCheckInDemoFeito(true)}
+        />
+        {checkInDemoFeito ? (
+          <Botao titulo="Reiniciar demo" variante="texto" onPress={() => setCheckInDemoFeito(false)} />
+        ) : null}
       </Secao>
 
       <Secao titulo="CartaoSessao">
@@ -286,6 +302,17 @@ export default function GaleriaScreen() {
           <Medalha rotulo="10 treinos" />
           <Medalha rotulo="30 dias seguidos" conquistada={false} />
         </Linha>
+      </Secao>
+
+      <Secao titulo="CelebracaoGraduacao — usada em RegistrarGraduacaoScreen">
+        <Botao titulo="Simular subida de faixa" onPress={() => setCelebracaoAberta(true)} />
+        <CelebracaoGraduacao
+          visivel={celebracaoAberta}
+          nomeAluno="Maria Silva"
+          grau="Faixa azul"
+          modalidade="Jiu-Jitsu"
+          onFechar={() => setCelebracaoAberta(false)}
+        />
       </Secao>
 
       <Secao titulo="IndicadorSequencia (Ciclo 2, sem consumidor real ainda)">
