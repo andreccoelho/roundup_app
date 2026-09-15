@@ -3,6 +3,15 @@ import { Timestamp } from 'firebase/firestore';
 // RF01, RF02, RF03, RF04, RF05, RF06: cadastro, autenticação e perfil diferenciado por ator
 export type Perfil = 'academia' | 'professor' | 'aluno';
 
+// RF30 (Ciclo 4): identificação do responsável legal, obrigatória no cadastro quando o aluno é
+// menor de 18 anos (Usuario.dataNascimento). Guardado dentro do próprio Usuario — mais simples
+// que uma coleção separada, e não há hoje nenhum outro consumidor que precise dele fora do
+// perfil do próprio aluno.
+export interface ResponsavelLegal {
+  nome: string;
+  contato: string; // e-mail ou telefone — RF30 não distingue, texto livre
+}
+
 export interface Usuario {
   id: string;
   nome: string;
@@ -15,8 +24,19 @@ export interface Usuario {
   graduacao?: string;     // RF05: só perfil 'professor'
   nomeAcademia?: string;  // RF04: só perfil 'academia' — nome institucional, distinto de `nome` (contato)
   endereco?: string;      // RF04: só perfil 'academia'
+  dataNascimento?: Timestamp;       // RF30: só perfil 'aluno' — determina se responsavelLegal é obrigatório
+  responsavelLegal?: ResponsavelLegal; // RF30: obrigatório quando dataNascimento indica menor de 18 anos
+  preferenciasNotificacao?: PreferenciasNotificacao; // RF31
   criadoEm: Timestamp;
   atualizadoEm: Timestamp;
+}
+
+// RF31 (Ciclo 4): preferências de notificação por tipo — só a preferência é persistida aqui; o
+// envio real de push (expo-notifications + gatilho de backend) não está implementado.
+export interface PreferenciasNotificacao {
+  lembreteSessao: boolean;
+  novaMissao: boolean;
+  conquista: boolean;
 }
 
 // RN05, RN06: documento privado em usuarios/{uid}/privado/vinculos — nunca lido por nenhum
@@ -127,14 +147,30 @@ export interface Missao {
   atualizadoEm: Date;
 }
 
-// RF18 (Ciclo 2): acompanhamento do progresso de missões por aluno
+// RF18 (Ciclo 2): acompanhamento do progresso de missões por aluno. `responsavelId` desnormaliza
+// o dono da missão (decisão: só o responsável escreve progresso, nunca o aluno — mesmo espírito
+// de RN01, ver docs/DECISOES_PENDENTES.md) e habilita a leitura filtrada do gestor sem get()
+// cruzado em firestore.rules.
 export interface MissaoProgresso {
   id: string;
   missaoId: string;
   alunoId: string;
+  responsavelId: string;
   progressoAtual: number;
   concluida: boolean;
   dataConclusao?: Date;
+  atualizadoEm: Date;
+}
+
+// RF20, RN04, RN09 (Ciclo 2): pontuação acumulada do aluno, por escopo de vínculo — id
+// determinístico `${alunoId}_${responsavelId}`, um documento por par aluno/responsável (RN09:
+// escopo segue o vínculo). PROVISÓRIO: cumulativo desde sempre, RN04 (janela de tempo) ainda
+// não reseta pontos por período — ver docs/DECISOES_PENDENTES.md.
+export interface Classificacao {
+  id: string;
+  alunoId: string;
+  responsavelId: string;
+  pontos: number;
   atualizadoEm: Date;
 }
 
