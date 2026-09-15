@@ -1,17 +1,37 @@
-// RF15: histórico de check-ins do aluno, em ordem decrescente de data
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../constants/colors';
+// RF15: histórico de check-ins do aluno, em ordem decrescente de data.
+// Não reaproveita CartaoSessao: aquele componente é orientado à ação (BotaoCheckIn, estado
+// EstadoCheckIn 'disponivel'/'foraDaJanela'/'realizado'); aqui os registros já são passado,
+// somente leitura, com o enum diferente StatusCheckIn 'pendente'/'validado'/'rejeitado' — forçar
+// o componente errado esconderia esse status atrás de um rótulo que não é o dele.
+import { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarHistoricoDoAluno } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
-import { CheckIn } from '../../types';
+import { CheckIn, StatusCheckIn } from '../../types';
 import { formatarDataHora } from '../../utils/datas';
+import Cartao from '../../components/ui/Cartao';
+import Esqueleto from '../../components/ui/Esqueleto';
+import EstadoVazio from '../../components/ui/EstadoVazio';
+import EstadoErro from '../../components/ui/EstadoErro';
 
 interface ItemHistorico {
   checkIn: CheckIn;
   nomeTurma: string;
 }
+
+const ROTULO_STATUS: Record<StatusCheckIn, string> = {
+  pendente: 'Pendente',
+  validado: 'Validado',
+  rejeitado: 'Rejeitado',
+};
+
+const COR_STATUS: Record<StatusCheckIn, string> = {
+  pendente: Cores.cinzaMedio,
+  validado: Cores.checkinValidado,
+  rejeitado: Cores.alerta,
+};
 
 export default function HistoricoScreen() {
   const { usuario } = useAuth();
@@ -20,11 +40,7 @@ export default function HistoricoScreen() {
   const [erro, setErro] = useState<string | null>(null);
   const [itens, setItens] = useState<ItemHistorico[]>([]);
 
-  useEffect(() => {
-    carregar();
-  }, []);
-
-  async function carregar() {
+  const carregar = useCallback(async () => {
     if (!usuario) return;
     setCarregando(true);
     setErro(null);
@@ -42,47 +58,53 @@ export default function HistoricoScreen() {
     } finally {
       setCarregando(false);
     }
-  }
+  }, [usuario]);
+
+  useEffect(() => {
+    carregar();
+  }, [carregar]);
 
   if (carregando) {
     return (
-      <View style={styles.centro}>
-        <ActivityIndicator color={Colors.preto} />
+      <View style={styles.container}>
+        <Esqueleto altura={64} repeticoes={5} />
       </View>
     );
   }
 
   if (erro) {
+    return <EstadoErro mensagem={erro} onTentarNovamente={carregar} />;
+  }
+
+  if (itens.length === 0) {
     return (
-      <View style={styles.centro}>
-        <Text style={styles.erro}>{erro}</Text>
+      <View style={styles.container}>
+        <EstadoVazio titulo="Nenhum check-in registrado ainda" descricao="Seus check-ins validados e pendentes aparecem aqui." />
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {itens.length === 0 ? (
-        <Text style={styles.vazio}>Nenhum check-in registrado ainda.</Text>
-      ) : (
-        itens.map(({ checkIn, nomeTurma }) => (
-          <View key={checkIn.id} style={styles.item}>
-            <Text style={styles.itemNome}>{nomeTurma}</Text>
-            <Text style={styles.itemDetalhe}>{formatarDataHora(checkIn.dataHora)} · status: {checkIn.status}</Text>
+      {itens.map(({ checkIn, nomeTurma }) => (
+        <Cartao key={checkIn.id} style={styles.item}>
+          <Text style={styles.itemNome}>{nomeTurma}</Text>
+          <View style={styles.itemLinha}>
+            <Text style={styles.itemDetalhe}>{formatarDataHora(checkIn.dataHora)}</Text>
+            <Text style={[styles.itemStatus, { color: COR_STATUS[checkIn.status] }]}>{ROTULO_STATUS[checkIn.status]}</Text>
           </View>
-        ))
-      )}
+        </Cartao>
+      ))}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.branco },
-  conteudo: { padding: 16 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.branco },
-  erro: { color: Colors.preto, fontWeight: 'bold' },
-  vazio: { color: Colors.cinzaMedio },
-  item: { borderWidth: 1, borderColor: Colors.cinzaBorda, borderRadius: 8, padding: 12, marginBottom: 8 },
-  itemNome: { fontSize: 16, fontWeight: 'bold', color: Colors.preto },
-  itemDetalhe: { fontSize: 12, color: Colors.cinzaMedio, marginTop: 4 },
+  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  conteudo: { paddingBottom: Espacamento.enorme },
+  item: { marginBottom: Espacamento.pequeno },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
+  itemLinha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Espacamento.minimo },
+  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio },
+  itemStatus: { fontSize: TamanhoFonte.xs, fontWeight: '600' },
 });
