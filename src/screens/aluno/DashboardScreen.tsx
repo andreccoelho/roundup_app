@@ -5,7 +5,7 @@
 // vínculos) e sequência (histórico de check-ins). Base de pontuação é PROVISÓRIA — ver
 // docs/DECISOES_PENDENTES.md. Missões e ranking têm telas próprias (abas Missões/Classificação).
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
@@ -26,7 +26,6 @@ import IndicadorSequencia from '../../components/ui/IndicadorSequencia';
 import Avatar from '../../components/ui/Avatar';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Etiqueta from '../../components/ui/Etiqueta';
-import { IconeCorda } from '../../components/icones';
 
 const MAXIMO_SESSOES_EXIBIDAS = 4;
 
@@ -117,9 +116,13 @@ export default function DashboardScreen() {
       <StatusBar style="light" />
       {/* Banda full-bleed, não card — ficha de pesagem, não dashboard de SaaS (DESIGN_BRIEF.md). */}
       <View style={styles.cabecalho}>
-        <View style={styles.motivoCorda} pointerEvents="none">
-          <IconeCorda tamanho={64} cor={Cores.cinzaEscuro} espessura={1} />
-        </View>
+        {/* Marca invertida como textura de fundo, deslocada para o canto — detalhe único desta
+            tela, não repetição decorativa (DESIGN_BRIEF.md, motivo assinatura). */}
+        <Image
+          source={require('../../../assets/roundup_logo_invertida.png')}
+          style={styles.marcaFundo}
+          resizeMode="contain"
+        />
         <View style={styles.cabecalhoTopo}>
           <Avatar nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={52} />
           <Text style={styles.saudacaoNome} numberOfLines={1} adjustsFontSizeToFit>
@@ -198,8 +201,8 @@ const styles = StyleSheet.create({
   conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
 
   // Banda full-bleed preta — hero de identidade do aluno, não um card branco a mais (anti-padrão
-  // "kit de card de SaaS" do DESIGN_BRIEF.md). overflow hidden para a corda decorativa não
-  // vazar do recorte.
+  // "kit de card de SaaS" do DESIGN_BRIEF.md). overflow hidden para a marca de fundo não vazar
+  // do recorte.
   cabecalho: {
     backgroundColor: Cores.preto,
     paddingHorizontal: Espacamento.grande,
@@ -207,9 +210,17 @@ const styles = StyleSheet.create({
     paddingBottom: Espacamento.grande,
     overflow: 'hidden',
   },
-  // Motivo assinatura (corda do ringue), usado uma única vez nesta tela — DESIGN_BRIEF.md.
-  // Recorte no canto, bem apagado (cinzaEscuro sobre preto), textura e não decoração central.
-  motivoCorda: { position: 'absolute', top: -8, right: -10, opacity: 0.6 },
+  // Motivo assinatura (a marca invertida, assets/roundup_logo_invertida.png), usado uma única
+  // vez nesta tela — DESIGN_BRIEF.md. Grande e deslocada para fora do canto, opacidade baixa:
+  // textura de fundo, não repetição decorativa da marca.
+  marcaFundo: {
+    position: 'absolute',
+    top: -40,
+    right: -70,
+    width: 220,
+    height: 220,
+    opacity: 0.12,
+  },
   cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
   saudacaoNome: {
     flex: 1,
