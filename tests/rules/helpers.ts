@@ -152,3 +152,40 @@ export function sessaoBase(
 export function vinculosPrivadoBase(responsaveisIds: string[]) {
   return { responsaveisIds };
 }
+
+export function missaoBase(responsavelId: string, overrides: Record<string, unknown> = {}) {
+  return {
+    titulo: 'Missão de teste',
+    descricao: 'Descrição de teste',
+    tipo: 'presenca',
+    meta: 10,
+    pontos: 10,
+    responsavelId,
+    ativa: true,
+    criadoEm: AGORA,
+    atualizadoEm: AGORA,
+    ...overrides,
+  };
+}
+
+export function graduacaoBase(alunoId: string, responsavelId: string, overrides: Record<string, unknown> = {}) {
+  return {
+    alunoId,
+    responsavelId,
+    modalidade: 'Jiu-Jitsu',
+    grau: 'Faixa azul',
+    dataGraduacao: AGORA,
+    criadoEm: AGORA,
+    ...overrides,
+  };
+}
+
+export function classificacaoBase(alunoId: string, responsavelId: string, overrides: Record<string, unknown> = {}) {
+  return {
+    alunoId,
+    responsavelId,
+    pontos: 0,
+    atualizadoEm: AGORA,
+    ...overrides,
+  };
+}
