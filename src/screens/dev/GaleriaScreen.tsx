@@ -20,6 +20,7 @@ import Botao from '../../components/ui/Botao';
 import CampoTexto from '../../components/ui/CampoTexto';
 import ModalitySelector from '../../components/ui/ModalitySelector';
 import Cartao from '../../components/ui/Cartao';
+import TexturaLona from '../../components/ui/TexturaLona';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Avatar from '../../components/ui/Avatar';
 import LinhaFina from '../../components/LinhaFina';
@@ -160,6 +161,17 @@ export default function GaleriaScreen() {
         <Cartao raio={16}>
           <Text style={styles.textoDemo}>Cartão com raio grande — tratamento distinto para outro tipo de conteúdo.</Text>
         </Cartao>
+        <View style={styles.espaco} />
+        <Cartao corteDiagonal corFundo={Cores.cinzaFundo}>
+          <Text style={styles.textoDemo}>corteDiagonal — script.md, item 1: "placa de ringue", não retângulo uniforme.</Text>
+        </Cartao>
+      </Secao>
+
+      <Secao titulo="TexturaLona — script.md, item 1 (fundo sutil para telas-chave)">
+        <View style={styles.amostraTextura}>
+          <TexturaLona opacidade={0.12} />
+          <Text style={styles.textoDemo}>opacidade ampliada aqui (0.12) só pra essa amostra ficar visível — uso real é bem mais discreto (0.05).</Text>
+        </View>
       </Secao>
 
       <Secao titulo="Etiqueta">
@@ -328,5 +340,14 @@ const styles = StyleSheet.create({
     padding: Espacamento.padrao,
     marginTop: Espacamento.pequeno,
     alignItems: 'flex-start',
+  },
+  amostraTextura: {
+    position: 'relative',
+    backgroundColor: Cores.branco,
+    borderWidth: 1,
+    borderColor: Cores.cinzaBorda,
+    borderRadius: Raios.medio,
+    padding: Espacamento.padrao,
+    overflow: 'hidden',
   },
 });
