@@ -18,9 +18,10 @@ Round, corner, luva, faixa/grau, tatame, corda do ringue, sino, ficha técnica, 
 
 **Cor:** base estritamente monocromática, como já definido — preto `#0A0A0A`, branco, e uma escala de cinzas. Nada de acento colorido decorativo (nem o verde/vermelho semântico deve virar "tema" — reserve cor só para status funcional: sucesso de check-in, alerta de janela fechada). A ausência de cor É a identidade — não compense com gradientes ou sombras suaves genéricas.
 
-**Tipografia:** dois registros claramente distintos, não um Inter-para-tudo:
-- Um **grotesco condensado/bold para números e headlines de placar** (XP, contagem de round, percentual de graduação) — pense em ficha de pesagem ou placar de arena: números grandes, apertados, com peso. Se Homebase (a fonte da marca) tiver um corte bold/condensado, use-o aqui; senão, é aceitável buscar uma condensada gratuita via Google Fonts (ex: Oswald, Bebas Neue) especificamente para esse papel numérico.
-- Um **sans-serif neutro e legível para corpo de texto** (Homebase Regular, conforme já definido).
+**Tipografia:** três papéis, cada um com escopo estrito — não um "Homebase para tudo" nem um "Inter para tudo":
+- **Oswald** (grotesco condensado/bold, decisão fechada, já implementada via `@expo-google-fonts/oswald`) para números e headlines de placar — XP, contagem de round, percentual de graduação. Pense em ficha de pesagem ou placar de arena: números grandes, apertados, com peso.
+- **Homebase** (a fonte da marca, `assets/fonts/homebase.ttf`, carregada em `App.tsx`) só para o lettering "RNDP"/wordmark e para títulos de tela. Nunca em número de placar — isso é Oswald — e nunca em corpo de texto: é fonte de identidade, não de leitura corrida.
+- Um **sans-serif neutro do sistema** para corpo de texto — rótulos, parágrafos, itens de lista. Nem Oswald nem Homebase aparecem aqui.
 - Não use CAIXA ALTA como recurso de rótulo padrão — é o tique mais comum de design genérico. Se precisar de um rótulo pequeno, resolva com peso ou cor, não com maiúsculas forçadas.
 - Não junte metadados com ponto médio ("Roxa · 2º Grau · 64%"). Separe visualmente por hierarquia de tamanho/peso, não por pontuação.
 

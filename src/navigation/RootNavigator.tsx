@@ -1,9 +1,9 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthStack } from './AuthStack';
-import { AlunoStack } from './AlunoStack';
-import { ProfessorStack } from './ProfessorStack';
-import { AcademiaStack } from './AcademiaStack';
+import { AlunoRaiz } from './AlunoRaiz';
+import { ProfessorTabs } from './ProfessorTabs';
+import { AcademiaTabs } from './AcademiaTabs';
 import LoadingScreen from '../components/LoadingScreen';
 
 export function RootNavigator() {
@@ -13,19 +13,19 @@ export function RootNavigator() {
     return <LoadingScreen />;
   }
 
-  function renderStack() {
+  function renderRaiz() {
     if (!usuarioAuth) return <AuthStack />;
     switch (usuario?.perfil) {
       case 'aluno':
-        return <AlunoStack />;
+        return <AlunoRaiz />;
       case 'professor':
-        return <ProfessorStack />;
+        return <ProfessorTabs />;
       case 'academia':
-        return <AcademiaStack />;
+        return <AcademiaTabs />;
       default:
         return <AuthStack />;
     }
   }
 
-  return <NavigationContainer>{renderStack()}</NavigationContainer>;
+  return <NavigationContainer>{renderRaiz()}</NavigationContainer>;
 }
