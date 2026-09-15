@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
-import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardAlunoNavigationProp } from '../../navigation/AlunoTabs';
 import { listarProximasSessoesDoAluno } from '../../services/sessoes';
@@ -26,6 +26,7 @@ import IndicadorSequencia from '../../components/ui/IndicadorSequencia';
 import Avatar from '../../components/ui/Avatar';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Etiqueta from '../../components/ui/Etiqueta';
+import TexturaLona from '../../components/ui/TexturaLona';
 
 const MAXIMO_SESSOES_EXIBIDAS = 4;
 
@@ -116,6 +117,9 @@ export default function DashboardScreen() {
       <StatusBar style="light" />
       {/* Banda full-bleed, não card — ficha de pesagem, não dashboard de SaaS (DESIGN_BRIEF.md). */}
       <View style={styles.cabecalho}>
+        {/* script.md, item 1: textura de lona sutil na tela-chave (Home) — bem apagada, só dá
+            corpo ao preto, não compete com a marca-d'água abaixo. */}
+        <TexturaLona opacidade={0.08} cor={Cores.branco} />
         {/* Marca invertida como textura de fundo, deslocada para o canto — detalhe único desta
             tela, não repetição decorativa (DESIGN_BRIEF.md, motivo assinatura). */}
         <Image
@@ -222,12 +226,18 @@ const styles = StyleSheet.create({
     opacity: 0.12,
   },
   cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
+  // script.md, item 2: sombra dura (sem blur) no título de destaque — "efeito de batida". A
+  // receita padrão de Sombras.duraTitulo é preta (pensada pra título sobre fundo claro); aqui o
+  // fundo já é preto, então só a cor muda pra cinza-claro — mesmo deslocamento/raio do token,
+  // pra ficar visível sem sair da paleta.
   saudacaoNome: {
     flex: 1,
     fontFamily: FamiliaFonte.homebaseDisplay,
     fontSize: TamanhoFonte.xxl,
     color: Cores.branco,
     letterSpacing: 1,
+    ...Sombras.duraTitulo,
+    textShadowColor: Cores.cinzaClaro,
   },
   seloLinha: { marginTop: Espacamento.padrao },
 
