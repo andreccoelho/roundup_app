@@ -1,10 +1,11 @@
 // RF01: escolha do perfil decide qual formulário de cadastro é aberto em seguida.
 // Toque na linha já navega — sem botão "Continuar" extra, um toque a menos no fluxo.
+// Sem os 4 estados de carregando/vazio/erro: lista estática de 3 opções, não vem de busca de
+// dados.
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import LinhaFina from '../../components/LinhaFina';
 import Botao from '../../components/ui/Botao';
@@ -54,8 +55,13 @@ export default function SelecaoPerfilScreen() {
         <LinhaFina />
         {OPCOES.map(({ destino, titulo, descricao, Icone }) => (
           <View key={destino}>
-            <TouchableOpacity style={[styles.linha, semAnelDeFoco]} onPress={() => navigation.navigate(destino)}>
-              <Icone tamanho={28} cor={Colors.preto} />
+            <TouchableOpacity
+              style={[styles.linha, semAnelDeFoco]}
+              onPress={() => navigation.navigate(destino)}
+              accessibilityRole="button"
+              accessibilityLabel={`${titulo}. ${descricao}`}
+            >
+              <Icone tamanho={28} cor={Cores.preto} />
               <View style={styles.linhaTextos}>
                 <Text style={styles.linhaTitulo}>{titulo}</Text>
                 <Text style={styles.linhaDescricao}>{descricao}</Text>
@@ -70,12 +76,29 @@ export default function SelecaoPerfilScreen() {
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 24, paddingBottom: 32, backgroundColor: Colors.branco },
-  titulo: { fontSize: FontSize.xxl, fontWeight: '700', color: Colors.preto, marginTop: 16 },
-  subtitulo: { fontSize: FontSize.sm, color: Colors.cinzaMedio, marginTop: 8, marginBottom: 28 },
+  scroll: {
+    flexGrow: 1,
+    paddingHorizontal: Espacamento.grande,
+    paddingTop: Espacamento.grande,
+    paddingBottom: Espacamento.extraGrande,
+    backgroundColor: Cores.branco,
+  },
+  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.padrao },
+  subtitulo: {
+    fontSize: TamanhoFonte.sm,
+    color: Cores.cinzaMedio,
+    marginTop: Espacamento.pequeno,
+    marginBottom: Espacamento.grande + Espacamento.minimo,
+  },
   lista: { flexGrow: 0 },
-  linha: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: 20, gap: 16 },
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: Espacamento.padrao + Espacamento.minimo,
+    gap: Espacamento.padrao,
+    minHeight: 44,
+  },
   linhaTextos: { flex: 1 },
-  linhaTitulo: { fontSize: FontSize.lg, fontWeight: '600', color: Colors.preto, marginBottom: 4 },
-  linhaDescricao: { fontSize: FontSize.sm, color: Colors.cinzaMedio, lineHeight: 20 },
+  linhaTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.minimo },
+  linhaDescricao: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, lineHeight: 20 },
 });
