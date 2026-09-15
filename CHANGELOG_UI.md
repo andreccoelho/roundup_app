@@ -62,7 +62,7 @@ Depois do checkpoint anterior, esta rodada fechou a dívida nas 5 telas identifi
 - Verificado (não é falha): `cinzaClaro` como `placeholderTextColor` e como fundo de botão desabilitado — WCAG exclui explicitamente placeholders e componentes de UI inativos/desabilitados da exigência de contraste.
 - Suíte completa (`npx tsc --noEmit`, `npm run test:rules`) rodada depois de cada tela e no fechamento — sem regressão em nenhum ponto.
 - **Ainda não fechado nesta rodada**: o achado de `professor/DashboardScreen.tsx` acima (fora do escopo pedido).
-- As 3 telas de gestor (`TurmasScreen`, `TurmaDetalheScreen`, `SessaoDetalheScreen`) foram aprovadas e fechadas numa rodada seguinte, junto da decisão de que a métrica de pontuação provisória (`docs/DECISOES_PENDENTES.md`) não bloqueia o Ciclo 4.
+- As 3 telas de gestor (`TurmasScreen`, `TurmaDetalheScreen`, `SessaoDetalheScreen`) foram **aprovadas como pendência aceita**, não corrigidas — nenhum código dessas telas foi tocado. A decisão registrada foi seguir para o Ciclo 4 com essa dívida em aberto e com a métrica de pontuação provisória (`docs/DECISOES_PENDENTES.md`) documentada, mas não bloqueando o andamento.
 
 ---
 
