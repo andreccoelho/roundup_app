@@ -19,6 +19,9 @@ interface DadosCriarTurma {
   nivel: NivelTurma;
   descricao?: string;
   professorId?: string;
+  diasSemana?: number[];
+  horarioInicio?: string;
+  horarioFim?: string;
   autorId: string;
   autorPerfil: Perfil;
 }
@@ -52,6 +55,9 @@ export async function criarTurma(dados: DadosCriarTurma): Promise<Turma> {
     // Firestore rejeita campos com valor `undefined`: só entram no documento quando informados
     ...(dados.professorId ? { professorId: dados.professorId } : {}),
     ...(dados.descricao ? { descricao: dados.descricao } : {}),
+    ...(dados.diasSemana && dados.diasSemana.length > 0 ? { diasSemana: dados.diasSemana } : {}),
+    ...(dados.horarioInicio ? { horarioInicio: dados.horarioInicio } : {}),
+    ...(dados.horarioFim ? { horarioFim: dados.horarioFim } : {}),
   };
   await setDoc(ref, turma);
   return turma;
