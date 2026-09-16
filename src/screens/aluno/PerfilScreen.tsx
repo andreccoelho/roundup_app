@@ -114,14 +114,11 @@ export default function PerfilScreen() {
 
       <Text style={styles.email}>{usuario?.email}</Text>
 
-      <View style={styles.secaoPequena}>
-        <Botao titulo="Editar perfil" variante="secundario" onPress={() => navigation.navigate('EditarPerfil')} />
-      </View>
-      <View style={styles.secao}>
-        <Botao titulo="Meus vínculos" variante="secundario" onPress={() => navigation.navigate('VincularAluno')} />
-      </View>
-      <View style={styles.secaoPequena}>
+      <View style={styles.botoesLinha}>
+        <Botao compacto titulo="Editar perfil" variante="secundario" onPress={() => navigation.navigate('EditarPerfil')} />
+        <Botao compacto titulo="Meus vínculos" variante="secundario" onPress={() => navigation.navigate('VincularAluno')} />
         <Botao
+          compacto
           titulo="Preferências de notificação"
           variante="secundario"
           onPress={() => navigation.navigate('PreferenciasNotificacao')}
@@ -197,8 +194,14 @@ const styles = StyleSheet.create({
   },
   email: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, paddingHorizontal: Espacamento.padrao, marginTop: Espacamento.pequeno },
 
+  botoesLinha: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Espacamento.pequeno,
+    paddingHorizontal: Espacamento.padrao,
+    marginTop: Espacamento.padrao,
+  },
   secao: { marginTop: Espacamento.grande, paddingHorizontal: Espacamento.padrao },
-  secaoPequena: { marginTop: Espacamento.pequeno, paddingHorizontal: Espacamento.padrao },
   secaoCabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: Espacamento.medio },
   secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
   secaoContagem: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },

@@ -11,6 +11,9 @@ interface BotaoProps {
   carregando?: boolean;
   desabilitado?: boolean;
   variante?: VarianteCheia | 'texto';
+  // Menos padding vertical, pra linhas de ações secundárias lado a lado (ex.: Perfil) não
+  // virarem uma pilha de barras cheias — minHeight:44 (alvo de toque) continua garantido.
+  compacto?: boolean;
   accessibilityLabel?: string;
 }
 
@@ -37,7 +40,7 @@ const ESTILOS_POR_VARIANTE: Record<VarianteCheia, { container: ViewStyle; texto:
   },
 };
 
-export default function Botao({ titulo, onPress, carregando, desabilitado, variante = 'primario', accessibilityLabel }: BotaoProps) {
+export default function Botao({ titulo, onPress, carregando, desabilitado, variante = 'primario', compacto, accessibilityLabel }: BotaoProps) {
   const inativo = Boolean(carregando || desabilitado);
 
   if (variante === 'texto') {
@@ -60,14 +63,18 @@ export default function Botao({ titulo, onPress, carregando, desabilitado, varia
 
   return (
     <TouchableOpacity
-      style={[styles.botao, estilos.container, inativo && styles.botaoDesabilitado, semAnelDeFoco]}
+      style={[styles.botao, estilos.container, compacto && styles.botaoCompacto, inativo && styles.botaoDesabilitado, semAnelDeFoco]}
       onPress={onPress}
       disabled={inativo}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? titulo}
       accessibilityState={{ disabled: inativo, busy: Boolean(carregando) }}
     >
-      {carregando ? <ActivityIndicator color={estilos.corIndicador} /> : <Text style={[styles.texto, estilos.texto]}>{titulo}</Text>}
+      {carregando ? (
+        <ActivityIndicator color={estilos.corIndicador} />
+      ) : (
+        <Text style={[styles.texto, compacto && styles.textoCompacto, estilos.texto]}>{titulo}</Text>
+      )}
     </TouchableOpacity>
   );
 }
@@ -83,6 +90,8 @@ const styles = StyleSheet.create({
     minWidth: 44,
   },
   botaoDesabilitado: { opacity: 0.4 },
+  botaoCompacto: { paddingVertical: Espacamento.pequeno, paddingHorizontal: Espacamento.medio },
+  textoCompacto: { fontSize: TamanhoFonte.sm },
   texto: { fontSize: TamanhoFonte.md, fontWeight: '600', letterSpacing: 0.3 },
   textoLink: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, textDecorationLine: 'underline', textAlign: 'center' },
 });
