@@ -60,7 +60,10 @@ export default function ExcluirContaSecao() {
 }
 
 const styles = StyleSheet.create({
-  container: { marginTop: Espacamento.grande },
+  // paddingHorizontal próprio: o componente não pode depender do pai já ter padding lateral —
+  // as 3 telas de Perfil que o usam tiraram o padding do container geral (a banda de identidade
+  // precisa ser full-bleed).
+  container: { marginTop: Espacamento.grande, paddingHorizontal: Espacamento.padrao },
   titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
   descricao: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
   espaco: { height: Espacamento.medio },
