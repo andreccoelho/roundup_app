@@ -41,7 +41,12 @@ export default function ExcluirContaSecao() {
       <Text style={styles.descricao}>Remove sua conta e os dados pessoais associados. Esta ação não pode ser desfeita.</Text>
 
       <View style={styles.espaco} />
-      <Botao titulo="Excluir minha conta" variante="destrutivo" onPress={() => setConfirmando(true)} />
+      {/* compacto + wrapper flex-start — ação rara e destrutiva, não precisa do mesmo peso
+          visual de "Salvar"/"Confirmar"; um botão grande e cheio aqui lia como convite, não
+          como último recurso. */}
+      <View style={styles.botaoWrapper}>
+        <Botao compacto titulo="Excluir minha conta" variante="destrutivo" onPress={() => setConfirmando(true)} />
+      </View>
 
       <Dialogo
         visivel={confirmando}
@@ -64,6 +69,9 @@ const styles = StyleSheet.create({
   // as 3 telas de Perfil que o usam tiraram o padding do container geral (a banda de identidade
   // precisa ser full-bleed).
   container: { marginTop: Espacamento.grande, paddingHorizontal: Espacamento.padrao },
+  // Wrapper só do botão, não do texto acima: alignItems:'flex-start' no container inteiro
+  // quebraria o wrap do parágrafo de descrição (Text sem stretch tenta caber numa linha só).
+  botaoWrapper: { alignItems: 'flex-start' },
   titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
   descricao: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
   espaco: { height: Espacamento.medio },
