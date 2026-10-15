@@ -2,19 +2,29 @@
 // tela inicial — por isso o botão de check-in fica direto no item da lista, sem tela intermediária.
 // Os 3 estados de RN08 (disponível / fora da janela / já realizado) precisam ser legíveis de
 // relance: cada um tem forma, ícone e texto próprios — nunca só uma mudança de cor.
+// Visual: sessões agrupadas por dia (cabeçalho "Hoje", "Amanhã", "Qui 17/10"), linhas sobre o
+// fundo; erro de carga com "Tentar novamente"; erro de check-in em Aviso, sem esconder a lista.
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores } from '../../theme';
+import { View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarProximasSessoesDoAluno } from '../../services/sessoes';
 import { realizarCheckIn, buscarCheckInDaSessao } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
 import { buscarUsuario } from '../../services/usuarios';
 import { Sessao } from '../../types';
-import { formatarDataHora } from '../../utils/datas';
+import { paraData } from '../../utils/datas';
+import { rotuloDia } from '../../utils/apresentacao';
+import { mensagemErro } from '../../utils/mensagensErro';
 import { estadoCheckIn, motivoJanelaFechada, EstadoCheckIn } from '../../utils/statusCheckIn';
 import LinhaFina from '../../components/LinhaFina';
 import CartaoSessao from '../../components/ui/CartaoSessao';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import Tela from '../../components/ui/Tela';
+import Aviso from '../../components/ui/Aviso';
+import Esqueleto from '../../components/ui/Esqueleto';
+import EstadoErro from '../../components/ui/EstadoErro';
+import EstadoVazio from '../../components/ui/EstadoVazio';
+import { IconeFichaTecnica } from '../../components/icones';
 
 interface ItemAgenda {
   sessao: Sessao;
@@ -28,6 +38,7 @@ export default function AgendaScreen() {
 
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
+  const [erroCheckIn, setErroCheckIn] = useState<string | null>(null);
   const [itens, setItens] = useState<ItemAgenda[]>([]);
   const [processandoId, setProcessandoId] = useState<string | null>(null);
 
@@ -53,8 +64,8 @@ export default function AgendaScreen() {
         }),
       );
       setItens(comDados);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar sua agenda agora.'));
     } finally {
       setCarregando(false);
     }
@@ -65,55 +76,64 @@ export default function AgendaScreen() {
   }, [carregar]);
 
   async function handleCheckIn(sessaoId: string) {
-    if (!usuario) return;
+    if (!usuario || processandoId) return;
     setProcessandoId(sessaoId);
-    setErro(null);
+    setErroCheckIn(null);
     try {
       await realizarCheckIn(sessaoId, usuario.id);
-      setItens(prev => prev.map(item => (item.sessao.id === sessaoId ? { ...item, estado: 'realizado' } : item)));
-    } catch (e: any) {
-      setErro(e.message);
+      setItens((prev) => prev.map((item) => (item.sessao.id === sessaoId ? { ...item, estado: 'realizado' } : item)));
+    } catch (e) {
+      setErroCheckIn(mensagemErro(e, 'Não foi possível fazer o check-in. Tente novamente.'));
     } finally {
       setProcessandoId(null);
     }
   }
 
-  if (carregando) {
-    return (
-      <View style={styles.centro}>
-        <ActivityIndicator color={Cores.texto} />
-      </View>
-    );
+  // Agrupa por dia, preservando a ordem que o service já devolve.
+  const grupos: { dia: string; itens: ItemAgenda[] }[] = [];
+  for (const item of itens) {
+    const dia = rotuloDia(paraData(item.sessao.inicio));
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.dia === dia) ultimo.itens.push(item);
+    else grupos.push({ dia, itens: [item] });
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {erro && <Text style={styles.erro}>{erro}</Text>}
-      {itens.length === 0 ? (
-        <Text style={styles.vazio}>Nenhuma sessão futura nas suas turmas.</Text>
+    <Tela
+      largura="lista"
+      sobreposicao={<Aviso visivel={erroCheckIn !== null} tipo="erro" mensagem={erroCheckIn ?? ''} onFechar={() => setErroCheckIn(null)} acimaDaTabBar />}
+    >
+      {carregando ? (
+        <Esqueleto forma="linha" repeticoes={5} />
+      ) : erro ? (
+        <EstadoErro mensagem={erro} onTentarNovamente={carregar} />
+      ) : itens.length === 0 ? (
+        <EstadoVazio
+          icone={IconeFichaTecnica}
+          titulo="Nenhum treino na agenda"
+          descricao="Quando suas turmas tiverem sessões marcadas, elas aparecem aqui."
+        />
       ) : (
-        itens.map(({ sessao, nomeTurma, nomeProfessor, estado }, i) => (
-          <View key={sessao.id}>
-            <CartaoSessao
-              nomeTurma={nomeTurma}
-              detalhe={`${formatarDataHora(sessao.inicio)} · Prof. ${nomeProfessor}`}
-              estado={estado}
-              carregando={processandoId === sessao.id}
-              motivo={estado === 'foraDaJanela' ? motivoJanelaFechada(sessao) : undefined}
-              onCheckIn={() => handleCheckIn(sessao.id)}
-            />
-            {i < itens.length - 1 && <LinhaFina />}
+        grupos.map((grupo, g) => (
+          <View key={grupo.dia}>
+            <CabecalhoSecao titulo={grupo.dia} contador={grupo.itens.length === 1 ? '1 treino' : `${grupo.itens.length} treinos`} semMargem={g === 0} />
+            {grupo.itens.map(({ sessao, nomeTurma, nomeProfessor, estado }, i) => (
+              <View key={sessao.id}>
+                {i > 0 ? <LinhaFina /> : null}
+                <CartaoSessao
+                  nomeTurma={nomeTurma}
+                  detalhe={`com ${nomeProfessor}`}
+                  inicio={paraData(sessao.inicio)}
+                  estado={estado}
+                  carregando={processandoId === sessao.id}
+                  motivo={estado === 'foraDaJanela' ? motivoJanelaFechada(sessao) : undefined}
+                  onCheckIn={() => handleCheckIn(sessao.id)}
+                />
+              </View>
+            ))}
           </View>
         ))
       )}
-    </ScrollView>
+    </Tela>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { paddingHorizontal: 20, paddingVertical: 8 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Cores.fundo },
-  erro: { color: Cores.perigo, fontWeight: '600', marginBottom: 12 },
-  vazio: { color: Cores.texto2, paddingVertical: 16 },
-});

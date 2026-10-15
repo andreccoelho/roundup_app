@@ -9,20 +9,20 @@
 // (consentimentoAceito, versaoConsentimento); a gravação real acontece dentro de cada tela de
 // Cadastro, logo depois que cadastrar() resolve e já existe um uid autenticado.
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, FamiliaFonte, Raios, Sombras, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento, Raios } from '../../theme';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import Botao from '../../components/ui/Botao';
 import Checkbox from '../../components/ui/Checkbox';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
 
 export const VERSAO_POLITICA_LGPD = '1.0';
 
 type Rota = RouteProp<AuthStackParamList, 'ConsentimentoLGPD'>;
 type Navegacao = NativeStackNavigationProp<AuthStackParamList, 'ConsentimentoLGPD'>;
-
-const semAnelDeFoco = { outlineWidth: 0 } as const;
 
 export default function ConsentimentoLGPDScreen() {
   const navigation = useNavigation<Navegacao>();
@@ -34,58 +34,52 @@ export default function ConsentimentoLGPDScreen() {
   }
 
   return (
-    <View style={styles.flex}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-        <Botao variante="voltar" onPress={() => navigation.goBack()} />
+    <Tela largura="formulario" bordas={['topo', 'base']}>
+      <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-        <Text style={styles.titulo}>Privacidade dos seus dados</Text>
-        <Text style={styles.subtitulo}>
-          Antes de continuar, leia como o RoundUp trata seus dados pessoais (versão {VERSAO_POLITICA_LGPD}).
-        </Text>
+      <Texto variante="display" style={styles.titulo}>
+        Seus dados
+      </Texto>
+      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+        {`Antes de continuar, leia como o RoundUp trata seus dados pessoais (versão ${VERSAO_POLITICA_LGPD}).`}
+      </Texto>
 
-        <View style={styles.politica}>
-          <Text style={styles.politicaTexto}>
-            [Texto da política de privacidade — placeholder. Substituir pelo conteúdo jurídico
-            definitivo antes da entrega, com a descrição real de quais dados são coletados, com
-            que finalidade, por quanto tempo são retidos e como o usuário pode exercer seus
-            direitos sob a LGPD (Lei 13.709/2018), incluindo acesso, correção e eliminação
-            (RF29).]
-          </Text>
-        </View>
+      <View style={styles.politica}>
+        <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
+          <Texto variante="legenda">
+            [Texto da política de privacidade — placeholder. Substituir pelo conteúdo jurídico definitivo antes da
+            entrega, com a descrição real de quais dados são coletados, com que finalidade, por quanto tempo são
+            retidos e como o usuário pode exercer seus direitos sob a LGPD (Lei 13.709/2018), incluindo acesso,
+            correção e eliminação (RF29).]
+          </Texto>
+        </ScrollView>
+      </View>
 
-        <View style={styles.linhaAceite}>
-          <Checkbox rotulo="Li e aceito a política de privacidade." marcado={aceito} onAlterar={setAceito} />
-        </View>
+      <View style={styles.aceite}>
+        <Checkbox rotulo="Li e aceito a política de privacidade." marcado={aceito} onAlterar={setAceito} />
+      </View>
 
-        <View style={styles.espaco} />
-        <Botao titulo="Continuar" onPress={handleContinuar} desabilitado={!aceito} />
-      </ScrollView>
-    </View>
+      <Botao titulo="Continuar" grande onPress={handleContinuar} desabilitado={!aceito} />
+      {!aceito ? (
+        <Texto variante="legenda" cor="texto3" alinhamento="center" style={styles.ajuda}>
+          Marque o aceite para continuar.
+        </Texto>
+      ) : null}
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.fundo },
-  scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
-  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
-  titulo: {
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    marginTop: Espacamento.padrao,
-  },
-  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
+  titulo: { marginTop: Espacamento.grande },
+  subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
   politica: {
-    borderWidth: 1,
-    borderColor: Cores.linha,
+    backgroundColor: Cores.superficie1,
     borderRadius: Raios.pequeno,
+    borderLeftWidth: 2,
+    borderLeftColor: Cores.linhaForte,
     padding: Espacamento.padrao,
-    maxHeight: 260,
+    maxHeight: 280,
   },
-  politicaTexto: { fontSize: TamanhoFonte.sm, color: Cores.texto2, lineHeight: 20 },
-  linhaAceite: { marginTop: Espacamento.grande },
-  caixa: { width: 22, height: 22, borderRadius: Raios.pequeno, borderWidth: 1, borderColor: Cores.linhaForte },
-  caixaMarcada: { backgroundColor: Cores.superficie2, borderColor: Cores.texto },
-  textoAceite: { flex: 1, fontSize: TamanhoFonte.sm, color: Cores.texto },
-  espaco: { height: Espacamento.padrao },
+  aceite: { marginTop: Espacamento.grande, marginBottom: Espacamento.padrao },
+  ajuda: { marginTop: Espacamento.pequeno },
 });

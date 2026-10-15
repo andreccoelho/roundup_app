@@ -1,12 +1,11 @@
 // Painel do Professor — RF10 (turmas), RF12 (sessão do dia), RF13/RN02/RN08 (chamada = validação
 // de check-in, adiantando RF22). Dado real: turmas do professor, matrícula ativa, sessão de hoje
 // e status de check-in de cada aluno. Missões ativas e graduações pendentes NÃO entram nesta tela
-// ainda — RF23/RF25 são Ciclo 3, coleções `missoes`/`graduacoes` hoje bloqueadas em
-// firestore.rules.
+// ainda — RF23/RF25 são Ciclo 3.
+// Esta tela busca dados e reage a ações; a apresentação está em HojeProfessorVisao.tsx (a mesma
+// usada pela Galeria, com dados fictícios).
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Cores, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardProfessorNavigationProp } from '../../navigation/ProfessorTabs';
 import { listarTurmasDoProfessor } from '../../services/turmas';
@@ -15,16 +14,15 @@ import { listarSessoesPorTurma } from '../../services/sessoes';
 import { listarCheckInsPorSessao, validarCheckIn } from '../../services/checkins';
 import { buscarUsuario } from '../../services/usuarios';
 import { CheckIn, Sessao, Turma } from '../../types';
-import { formatarDataHora } from '../../utils/datas';
-import LinhaFina from '../../components/LinhaFina';
-import Botao from '../../components/ui/Botao';
-import Etiqueta from '../../components/ui/Etiqueta';
-import Avatar from '../../components/ui/Avatar';
-import SeloFaixa from '../../components/ui/SeloFaixa';
+import { paraData } from '../../utils/datas';
+import { mensagemErro } from '../../utils/mensagensErro';
+import Tela from '../../components/ui/Tela';
+import HojeProfessorVisao, { type ItemChamadaVisao } from './HojeProfessorVisao';
 
 interface ItemChamada {
   alunoId: string;
   nome: string;
+  fotoUrl?: string;
   checkIn: CheckIn | null;
 }
 
@@ -58,17 +56,22 @@ export default function DashboardScreen() {
   const [processandoAlunoId, setProcessandoAlunoId] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
-  useEffect(() => {
+  const carregarTurmas = useCallback(() => {
     if (!usuario) return;
     setCarregandoTurmas(true);
+    setErro(null);
     listarTurmasDoProfessor(usuario.id)
       .then((lista) => {
         setTurmas(lista);
         setTurmaSelecionadaId((atual) => atual ?? lista[0]?.id ?? null);
       })
-      .catch((e: any) => setErro(e.message))
+      .catch((e) => setErro(mensagemErro(e, 'Não foi possível carregar suas turmas agora.')))
       .finally(() => setCarregandoTurmas(false));
   }, [usuario]);
+
+  useEffect(() => {
+    carregarTurmas();
+  }, [carregarTurmas]);
 
   const carregarPainel = useCallback(async (turmaId: string) => {
     if (!usuario) return;
@@ -89,6 +92,7 @@ export default function DashboardScreen() {
           return {
             alunoId: matricula.alunoId,
             nome: aluno?.nome ?? 'Aluno',
+            fotoUrl: aluno?.fotoUrl,
             checkIn: checkIns.find((c) => c.alunoId === matricula.alunoId) ?? null,
           };
         }),
@@ -96,8 +100,8 @@ export default function DashboardScreen() {
 
       setSessaoHoje(sessao);
       setChamada(listaChamada);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar a chamada agora.'));
     } finally {
       setCarregandoPainel(false);
     }
@@ -107,8 +111,9 @@ export default function DashboardScreen() {
     if (turmaSelecionadaId) carregarPainel(turmaSelecionadaId);
   }, [turmaSelecionadaId, carregarPainel]);
 
-  async function handleTogglePresenca(item: ItemChamada) {
-    if (!usuario || !item.checkIn) return;
+  async function handleTogglePresenca(alunoId: string) {
+    const item = chamada.find((c) => c.alunoId === alunoId);
+    if (!usuario || !item?.checkIn || processandoAlunoId) return;
     const novoStatus = item.checkIn.status === 'validado' ? 'pendente' : 'validado';
     setProcessandoAlunoId(item.alunoId);
     setErro(null);
@@ -117,209 +122,43 @@ export default function DashboardScreen() {
       setChamada((prev) =>
         prev.map((c) => (c.alunoId === item.alunoId && c.checkIn ? { ...c, checkIn: { ...c.checkIn, status: novoStatus } } : c)),
       );
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível atualizar a presença. Tente novamente.'));
     } finally {
       setProcessandoAlunoId(null);
     }
   }
 
-  const total = chamada.length;
   const presentes = chamada.filter((c) => c.checkIn && c.checkIn.status !== 'rejeitado').length;
-  const modalidades = usuario?.modalidades ?? [];
+  const chamadaVisao: ItemChamadaVisao[] = chamada.map((c) => ({
+    alunoId: c.alunoId,
+    nome: c.nome,
+    fotoUrl: c.fotoUrl,
+    status: c.checkIn ? c.checkIn.status : 'aguardando',
+  }));
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {/* Banda full-bleed encosta no topo — ícones claros, igual ao Login/Dashboard do Aluno. */}
-      <View style={styles.cabecalho}>
-        {/* Marca invertida como textura de fundo — mesmo tratamento do Dashboard do Aluno. */}
-        <Image
-          source={require('../../../assets/roundup_logo_invertida.png')}
-          style={styles.marcaFundo}
-          resizeMode="contain"
-        />
-        <View style={styles.cabecalhoTopo}>
-          <Avatar nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={52} />
-          <Text style={styles.saudacaoNome} numberOfLines={1} adjustsFontSizeToFit>
-            {usuario?.nome ?? ''}
-          </Text>
-        </View>
-        {usuario?.graduacao ? (
-          <View style={styles.seloLinha}>
-            <SeloFaixa faixaOuGrau={usuario.graduacao} />
-          </View>
-        ) : null}
-      </View>
-
-      {modalidades.length > 0 ? (
-        <View style={styles.modalidadesLinha}>
-          {modalidades.map((modalidade) => (
-            <Etiqueta key={modalidade} texto={modalidade} />
-          ))}
-        </View>
-      ) : null}
-
-      {erro ? (
-        <Text style={styles.erro} accessibilityRole="alert">
-          {erro}
-        </Text>
-      ) : null}
-
-      {carregandoTurmas ? (
-        <ActivityIndicator color={Cores.texto} style={styles.espacoTopo} />
-      ) : turmas.length === 0 ? (
-        <View style={styles.secao}>
-          <Text style={styles.vazio}>Você ainda não tem turmas.</Text>
-          <View style={styles.espacoPequeno} />
-          <Botao titulo="Criar turma" onPress={() => navigation.navigate('Turmas')} />
-        </View>
-      ) : (
-        <>
-          {turmas.length > 1 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsLinha} contentContainerStyle={styles.chipsConteudo}>
-              {turmas.map((turma) => (
-                <Etiqueta
-                  key={turma.id}
-                  texto={turma.nome}
-                  selecionada={turmaSelecionadaId === turma.id}
-                  onPress={() => setTurmaSelecionadaId(turma.id)}
-                />
-              ))}
-            </ScrollView>
-          )}
-
-          <View style={styles.secao}>
-            <Text style={styles.turmaNome}>{turmas.find((t) => t.id === turmaSelecionadaId)?.nome}</Text>
-            <Text style={styles.turmaDetalhe}>
-              {sessaoHoje ? `Sessão de hoje · ${formatarDataHora(sessaoHoje.inicio)} · status: ${sessaoHoje.status}` : 'Nenhuma sessão hoje nesta turma.'}
-            </Text>
-
-            <View style={styles.contadoresLinha}>
-              <View>
-                <Text style={styles.contadorValor}>{presentes}/{total}</Text>
-                <Text style={styles.contadorRotulo}>presentes / matriculados</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.secao}>
-            <Text style={styles.secaoTitulo}>Chamada de hoje</Text>
-            {carregandoPainel ? (
-              <ActivityIndicator color={Cores.texto} style={styles.espacoTopo} />
-            ) : !sessaoHoje ? (
-              <Text style={styles.vazio}>Sem sessão hoje — nada para chamar.</Text>
-            ) : chamada.length === 0 ? (
-              <Text style={styles.vazio}>Nenhum aluno matriculado nesta turma.</Text>
-            ) : (
-              chamada.map((item, i) => (
-                <View key={item.alunoId}>
-                  <View style={styles.linhaChamada}>
-                    <Text style={styles.itemNome}>{item.nome}</Text>
-                    {!item.checkIn ? (
-                      <Text style={styles.statusAguardando}>Aguardando check-in</Text>
-                    ) : (
-                      <TouchableOpacity
-                        style={[styles.botaoPresenca, item.checkIn.status === 'validado' && styles.botaoPresencaAtivo]}
-                        onPress={() => handleTogglePresenca(item)}
-                        disabled={processandoAlunoId === item.alunoId}
-                        accessibilityRole="button"
-                        accessibilityLabel={`${item.checkIn.status === 'validado' ? 'Presente' : 'Confirmar presença'} de ${item.nome}`}
-                        accessibilityState={{ selected: item.checkIn.status === 'validado', disabled: processandoAlunoId === item.alunoId }}
-                      >
-                        <Text style={[styles.textoPresenca, item.checkIn.status === 'validado' && styles.textoPresencaAtivo]}>
-                          {processandoAlunoId === item.alunoId ? '...' : item.checkIn.status === 'validado' ? 'Presente' : 'Confirmar'}
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  {i < chamada.length - 1 && <LinhaFina />}
-                </View>
-              ))
-            )}
-          </View>
-        </>
-      )}
-
-      <View style={styles.rodape}>
-        <TouchableOpacity onPress={() => navigation.navigate('Turmas')}>
-          <Text style={styles.linkRodape}>Gerenciar turmas</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+    <Tela largura="lista" preenchimento={false}>
+      <HojeProfessorVisao
+        nome={usuario?.nome ?? ''}
+        fotoUrl={usuario?.fotoUrl}
+        graduacao={usuario?.graduacao}
+        modalidades={usuario?.modalidades ?? []}
+        turmas={turmas.map((t) => ({ id: t.id, nome: t.nome }))}
+        turmaSelecionadaId={turmaSelecionadaId}
+        carregandoTurmas={carregandoTurmas}
+        sessaoHoje={sessaoHoje ? { inicio: paraData(sessaoHoje.inicio), status: sessaoHoje.status } : null}
+        carregandoPainel={carregandoPainel}
+        chamada={chamadaVisao}
+        presentes={presentes}
+        processandoAlunoId={processandoAlunoId}
+        erro={erro}
+        onSelecionarTurma={setTurmaSelecionadaId}
+        onTogglePresenca={handleTogglePresenca}
+        onTentarNovamente={() => (turmas.length === 0 ? carregarTurmas() : turmaSelecionadaId && carregarPainel(turmaSelecionadaId))}
+        onCriarTurma={() => navigation.navigate('Turmas')}
+        onGerenciarTurmas={() => navigation.navigate('Turmas')}
+      />
+    </Tela>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
-
-  // Banda full-bleed preta — mesmo tratamento de identidade do Dashboard do Aluno.
-  cabecalho: {
-    backgroundColor: Cores.superficie2,
-    paddingHorizontal: Espacamento.grande,
-    paddingTop: Espacamento.extraGrande,
-    paddingBottom: Espacamento.grande,
-    overflow: 'hidden',
-  },
-  marcaFundo: {
-    position: 'absolute',
-    top: -40,
-    right: -70,
-    width: 220,
-    height: 220,
-    opacity: 0.12,
-  },
-  cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
-  saudacaoNome: {
-    flex: 1,
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    letterSpacing: 1,
-  },
-  seloLinha: { marginTop: Espacamento.padrao },
-  modalidadesLinha: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Espacamento.pequeno,
-    paddingHorizontal: Espacamento.grande,
-    paddingTop: Espacamento.padrao,
-  },
-  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
-  espacoTopo: { marginTop: Espacamento.padrao },
-  espacoPequeno: { height: Espacamento.medio },
-
-  chipsLinha: { marginTop: Espacamento.minimo, marginBottom: Espacamento.minimo },
-  chipsConteudo: { paddingHorizontal: Espacamento.grande, gap: Espacamento.pequeno },
-
-  secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.minimo },
-  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-
-  turmaNome: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.texto },
-  turmaDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.minimo },
-  contadoresLinha: { flexDirection: 'row', marginTop: Espacamento.padrao },
-  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
-  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
-
-  linhaChamada: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Espacamento.medio },
-  itemNome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
-  // Cores.texto3 corrigido na fonte (src/theme/tokens.ts) para 4,61:1 sobre branco — este
-  // rótulo passou a valer 4,5:1 sem precisar de nenhuma mudança aqui além do import direto.
-  statusAguardando: { fontSize: TamanhoFonte.xs, color: Cores.texto3 },
-  botaoPresenca: {
-    borderWidth: 1,
-    borderColor: Cores.linhaForte,
-    borderRadius: Raios.pequeno,
-    paddingVertical: Espacamento.pequeno,
-    paddingHorizontal: Espacamento.padrao,
-    minHeight: 44,
-    justifyContent: 'center',
-  },
-  botaoPresencaAtivo: { backgroundColor: Cores.sucesso, borderColor: Cores.sucesso },
-  textoPresenca: { fontSize: TamanhoFonte.sm, color: Cores.linhaForte },
-  textoPresencaAtivo: { color: Cores.texto, fontWeight: '600' },
-
-  rodape: { paddingHorizontal: Espacamento.grande, gap: Espacamento.medio, marginTop: Espacamento.grande + Espacamento.minimo, paddingTop: Espacamento.padrao },
-  linkRodape: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-});

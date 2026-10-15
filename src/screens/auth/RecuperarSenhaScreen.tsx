@@ -2,17 +2,21 @@
 // Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento } from '../../theme';
 import { auth } from '../../services/firebase';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { emailValido } from '../../utils/validacaoCadastro';
 import { mensagemErroAutenticacao } from '../../utils/mensagensErro';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import MensagemErro from '../../components/ui/MensagemErro';
+import { IconeCheck } from '../../components/icones';
 
 export default function RecuperarSenhaScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'RecuperarSenha'>>();
@@ -24,6 +28,7 @@ export default function RecuperarSenhaScreen() {
   const [enviado, setEnviado] = useState(false);
 
   async function handleEnviar() {
+    if (carregando) return;
     setErroConta(null);
     if (!email.trim()) {
       setErroEmail('Informe seu e-mail.');
@@ -46,62 +51,57 @@ export default function RecuperarSenhaScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Botao variante="voltar" onPress={() => navigation.goBack()} />
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+      <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-        <Text style={styles.titulo}>Recuperar senha</Text>
-        <Text style={styles.subtitulo}>
-          Informe o e-mail da sua conta. Se ele existir, enviaremos um link para redefinir a senha.
-        </Text>
+      <Texto variante="display" style={styles.titulo}>
+        Recuperar senha
+      </Texto>
+      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+        Informe o e-mail da sua conta. Se ele existir, enviaremos um link para redefinir a senha.
+      </Texto>
 
-        {enviado ? (
-          <Text style={styles.confirmacao} accessibilityRole="alert">
-            Se {email.trim()} estiver cadastrado, o link de recuperação já foi enviado.
-          </Text>
-        ) : (
-          <>
-            {erroConta ? (
-              <Text style={styles.erroConta} accessibilityRole="alert">
-                {erroConta}
-              </Text>
-            ) : null}
-            <CampoTexto
-              rotulo="E-mail"
-              placeholder="seuemail@exemplo.com"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="email-address"
-              valor={email}
-              onAlterar={setEmail}
-              erro={erroEmail}
-            />
-            <View style={styles.espaco} />
-            <Botao titulo="Enviar link de recuperação" onPress={handleEnviar} carregando={carregando} />
-          </>
-        )}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      {enviado ? (
+        <View style={styles.confirmacao} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          <IconeCheck tamanho={24} cor={Cores.sucesso} />
+          <Texto variante="corpo" style={styles.confirmacaoTexto}>
+            {`Se ${email.trim()} estiver cadastrado, o link de recuperação já foi enviado.`}
+          </Texto>
+        </View>
+      ) : (
+        <>
+          <MensagemErro mensagem={erroConta} />
+          <CampoTexto
+            rotulo="E-mail"
+            placeholder="seuemail@exemplo.com"
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            autoComplete="email"
+            returnKeyType="send"
+            onSubmitEditing={handleEnviar}
+            valor={email}
+            onAlterar={setEmail}
+            erro={erroEmail}
+          />
+          <Botao titulo="Enviar link" grande onPress={handleEnviar} carregando={carregando} />
+        </>
+      )}
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.fundo },
-  scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.grande },
-  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
-  titulo: {
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    marginTop: Espacamento.padrao,
+  titulo: { marginTop: Espacamento.grande },
+  subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
+  confirmacao: {
+    flexDirection: 'row',
+    gap: Espacamento.medio,
+    alignItems: 'flex-start',
+    backgroundColor: Cores.superficie1,
+    borderLeftWidth: 3,
+    borderLeftColor: Cores.sucesso,
+    padding: Espacamento.padrao,
   },
-  subtitulo: {
-    fontSize: TamanhoFonte.sm,
-    color: Cores.texto2,
-    marginTop: Espacamento.pequeno,
-    marginBottom: Espacamento.grande + Espacamento.minimo,
-  },
-  confirmacao: { fontSize: TamanhoFonte.md, color: Cores.texto },
-  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  espaco: { height: Espacamento.pequeno },
+  confirmacaoTexto: { flex: 1 },
 });

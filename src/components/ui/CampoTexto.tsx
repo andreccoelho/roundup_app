@@ -3,7 +3,7 @@
 // acessível do input; erro é anunciado (live region). Senha com mostrar/ocultar. Máscara opcional
 // de data (DD/MM/AAAA) e hora (HH:MM) com teclado numérico — o valor entregue continua sendo o
 // texto formatado, exatamente como as telas já validavam antes.
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 import { Cores, Espacamento, Raios, TamanhoFonte } from '../../theme';
 import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
@@ -33,6 +33,8 @@ interface CampoTextoProps
   erro?: string;
   ajuda?: string;
   mascara?: Mascara;
+  // Para encadear campos (Enter/"próximo" foca o seguinte).
+  refCampo?: Ref<TextInput>;
 }
 
 function aplicarMascara(texto: string, mascara: Mascara): string {
@@ -58,6 +60,7 @@ export default function CampoTexto({
   keyboardType,
   placeholder,
   multiline,
+  refCampo,
   ...resto
 }: CampoTextoProps) {
   const [focado, setFocado] = useState(false);
@@ -74,6 +77,7 @@ export default function CampoTexto({
       </Texto>
       <View style={[styles.caixa, { borderBottomColor: corBorda }, (focado || erro) && styles.caixaRealce]}>
         <TextInput
+          ref={refCampo}
           style={[styles.campo, multiline && styles.campoMultilinha, estiloSemOutline]}
           value={valor}
           onChangeText={(texto) => onAlterar(mascara ? aplicarMascara(texto, mascara) : texto)}

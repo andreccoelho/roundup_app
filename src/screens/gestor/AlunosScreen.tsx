@@ -2,7 +2,7 @@
 // registrar graduação (RF25). RF32: sinaliza queda de frequência (critério provisório em
 // src/config/gamificacao.ts) reaproveitando CartaoAluno — sem tela nem componente novos.
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Cores, Espacamento } from '../../theme';
@@ -14,6 +14,11 @@ import LinhaFina from '../../components/LinhaFina';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import { IconeFaixa } from '../../components/icones';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 export default function AlunosScreen() {
   const { usuario } = useAuth();
@@ -28,8 +33,8 @@ export default function AlunosScreen() {
     setErro(null);
     try {
       setAlunos(await listarAlunosComFrequencia(usuario.id));
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar seus alunos agora.'));
     } finally {
       setCarregando(false);
     }
@@ -41,9 +46,9 @@ export default function AlunosScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={64} repeticoes={5} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto forma="linha" repeticoes={6} />
+      </Tela>
     );
   }
 
@@ -53,20 +58,28 @@ export default function AlunosScreen() {
 
   if (alunos.length === 0) {
     return (
-      <View style={styles.container}>
-        <EstadoVazio titulo="Nenhum aluno matriculado" descricao="Alunos aparecem aqui assim que se matricularem em uma turma sua." />
-      </View>
+      <Tela largura="lista" centralizarVertical>
+        <EstadoVazio icone={IconeFaixa} titulo="Nenhum aluno matriculado" descricao="Alunos aparecem aqui assim que se matricularem em uma turma sua." />
+      </Tela>
     );
   }
 
+  const emQueda = alunos.filter((a) => a.quedaFrequencia).length;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+    <Tela largura="lista">
+      <Texto variante="legenda" style={styles.intro}>
+        Toque num aluno para registrar graduação. As marcas mostram as últimas presenças.
+      </Texto>
+      <CabecalhoSecao titulo="Alunos" contador={emQueda > 0 ? `${alunos.length}, ${emQueda} em queda` : alunos.length} semMargem />
       {alunos.map((aluno, i) => (
         <View key={aluno.alunoId}>
-          <TouchableOpacity
+          {i > 0 ? <LinhaFina /> : null}
+          <Pressable
             onPress={() => navigation.navigate('RegistrarGraduacao', { alunoId: aluno.alunoId, nomeAluno: aluno.nome })}
             accessibilityRole="button"
-            accessibilityLabel={`Registrar graduação de ${aluno.nome}`}
+            accessibilityLabel={`${aluno.nome}${aluno.faixaOuGrau ? `, ${aluno.faixaOuGrau}` : ''}${aluno.quedaFrequencia ? ', queda de frequência' : ''}. Registrar graduação`}
+            style={({ pressed }) => pressed && styles.pressionada}
           >
             <CartaoAluno
               nome={aluno.nome}
@@ -74,15 +87,14 @@ export default function AlunosScreen() {
               frequenciaRecente={aluno.frequenciaRecente}
               alerta={aluno.quedaFrequencia ? 'Queda de frequência' : undefined}
             />
-          </TouchableOpacity>
-          {i < alunos.length - 1 && <LinhaFina />}
+          </Pressable>
         </View>
       ))}
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
+  intro: { marginBottom: Espacamento.padrao },
+  pressionada: { backgroundColor: Cores.superficie1 },
 });

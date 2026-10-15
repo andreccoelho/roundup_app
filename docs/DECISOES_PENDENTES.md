@@ -119,3 +119,12 @@ RN04 (janela de tempo com reset) não está implementada e a pontuação é cumu
 
 ### R-05 — Faixa interpretada a partir do texto livre
 O `SeloFaixa` deduz cor e graus de `faixaOuGrau`/`graduacao` (texto livre) sem mudar o modelo. Termos fora da lista (ex.: "Kruang 5", "prajied rosa") caem no visual neutro com o texto original. **A validar:** se o produto quer um campo estruturado de faixa no futuro (mudança de modelo e de Firestore, fora deste redesign).
+
+### R-06 — "Meus vínculos" virou "Vincular-se"
+A tela aberta por "Meus vínculos" só lista academias/professores para pedir vínculo; não mostra os vínculos existentes (RELATORIO_UI_UX.md, UX-03). Mostrar os existentes exigiria uma consulta nova ao Firestore, fora do escopo (redesign só de apresentação). **Decisão:** renomear o item e o título da tela para "Vincular-se". O estado "Enviado" continua local à tela. **A validar:** criar uma tela real de "Meus vínculos" (com pendentes e aceitos) numa rodada de funcionalidade.
+
+### R-07 — Home do Aluno sem o nome do professor no hero
+O HeroCheckIn aceita `professor`, mas a Home não buscava o professor de cada sessão (a Agenda busca). Buscar exigiria uma chamada nova ao Firestore na Home. **Decisão:** a Home não mostra o professor; a Agenda mostra. **A validar:** se vale a leitura extra.
+
+### R-08 — "Encerrar sessão" sem confirmação
+A ação principal da sessão virou botão primário, mas segue sem diálogo de confirmação (comportamento original). **A validar:** se encerrar por engano é um risco real (a sessão encerrada não reabre).

@@ -28,7 +28,11 @@ interface BotaoProps {
   grande?: boolean;
   icone?: ComponentType<IconeProps>;
   accessibilityLabel?: string;
+  // Só para a variante "texto": alinhamento do link na linha (padrão: centro).
+  alinhar?: 'inicio' | 'centro' | 'fim';
 }
+
+const ALINHAR = { inicio: 'flex-start', centro: 'center', fim: 'flex-end' } as const;
 
 const ESTILOS: Record<VarianteCheia, { container: ViewStyle; cor: string }> = {
   primario: { container: { backgroundColor: Cores.acento }, cor: Cores.sobreCor },
@@ -47,6 +51,7 @@ export default function Botao({
   grande,
   icone: Icone,
   accessibilityLabel,
+  alinhar = 'centro',
 }: BotaoProps) {
   const inativo = Boolean(carregando || desabilitado);
   const { focado, propsFoco } = useFocoVisivel();
@@ -68,7 +73,7 @@ export default function Botao({
         accessibilityRole={variante === 'voltar' ? 'button' : 'link'}
         accessibilityLabel={accessibilityLabel ?? rotulo}
         accessibilityState={{ disabled: inativo }}
-        style={[variante === 'voltar' ? styles.voltar : styles.link, estiloSemOutline, focado && estiloAnelFoco]}
+        style={[variante === 'voltar' ? styles.voltar : [styles.link, { alignSelf: ALINHAR[alinhar] }], estiloSemOutline, focado && estiloAnelFoco]}
         {...propsFoco}
       >
         {({ pressed }) => (

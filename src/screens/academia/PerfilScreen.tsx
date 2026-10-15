@@ -1,127 +1,94 @@
 // RF04: perfil da academia — leitura, edição (EditarPerfilScreen: nome, foto, nome da academia,
-// endereço, modalidades), gestão de professores, gestão de alunos, visão consolidada e sair.
-// Mesma linguagem visual dos outros dois perfis: banda de identidade (marca invertida + textura
-// + nome em Homebase) — aqui a identidade é a academia (nomeAcademia), não a pessoa de contato.
-import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+// endereço, modalidades), gestão de professores, gestão de alunos, visão consolidada,
+// notificações, conta e privacidade, e sair. A identidade da banda é a academia (nomeAcademia),
+// não a pessoa de contato. "Excluir conta" vive na subtela "Conta e privacidade".
+import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { PerfilAcademiaNavigationProp } from '../../navigation/AcademiaTabs';
 import { formatarMesAno } from '../../utils/datas';
-import Avatar from '../../components/ui/Avatar';
-import Botao from '../../components/ui/Botao';
+import Tela from '../../components/ui/Tela';
+import BandaIdentidade from '../../components/ui/BandaIdentidade';
 import Etiqueta from '../../components/ui/Etiqueta';
-import TexturaLona from '../../components/ui/TexturaLona';
-import ExcluirContaSecao from '../compartilhado/ExcluirContaSecao';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import ItemMenu from '../../components/ui/ItemMenu';
+import {
+  IconeCadeado,
+  IconeCartaoPontuacao,
+  IconeFaixa,
+  IconeLuva,
+  IconePerfil,
+  IconeSair,
+  IconeSino,
+} from '../../components/icones';
 
 export default function PerfilScreen() {
   const { usuario, logout } = useAuth();
   const navigation = useNavigation<PerfilAcademiaNavigationProp>();
 
   const modalidades = usuario?.modalidades ?? [];
+  const detalhes = [
+    usuario?.endereco,
+    usuario?.nome ? `Responsável: ${usuario.nome}` : undefined,
+    usuario?.criadoEm ? `Membro desde ${formatarMesAno(usuario.criadoEm)}` : undefined,
+  ].filter((d): d is string => Boolean(d));
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <View style={styles.cabecalho}>
-        <TexturaLona opacidade={0.08} cor={Cores.texto} />
-        <Image
-          source={require('../../../assets/roundup_logo_invertida.png')}
-          style={styles.marcaFundo}
-          resizeMode="contain"
-        />
-        <Avatar nome={usuario?.nomeAcademia ?? usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={72} />
-        <Text
-          style={[styles.nome]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-        >
-          {usuario?.nomeAcademia ?? usuario?.nome}
-        </Text>
-        {usuario?.endereco ? <Text style={styles.detalheEscuro}>{usuario.endereco}</Text> : null}
-        {usuario?.criadoEm ? <Text style={styles.membroDesde}>Membro desde {formatarMesAno(usuario.criadoEm)}</Text> : null}
-      </View>
+    <Tela largura="lista" preenchimento={false}>
+      <BandaIdentidade
+        variante="gestor"
+        sobHeader
+        nome={usuario?.nomeAcademia ?? usuario?.nome ?? ''}
+        fotoUrl={usuario?.fotoUrl}
+        detalhes={detalhes}
+      />
 
-      {modalidades.length > 0 ? (
-        <View style={styles.modalidadesLinha}>
-          {modalidades.map((modalidade) => (
-            <Etiqueta key={modalidade} texto={modalidade} />
-          ))}
-        </View>
-      ) : null}
+      <View style={styles.corpo}>
+        {modalidades.length > 0 ? (
+          <>
+            <CabecalhoSecao titulo="Modalidades" semMargem />
+            <View style={styles.modalidades}>
+              {modalidades.map((m) => (
+                <Etiqueta key={m} texto={m} />
+              ))}
+            </View>
+          </>
+        ) : null}
 
-      <Text style={styles.email}>{usuario?.email}</Text>
-
-      <View style={styles.botoesLinha}>
-        <Botao compacto titulo="Editar perfil" variante="secundario" onPress={() => navigation.navigate('EditarPerfil')} />
-        <Botao
-          compacto
-          titulo="Gestão de professores"
-          variante="secundario"
+        <CabecalhoSecao titulo="Gestão" />
+        <ItemMenu
+          rotulo="Gestão de professores"
+          descricao="Pedidos e professores vinculados"
+          icone={IconeLuva}
           onPress={() => navigation.navigate('SolicitacoesProfessores', { perfilSolicitante: 'professor' })}
         />
-        <Botao
-          compacto
-          titulo="Gestão de alunos"
-          variante="secundario"
+        <ItemMenu
+          rotulo="Gestão de alunos"
+          descricao="Pedidos e alunos vinculados"
+          icone={IconeFaixa}
           onPress={() => navigation.navigate('SolicitacoesAlunos', { perfilSolicitante: 'aluno' })}
+          separador
         />
-        <Botao compacto titulo="Visão consolidada" variante="secundario" onPress={() => navigation.navigate('VisaoConsolidada')} />
-        <Botao
-          compacto
-          titulo="Preferências de notificação"
-          variante="secundario"
-          onPress={() => navigation.navigate('PreferenciasNotificacao')}
+        <ItemMenu
+          rotulo="Visão consolidada"
+          descricao="Turmas, equipe e frequência da unidade"
+          icone={IconeCartaoPontuacao}
+          onPress={() => navigation.navigate('VisaoConsolidada')}
+          separador
         />
-      </View>
 
-      <ExcluirContaSecao />
-
-      <View style={styles.rodape}>
-        <Botao titulo="Sair" variante="texto" onPress={logout} />
+        <CabecalhoSecao titulo="Conta" />
+        <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={() => navigation.navigate('EditarPerfil')} />
+        <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={() => navigation.navigate('PreferenciasNotificacao')} separador />
+        <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={() => navigation.navigate('ContaPrivacidade')} separador />
+        <ItemMenu rotulo="Sair" icone={IconeSair} semChevron onPress={logout} separador />
       </View>
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { paddingBottom: Espacamento.enorme },
-
-  cabecalho: {
-    backgroundColor: Cores.superficie2,
-    alignItems: 'center',
-    paddingTop: Espacamento.extraGrande,
-    paddingBottom: Espacamento.grande,
-    paddingHorizontal: Espacamento.grande,
-    overflow: 'hidden',
-  },
-  marcaFundo: { position: 'absolute', top: -30, right: -60, width: 180, height: 180, opacity: 0.12 },
-  nome: {
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    letterSpacing: 1,
-    marginTop: Espacamento.medio,
-    maxWidth: '100%',
-  },
-  detalheEscuro: { fontSize: TamanhoFonte.sm, color: Cores.texto3, marginTop: Espacamento.pequeno },
-  membroDesde: { fontSize: TamanhoFonte.xs, color: Cores.texto3, marginTop: Espacamento.pequeno, textTransform: 'capitalize' },
-
-  modalidadesLinha: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Espacamento.pequeno,
-    paddingHorizontal: Espacamento.padrao,
-    paddingTop: Espacamento.padrao,
-  },
-  email: { fontSize: TamanhoFonte.sm, color: Cores.texto2, paddingHorizontal: Espacamento.padrao, marginTop: Espacamento.pequeno },
-
-  botoesLinha: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Espacamento.pequeno,
-    paddingHorizontal: Espacamento.padrao,
-    marginTop: Espacamento.padrao,
-  },
-  rodape: { alignItems: 'center', marginTop: Espacamento.grande },
+  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.grande, paddingBottom: Espacamento.enorme },
+  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
 });

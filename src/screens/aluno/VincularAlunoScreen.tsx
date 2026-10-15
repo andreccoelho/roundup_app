@@ -1,11 +1,20 @@
 // RF08: aluno solicita vínculo com academia ou professor autônomo
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { StyleSheet, View } from 'react-native';
+import { Cores, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarAcademiasDisponiveis, listarProfessoresAutonomos, solicitarVinculo } from '../../services/vinculos';
 import { PerfilDestinatario, Usuario } from '../../types';
-import Cartao from '../../components/ui/Cartao';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Avatar from '../../components/ui/Avatar';
+import Aviso from '../../components/ui/Aviso';
+import CampoTexto from '../../components/ui/CampoTexto';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import LinhaFina from '../../components/LinhaFina';
+import { IconeCheck, IconeCorda } from '../../components/icones';
+import { mensagemErro } from '../../utils/mensagensErro';
 import Botao from '../../components/ui/Botao';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
@@ -24,6 +33,9 @@ export default function VincularAlunoScreen() {
   const [professores, setProfessores] = useState<Usuario[]>([]);
   const [solicitados, setSolicitados] = useState<Set<string>>(new Set());
   const [erroSolicitacao, setErroSolicitacao] = useState<string | null>(null);
+  const [enviandoId, setEnviandoId] = useState<string | null>(null);
+  const [sucesso, setSucesso] = useState<string | null>(null);
+  const [busca, setBusca] = useState('');
 
   const carregarOpcoes = useCallback(async () => {
     setCarregando(true);
@@ -35,8 +47,8 @@ export default function VincularAlunoScreen() {
       ]);
       setAcademias(listaAcademias);
       setProfessores(listaProfessores);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar as opções agora.'));
     } finally {
       setCarregando(false);
     }
@@ -47,41 +59,58 @@ export default function VincularAlunoScreen() {
   }, [carregarOpcoes]);
 
   async function handleSolicitar({ usuario: destinatario, perfilDestinatario }: OpcaoVinculo) {
-    if (!usuario) return;
+    if (!usuario || enviandoId) return;
     setErroSolicitacao(null);
+    setEnviandoId(destinatario.id);
     try {
       await solicitarVinculo(usuario.id, destinatario.id, 'aluno', perfilDestinatario);
       setSolicitados((prev) => new Set(prev).add(destinatario.id));
-    } catch (e: any) {
-      setErroSolicitacao(e.message);
+      setSucesso('Pedido enviado. Você será liberado assim que aceitarem.');
+    } catch (e) {
+      setErroSolicitacao(mensagemErro(e, 'Não foi possível enviar o pedido. Tente novamente.'));
+    } finally {
+      setEnviandoId(null);
     }
   }
 
-  function renderItem({ usuario: destinatario, perfilDestinatario }: OpcaoVinculo) {
+  function renderItem({ usuario: destinatario, perfilDestinatario }: OpcaoVinculo, indice: number) {
     const jaSolicitado = solicitados.has(destinatario.id);
     return (
-      <Cartao key={destinatario.id} style={styles.item}>
-        <View style={styles.itemLinha}>
-          <View style={styles.itemInfo}>
-            <Text style={styles.itemNome}>{destinatario.nome}</Text>
-            <Text style={styles.itemTipo}>{perfilDestinatario === 'academia' ? 'Academia' : 'Professor autônomo'}</Text>
+      <View key={destinatario.id}>
+        {indice > 0 ? <LinhaFina /> : null}
+        <View style={styles.linha}>
+          <Avatar nome={destinatario.nomeAcademia ?? destinatario.nome} fotoUrl={destinatario.fotoUrl} tamanho={40} />
+          <View style={styles.textos}>
+            <Texto variante="corpoForte">{destinatario.nomeAcademia ?? destinatario.nome}</Texto>
+            <Texto variante="legenda">{perfilDestinatario === 'academia' ? 'Academia' : 'Professor autônomo'}</Texto>
           </View>
-          <Botao
-            titulo={jaSolicitado ? 'Solicitado' : 'Solicitar vínculo'}
-            variante={jaSolicitado ? 'secundario' : 'primario'}
-            desabilitado={jaSolicitado}
-            onPress={() => handleSolicitar({ usuario: destinatario, perfilDestinatario })}
-          />
+          {jaSolicitado ? (
+            <View style={styles.solicitado} accessible accessibilityLabel="Solicitação enviada">
+              <IconeCheck tamanho={16} cor={Cores.texto2} />
+              <Texto variante="rotuloPlacar" cor="texto2">
+                Enviado
+              </Texto>
+            </View>
+          ) : (
+            <Botao
+              titulo="Solicitar"
+              variante="secundario"
+              compacto
+              carregando={enviandoId === destinatario.id}
+              onPress={() => handleSolicitar({ usuario: destinatario, perfilDestinatario })}
+              accessibilityLabel={`Solicitar vínculo com ${destinatario.nomeAcademia ?? destinatario.nome}`}
+            />
+          )}
         </View>
-      </Cartao>
+      </View>
     );
   }
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={72} repeticoes={4} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto forma="linha" repeticoes={5} />
+      </Tela>
     );
   }
 
@@ -91,46 +120,54 @@ export default function VincularAlunoScreen() {
 
   if (academias.length === 0 && professores.length === 0) {
     return (
-      <View style={styles.container}>
-        <EstadoVazio titulo="Nenhuma opção disponível" descricao="Ainda não há academias nem professores autônomos cadastrados." />
-      </View>
+      <Tela largura="lista" centralizarVertical>
+        <EstadoVazio icone={IconeCorda} titulo="Nenhuma opção disponível" descricao="Ainda não há academias nem professores autônomos cadastrados." />
+      </Tela>
     );
   }
 
+  const termo = busca.trim().toLocaleLowerCase('pt-BR');
+  const casa = (u: Usuario) => !termo || `${u.nomeAcademia ?? ''} ${u.nome} ${u.endereco ?? ''}`.toLocaleLowerCase('pt-BR').includes(termo);
+  const academiasFiltradas = academias.filter(casa);
+  const professoresFiltrados = professores.filter(casa);
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {erroSolicitacao ? (
-        <Text style={styles.erroInline} accessibilityRole="alert">
-          {erroSolicitacao}
-        </Text>
-      ) : null}
+    <Tela
+      largura="lista"
+      teclado
+      sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} />}
+    >
+      <Texto variante="corpo" cor="texto2" style={styles.intro}>
+        Peça vínculo com sua academia ou professor. Assim que aceitarem, suas turmas e o check-in são liberados.
+      </Texto>
+      <CampoTexto rotulo="Buscar" placeholder="Nome da academia ou do professor" valor={busca} onAlterar={setBusca} autoCorrect={false} />
+      <MensagemErro mensagem={erroSolicitacao} />
 
-      <Text style={styles.secaoTitulo}>Academias</Text>
-      {academias.length === 0 ? (
-        <Text style={styles.vazio}>Nenhuma academia disponível.</Text>
+      <CabecalhoSecao titulo="Academias" contador={academiasFiltradas.length} semMargem />
+      {academiasFiltradas.length === 0 ? (
+        <Texto variante="legenda" style={styles.vazio}>
+          {termo ? 'Nenhuma academia com esse nome.' : 'Nenhuma academia disponível.'}
+        </Texto>
       ) : (
-        academias.map((academia) => renderItem({ usuario: academia, perfilDestinatario: 'academia' }))
+        academiasFiltradas.map((academia, i) => renderItem({ usuario: academia, perfilDestinatario: 'academia' }, i))
       )}
 
-      <Text style={styles.secaoTitulo}>Professores autônomos</Text>
-      {professores.length === 0 ? (
-        <Text style={styles.vazio}>Nenhum professor autônomo disponível.</Text>
+      <CabecalhoSecao titulo="Professores autônomos" contador={professoresFiltrados.length} />
+      {professoresFiltrados.length === 0 ? (
+        <Texto variante="legenda" style={styles.vazio}>
+          {termo ? 'Nenhum professor com esse nome.' : 'Nenhum professor autônomo disponível.'}
+        </Texto>
       ) : (
-        professores.map((professor) => renderItem({ usuario: professor, perfilDestinatario: 'professor' }))
+        professoresFiltrados.map((professor, i) => renderItem({ usuario: professor, perfilDestinatario: 'professor' }, i))
       )}
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
-  erroInline: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
-  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.pequeno },
-  item: { marginBottom: Espacamento.pequeno },
-  itemLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Espacamento.medio },
-  itemInfo: { flex: 1 },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
-  itemTipo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
+  intro: { marginBottom: Espacamento.padrao },
+  vazio: { paddingVertical: Espacamento.medio },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 64, paddingVertical: Espacamento.medio },
+  textos: { flex: 1, gap: 2 },
+  solicitado: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.minimo, minHeight: 44 },
 });

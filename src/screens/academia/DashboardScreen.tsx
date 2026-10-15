@@ -3,9 +3,9 @@
 // duas coleções já reais). Frequência geral NÃO entra nesta tela ainda — RF26, Ciclo 3, exige
 // uma agregação de check-ins por período que ainda não existe.
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardAcademiaNavigationProp } from '../../navigation/AcademiaTabs';
 import { listarTurmasPorResponsavel } from '../../services/turmas';
@@ -14,6 +14,16 @@ import { buscarUsuario } from '../../services/usuarios';
 import LinhaFina from '../../components/LinhaFina';
 import Avatar from '../../components/ui/Avatar';
 import Etiqueta from '../../components/ui/Etiqueta';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import BandaIdentidade from '../../components/ui/BandaIdentidade';
+import Estatistica from '../../components/ui/Estatistica';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import ItemMenu from '../../components/ui/ItemMenu';
+import Esqueleto from '../../components/ui/Esqueleto';
+import EstadoErro from '../../components/ui/EstadoErro';
+import { IconeTatame } from '../../components/icones';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 interface ProfessorVinculado {
   id: string;
@@ -53,8 +63,8 @@ export default function DashboardScreen() {
         }),
       );
       setProfessores(listaProfessores);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar o painel agora.'));
     } finally {
       setCarregando(false);
     }
@@ -64,139 +74,82 @@ export default function DashboardScreen() {
     carregar();
   }, [carregar]);
 
-  if (carregando) {
-    return (
-      <View style={styles.centro}>
-        <ActivityIndicator color={Cores.texto} />
-      </View>
-    );
-  }
-
   const modalidades = usuario?.modalidades ?? [];
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {/* Banda full-bleed encosta no topo — ícones claros, igual ao Login/Dashboard do Aluno. */}
-      <View style={styles.cabecalho}>
-        {/* Marca invertida como textura de fundo — mesmo tratamento do Dashboard do Aluno. */}
-        <Image
-          source={require('../../../assets/roundup_logo_invertida.png')}
-          style={styles.marcaFundo}
-          resizeMode="contain"
-        />
-        <View style={styles.cabecalhoTopo}>
-          <Avatar nome={usuario?.nomeAcademia ?? usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} tamanho={52} />
-          <Text style={styles.saudacaoNome} numberOfLines={1} adjustsFontSizeToFit>
-            {usuario?.nomeAcademia ?? 'Painel da Academia'}
-          </Text>
-        </View>
-        {usuario?.endereco ? <Text style={styles.enderecoTexto}>{usuario.endereco}</Text> : null}
-      </View>
+    <Tela largura="lista" preenchimento={false}>
+      <BandaIdentidade
+        variante="gestor"
+        compacta
+        sobretitulo="Hoje"
+        nome={usuario?.nomeAcademia ?? 'Painel da Academia'}
+        fotoUrl={usuario?.fotoUrl}
+        detalhes={usuario?.endereco ? [usuario.endereco] : []}
+      >
+        {modalidades.length > 0 ? (
+          <View style={styles.chips}>
+            {modalidades.map((m) => (
+              <Etiqueta key={m} texto={m} />
+            ))}
+          </View>
+        ) : null}
+      </BandaIdentidade>
 
-      {modalidades.length > 0 ? (
-        <View style={styles.modalidadesLinha}>
-          {modalidades.map((modalidade) => (
-            <Etiqueta key={modalidade} texto={modalidade} />
-          ))}
-        </View>
-      ) : null}
-
-      {erro ? <Text style={styles.erro}>{erro}</Text> : null}
-
-      <View style={styles.contadoresLinha}>
-        <View style={styles.contadorItem}>
-          <Text style={styles.contadorValor}>{turmasAtivas}</Text>
-          <Text style={styles.contadorRotulo}>turmas ativas</Text>
-        </View>
-        <View style={styles.contadorItem}>
-          <Text style={styles.contadorValor}>{professores.length}</Text>
-          <Text style={styles.contadorRotulo}>professores vinculados</Text>
-        </View>
-        <View style={styles.contadorItem}>
-          <Text style={styles.contadorValor}>{alunosVinculados}</Text>
-          <Text style={styles.contadorRotulo}>alunos vinculados</Text>
-        </View>
-      </View>
-
-      <View style={styles.secao}>
-        <Text style={styles.secaoTitulo}>Professores vinculados</Text>
-        {professores.length === 0 ? (
-          <Text style={styles.vazio}>Nenhum professor vinculado ainda.</Text>
+      <View style={styles.corpo}>
+        {carregando ? (
+          <>
+            <Esqueleto altura={72} />
+            <View style={styles.espaco} />
+            <Esqueleto forma="linha" repeticoes={3} />
+          </>
+        ) : erro ? (
+          <EstadoErro compacto mensagem={erro} onTentarNovamente={carregar} />
         ) : (
-          professores.map((professor, i) => (
-            <View key={professor.id}>
-              <View style={styles.linhaSimples}>
-                <Text style={styles.itemNome}>{professor.nome}</Text>
-                <Text style={styles.itemDetalhe}>{professor.quantidadeTurmas} turma(s)</Text>
-              </View>
-              {i < professores.length - 1 && <LinhaFina />}
+          <>
+            <View style={styles.contadores}>
+              <Estatistica valor={turmasAtivas} rotulo="Turmas ativas" tamanho="grande" />
+              <Estatistica valor={professores.length} rotulo="Professores" tamanho="grande" />
+              <Estatistica valor={alunosVinculados} rotulo="Alunos" tamanho="grande" />
             </View>
-          ))
+
+            <CabecalhoSecao titulo="Professores vinculados" contador={professores.length} />
+            {professores.length === 0 ? (
+              <Texto variante="legenda" style={styles.vazio}>
+                Nenhum professor vinculado ainda. Os pedidos chegam em Perfil, Gestão de professores.
+              </Texto>
+            ) : (
+              professores.map((professor, i) => (
+                <View key={professor.id}>
+                  {i > 0 ? <LinhaFina /> : null}
+                  <View style={styles.linha} accessible accessibilityLabel={`${professor.nome}, ${professor.quantidadeTurmas} turmas`}>
+                    <Avatar nome={professor.nome} tamanho={36} />
+                    <Texto variante="corpoForte" style={styles.nome} numberOfLines={1}>
+                      {professor.nome}
+                    </Texto>
+                    <Texto variante="placar">{professor.quantidadeTurmas}</Texto>
+                    <Texto variante="rotuloPlacar" cor="texto3">
+                      {professor.quantidadeTurmas === 1 ? 'turma' : 'turmas'}
+                    </Texto>
+                  </View>
+                </View>
+              ))
+            )}
+
+            <CabecalhoSecao titulo="Atalhos" />
+            <ItemMenu rotulo="Gerenciar turmas" descricao="Turmas, sessões e relatório de frequência" icone={IconeTatame} onPress={() => navigation.navigate('Turmas')} />
+          </>
         )}
       </View>
-
-      <View style={styles.rodape}>
-        <TouchableOpacity onPress={() => navigation.navigate('Turmas')}>
-          <Text style={styles.linkRodape}>Gerenciar turmas</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Cores.fundo },
-
-  // Banda full-bleed preta — mesmo tratamento de identidade do Dashboard do Aluno/Professor.
-  // A "identidade" aqui é a academia (nomeAcademia), não a pessoa de contato.
-  cabecalho: {
-    backgroundColor: Cores.superficie2,
-    paddingHorizontal: Espacamento.grande,
-    paddingTop: Espacamento.extraGrande,
-    paddingBottom: Espacamento.grande,
-    overflow: 'hidden',
-  },
-  marcaFundo: {
-    position: 'absolute',
-    top: -40,
-    right: -70,
-    width: 220,
-    height: 220,
-    opacity: 0.12,
-  },
-  cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
-  saudacaoNome: {
-    flex: 1,
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    letterSpacing: 1,
-  },
-  enderecoTexto: { color: Cores.texto3, fontSize: TamanhoFonte.sm, marginTop: Espacamento.padrao },
-  modalidadesLinha: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Espacamento.pequeno,
-    paddingHorizontal: Espacamento.grande,
-    paddingTop: Espacamento.padrao,
-  },
-  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
-
-  contadoresLinha: { flexDirection: 'row', paddingHorizontal: Espacamento.grande, gap: Espacamento.grande, marginTop: Espacamento.padrao },
-  contadorItem: { flex: 1 },
-  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
-  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
-
-  secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.pequeno },
-  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-
-  linhaSimples: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Espacamento.medio },
-  itemNome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
-  itemDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.texto2 },
-
-  rodape: { paddingHorizontal: Espacamento.grande, gap: Espacamento.medio, marginTop: Espacamento.grande + Espacamento.minimo, paddingTop: Espacamento.padrao },
-  linkRodape: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
+  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.grande, paddingBottom: Espacamento.enorme },
+  espaco: { height: Espacamento.padrao },
+  contadores: { flexDirection: 'row', gap: Espacamento.padrao },
+  vazio: { paddingVertical: Espacamento.medio },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 56, paddingVertical: Espacamento.pequeno },
+  nome: { flex: 1 },
 });
