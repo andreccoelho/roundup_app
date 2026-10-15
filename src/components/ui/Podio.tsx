@@ -1,11 +1,11 @@
-// script.md, item 4: "Ranking/leaderboard: top 3 precisa se destacar visualmente de forma óbvia
-// (não só numeração), como um pódio ou disposição assimétrica." Ordem visual clássica (2º-1º-3º),
-// 1º lugar com avatar maior — assimetria de tamanho, não de cor (paleta monocromática continua
-// valendo, RN09/DESIGN_BRIEF.md). Usado só para os 3 primeiros; da 4ª posição em diante continua
-// LinhaClassificacao normal.
-import { StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
+// Podio — top 3 do ranking (RF20) como pódio de verdade: blocos com alturas 1º > 2º > 3º na ordem
+// visual 2º-1º-3º, posição em placar dentro do bloco. O 1º é o único em ouro (docs/DESIGN.md).
+// A coluna do próprio aluno ganha o traço de acento no topo do bloco.
+import { StyleSheet, View } from 'react-native';
+import { Cores, Espacamento, Raios } from '../../theme';
+import { IconeCinturao } from '../icones';
 import Avatar from './Avatar';
+import Texto from './Texto';
 
 interface ItemPodio {
   posicao: number;
@@ -21,17 +21,36 @@ interface PodioProps {
   terceiro?: ItemPodio;
 }
 
-function Coluna({ item, tamanhoAvatar }: { item: ItemPodio; tamanhoAvatar: number }) {
+const ALTURA_BLOCO: Record<number, number> = { 1: 104, 2: 76, 3: 56 };
+
+function Coluna({ item }: { item: ItemPodio }) {
+  const campeao = item.posicao === 1;
   return (
-    <View style={[styles.coluna, item.destaque && styles.colunaDestaque]}>
-      <View style={styles.numeroBadge}>
-        <Text style={styles.numeroTexto}>{item.posicao}</Text>
-      </View>
-      <Avatar nome={item.nome} fotoUrl={item.fotoUrl} tamanho={tamanhoAvatar} />
-      <Text style={styles.nome} numberOfLines={1}>
+    <View
+      style={styles.coluna}
+      accessible
+      accessibilityLabel={`${item.posicao}º lugar: ${item.nome}, ${item.pontos} pontos${item.destaque ? ', você' : ''}`}
+    >
+      {campeao ? <IconeCinturao tamanho={28} cor={Cores.ouro} /> : null}
+      <Avatar nome={item.nome} fotoUrl={item.fotoUrl} tamanho={campeao ? 64 : 48} />
+      <Texto variante="corpoForte" numberOfLines={1} alinhamento="center" style={styles.nome}>
         {item.nome}
-      </Text>
-      <Text style={styles.pontos}>{item.pontos}</Text>
+      </Texto>
+      <Texto variante="placar" cor={campeao ? 'ouro' : 'texto'}>
+        {item.pontos}
+      </Texto>
+      <View
+        style={[
+          styles.bloco,
+          { height: ALTURA_BLOCO[item.posicao] ?? 48 },
+          campeao ? styles.blocoOuro : null,
+          item.destaque && styles.blocoDestaque,
+        ]}
+      >
+        <Texto variante="placarGrande" cor={campeao ? 'sobreCor' : 'texto2'}>
+          {item.posicao}
+        </Texto>
+      </View>
     </View>
   );
 }
@@ -39,9 +58,9 @@ function Coluna({ item, tamanhoAvatar }: { item: ItemPodio; tamanhoAvatar: numbe
 export default function Podio({ primeiro, segundo, terceiro }: PodioProps) {
   return (
     <View style={styles.container}>
-      {segundo ? <Coluna item={segundo} tamanhoAvatar={44} /> : <View style={styles.colunaVazia} />}
-      <Coluna item={primeiro} tamanhoAvatar={64} />
-      {terceiro ? <Coluna item={terceiro} tamanhoAvatar={44} /> : <View style={styles.colunaVazia} />}
+      {segundo ? <Coluna item={segundo} /> : <View style={styles.colunaVazia} />}
+      <Coluna item={primeiro} />
+      {terceiro ? <Coluna item={terceiro} /> : <View style={styles.colunaVazia} />}
     </View>
   );
 }
@@ -51,14 +70,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'center',
-    gap: Espacamento.padrao,
-    paddingVertical: Espacamento.grande,
+    gap: Espacamento.pequeno,
+    paddingTop: Espacamento.padrao,
+    borderBottomWidth: 1,
+    borderBottomColor: Cores.linhaForte,
   },
-  coluna: { alignItems: 'center', width: 88, gap: Espacamento.minimo, paddingVertical: Espacamento.pequeno, borderRadius: Raios.pequeno },
-  colunaDestaque: { backgroundColor: Cores.superficie1 },
-  colunaVazia: { width: 88 },
-  numeroBadge: { width: 22, height: 22, borderRadius: 11, backgroundColor: Cores.superficie2, alignItems: 'center', justifyContent: 'center' },
-  numeroTexto: { color: Cores.texto, fontSize: TamanhoFonte.xs, fontWeight: '700', fontFamily: FamiliaFonte.placarSemiBold },
-  nome: { fontSize: TamanhoFonte.sm, color: Cores.texto, fontWeight: '600', maxWidth: 84, textAlign: 'center' },
-  pontos: { fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.texto },
+  coluna: { flex: 1, maxWidth: 120, alignItems: 'center', gap: Espacamento.minimo },
+  colunaVazia: { flex: 1, maxWidth: 120 },
+  nome: { maxWidth: '100%' },
+  bloco: {
+    alignSelf: 'stretch',
+    marginTop: Espacamento.minimo,
+    backgroundColor: Cores.superficie2,
+    borderTopLeftRadius: Raios.vivo,
+    borderTopRightRadius: Raios.vivo,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: Espacamento.pequeno,
+  },
+  blocoOuro: { backgroundColor: Cores.ouro },
+  blocoDestaque: { borderTopWidth: 3, borderTopColor: Cores.acento },
 });

@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Cores.linhaForte,
   },
-  estatica: { paddingVertical: Espacamento.minimo + 1, backgroundColor: Cores.superficie1, alignSelf: 'flex-start' },
+  estatica: { paddingVertical: Espacamento.minimo + 1, backgroundColor: Cores.superficie2, alignSelf: 'flex-start' },
   selecionada: { backgroundColor: Cores.texto, borderColor: Cores.texto },
   pressionada: { backgroundColor: Cores.superficie2 },
   desabilitada: { opacity: 0.4 },

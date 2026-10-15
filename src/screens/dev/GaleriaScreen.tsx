@@ -3,7 +3,7 @@
 // de domínio, para validar o visual sem backend (docs/DESIGN.md).
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Cores, CoresFaixa, Espacamento, Raios, type NomeCor } from '../../theme';
+import { Cores, Espacamento, Raios, type NomeCor } from '../../theme';
 
 import {
   IconeLuva,
@@ -49,7 +49,6 @@ import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Esqueleto from '../../components/ui/Esqueleto';
 
-import BotaoCheckIn from '../../components/ui/BotaoCheckIn';
 import CartaoSessao from '../../components/ui/CartaoSessao';
 import BarraProgresso from '../../components/ui/BarraProgresso';
 import CartaoMissao from '../../components/ui/CartaoMissao';
@@ -61,6 +60,8 @@ import Podio from '../../components/ui/Podio';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import CartaoAluno from '../../components/ui/CartaoAluno';
 import IndicadorFrequencia from '../../components/ui/IndicadorFrequencia';
+import HeroCheckIn from '../../components/ui/HeroCheckIn';
+import { COMPOSICOES, ComposicaoPorNome, type Composicao } from './composicoes';
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
@@ -121,8 +122,20 @@ export default function GaleriaScreen() {
   const [data, setData] = useState('');
   const [hora, setHora] = useState('');
   const [senha, setSenha] = useState('segredo1');
+  const [composicao, setComposicao] = useState<Composicao | null>(null);
 
   if (!__DEV__) return null;
+
+  if (composicao) {
+    return (
+      <Tela largura="lista" preenchimento={false}>
+        <View style={styles.voltarComposicao}>
+          <Botao variante="voltar" titulo="Voltar à galeria" onPress={() => setComposicao(null)} />
+        </View>
+        <ComposicaoPorNome nome={composicao} />
+      </Tela>
+    );
+  }
 
   return (
     <Tela
@@ -139,6 +152,12 @@ export default function GaleriaScreen() {
       <Texto variante="display" style={styles.tituloGaleria}>
         Galeria
       </Texto>
+
+      <Secao titulo="Composições (telas com dados fictícios)">
+        {COMPOSICOES.map((c, i) => (
+          <ItemMenu key={c.valor} rotulo={c.rotulo} separador={i > 0} onPress={() => setComposicao(c.valor)} />
+        ))}
+      </Secao>
 
       <Secao titulo="Tipografia">
         {VARIANTES.map((v) => (
@@ -360,50 +379,113 @@ export default function GaleriaScreen() {
         <Esqueleto altura={72} repeticoes={1} />
       </Secao>
 
-      <Secao titulo="Domínio">
-        <BotaoCheckIn estado={checkInDemoFeito ? 'realizado' : 'disponivel'} onPress={() => setCheckInDemoFeito(true)} />
+      <Secao titulo="HeroCheckIn — 3 estados (RN08)">
+        <HeroCheckIn
+          nomeTurma="Muay Thai — Turma A"
+          professor="Mestre Kleber"
+          inicio={new Date(Date.now() + 25 * 60000)}
+          janelaInicio={new Date(Date.now() - 5 * 60000)}
+          janelaFim={new Date(Date.now() + 55 * 60000)}
+          estado={checkInDemoFeito ? 'realizado' : 'disponivel'}
+          onCheckIn={() => setCheckInDemoFeito(true)}
+        />
         {checkInDemoFeito ? <Botao titulo="Reiniciar demo" variante="texto" onPress={() => setCheckInDemoFeito(false)} /> : null}
         <View style={styles.espaco} />
-        <BotaoCheckIn estado="foraDaJanela" motivo="Check-in ainda não abriu" />
-        <CartaoSessao nomeTurma="Muay Thai — Turma A" detalhe="Hoje, 19:00" estado="disponivel" onCheckIn={() => {}} />
-        <LinhaFina />
-        <CartaoSessao nomeTurma="Boxe — Turma B" detalhe="Amanhã, 07:00" estado="foraDaJanela" motivo="Check-in ainda não abriu" />
-        <LinhaFina />
-        <CartaoSessao nomeTurma="Muay Thai — Turma C" detalhe="Ontem, 20:00" estado="realizado" />
+        <HeroCheckIn
+          nomeTurma="Boxe — Fundamentos"
+          inicio={new Date(Date.now() + 150 * 60000)}
+          janelaInicio={new Date(Date.now() + 120 * 60000)}
+          janelaFim={new Date(Date.now() + 180 * 60000)}
+          estado="foraDaJanela"
+          onCheckIn={() => {}}
+        />
         <View style={styles.espaco} />
+        <HeroCheckIn
+          nomeTurma="Muay Thai — Clinch"
+          inicio={new Date(Date.now() - 20 * 60000)}
+          janelaInicio={new Date(Date.now() - 50 * 60000)}
+          janelaFim={new Date(Date.now() + 10 * 60000)}
+          estado="realizado"
+          onCheckIn={() => {}}
+        />
+      </Secao>
+
+      <Secao titulo="Linhas de sessão (CartaoSessao + BotaoCheckIn)">
+        <CartaoSessao nomeTurma="Muay Thai — Turma A" detalhe="com Mestre Kleber" inicio={new Date(Date.now() + 25 * 60000)} estado="disponivel" onCheckIn={() => {}} />
+        <LinhaFina />
+        <CartaoSessao nomeTurma="Boxe — Turma B" inicio={new Date(Date.now() + 26 * 3600000)} estado="foraDaJanela" motivo="Abre amanhã" />
+        <LinhaFina />
+        <CartaoSessao nomeTurma="Muay Thai — Turma C" inicio={new Date(Date.now() - 20 * 3600000)} estado="realizado" />
+        <LinhaFina />
+        <CartaoSessao nomeTurma="Sem horário (lista antiga)" detalhe="15/10/2026, 19:00" estado="disponivel" onCheckIn={() => {}} />
+      </Secao>
+
+      <Secao titulo="Progresso">
         <BarraProgresso nivel={4} xpAtual={320} xpProximoNivel={500} />
         <View style={styles.espaco} />
+        <BarraProgresso nivel={11} xpAtual={1} xpProximoNivel={1} />
+        <View style={styles.espaco} />
         <IndicadorSequencia dias={7} />
-        <View style={styles.espaco} />
-        <CartaoMissao titulo="Treine 3 vezes esta semana" descricao="Missão semanal" progressoAtual={2} meta={3} />
-        <View style={styles.espaco} />
+      </Secao>
+
+      <Secao titulo="Missões">
+        <CartaoMissao titulo="Treine 3 vezes esta semana" descricao="Presença" progressoAtual={2} meta={3} pontos={30} />
+        <LinhaFina />
+        <CartaoMissao titulo="Primeiro check-in" descricao="Boas-vindas" progressoAtual={1} meta={1} concluida />
+        <LinhaFina />
+        <CartaoMissao titulo="500 pontos no mês" descricao="Pontuação" progressoAtual={320} meta={500} />
+      </Secao>
+
+      <Secao titulo="Medalhas">
         <Linha>
-          <Medalha rotulo="10 treinos" />
-          <Medalha rotulo="30 dias seguidos" conquistada={false} />
+          <Medalha rotulo="10 treinos" tipo="treinos" numero={10} />
+          <Medalha rotulo="7 dias seguidos" tipo="sequencia" numero={7} />
+          <Medalha rotulo="100 treinos" tipo="treinos" numero={100} maxima />
+          <Medalha rotulo="Primeira graduação" tipo="graduacoes" numero={1} conquistada={false} />
         </Linha>
-        <Botao titulo="Simular subida de faixa" variante="secundario" onPress={() => setCelebracaoAberta(true)} />
+      </Secao>
+
+      <Secao titulo="SeloFaixa (texto livre interpretado)">
+        {['Faixa branca', 'Faixa azul, 2º grau', 'Roxa grau 3', 'Faixa marrom 1º grau', 'Faixa preta, 4º dan', 'Prajied vermelha', 'Kruang 5', 'Faixa não informada'].map((t) => (
+          <View key={t} style={styles.amostraFaixa}>
+            <SeloFaixa faixaOuGrau={t} />
+          </View>
+        ))}
+        <View style={styles.espaco} />
+        <Cartao corteDiagonal>
+          <Texto variante="rotuloPlacar" alinhamento="center">
+            Graduação
+          </Texto>
+          <View style={styles.espaco} />
+          <SeloFaixa faixaOuGrau="Faixa preta, 2º grau" tamanho="grande" />
+        </Cartao>
+        <View style={styles.espaco} />
+        <Botao titulo="Simular graduação registrada" variante="secundario" onPress={() => setCelebracaoAberta(true)} />
         <CelebracaoGraduacao
           visivel={celebracaoAberta}
           nomeAluno="Maria Silva"
-          grau="Faixa azul"
+          grau="Faixa azul, 1º grau"
           modalidade="Muay Thai"
           onFechar={() => setCelebracaoAberta(false)}
         />
+      </Secao>
+
+      <Secao titulo="Classificação">
         <Podio
-          primeiro={{ posicao: 1, nome: 'Ana Beatriz', pontos: 980, destaque: true }}
-          segundo={{ posicao: 2, nome: 'Carlos Eduardo', pontos: 860 }}
+          primeiro={{ posicao: 1, nome: 'Ana Beatriz', pontos: 980 }}
+          segundo={{ posicao: 2, nome: 'Carlos Eduardo', pontos: 860, destaque: true }}
           terceiro={{ posicao: 3, nome: 'João Pedro', pontos: 790 }}
         />
         <LinhaClassificacao posicao={4} nome="Marina Costa" pontos={710} destaque />
         <LinhaFina />
         <LinhaClassificacao posicao={5} nome="Rafael Souza" pontos={640} />
-        <View style={styles.espaco} />
-        <Linha>
-          {(Object.keys(CoresFaixa) as (keyof typeof CoresFaixa)[]).slice(0, 4).map((c) => (
-            <SeloFaixa key={c} faixaOuGrau={`Faixa ${c}`} />
-          ))}
-        </Linha>
+      </Secao>
+
+      <Secao titulo="Gestor: aluno e frequência">
         <CartaoAluno nome="Maria Silva" faixaOuGrau="Faixa azul" frequenciaRecente={[true, true, false, true, true]} />
+        <LinhaFina />
+        <CartaoAluno nome="Pedro Lima" faixaOuGrau="Faixa branca" frequenciaRecente={[true, false, false, false, false]} alerta="Queda de frequência" />
+        <View style={styles.espaco} />
         <IndicadorFrequencia presencas={[true, false, true, true, true]} />
       </Secao>
     </Tela>
@@ -424,5 +506,7 @@ const styles = StyleSheet.create({
   itemIcone: { width: 64, alignItems: 'center', gap: Espacamento.minimo },
   estatisticas: { marginTop: Espacamento.padrao, marginBottom: Espacamento.padrao },
   sangria: { marginHorizontal: -Espacamento.padrao },
+  amostraFaixa: { marginBottom: Espacamento.pequeno },
+  voltarComposicao: { paddingHorizontal: Espacamento.padrao },
   amostraTextura: { position: 'relative', backgroundColor: Cores.superficie1, borderRadius: Raios.pequeno, padding: Espacamento.padrao, overflow: 'hidden' },
 });

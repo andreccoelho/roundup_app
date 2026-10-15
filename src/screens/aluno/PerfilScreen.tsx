@@ -80,7 +80,7 @@ export default function PerfilScreen() {
           {usuario?.nome ?? ''}
         </Text>
         <View style={styles.seloLinha}>
-          <SeloFaixa faixaOuGrau={usuario?.faixaOuGrau ?? 'Faixa não informada'} sobreEscuro />
+          <SeloFaixa faixaOuGrau={usuario?.faixaOuGrau ?? 'Faixa não informada'} />
         </View>
         {usuario?.criadoEm ? <Text style={styles.membroDesde}>Membro desde {formatarMesAno(usuario.criadoEm)}</Text> : null}
       </View>

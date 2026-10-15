@@ -1,0 +1,20 @@
+[mobile] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[mobile] warning: Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make su
+[mobile] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[mobile] warning: Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make su
+[mobile] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[mobile] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[mobile] warning: props.pointerEvents is deprecated. Use style.pointerEvents
+[mobile] warning: Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make su
+[tablet] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[tablet] warning: Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make su
+[tablet] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[tablet] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[tablet] warning: props.pointerEvents is deprecated. Use style.pointerEvents
+[tablet] warning: Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make su
+[desktop] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[desktop] warning: Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make su
+[desktop] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[desktop] warning: "textShadow*" style props are deprecated. Use "textShadow".
+[desktop] warning: props.pointerEvents is deprecated. Use style.pointerEvents
+[desktop] warning: Animated: `useNativeDriver` is not supported because the native animated module is missing. Falling back to JS-based animation. To resolve this, add `RCTAnimation` module to this app, or remove `useNativeDriver`. Make su
