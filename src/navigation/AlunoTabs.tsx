@@ -18,7 +18,7 @@ import ClassificacaoScreen from '../screens/aluno/ClassificacaoScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
 import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import { IconeLuva, IconeFichaTecnica, IconeBandeira, IconeCartaoPontuacao, IconePerfil } from '../components/icones';
-import { opcoesHeader, opcoesTabBar } from './opcoesCasca';
+import { iconeAba, opcoesHeader, useOpcoesTabBar } from './opcoesCasca';
 
 export type TreinarStackParamList = {
   Dashboard: undefined;
@@ -113,32 +113,33 @@ function PerfilNavigator() {
 const Tab = createBottomTabNavigator<AlunoTabParamList>();
 
 export function AlunoTabs() {
+  const opcoesTabBar = useOpcoesTabBar();
   return (
     <Tab.Navigator screenOptions={opcoesTabBar}>
       <Tab.Screen
         name="Treinar"
         component={TreinarNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <IconeLuva tamanho={size} cor={color} /> }}
+        options={{ tabBarIcon: iconeAba(IconeLuva) }}
       />
       <Tab.Screen
         name="Agenda"
         component={AgendaNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <IconeFichaTecnica tamanho={size} cor={color} /> }}
+        options={{ tabBarIcon: iconeAba(IconeFichaTecnica) }}
       />
       <Tab.Screen
         name="Missoes"
         component={MissoesNavigator}
-        options={{ title: 'Missões', tabBarIcon: ({ color, size }) => <IconeBandeira tamanho={size} cor={color} /> }}
+        options={{ title: 'Missões', tabBarIcon: iconeAba(IconeBandeira) }}
       />
       <Tab.Screen
         name="Classificacao"
         component={ClassificacaoNavigator}
-        options={{ title: 'Classificação', tabBarIcon: ({ color, size }) => <IconeCartaoPontuacao tamanho={size} cor={color} /> }}
+        options={{ title: 'Classificação', tabBarIcon: iconeAba(IconeCartaoPontuacao) }}
       />
       <Tab.Screen
         name="Perfil"
         component={PerfilNavigator}
-        options={{ tabBarIcon: ({ color, size }) => <IconePerfil tamanho={size} cor={color} /> }}
+        options={{ tabBarIcon: iconeAba(IconePerfil) }}
       />
     </Tab.Navigator>
   );

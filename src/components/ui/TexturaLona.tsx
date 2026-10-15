@@ -13,7 +13,7 @@ interface TexturaLonaProps {
   cor?: string;
 }
 
-export default function TexturaLona({ opacidade = 0.05, cor = Cores.preto }: TexturaLonaProps) {
+export default function TexturaLona({ opacidade = 0.05, cor = Cores.texto }: TexturaLonaProps) {
   return (
     <Svg
       style={StyleSheet.absoluteFill}

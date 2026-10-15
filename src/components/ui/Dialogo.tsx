@@ -46,8 +46,8 @@ export default function Dialogo({
 
 const styles = StyleSheet.create({
   fundo: { flex: 1, backgroundColor: 'rgba(10,10,10,0.5)', alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
-  caixa: { backgroundColor: Cores.branco, borderRadius: Raios.medio, padding: Espacamento.padrao, width: '100%', maxWidth: 360 },
-  titulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.preto },
-  mensagem: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.pequeno },
+  caixa: { backgroundColor: Cores.fundo, borderRadius: Raios.pequeno, padding: Espacamento.padrao, width: '100%', maxWidth: 360 },
+  titulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto },
+  mensagem: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.pequeno },
   acoes: { flexDirection: 'row', justifyContent: 'flex-end', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
 });

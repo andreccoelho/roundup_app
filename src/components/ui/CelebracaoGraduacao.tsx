@@ -53,14 +53,14 @@ export default function CelebracaoGraduacao({ visivel, grau, modalidade, nomeAlu
 const styles = StyleSheet.create({
   fundo: { flex: 1, backgroundColor: 'rgba(10,10,10,0.7)', alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
   caixa: {
-    backgroundColor: Cores.branco,
-    borderRadius: Raios.medio,
+    backgroundColor: Cores.fundo,
+    borderRadius: Raios.pequeno,
     padding: Espacamento.grande,
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
   },
-  titulo: { fontFamily: FamiliaFonte.homebaseDisplay, fontSize: TamanhoFonte.xxl, color: Cores.preto, marginTop: Espacamento.padrao },
-  detalhe: { fontSize: TamanhoFonte.md, color: Cores.cinzaMedio, marginTop: Espacamento.minimo, textAlign: 'center' },
+  titulo: { fontFamily: FamiliaFonte.display, fontSize: TamanhoFonte.xxl, color: Cores.texto, marginTop: Espacamento.padrao },
+  detalhe: { fontSize: TamanhoFonte.md, color: Cores.texto2, marginTop: Espacamento.minimo, textAlign: 'center' },
   espaco: { height: Espacamento.grande },
 });

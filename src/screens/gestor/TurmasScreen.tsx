@@ -243,19 +243,19 @@ export default function TurmasScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.preto, marginBottom: Espacamento.pequeno },
+  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginBottom: Espacamento.pequeno },
   secaoListaTitulo: { marginTop: Espacamento.grande },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.pequeno },
+  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.pequeno },
   linhaNiveis: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   linhaHorarios: { flexDirection: 'row', gap: Espacamento.padrao },
   campoHorario: { flex: 1 },
-  notaGrade: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
-  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  erroForm: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
+  notaGrade: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  erroForm: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
   espaco: { height: Espacamento.minimo },
   item: { marginBottom: Espacamento.pequeno },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
+  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
 });

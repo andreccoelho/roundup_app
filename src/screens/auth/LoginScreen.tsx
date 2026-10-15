@@ -120,22 +120,22 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.branco },
+  flex: { flex: 1, backgroundColor: Cores.fundo },
   scroll: { flexGrow: 1 },
   // Tela toda clara — a marca (assets/roundup_logo.png) é desenhada em preto, precisa de fundo
   // claro para aparecer. Sem banda escura aqui, ao contrário do Dashboard do Aluno.
   banda: {
-    backgroundColor: Cores.branco,
+    backgroundColor: Cores.fundo,
     paddingTop: Espacamento.enorme,
     paddingBottom: Espacamento.grande,
     alignItems: 'center',
   },
   logo: { width: 180, height: 180 },
-  tagline: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, marginTop: -Espacamento.padrao },
+  tagline: { color: Cores.texto2, fontSize: TamanhoFonte.sm, marginTop: -Espacamento.padrao },
   corpo: { paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.extraGrande, paddingBottom: Espacamento.grande },
-  erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
   linhaEsqueci: { alignItems: 'flex-end', marginBottom: Espacamento.grande, marginTop: -Espacamento.pequeno },
   rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  rodapeTexto: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  rodapeTexto: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
   rodapeDev: { alignItems: 'center', marginTop: Espacamento.extraGrande },
 });

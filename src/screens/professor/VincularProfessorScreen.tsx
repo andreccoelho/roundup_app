@@ -95,10 +95,10 @@ export default function VincularProfessorScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
-  erroInline: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  erroInline: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
   item: { marginBottom: Espacamento.pequeno },
   itemLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Espacamento.medio },
-  itemNome: { flex: 1, fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
+  itemNome: { flex: 1, fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
 });

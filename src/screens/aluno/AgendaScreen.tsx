@@ -4,7 +4,7 @@
 // relance: cada um tem forma, ícone e texto próprios — nunca só uma mudança de cor.
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Colors } from '../../constants/colors';
+import { Cores } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarProximasSessoesDoAluno } from '../../services/sessoes';
 import { realizarCheckIn, buscarCheckInDaSessao } from '../../services/checkins';
@@ -81,7 +81,7 @@ export default function AgendaScreen() {
   if (carregando) {
     return (
       <View style={styles.centro}>
-        <ActivityIndicator color={Colors.preto} />
+        <ActivityIndicator color={Cores.texto} />
       </View>
     );
   }
@@ -111,9 +111,9 @@ export default function AgendaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { paddingHorizontal: 20, paddingVertical: 8 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.branco },
-  erro: { color: Colors.alerta, fontWeight: '600', marginBottom: 12 },
-  vazio: { color: Colors.cinzaMedio, paddingVertical: 16 },
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Cores.fundo },
+  erro: { color: Cores.perigo, fontWeight: '600', marginBottom: 12 },
+  vazio: { color: Cores.texto2, paddingVertical: 16 },
 });

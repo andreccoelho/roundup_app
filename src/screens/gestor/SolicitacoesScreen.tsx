@@ -242,11 +242,11 @@ export default function SolicitacoesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.pequeno },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.pequeno },
   secaoVinculados: { marginTop: Espacamento.grande },
-  vazioVinculados: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  vazioVinculados: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
   linha: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -254,10 +254,10 @@ const styles = StyleSheet.create({
     paddingVertical: Espacamento.medio,
     gap: Espacamento.medio,
   },
-  nome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600', flexShrink: 1 },
+  nome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600', flexShrink: 1 },
   acoes: { flexDirection: 'row', gap: Espacamento.pequeno },
   vinculadoTextos: { flex: 1 },
-  matriculado: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
-  semMatricula: { fontSize: TamanhoFonte.xs, color: Cores.cinzaClaro, marginTop: 2 },
-  erroInline: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
+  matriculado: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
+  semMatricula: { fontSize: TamanhoFonte.xs, color: Cores.texto3, marginTop: 2 },
+  erroInline: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
 });

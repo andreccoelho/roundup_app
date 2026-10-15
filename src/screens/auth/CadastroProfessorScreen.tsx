@@ -190,26 +190,25 @@ export default function CadastroProfessorScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.branco },
+  flex: { flex: 1, backgroundColor: Cores.fundo },
   scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
   // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
   titulo: {
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.preto,
+    color: Cores.texto,
     marginTop: Espacamento.padrao,
-    ...Sombras.duraTitulo,
   },
   subtitulo: {
     fontSize: TamanhoFonte.md,
-    color: Cores.cinzaMedio,
+    color: Cores.texto2,
     marginTop: Espacamento.minimo / 2,
     marginBottom: Espacamento.grande + Espacamento.minimo,
   },
-  erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
   campoToggle: { marginBottom: Espacamento.padrao },
-  rotuloToggle: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.pequeno },
-  toggle: { flexDirection: 'row', borderWidth: 1, borderColor: Cores.cinzaEscuro, borderRadius: Raios.pilula, overflow: 'hidden' },
+  rotuloToggle: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.pequeno },
+  toggle: { flexDirection: 'row', borderWidth: 1, borderColor: Cores.linhaForte, borderRadius: Raios.pilula, overflow: 'hidden' },
   opcaoToggle: {
     flex: 1,
     paddingVertical: Espacamento.medio - Espacamento.minimo / 2,
@@ -217,11 +216,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 44,
   },
-  opcaoToggleAtiva: { backgroundColor: Cores.preto },
-  textoToggle: { fontSize: TamanhoFonte.sm, color: Cores.cinzaEscuro },
-  textoToggleAtivo: { color: Cores.branco, fontWeight: '600' },
-  ajudaToggle: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.pequeno },
+  opcaoToggleAtiva: { backgroundColor: Cores.superficie2 },
+  textoToggle: { fontSize: TamanhoFonte.sm, color: Cores.linhaForte },
+  textoToggleAtivo: { color: Cores.texto, fontWeight: '600' },
+  ajudaToggle: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.pequeno },
   espaco: { height: Espacamento.pequeno },
   rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  rodapeTexto: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  rodapeTexto: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
 });

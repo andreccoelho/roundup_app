@@ -20,6 +20,6 @@ export default function IndicadorFrequencia({ presencas }: IndicadorFrequenciaPr
 const styles = StyleSheet.create({
   container: { flexDirection: 'row', gap: Espacamento.minimo },
   ponto: { width: 8, height: 8, borderRadius: 4 },
-  pontoPresente: { backgroundColor: Cores.preto },
-  pontoAusente: { backgroundColor: Cores.cinzaBorda },
+  pontoPresente: { backgroundColor: Cores.superficie2 },
+  pontoAusente: { backgroundColor: Cores.linha },
 });

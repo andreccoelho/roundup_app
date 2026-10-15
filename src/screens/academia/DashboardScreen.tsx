@@ -4,7 +4,6 @@
 // uma agregação de check-ins por período que ainda não existe.
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -68,7 +67,7 @@ export default function DashboardScreen() {
   if (carregando) {
     return (
       <View style={styles.centro}>
-        <ActivityIndicator color={Cores.preto} />
+        <ActivityIndicator color={Cores.texto} />
       </View>
     );
   }
@@ -78,7 +77,6 @@ export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
       {/* Banda full-bleed encosta no topo — ícones claros, igual ao Login/Dashboard do Aluno. */}
-      <StatusBar style="light" />
       <View style={styles.cabecalho}>
         {/* Marca invertida como textura de fundo — mesmo tratamento do Dashboard do Aluno. */}
         <Image
@@ -147,14 +145,14 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
-  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Cores.branco },
+  centro: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Cores.fundo },
 
   // Banda full-bleed preta — mesmo tratamento de identidade do Dashboard do Aluno/Professor.
   // A "identidade" aqui é a academia (nomeAcademia), não a pessoa de contato.
   cabecalho: {
-    backgroundColor: Cores.preto,
+    backgroundColor: Cores.superficie2,
     paddingHorizontal: Espacamento.grande,
     paddingTop: Espacamento.extraGrande,
     paddingBottom: Espacamento.grande,
@@ -171,12 +169,12 @@ const styles = StyleSheet.create({
   cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
   saudacaoNome: {
     flex: 1,
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.branco,
+    color: Cores.texto,
     letterSpacing: 1,
   },
-  enderecoTexto: { color: Cores.cinzaClaro, fontSize: TamanhoFonte.sm, marginTop: Espacamento.padrao },
+  enderecoTexto: { color: Cores.texto3, fontSize: TamanhoFonte.sm, marginTop: Espacamento.padrao },
   modalidadesLinha: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -184,21 +182,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Espacamento.grande,
     paddingTop: Espacamento.padrao,
   },
-  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
+  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
 
   contadoresLinha: { flexDirection: 'row', paddingHorizontal: Espacamento.grande, gap: Espacamento.grande, marginTop: Espacamento.padrao },
   contadorItem: { flex: 1 },
-  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
-  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
+  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
+  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
 
   secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.pequeno },
-  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.pequeno },
+  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
 
   linhaSimples: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Espacamento.medio },
-  itemNome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600' },
-  itemDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },
+  itemNome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
+  itemDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.texto2 },
 
   rodape: { paddingHorizontal: Espacamento.grande, gap: Espacamento.medio, marginTop: Espacamento.grande + Espacamento.minimo, paddingTop: Espacamento.padrao },
-  linkRodape: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  linkRodape: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
 });

@@ -21,9 +21,9 @@ export default function Folha({ visivel, onFechar, children }: FolhaProps) {
 const styles = StyleSheet.create({
   fundo: { flex: 1, backgroundColor: 'rgba(10,10,10,0.5)' },
   folha: {
-    backgroundColor: Cores.branco,
-    borderTopLeftRadius: Raios.grande,
-    borderTopRightRadius: Raios.grande,
+    backgroundColor: Cores.fundo,
+    borderTopLeftRadius: Raios.pequeno,
+    borderTopRightRadius: Raios.pequeno,
     padding: Espacamento.padrao,
     paddingBottom: Espacamento.grande,
   },

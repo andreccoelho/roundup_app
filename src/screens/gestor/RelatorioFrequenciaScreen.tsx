@@ -91,14 +91,14 @@ export default function RelatorioFrequenciaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
-  input: { borderBottomWidth: 1, borderBottomColor: Cores.cinzaBorda, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.preto },
-  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
+  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
+  input: { borderBottomWidth: 1, borderBottomColor: Cores.linha, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.texto },
+  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
   espaco: { height: Espacamento.padrao },
   espacoGrande: { height: Espacamento.grande },
   linha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Espacamento.medio },
-  nome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600' },
-  frequencia: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },
+  nome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
+  frequencia: { fontSize: TamanhoFonte.sm, color: Cores.texto2 },
 });

@@ -20,5 +20,5 @@ export default function TelaEmBreve({ titulo, descricao }: TelaEmBreveProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: Cores.fundo, justifyContent: 'center' },
 });

@@ -5,7 +5,6 @@
 // firestore.rules.
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { Cores, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -132,7 +131,6 @@ export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
       {/* Banda full-bleed encosta no topo — ícones claros, igual ao Login/Dashboard do Aluno. */}
-      <StatusBar style="light" />
       <View style={styles.cabecalho}>
         {/* Marca invertida como textura de fundo — mesmo tratamento do Dashboard do Aluno. */}
         <Image
@@ -168,7 +166,7 @@ export default function DashboardScreen() {
       ) : null}
 
       {carregandoTurmas ? (
-        <ActivityIndicator color={Cores.preto} style={styles.espacoTopo} />
+        <ActivityIndicator color={Cores.texto} style={styles.espacoTopo} />
       ) : turmas.length === 0 ? (
         <View style={styles.secao}>
           <Text style={styles.vazio}>Você ainda não tem turmas.</Text>
@@ -207,7 +205,7 @@ export default function DashboardScreen() {
           <View style={styles.secao}>
             <Text style={styles.secaoTitulo}>Chamada de hoje</Text>
             {carregandoPainel ? (
-              <ActivityIndicator color={Cores.preto} style={styles.espacoTopo} />
+              <ActivityIndicator color={Cores.texto} style={styles.espacoTopo} />
             ) : !sessaoHoje ? (
               <Text style={styles.vazio}>Sem sessão hoje — nada para chamar.</Text>
             ) : chamada.length === 0 ? (
@@ -252,12 +250,12 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
 
   // Banda full-bleed preta — mesmo tratamento de identidade do Dashboard do Aluno.
   cabecalho: {
-    backgroundColor: Cores.preto,
+    backgroundColor: Cores.superficie2,
     paddingHorizontal: Espacamento.grande,
     paddingTop: Espacamento.extraGrande,
     paddingBottom: Espacamento.grande,
@@ -274,9 +272,9 @@ const styles = StyleSheet.create({
   cabecalhoTopo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
   saudacaoNome: {
     flex: 1,
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.branco,
+    color: Cores.texto,
     letterSpacing: 1,
   },
   seloLinha: { marginTop: Espacamento.padrao },
@@ -287,7 +285,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Espacamento.grande,
     paddingTop: Espacamento.padrao,
   },
-  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
+  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginHorizontal: Espacamento.grande, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
   espacoTopo: { marginTop: Espacamento.padrao },
   espacoPequeno: { height: Espacamento.medio },
 
@@ -295,33 +293,33 @@ const styles = StyleSheet.create({
   chipsConteudo: { paddingHorizontal: Espacamento.grande, gap: Espacamento.pequeno },
 
   secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.minimo },
-  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.minimo },
+  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
 
-  turmaNome: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.preto },
-  turmaDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  turmaNome: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.texto },
+  turmaDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.minimo },
   contadoresLinha: { flexDirection: 'row', marginTop: Espacamento.padrao },
-  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
-  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
+  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
+  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
 
   linhaChamada: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: Espacamento.medio },
-  itemNome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600' },
-  // Cores.cinzaClaro corrigido na fonte (src/theme/tokens.ts) para 4,61:1 sobre branco — este
+  itemNome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
+  // Cores.texto3 corrigido na fonte (src/theme/tokens.ts) para 4,61:1 sobre branco — este
   // rótulo passou a valer 4,5:1 sem precisar de nenhuma mudança aqui além do import direto.
-  statusAguardando: { fontSize: TamanhoFonte.xs, color: Cores.cinzaClaro },
+  statusAguardando: { fontSize: TamanhoFonte.xs, color: Cores.texto3 },
   botaoPresenca: {
     borderWidth: 1,
-    borderColor: Cores.cinzaEscuro,
-    borderRadius: Raios.grande,
+    borderColor: Cores.linhaForte,
+    borderRadius: Raios.pequeno,
     paddingVertical: Espacamento.pequeno,
     paddingHorizontal: Espacamento.padrao,
     minHeight: 44,
     justifyContent: 'center',
   },
-  botaoPresencaAtivo: { backgroundColor: Cores.checkinValidado, borderColor: Cores.checkinValidado },
-  textoPresenca: { fontSize: TamanhoFonte.sm, color: Cores.cinzaEscuro },
-  textoPresencaAtivo: { color: Cores.branco, fontWeight: '600' },
+  botaoPresencaAtivo: { backgroundColor: Cores.sucesso, borderColor: Cores.sucesso },
+  textoPresenca: { fontSize: TamanhoFonte.sm, color: Cores.linhaForte },
+  textoPresencaAtivo: { color: Cores.texto, fontWeight: '600' },
 
   rodape: { paddingHorizontal: Espacamento.grande, gap: Espacamento.medio, marginTop: Espacamento.grande + Espacamento.minimo, paddingTop: Espacamento.padrao },
-  linkRodape: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  linkRodape: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
 });

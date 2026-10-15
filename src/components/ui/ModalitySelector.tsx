@@ -1,8 +1,8 @@
 // RF04, RF05, RF06: seletor de modalidade(s) compartilhado pelos 3 cadastros — pílulas que
 // preenchem de preto quando ativas, não o "kit de card branco com borda" repetido na tela.
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { Colors } from '../../constants/colors';
-import { FontSize } from '../../constants/typography';
+import { Cores } from '../../theme';
+import { TamanhoFonte } from '../../theme';
 import { MODALIDADES, MODALIDADE_OUTRA } from '../../constants/modalidades';
 
 const semAnelDeFoco = { outlineWidth: 0 } as const;
@@ -61,7 +61,7 @@ export default function ModalitySelector({
         <TextInput
           style={[styles.campoOutra, semAnelDeFoco]}
           placeholder="Qual modalidade?"
-          placeholderTextColor={Colors.cinzaClaro}
+          placeholderTextColor={Cores.texto3}
           value={outraTexto}
           onChangeText={onAlterarOutraTexto}
         />
@@ -73,25 +73,25 @@ export default function ModalitySelector({
 
 const styles = StyleSheet.create({
   container: { marginBottom: 20 },
-  rotulo: { fontSize: FontSize.sm, color: Colors.cinzaMedio, marginBottom: 10 },
+  rotulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: 10 },
   grade: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   pilula: {
     borderWidth: 1,
-    borderColor: Colors.cinzaEscuro,
+    borderColor: Cores.linhaForte,
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 14,
   },
-  pilulaAtiva: { backgroundColor: Colors.preto, borderColor: Colors.preto },
-  textoPilula: { fontSize: FontSize.sm, color: Colors.cinzaEscuro },
-  textoPilulaAtiva: { color: Colors.branco, fontWeight: '600' },
+  pilulaAtiva: { backgroundColor: Cores.superficie2, borderColor: Cores.texto },
+  textoPilula: { fontSize: TamanhoFonte.sm, color: Cores.linhaForte },
+  textoPilulaAtiva: { color: Cores.texto, fontWeight: '600' },
   campoOutra: {
     borderBottomWidth: 1,
-    borderBottomColor: Colors.cinzaBorda,
+    borderBottomColor: Cores.linha,
     paddingVertical: 8,
     marginTop: 12,
-    fontSize: FontSize.md,
-    color: Colors.preto,
+    fontSize: TamanhoFonte.md,
+    color: Cores.texto,
   },
-  erro: { fontSize: FontSize.xs, color: Colors.alerta, marginTop: 6 },
+  erro: { fontSize: TamanhoFonte.xs, color: Cores.perigo, marginTop: 6 },
 });

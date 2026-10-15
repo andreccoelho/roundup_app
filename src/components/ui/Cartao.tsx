@@ -17,10 +17,10 @@ interface CartaoProps extends ViewProps {
 
 export default function Cartao({
   style,
-  raio = Raios.medio,
+  raio = Raios.pequeno,
   semBorda,
   corteDiagonal,
-  corFundo = Cores.branco,
+  corFundo = Cores.texto,
   children,
   ...resto
 }: CartaoProps) {
@@ -46,7 +46,7 @@ export default function Cartao({
 const styles = StyleSheet.create({
   cartao: {
     borderWidth: 1,
-    borderColor: Cores.cinzaBorda,
+    borderColor: Cores.linha,
     padding: Espacamento.padrao,
   },
   semBorda: { borderWidth: 0 },
