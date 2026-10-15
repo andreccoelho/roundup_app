@@ -25,6 +25,7 @@ function Aba({ rotulo, ativa, onPress }: { rotulo: string; ativa: boolean; onPre
       onPress={onPress}
       accessibilityRole="tab"
       accessibilityState={{ selected: ativa }}
+      aria-selected={ativa}
       accessibilityLabel={rotulo}
       {...propsFoco}
     >

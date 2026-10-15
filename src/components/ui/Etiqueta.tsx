@@ -32,6 +32,7 @@ export default function Etiqueta({ texto, selecionada, onPress, desabilitada, mo
       accessibilityRole={modo === 'multiplo' ? 'checkbox' : 'radio'}
       accessibilityLabel={accessibilityLabel ?? texto}
       accessibilityState={{ checked: Boolean(selecionada), disabled: Boolean(desabilitada) }}
+      aria-checked={Boolean(selecionada)}
       style={({ pressed }) => [
         styles.etiqueta,
         styles.interativa,

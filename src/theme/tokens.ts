@@ -1,3 +1,5 @@
+import { Platform, type TextStyle } from 'react-native';
+
 // Tokens visuais do RoundUp — direção "Noite de luta" (docs/DESIGN.md). Fonte única: nenhuma
 // tela define cor, tamanho de fonte ou raio fora daqui. Tema só escuro.
 //
@@ -110,13 +112,18 @@ export const DuracaoAnimacao = {
 } as const;
 
 // Sombra dura só em título display de hero/conquista, na cor do acento, offset 2/2.
+// No web, o react-native-web 0.21 descontinuou textShadowColor/Offset/Radius (avisa no console) e
+// pede a propriedade CSS textShadow; no nativo, as três props continuam sendo o caminho.
 export const Sombras = {
-  duraAcento: {
-    textShadowColor: Cores.acento,
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 0,
-  },
-} as const;
+  duraAcento: Platform.select<TextStyle>({
+    web: { textShadow: `2px 2px 0px ${Cores.acento}` } as TextStyle,
+    default: {
+      textShadowColor: Cores.acento,
+      textShadowOffset: { width: 2, height: 2 },
+      textShadowRadius: 0,
+    },
+  }),
+};
 
 // Corte diagonal do canto inferior direito, em px. No máximo uma vez por tela: hero de
 // check-in e card de faixa.

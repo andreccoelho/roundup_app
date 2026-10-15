@@ -35,7 +35,7 @@ export default function ModalitySelector({
   }
 
   return (
-    <View style={styles.container} accessibilityRole="list" accessibilityLabel={rotulo}>
+    <View style={styles.container} role="group" aria-label={rotulo}>
       <Texto variante="legenda" style={styles.rotulo} cabecalho={false}>
         {rotulo}
       </Texto>

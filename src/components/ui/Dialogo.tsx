@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { Cores, Espacamento, Raios } from '../../theme';
+import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import Botao from './Botao';
 import Texto from './Texto';
 
@@ -31,8 +32,9 @@ export default function Dialogo({
   carregando,
   children,
 }: DialogoProps) {
+  const reduzido = useMovimentoReduzido();
   return (
-    <Modal visible={visivel} transparent animationType="fade" onRequestClose={onCancelar} statusBarTranslucent>
+    <Modal visible={visivel} transparent animationType={reduzido ? 'none' : 'fade'} onRequestClose={onCancelar} statusBarTranslucent>
       <View style={styles.fundo}>
         <View style={[styles.caixa, destrutivo && styles.caixaDestrutiva]} accessibilityViewIsModal aria-modal role="dialog">
           <Texto variante="titulo">{titulo}</Texto>

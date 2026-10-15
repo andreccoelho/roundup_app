@@ -16,10 +16,12 @@ import { buscarTurma } from '../../services/turmas';
 import { listarClassificacoesDoAluno } from '../../services/classificacoes';
 import { paraData } from '../../utils/datas';
 import { estadoCheckIn, motivoJanelaFechada } from '../../utils/statusCheckIn';
-import { calcularProgressoNivel, calcularSequencia, ProgressoNivel } from '../../utils/gamificacao';
+import { calcularMedalhas, calcularProgressoNivel, calcularSequencia, MedalhaComEstado, ProgressoNivel } from '../../utils/gamificacao';
 import { mensagemErro } from '../../utils/mensagensErro';
 import Tela from '../../components/ui/Tela';
 import Aviso from '../../components/ui/Aviso';
+import MomentoConquista from '../../components/ui/MomentoConquista';
+import { useConquistas } from '../../hooks/useConquistas';
 import HomeAlunoVisao, { type SessaoHome } from './HomeAlunoVisao';
 
 const MAXIMO_SESSOES_EXIBIDAS = 4;
@@ -36,6 +38,8 @@ export default function DashboardScreen() {
 
   const [progresso, setProgresso] = useState<ProgressoNivel | null>(null);
   const [sequencia, setSequencia] = useState(0);
+  const [medalhas, setMedalhas] = useState<MedalhaComEstado[] | undefined>(undefined);
+  const [progressoPronto, setProgressoPronto] = useState(false);
 
   const carregar = useCallback(async () => {
     if (!usuario) return;
@@ -80,14 +84,28 @@ export default function DashboardScreen() {
     Promise.all([listarClassificacoesDoAluno(usuario.id), listarHistoricoDoAluno(usuario.id)])
       .then(([classificacoes, historico]) => {
         const pontosTotais = classificacoes.reduce((soma, c) => soma + c.pontos, 0);
+        const sequenciaAtual = calcularSequencia(historico);
+        const validados = historico.filter((c) => c.status === 'validado').length;
         setProgresso(calcularProgressoNivel(pontosTotais));
-        setSequencia(calcularSequencia(historico));
+        setSequencia(sequenciaAtual);
+        // Medalhas de graduação ficam de fora: dependem de `graduacoes`, que esta tela não lê.
+        setMedalhas(calcularMedalhas(validados, sequenciaAtual, 0));
+        setProgressoPronto(true);
       })
       .catch(() => {
         setProgresso(calcularProgressoNivel(0));
         setSequencia(0);
       });
   }, [usuario]);
+
+  // Celebração do lado do aluno: compara com o último estado salvo neste aparelho.
+  const { conquista, restantes, proxima } = useConquistas({
+    usuarioId: usuario?.id,
+    nivel: progresso?.nivel,
+    faixa: usuario?.faixaOuGrau,
+    medalhas,
+    pronto: progressoPronto,
+  });
 
   async function handleCheckIn(sessaoId: string) {
     if (!usuario || enviandoId) return;
@@ -128,6 +146,7 @@ export default function DashboardScreen() {
         onTurmasDisponiveis={() => navigation.navigate('TurmasDisponiveis')}
         onHistorico={() => navigation.navigate('Historico')}
       />
+      <MomentoConquista conquista={conquista} onFechar={proxima} posicaoFila={restantes > 1 ? `Mais ${restantes - 1} a seguir` : undefined} />
     </Tela>
   );
 }
