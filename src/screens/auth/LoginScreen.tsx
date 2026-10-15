@@ -89,7 +89,7 @@ export default function LoginScreen() {
         refCampo={refSenha}
         rotulo="Senha"
         secureTextEntry
-        autoComplete="password"
+        autoComplete="current-password"
         textContentType="password"
         returnKeyType="go"
         onSubmitEditing={handleLogin}

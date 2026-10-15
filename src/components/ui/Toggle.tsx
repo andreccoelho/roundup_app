@@ -22,6 +22,7 @@ export default function Toggle({ rotulo, descricao, valor, onAlterar, desabilita
       accessibilityLabel={rotulo}
       accessibilityHint={descricao}
       accessibilityState={{ checked: valor, disabled: Boolean(desabilitado) }}
+      aria-checked={valor}
     >
       <View style={styles.textos}>
         <Texto variante="corpoForte">{rotulo}</Texto>
@@ -31,11 +32,11 @@ export default function Toggle({ rotulo, descricao, valor, onAlterar, desabilita
         value={valor}
         onValueChange={onAlterar}
         disabled={desabilitado}
-        trackColor={{ false: Cores.superficie2, true: Cores.sucesso }}
+        trackColor={{ false: Cores.linhaForte, true: Cores.sucesso }}
         thumbColor={Cores.texto}
         // react-native-web usa activeThumbColor (teal por padrão) quando ligado.
         {...({ activeThumbColor: Cores.texto, activeTrackColor: Cores.sucesso } as object)}
-        ios_backgroundColor={Cores.superficie2}
+        ios_backgroundColor={Cores.linhaForte}
         // A linha já é o controle acessível — o Switch não é anunciado duas vezes.
         aria-hidden
         importantForAccessibility="no-hide-descendants"

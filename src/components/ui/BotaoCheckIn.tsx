@@ -7,6 +7,7 @@
 import { useEffect, useRef } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Alturas, Cores, DuracaoAnimacao, Espacamento, Raios } from '../../theme';
+import { DRIVER_NATIVO } from '../../utils/animacao';
 import type { EstadoCheckIn } from '../../utils/statusCheckIn';
 import { hapticaImpacto, hapticaSucesso } from '../../utils/haptica';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
@@ -36,12 +37,12 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
         flash.setValue(0);
         Animated.parallel([
           Animated.sequence([
-            Animated.timing(escala, { toValue: 1.2, duration: DuracaoAnimacao.rapida, useNativeDriver: true }),
-            Animated.spring(escala, { toValue: 1, friction: 4, useNativeDriver: true }),
+            Animated.timing(escala, { toValue: 1.2, duration: DuracaoAnimacao.rapida, useNativeDriver: DRIVER_NATIVO }),
+            Animated.spring(escala, { toValue: 1, friction: 4, useNativeDriver: DRIVER_NATIVO }),
           ]),
           Animated.sequence([
-            Animated.timing(flash, { toValue: 0.35, duration: 80, useNativeDriver: true }),
-            Animated.timing(flash, { toValue: 0, duration: DuracaoAnimacao.base, useNativeDriver: true }),
+            Animated.timing(flash, { toValue: 0.35, duration: 80, useNativeDriver: DRIVER_NATIVO }),
+            Animated.timing(flash, { toValue: 0, duration: DuracaoAnimacao.base, useNativeDriver: DRIVER_NATIVO }),
           ]),
         ]).start();
       }

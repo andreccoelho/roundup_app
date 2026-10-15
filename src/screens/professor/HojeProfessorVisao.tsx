@@ -63,6 +63,7 @@ function BotaoPresenca({ item, processando, onPress }: { item: ItemChamadaVisao;
       accessibilityRole="switch"
       accessibilityLabel={`Presença de ${item.nome}`}
       accessibilityState={{ checked: presente, disabled: processando, busy: processando }}
+      aria-checked={presente}
       style={({ pressed }) => [
         styles.presenca,
         presente ? styles.presencaAtiva : styles.presencaInativa,

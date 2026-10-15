@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Modal, StyleSheet, View } from 'react-native';
 import { Cores, DuracaoAnimacao, Espacamento, Raios, Sombras } from '../../theme';
+import { DRIVER_NATIVO } from '../../utils/animacao';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import { hapticaSucesso } from '../../utils/haptica';
 import Botao from './Botao';
@@ -34,13 +35,13 @@ export default function CelebracaoGraduacao({ visivel, grau, modalidade, nomeAlu
     escala.setValue(0.8);
     opacidade.setValue(0);
     Animated.parallel([
-      Animated.timing(opacidade, { toValue: 1, duration: DuracaoAnimacao.dramatica, useNativeDriver: true }),
-      Animated.spring(escala, { toValue: 1, friction: 5, tension: 50, useNativeDriver: true }),
+      Animated.timing(opacidade, { toValue: 1, duration: DuracaoAnimacao.dramatica, useNativeDriver: DRIVER_NATIVO }),
+      Animated.spring(escala, { toValue: 1, friction: 5, tension: 50, useNativeDriver: DRIVER_NATIVO }),
     ]).start();
   }, [visivel, reduzido, escala, opacidade]);
 
   return (
-    <Modal visible={visivel} transparent animationType="fade" onRequestClose={onFechar} statusBarTranslucent>
+    <Modal visible={visivel} transparent animationType={reduzido ? 'none' : 'fade'} onRequestClose={onFechar} statusBarTranslucent>
       <View style={styles.fundo}>
         <Animated.View
           style={[styles.caixa, { opacity: opacidade, transform: [{ scale: escala }] }]}

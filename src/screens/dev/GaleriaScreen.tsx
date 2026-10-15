@@ -61,6 +61,7 @@ import SeloFaixa from '../../components/ui/SeloFaixa';
 import CartaoAluno from '../../components/ui/CartaoAluno';
 import IndicadorFrequencia from '../../components/ui/IndicadorFrequencia';
 import HeroCheckIn from '../../components/ui/HeroCheckIn';
+import MomentoConquista, { type Conquista } from '../../components/ui/MomentoConquista';
 import { COMPOSICOES, ComposicaoPorNome, type Composicao } from './composicoes';
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
@@ -123,6 +124,7 @@ export default function GaleriaScreen() {
   const [hora, setHora] = useState('');
   const [senha, setSenha] = useState('segredo1');
   const [composicao, setComposicao] = useState<Composicao | null>(null);
+  const [conquistaDemo, setConquistaDemo] = useState<Conquista | null>(null);
 
   if (!__DEV__) return null;
 
@@ -157,6 +159,15 @@ export default function GaleriaScreen() {
         {COMPOSICOES.map((c, i) => (
           <ItemMenu key={c.valor} rotulo={c.rotulo} separador={i > 0} onPress={() => setComposicao(c.valor)} />
         ))}
+      </Secao>
+
+      <Secao titulo="MomentoConquista">
+        <View style={styles.pilha}>
+          <Botao titulo="Conquista: nível" variante="secundario" onPress={() => setConquistaDemo({ tipo: 'nivel', valor: 5, rotulo: 'Você chegou ao nível 5.' })} />
+          <Botao titulo="Conquista: faixa" variante="secundario" onPress={() => setConquistaDemo({ tipo: 'faixa', valor: 'Faixa roxa, 1º grau', rotulo: 'Graduação registrada pelo seu professor.' })} />
+          <Botao titulo="Conquista: medalha" variante="secundario" onPress={() => setConquistaDemo({ tipo: 'medalha', valor: 30, rotulo: '30 treinos', icone: 'treinos' })} />
+        </View>
+        <MomentoConquista conquista={conquistaDemo} onFechar={() => setConquistaDemo(null)} />
       </Secao>
 
       <Secao titulo="Tipografia">

@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
 import { Alturas, Cores, DuracaoAnimacao, Espacamento, Raios, TamanhoFonte } from '../../theme';
+import { DRIVER_NATIVO } from '../../utils/animacao';
 import type { EstadoCheckIn } from '../../utils/statusCheckIn';
 import { formatarDuracao, formatarHora, rotuloDia } from '../../utils/apresentacao';
 import { hapticaImpacto, hapticaSucesso } from '../../utils/haptica';
@@ -63,12 +64,12 @@ export default function HeroCheckIn({ nomeTurma, inicio, janelaInicio, janelaFim
         flash.setValue(0);
         Animated.parallel([
           Animated.sequence([
-            Animated.timing(escala, { toValue: 1.06, duration: DuracaoAnimacao.rapida, useNativeDriver: true }),
-            Animated.spring(escala, { toValue: 1, friction: 4, tension: 120, useNativeDriver: true }),
+            Animated.timing(escala, { toValue: 1.06, duration: DuracaoAnimacao.rapida, useNativeDriver: DRIVER_NATIVO }),
+            Animated.spring(escala, { toValue: 1, friction: 4, tension: 120, useNativeDriver: DRIVER_NATIVO }),
           ]),
           Animated.sequence([
-            Animated.timing(flash, { toValue: 1, duration: 80, useNativeDriver: true }),
-            Animated.timing(flash, { toValue: 0, duration: DuracaoAnimacao.lenta, useNativeDriver: true }),
+            Animated.timing(flash, { toValue: 1, duration: 80, useNativeDriver: DRIVER_NATIVO }),
+            Animated.timing(flash, { toValue: 0, duration: DuracaoAnimacao.lenta, useNativeDriver: DRIVER_NATIVO }),
           ]),
         ]).start();
       }

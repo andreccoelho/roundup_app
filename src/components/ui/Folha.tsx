@@ -6,6 +6,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleShee
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Cores, Espacamento, LarguraMaxima, Raios } from '../../theme';
 import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
+import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import { IconeFechar } from '../icones';
 import Texto from './Texto';
 
@@ -19,9 +20,10 @@ interface FolhaProps {
 export default function Folha({ visivel, onFechar, titulo, children }: FolhaProps) {
   const insets = useSafeAreaInsets();
   const fechar = useFocoVisivel();
+  const reduzido = useMovimentoReduzido();
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onFechar} statusBarTranslucent>
+    <Modal visible={visivel} transparent animationType={reduzido ? 'none' : 'slide'} onRequestClose={onFechar} statusBarTranslucent>
       <KeyboardAvoidingView style={styles.raiz} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <Pressable style={styles.fundo} onPress={onFechar} accessibilityRole="button" accessibilityLabel="Fechar" />
         <View style={[styles.folha, { paddingBottom: insets.bottom + Espacamento.padrao }]} accessibilityViewIsModal aria-modal role="dialog">
@@ -55,11 +57,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: LarguraMaxima.lista,
     maxHeight: '88%',
-    backgroundColor: Cores.superficie1,
+    // Fundo = fundo da tela (não superficie1): mantém válidas dentro da folha as mesmas regras
+    // de contraste das telas (texto em perigo só sobre fundo, 4,5:1). A separação do conteúdo atrás
+    // vem do overlay, do contorno superior e da alça.
+    backgroundColor: Cores.fundo,
     borderTopLeftRadius: Raios.pequeno,
     borderTopRightRadius: Raios.pequeno,
     borderTopWidth: 1,
-    borderTopColor: Cores.linha,
+    borderTopColor: Cores.linhaForte,
     paddingHorizontal: Espacamento.padrao,
   },
   alca: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: Cores.linhaForte, marginTop: Espacamento.pequeno },
