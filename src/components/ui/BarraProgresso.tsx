@@ -1,8 +1,13 @@
-// BarraProgresso — XP até o próximo nível (RF17, Ciclo 2). Sem consumidor real ainda:
-// `missoesProgresso`/pontuação seguem bloqueados em firestore.rules; componente pronto para
-// quando RF16/RF17 destravarem.
-import { StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
+// BarraProgresso — XP até o próximo nível (RF17). Segmentada "por round" (10 segmentos).
+// Trilha visível: segmento vazio é um traço em `linhaForte` (3,9:1 sobre o fundo, ≥3:1 de
+// componente de UI); segmento cheio é um bloco em acento — diferença de forma, não só de cor.
+// Preenchimento e contador de XP animados ao montar (reduce motion: valor final direto).
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Easing, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { Cores, DuracaoAnimacao, Espacamento } from '../../theme';
+import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
+import { useNumeroAnimado } from '../../hooks/useNumeroAnimado';
+import Texto from './Texto';
 
 interface BarraProgressoProps {
   nivel: number;
@@ -10,43 +15,94 @@ interface BarraProgressoProps {
   xpProximoNivel: number;
 }
 
-// script.md, item 3: "textura de 'round' (segmentada por round)... em vez de barra lisa padrão".
-// 10 segmentos fixos — não é uma contagem literal de rounds da luta, é só o motivo visual da
-// barra virar cartão de pontuação em vez de progressbar de SaaS genérica.
 const SEGMENTOS = 10;
 
+function Segmentos({ cheio, largura }: { cheio: boolean; largura?: number }) {
+  return (
+    <View style={[styles.segmentos, largura ? { width: largura } : null]}>
+      {Array.from({ length: SEGMENTOS }).map((_, i) => (
+        <View key={i} style={styles.segmento}>
+          <View style={cheio ? styles.cheio : styles.vazio} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function BarraProgresso({ nivel, xpAtual, xpProximoNivel }: BarraProgressoProps) {
+  const reduzido = useMovimentoReduzido();
+  const maximo = xpProximoNivel <= 1 && xpAtual >= xpProximoNivel;
   const progresso = xpProximoNivel > 0 ? Math.min(1, xpAtual / xpProximoNivel) : 0;
+  const [largura, setLargura] = useState(0);
+  const preenchimento = useRef(new Animated.Value(reduzido ? progresso : 0)).current;
+  const xpExibido = useNumeroAnimado(xpAtual);
+
+  useEffect(() => {
+    if (reduzido) {
+      preenchimento.setValue(progresso);
+      return;
+    }
+    Animated.timing(preenchimento, {
+      toValue: progresso,
+      duration: DuracaoAnimacao.contador,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [progresso, reduzido, preenchimento]);
+
+  const faltam = Math.max(0, xpProximoNivel - xpAtual);
 
   return (
-    <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: xpProximoNivel, now: xpAtual }}>
+    <View
+      accessibilityRole="progressbar"
+      accessibilityLabel={maximo ? `Nível ${nivel}, nível máximo` : `Nível ${nivel}: ${xpAtual} de ${xpProximoNivel} XP`}
+      accessibilityValue={{ min: 0, max: xpProximoNivel, now: xpAtual }}
+    >
       <View style={styles.cabecalho}>
-        <Text style={styles.nivel}>Nível {nivel}</Text>
-        <Text style={styles.xp}>
-          {xpAtual} / {xpProximoNivel} XP
-        </Text>
+        <View style={styles.nivel}>
+          <Texto variante="rotuloPlacar">Nível</Texto>
+          <Texto variante="placar">{nivel}</Texto>
+        </View>
+        {maximo ? (
+          <Texto variante="rotuloPlacar" cor="texto">
+            Nível máximo
+          </Texto>
+        ) : (
+          <View style={styles.xp}>
+            <Texto variante="placar">{xpExibido}</Texto>
+            <Texto variante="rotuloPlacar" cor="texto3">{`/ ${xpProximoNivel} XP`}</Texto>
+          </View>
+        )}
       </View>
-      <View style={styles.trilha}>
-        {Array.from({ length: SEGMENTOS }).map((_, i) => {
-          const inicioSegmento = i / SEGMENTOS;
-          const fimSegmento = (i + 1) / SEGMENTOS;
-          const progressoSegmento = Math.max(0, Math.min(1, (progresso - inicioSegmento) / (fimSegmento - inicioSegmento)));
-          return (
-            <View key={i} style={styles.segmento}>
-              <View style={[styles.segmentoPreenchimento, { width: `${progressoSegmento * 100}%` }]} />
-            </View>
-          );
-        })}
+      <View style={styles.trilha} onLayout={(e: LayoutChangeEvent) => setLargura(e.nativeEvent.layout.width)}>
+        <Segmentos cheio={false} />
+        <Animated.View
+          style={[
+            styles.camadaCheia,
+            { width: preenchimento.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) },
+          ]}
+        >
+          {largura > 0 ? <Segmentos cheio largura={largura} /> : null}
+        </Animated.View>
       </View>
+      {!maximo ? (
+        <Texto variante="legenda" cor="texto3" style={styles.falta}>
+          {`Faltam ${faltam} XP para o nível ${nivel + 1}`}
+        </Texto>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  cabecalho: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Espacamento.minimo },
-  nivel: { fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.texto },
-  xp: { fontFamily: FamiliaFonte.placarRegular, fontSize: TamanhoFonte.sm, color: Cores.texto2 },
-  trilha: { flexDirection: 'row', gap: 2, height: 8 },
-  segmento: { flex: 1, borderRadius: Raios.pequeno, backgroundColor: Cores.superficie1, overflow: 'hidden' },
-  segmentoPreenchimento: { height: '100%', backgroundColor: Cores.superficie2 },
+  cabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: Espacamento.pequeno },
+  nivel: { flexDirection: 'row', alignItems: 'baseline', gap: Espacamento.pequeno },
+  xp: { flexDirection: 'row', alignItems: 'baseline', gap: Espacamento.minimo },
+  trilha: { height: 10, justifyContent: 'center' },
+  segmentos: { flexDirection: 'row', gap: 3, height: 10 },
+  segmento: { flex: 1, justifyContent: 'center' },
+  vazio: { height: 2, backgroundColor: Cores.linhaForte },
+  cheio: { height: 10, backgroundColor: Cores.acento },
+  camadaCheia: { position: 'absolute', left: 0, top: 0, bottom: 0, overflow: 'hidden' },
+  falta: { marginTop: Espacamento.pequeno },
 });

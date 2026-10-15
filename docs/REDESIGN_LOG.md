@@ -96,3 +96,23 @@ Validados na Galeria (`docs/redesign/fase-2/`, incluindo `*-modal-folha|dialogo|
 - `utils/mensagensErro.ts`: nova `mensagemErro(erro, padrao)` — traduz códigos do Firebase e preserva mensagens de negócio dos services (`throw new Error('...')` em PT).
 - `AuthStack` e `AlunoRaiz` passam a usar `opcoesHeader` (header da Galeria e de "Vincular-se" estava no estilo padrão).
 - Galeria reescrita: tipografia, paleta, ícones, todos os componentes base e de domínio.
+
+## Fase 3 — Componentes de domínio
+
+Screenshots em `docs/redesign/fase-3/`, incluindo as composições (`*-comp-home|perfil|classificacao|hoje.png`, e `mobile-comp-*-inteira.png` com a tela inteira) e `*-modal-celebracao.png`.
+
+- **Dependência**: `expo-haptics ~57.0.3` (`npx expo install`). Wrapper `src/utils/haptica.ts` (impacto, sucesso, seleção; nunca lança erro).
+- **`HeroCheckIn`** (novo): card do próximo treino com corte diagonal + lona, horário em `placarGrande`, rótulo do dia, turma e professor; área única de 56px, largura total, com os 3 estados — disponível (CTA em acento "Fazer check-in"), fora da janela (placa tracejada com cadeado e **contagem regressiva** "Abre em 25 min", atualizada a cada 15 s, ou "Check-in encerrado"), feito (placa verde "Treino registrado"). Filete superior muda de cor por estado. Punch + flash + haptic na transição para "feito"; reduce motion respeitado.
+- **`BotaoCheckIn`**: versão compacta para linhas — disponível contornado (o acento fica só no hero), fora da janela em `texto2` (estado, não erro), feito em verde; punch + haptic, reduce motion respeitado.
+- **`CartaoSessao`**: sem o ícone de estado duplicado; bloco de horário em placar à esquerda quando recebe `inicio`.
+- **`BarraProgresso`**: 10 segmentos "por round"; vazio = traço `linhaForte` (3,9:1), cheio = bloco em acento (diferença de forma, não só de cor); rótulo "NÍVEL" + placar; XP em contador animado; "Faltam N XP para o nível N+1"; estado "Nível máximo". Preenchimento animado. Novo hook `useNumeroAnimado`.
+- **`SeloFaixa`**: faixa de tecido em SVG. `interpretarFaixa()` lê o texto livre (branca, cinza, amarela, laranja, verde, azul, roxa/lilás, marrom, vermelha, preta; graus por "2º grau", "grau 2", "3 dan", "kyu"), desenha a cor, a ponteira (preta; vermelha na faixa preta) e até 6 tarjas. Não reconhecido → faixa neutra, texto original sempre visível. `tamanho="grande"` para o card de faixa. Prop `sobreEscuro` removida.
+- **`Medalha`**: emblema em SVG (placa de fivela de cinturão com correias), ícone por tipo (luva = treinos, chama = sequência, faixa = graduação), número em Oswald; bloqueada = contorno tracejado; `maxima` = única em ouro.
+- **`Podio`**: blocos com alturas 104/76/56 (1º/2º/3º), posição em `placarGrande` dentro do bloco, 1º em ouro com ícone de cinturão; coluna do aluno com traço de acento.
+- **`LinhaClassificacao`**: linha do aluno com fundo `superficie1`, barra lateral de 3px em acento e rótulo "Você".
+- **`CartaoMissao`**: virou linha (sem card) com barra segmentada por unidade da meta (≤10) e placar "2/3"; concluída em verde.
+- **`IndicadorSequencia`** (chama + placar animado), **`IndicadorFrequencia`** (bloco = presença, traço = falta), **`CartaoAluno`** (alerta com ícone), **`CelebracaoGraduacao`** (escuro, faixa grande, título display com sombra dura em acento, haptic, reduce motion).
+- `src/utils/apresentacao.ts` (novo): `formatarHora`, `rotuloDia` ("Hoje", "Amanhã", "Qui 17/10"), `formatarDiaHora`, `formatarDuracao`, rótulos humanizados de status de sessão ("Aberta agora"), nível de turma ("Intermediário") e status de check-in.
+- **Visões de apresentação** (novas, usadas pelas telas reais na fase 4 e pela Galeria): `aluno/HomeAlunoVisao.tsx`, `aluno/PerfilAlunoVisao.tsx`, `aluno/ClassificacaoVisao.tsx`, `professor/HojeProfessorVisao.tsx`.
+- **Galeria → "Composições"**: as 4 visões montadas com dados fictícios (`src/screens/dev/composicoes.tsx`), cada uma abrindo em tela inteira. Seções novas: HeroCheckIn (3 estados), linhas de sessão, progresso, missões, medalhas, faixas interpretadas, classificação, gestor.
+- Ajustes de revisão visual: chip estático em `superficie2` (sumia sobre a banda); coluna de horário com rótulo do dia em 1 linha.

@@ -1,47 +1,40 @@
-// CartaoSessao — componente de domínio: linha de sessão (turma, horário, estado de check-in).
-// Une o ícone líder de estado (antes só em aluno/DashboardScreen.tsx) com o BotaoCheckIn
-// (trailing), reaproveitado por aluno/DashboardScreen.tsx e aluno/AgendaScreen.tsx.
-import { ComponentType } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
-import { EstadoCheckIn } from '../../utils/statusCheckIn';
-import { IconeCadeado, IconeCheck, IconeLuva } from '../icones';
+// CartaoSessao — linha de sessão (turma, horário, estado de check-in) para Agenda e "próximos
+// treinos". Linha sobre o fundo (sem card). O horário vira bloco de placar à esquerda quando
+// `inicio` é passado; o estado aparece uma vez só, no BotaoCheckIn à direita (antes o ícone de
+// estado era desenhado duas vezes — RELATORIO_UI_UX.md, UI-16).
+import { StyleSheet, View } from 'react-native';
+import { Alturas, Espacamento } from '../../theme';
+import type { EstadoCheckIn } from '../../utils/statusCheckIn';
+import { formatarHora, rotuloDia } from '../../utils/apresentacao';
 import BotaoCheckIn from './BotaoCheckIn';
+import Texto from './Texto';
 
 interface CartaoSessaoProps {
   nomeTurma: string;
-  detalhe: string;
+  detalhe?: string;
+  inicio?: Date;
   estado: EstadoCheckIn;
   motivo?: string;
   carregando?: boolean;
   onCheckIn?: () => void;
 }
 
-interface IconeEstadoProps {
-  cor?: string;
-  tamanho?: number;
-}
-
-const ICONE_POR_ESTADO: Record<EstadoCheckIn, ComponentType<IconeEstadoProps>> = {
-  disponivel: IconeLuva,
-  foraDaJanela: IconeCadeado,
-  realizado: IconeCheck,
-};
-
-const COR_ICONE_POR_ESTADO: Record<EstadoCheckIn, string> = {
-  disponivel: Cores.texto,
-  foraDaJanela: Cores.perigo,
-  realizado: Cores.sucesso,
-};
-
-export default function CartaoSessao({ nomeTurma, detalhe, estado, motivo, carregando, onCheckIn }: CartaoSessaoProps) {
-  const Icone = ICONE_POR_ESTADO[estado];
+export default function CartaoSessao({ nomeTurma, detalhe, inicio, estado, motivo, carregando, onCheckIn }: CartaoSessaoProps) {
   return (
     <View style={styles.linha}>
-      <Icone cor={COR_ICONE_POR_ESTADO[estado]} tamanho={20} />
+      {inicio ? (
+        <View style={styles.horario} accessible accessibilityLabel={`${rotuloDia(inicio)} às ${formatarHora(inicio)}`}>
+          <Texto variante="placar">{formatarHora(inicio)}</Texto>
+          <Texto variante="rotuloPlacar" cor="texto3" numberOfLines={1}>
+            {rotuloDia(inicio)}
+          </Texto>
+        </View>
+      ) : null}
       <View style={styles.textos}>
-        <Text style={styles.titulo}>{nomeTurma}</Text>
-        <Text style={styles.detalhe}>{detalhe}</Text>
+        <Texto variante="corpoForte" numberOfLines={2}>
+          {nomeTurma}
+        </Texto>
+        {detalhe ? <Texto variante="legenda">{detalhe}</Texto> : null}
       </View>
       <BotaoCheckIn estado={estado} motivo={motivo} carregando={carregando} onPress={onCheckIn} />
     </View>
@@ -49,8 +42,7 @@ export default function CartaoSessao({ nomeTurma, detalhe, estado, motivo, carre
 }
 
 const styles = StyleSheet.create({
-  linha: { flexDirection: 'row', alignItems: 'center', paddingVertical: Espacamento.medio, gap: Espacamento.medio },
-  textos: { flex: 1 },
-  titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
-  detalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
+  linha: { flexDirection: 'row', alignItems: 'center', minHeight: Alturas.botaoHero + 8, paddingVertical: Espacamento.medio, gap: Espacamento.medio },
+  horario: { width: 76 },
+  textos: { flex: 1, gap: 2 },
 });

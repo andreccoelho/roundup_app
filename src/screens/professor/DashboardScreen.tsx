@@ -146,7 +146,7 @@ export default function DashboardScreen() {
         </View>
         {usuario?.graduacao ? (
           <View style={styles.seloLinha}>
-            <SeloFaixa faixaOuGrau={usuario.graduacao} sobreEscuro />
+            <SeloFaixa faixaOuGrau={usuario.graduacao} />
           </View>
         ) : null}
       </View>

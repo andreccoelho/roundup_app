@@ -1,8 +1,9 @@
-// LinhaClassificacao — linha de ranking (RF20, Ciclo 2). Lista sem bordas, separada por
-// LinhaFina — não "pilha de cards" (ver DESIGN_BRIEF.md). Sem consumidor real ainda.
-import { StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
+// LinhaClassificacao — linha de ranking (RF20) da 4ª posição em diante, sobre o fundo, separada por
+// LinhaFina. A linha do próprio aluno ganha fundo superficie1 e barra lateral de 3px em acento.
+import { StyleSheet, View } from 'react-native';
+import { Alturas, Cores, Espacamento } from '../../theme';
 import Avatar from './Avatar';
+import Texto from './Texto';
 
 interface LinhaClassificacaoProps {
   posicao: number;
@@ -14,19 +15,42 @@ interface LinhaClassificacaoProps {
 
 export default function LinhaClassificacao({ posicao, nome, pontos, fotoUrl, destaque }: LinhaClassificacaoProps) {
   return (
-    <View style={[styles.linha, destaque && styles.linhaDestaque]}>
-      <Text style={styles.posicao}>{posicao}</Text>
-      <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={32} />
-      <Text style={styles.nome}>{nome}</Text>
-      <Text style={styles.pontos}>{pontos}</Text>
+    <View
+      style={[styles.linha, destaque && styles.linhaDestaque]}
+      accessible
+      accessibilityLabel={`${posicao}º lugar: ${nome}, ${pontos} pontos${destaque ? ', você' : ''}`}
+    >
+      <Texto variante="placar" cor={destaque ? 'texto' : 'texto3'} style={styles.posicao}>
+        {posicao}
+      </Texto>
+      <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={36} />
+      <View style={styles.nome}>
+        <Texto variante="corpoForte" numberOfLines={1}>
+          {nome}
+        </Texto>
+        {destaque ? (
+          <Texto variante="rotuloPlacar" cor="texto2">
+            Você
+          </Texto>
+        ) : null}
+      </View>
+      <Texto variante="placar">{pontos}</Texto>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, paddingVertical: Espacamento.pequeno },
-  linhaDestaque: { backgroundColor: Cores.superficie1 },
-  posicao: { width: 24, fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.texto2, textAlign: 'center' },
-  nome: { flex: 1, fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
-  pontos: { fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.texto },
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Espacamento.medio,
+    minHeight: Alturas.botaoHero,
+    paddingVertical: Espacamento.pequeno,
+    paddingHorizontal: Espacamento.pequeno,
+    borderLeftWidth: 3,
+    borderLeftColor: 'transparent',
+  },
+  linhaDestaque: { backgroundColor: Cores.superficie1, borderLeftColor: Cores.acento },
+  posicao: { width: 32, textAlign: 'center' },
+  nome: { flex: 1 },
 });
