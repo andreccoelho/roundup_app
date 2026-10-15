@@ -30,3 +30,46 @@ export function ehErroDeAutenticacao(erro: unknown): boolean {
 
 export const MENSAGEM_ERRO_PERSISTENCIA =
   'Sua conta foi criada, mas houve um problema ao salvar seus dados. Verifique sua conexão e tente novamente.';
+
+// Erro genérico de qualquer chamada (Firestore, Storage, Auth ou regra de negócio dos services) →
+// mensagem em pt-BR para a tela. Substitui o `setErro(e.message)` cru, que mostrava ao usuário o
+// texto técnico do Firebase em inglês (RELATORIO_UI_UX.md, UX-10).
+// - Erros do Firebase têm `code` ("permission-denied", "storage/unauthorized", "auth/..."):
+//   traduzidos aqui.
+// - Erros lançados pelos próprios services (`throw new Error('Sessão não encontrada.')`) não têm
+//   `code` e já vêm em português: a mensagem é preservada.
+export function mensagemErro(erro: unknown, padrao = 'Não foi possível carregar agora. Tente novamente.'): string {
+  const codigo = (erro as { code?: unknown })?.code;
+  if (typeof codigo === 'string' && codigo.length > 0) {
+    if (codigo.startsWith('auth/')) return mensagemErroAutenticacao(codigo);
+    switch (codigo.replace(/^(firestore|storage|functions)\//, '')) {
+      case 'permission-denied':
+      case 'unauthorized':
+        return 'Você não tem permissão para acessar isso.';
+      case 'unauthenticated':
+        return 'Sua sessão expirou. Entre novamente.';
+      case 'unavailable':
+      case 'deadline-exceeded':
+      case 'retry-limit-exceeded':
+        return 'Sem conexão com o servidor. Verifique sua internet e tente novamente.';
+      case 'not-found':
+      case 'object-not-found':
+        return 'Não encontramos esse registro. Ele pode ter sido removido.';
+      case 'already-exists':
+        return 'Esse registro já existe.';
+      case 'resource-exhausted':
+      case 'quota-exceeded':
+        return 'Muitas solicitações seguidas. Aguarde um momento e tente novamente.';
+      case 'canceled':
+        return 'Operação cancelada.';
+      default:
+        return padrao;
+    }
+  }
+  const mensagem = (erro as { message?: unknown })?.message;
+  // Mensagem de negócio dos services: `throw new Error('...')` puro (não TypeError de rede etc.).
+  if (erro instanceof Error && erro.constructor === Error && typeof mensagem === 'string' && mensagem.length > 0 && mensagem.length < 160) {
+    return mensagem;
+  }
+  return padrao;
+}

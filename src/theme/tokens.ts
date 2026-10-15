@@ -118,8 +118,8 @@ export const Sombras = {
   },
 } as const;
 
-// Corte diagonal (% do lado, num viewBox 0-100 esticado). No máximo uma vez por tela: hero de
+// Corte diagonal do canto inferior direito, em px. No máximo uma vez por tela: hero de
 // check-in e card de faixa.
 export const Geometria = {
-  corteDiagonal: 14,
+  corteDiagonal: 28, // px, limitado a 40% da altura do card
 } as const;

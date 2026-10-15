@@ -1,30 +1,70 @@
-// Folha (bottom sheet) — modal ancorado na base da tela, para ações contextuais curtas.
+// Folha (bottom sheet) — ações e formulários curtos ancorados na base. Alça, título, botão de
+// fechar, rolagem interna e KeyboardAvoidingView (antes o teclado cobria os campos da "Nova
+// missão"). Respeita o inset inferior e fica centralizada com maxWidth 720 no web/tablet.
 import type { ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
-import { Cores, Espacamento, Raios } from '../../theme';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Cores, Espacamento, LarguraMaxima, Raios } from '../../theme';
+import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
+import { IconeFechar } from '../icones';
+import Texto from './Texto';
 
 interface FolhaProps {
   visivel: boolean;
   onFechar: () => void;
+  titulo?: string;
   children: ReactNode;
 }
 
-export default function Folha({ visivel, onFechar, children }: FolhaProps) {
+export default function Folha({ visivel, onFechar, titulo, children }: FolhaProps) {
+  const insets = useSafeAreaInsets();
+  const fechar = useFocoVisivel();
+
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onFechar}>
-      <Pressable style={styles.fundo} onPress={onFechar} accessibilityRole="button" accessibilityLabel="Fechar" />
-      <View style={styles.folha}>{children}</View>
+    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onFechar} statusBarTranslucent>
+      <KeyboardAvoidingView style={styles.raiz} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <Pressable style={styles.fundo} onPress={onFechar} accessibilityRole="button" accessibilityLabel="Fechar" />
+        <View style={[styles.folha, { paddingBottom: insets.bottom + Espacamento.padrao }]} accessibilityViewIsModal aria-modal role="dialog">
+          <View style={styles.alca} aria-hidden />
+          <View style={styles.cabecalho}>
+            <View style={styles.tituloArea}>{titulo ? <Texto variante="titulo">{titulo}</Texto> : null}</View>
+            <Pressable
+              onPress={onFechar}
+              hitSlop={8}
+              style={[styles.botaoFechar, estiloSemOutline, fechar.focado && estiloAnelFoco]}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar"
+              {...fechar.propsFoco}
+            >
+              <IconeFechar tamanho={22} cor={Cores.texto2} />
+            </Pressable>
+          </View>
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.conteudo} showsVerticalScrollIndicator={false}>
+            {children}
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  fundo: { flex: 1, backgroundColor: 'rgba(10,10,10,0.5)' },
+  raiz: { flex: 1, justifyContent: 'flex-end', alignItems: 'center' },
+  fundo: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: Cores.overlay },
   folha: {
-    backgroundColor: Cores.fundo,
+    width: '100%',
+    maxWidth: LarguraMaxima.lista,
+    maxHeight: '88%',
+    backgroundColor: Cores.superficie1,
     borderTopLeftRadius: Raios.pequeno,
     borderTopRightRadius: Raios.pequeno,
-    padding: Espacamento.padrao,
-    paddingBottom: Espacamento.grande,
+    borderTopWidth: 1,
+    borderTopColor: Cores.linha,
+    paddingHorizontal: Espacamento.padrao,
   },
+  alca: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: Cores.linhaForte, marginTop: Espacamento.pequeno },
+  cabecalho: { flexDirection: 'row', alignItems: 'center', minHeight: 48, marginTop: Espacamento.minimo },
+  tituloArea: { flex: 1 },
+  botaoFechar: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: -Espacamento.pequeno },
+  conteudo: { paddingTop: Espacamento.pequeno },
 });

@@ -16,6 +16,8 @@ import { emailValido, senhaValida, resolverModalidades, TAMANHO_MINIMO_SENHA } f
 import { ehErroDeAutenticacao, mensagemErroAutenticacao, MENSAGEM_ERRO_PERSISTENCIA } from '../../utils/mensagensErro';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
+import Abas from '../../components/ui/Abas';
+import Texto from '../../components/ui/Texto';
 import ModalitySelector from '../../components/ui/ModalitySelector';
 
 type Rota = RouteProp<AuthStackParamList, 'CadastroProfessor'>;
@@ -99,7 +101,7 @@ export default function CadastroProfessorScreen() {
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Botao titulo="‹ Voltar" variante="texto" onPress={() => navigation.goBack()} />
+        <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
         <Text style={styles.titulo}>Cadastro</Text>
         <Text style={styles.subtitulo}>Professor</Text>
@@ -149,32 +151,23 @@ export default function CadastroProfessorScreen() {
         />
 
         <View style={styles.campoToggle}>
-          <Text style={styles.rotuloToggle}>Atuação</Text>
-          <View style={styles.toggle} accessibilityRole="tablist">
-            <TouchableOpacity
-              style={[styles.opcaoToggle, autonomo && styles.opcaoToggleAtiva, semAnelDeFoco]}
-              onPress={() => setAutonomo(true)}
-              accessibilityRole="tab"
-              accessibilityLabel="Autônomo"
-              accessibilityState={{ selected: autonomo }}
-            >
-              <Text style={[styles.textoToggle, autonomo && styles.textoToggleAtivo]}>Autônomo</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.opcaoToggle, !autonomo && styles.opcaoToggleAtiva, semAnelDeFoco]}
-              onPress={() => setAutonomo(false)}
-              accessibilityRole="tab"
-              accessibilityLabel="Vinculado a academia"
-              accessibilityState={{ selected: !autonomo }}
-            >
-              <Text style={[styles.textoToggle, !autonomo && styles.textoToggleAtivo]}>Vinculado a academia</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.ajudaToggle}>
+          <Texto variante="legenda" style={styles.rotuloToggle}>
+            Atuação
+          </Texto>
+          <Abas
+            accessibilityLabel="Atuação"
+            opcoes={[
+              { valor: 'autonomo', rotulo: 'Autônomo' },
+              { valor: 'vinculado', rotulo: 'Vinculado a academia' },
+            ]}
+            selecionada={autonomo ? 'autonomo' : 'vinculado'}
+            onSelecionar={(valor) => setAutonomo(valor === 'autonomo')}
+          />
+          <Texto variante="legenda" cor="texto3" style={styles.ajudaToggle}>
             {autonomo
               ? 'Você mantém suas próprias turmas e alunos.'
               : 'Você poderá solicitar o vínculo com uma academia depois de entrar.'}
-          </Text>
+          </Texto>
         </View>
 
         <View style={styles.espaco} />

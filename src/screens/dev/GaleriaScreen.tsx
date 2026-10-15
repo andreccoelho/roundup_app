@@ -1,10 +1,9 @@
-// Galeria de componentes — acessível só em __DEV__ (a rota só é registrada em AuthStack.tsx
-// quando __DEV__ é true; este guard extra é defesa em profundidade). Mostra todas as variantes
-// e estados dos componentes de src/components/ui/, para revisão sem precisar rodar cada fluxo
-// real (ver SCRIPT.md, Passo 2).
+// Galeria de componentes — acessível só em __DEV__ (rota registrada em AuthStack.tsx só quando
+// __DEV__ é true; o guard abaixo é defesa em profundidade). Vitrine de tokens, componentes base e
+// de domínio, para validar o visual sem backend (docs/DESIGN.md).
 import { useState, type ReactNode } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
+import { StyleSheet, View } from 'react-native';
+import { Cores, CoresFaixa, Espacamento, Raios, type NomeCor } from '../../theme';
 
 import {
   IconeLuva,
@@ -15,7 +14,19 @@ import {
   IconeSino,
   IconeTatame,
   IconeFaixa,
+  IconePoste,
+  IconeCorda,
+  IconeCadeado,
+  IconeCheck,
+  IconeChama,
+  IconeCinturao,
+  IconeRelogio,
+  IconeAlerta,
+  IconeMais,
+  IconeSair,
 } from '../../components/icones';
+import Tela from '../../components/ui/Tela';
+import Texto, { type VarianteTexto } from '../../components/ui/Texto';
 import Botao from '../../components/ui/Botao';
 import CampoTexto from '../../components/ui/CampoTexto';
 import ModalitySelector from '../../components/ui/ModalitySelector';
@@ -26,8 +37,14 @@ import Avatar from '../../components/ui/Avatar';
 import LinhaFina from '../../components/LinhaFina';
 import Folha from '../../components/ui/Folha';
 import Dialogo from '../../components/ui/Dialogo';
-import Aviso from '../../components/ui/Aviso';
+import Aviso, { type TipoAviso } from '../../components/ui/Aviso';
 import Abas from '../../components/ui/Abas';
+import Toggle from '../../components/ui/Toggle';
+import Checkbox from '../../components/ui/Checkbox';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import ItemMenu from '../../components/ui/ItemMenu';
+import Estatistica from '../../components/ui/Estatistica';
+import BandaIdentidade from '../../components/ui/BandaIdentidade';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Esqueleto from '../../components/ui/Esqueleto';
@@ -48,7 +65,7 @@ import IndicadorFrequencia from '../../components/ui/IndicadorFrequencia';
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <View style={styles.secao}>
-      <Text style={styles.secaoTitulo}>{titulo}</Text>
+      <CabecalhoSecao titulo={titulo} semMargem />
       {children}
     </View>
   );
@@ -58,98 +75,167 @@ function Linha({ children }: { children: ReactNode }) {
   return <View style={styles.linha}>{children}</View>;
 }
 
-export default function GaleriaScreen() {
-  if (!__DEV__) return null;
+const VARIANTES: VarianteTexto[] = ['display', 'titulo', 'secao', 'corpo', 'corpoForte', 'legenda', 'rotuloPlacar', 'placar', 'placarGrande', 'placarXL'];
+const AMOSTRA: Partial<Record<VarianteTexto, string>> = {
+  display: 'Noite de luta',
+  secao: 'Próximos treinos',
+  rotuloPlacar: 'Nível',
+  placar: '1.240',
+  placarGrande: '19:30',
+  placarXL: '07',
+};
+const CORES_PALETA: NomeCor[] = ['fundo', 'superficie1', 'superficie2', 'linha', 'linhaForte', 'texto', 'texto2', 'texto3', 'acento', 'sucesso', 'perigo', 'ouro'];
+const ICONES = {
+  Luva: IconeLuva,
+  Ficha: IconeFichaTecnica,
+  Bandeira: IconeBandeira,
+  Pontuação: IconeCartaoPontuacao,
+  Perfil: IconePerfil,
+  Sino: IconeSino,
+  Tatame: IconeTatame,
+  Faixa: IconeFaixa,
+  Poste: IconePoste,
+  Corda: IconeCorda,
+  Cadeado: IconeCadeado,
+  Check: IconeCheck,
+  Chama: IconeChama,
+  Cinturão: IconeCinturao,
+  Relógio: IconeRelogio,
+  Alerta: IconeAlerta,
+  Mais: IconeMais,
+  Sair: IconeSair,
+};
 
-  const [modalidades, setModalidades] = useState<string[]>(['Boxe']);
+export default function GaleriaScreen() {
+  const [modalidades, setModalidades] = useState<string[]>(['Boxe', 'Muay Thai']);
   const [outraModalidade, setOutraModalidade] = useState('');
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [dialogoAberto, setDialogoAberto] = useState(false);
-  const [avisoVisivel, setAvisoVisivel] = useState(false);
+  const [aviso, setAviso] = useState<TipoAviso | null>(null);
   const [aba, setAba] = useState<'em-curso' | 'concluidas'>('em-curso');
   const [checkInDemoFeito, setCheckInDemoFeito] = useState(false);
   const [celebracaoAberta, setCelebracaoAberta] = useState(false);
+  const [toggle, setToggle] = useState(true);
+  const [check, setCheck] = useState(false);
+  const [nivel, setNivel] = useState('intermediario');
+  const [data, setData] = useState('');
+  const [hora, setHora] = useState('');
+  const [senha, setSenha] = useState('segredo1');
+
+  if (!__DEV__) return null;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <Text style={styles.tituloGaleria}>Galeria de componentes</Text>
+    <Tela
+      largura="lista"
+      sobreposicao={
+        <Aviso
+          visivel={aviso !== null}
+          tipo={aviso ?? 'info'}
+          mensagem={aviso === 'sucesso' ? 'Check-in registrado.' : aviso === 'erro' ? 'Sem conexão com o servidor.' : 'Sessão começa em 30 min.'}
+          onFechar={() => setAviso(null)}
+        />
+      }
+    >
+      <Texto variante="display" style={styles.tituloGaleria}>
+        Galeria
+      </Texto>
 
-      <Secao titulo="Teste de acentuação — Homebase">
-        <Text style={styles.tituloScreenHomebase}>Coração</Text>
-        <Text style={styles.tituloScreenHomebase}>Ação</Text>
-        <Text style={styles.tituloScreenHomebase}>Vínculo</Text>
-        <Text style={styles.notaTecnica}>
-          Fonte "Homebase", tamanho de título de tela (xxl). Checagem de cobertura de glifos via
-          cmap: ã, Ã, ç, Ç, í, Í presentes no arquivo (assets/fonts/homebase.ttf) — falta
-          confirmação visual de kerning/legibilidade neste tamanho.
-        </Text>
+      <Secao titulo="Tipografia">
+        {VARIANTES.map((v) => (
+          <View key={v} style={styles.amostraTipo}>
+            <Texto variante="legenda" cor="texto3" cabecalho={false}>
+              {v}
+            </Texto>
+            <Texto variante={v} cabecalho={false}>
+              {AMOSTRA[v] ?? 'Treine. Evolua. Suba de nível.'}
+            </Texto>
+          </View>
+        ))}
+        <Texto variante="display" style={styles.amostraTipo}>
+          Coração, ação, vínculo
+        </Texto>
       </Secao>
 
-      <Secao titulo="Ícones da tab bar — uma metáfora por aba">
-        <View style={styles.linhaIcones}>
-          <View style={styles.itemIcone}>
-            <IconeLuva tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Treinar</Text>
-          </View>
-          <View style={styles.itemIcone}>
-            <IconeFichaTecnica tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Agenda</Text>
-          </View>
-          <View style={styles.itemIcone}>
-            <IconeBandeira tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Missões</Text>
-          </View>
-          <View style={styles.itemIcone}>
-            <IconeCartaoPontuacao tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Classificação</Text>
-          </View>
-          <View style={styles.itemIcone}>
-            <IconePerfil tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Perfil</Text>
-          </View>
+      <Secao titulo="Paleta">
+        <View style={styles.paleta}>
+          {CORES_PALETA.map((nome) => (
+            <View key={nome} style={styles.swatch}>
+              <View style={[styles.swatchCor, { backgroundColor: Cores[nome] }]} />
+              <Texto variante="legenda">{nome}</Texto>
+              <Texto variante="legenda" cor="texto3">
+                {Cores[nome]}
+              </Texto>
+            </View>
+          ))}
         </View>
-        <View style={styles.linhaIcones}>
-          <View style={styles.itemIcone}>
-            <IconeSino tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Hoje</Text>
-          </View>
-          <View style={styles.itemIcone}>
-            <IconeTatame tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Turmas</Text>
-          </View>
-          <View style={styles.itemIcone}>
-            <IconeFaixa tamanho={24} cor={Cores.texto} />
-            <Text style={styles.rotuloIcone}>Alunos</Text>
-          </View>
-        </View>
-        <Text style={styles.notaTecnica}>
-          IconeLuva, IconeSino e IconeFaixa já existiam (reaproveitados aqui); IconeFichaTecnica,
-          IconeBandeira, IconeCartaoPontuacao, IconePerfil e IconeTatame são novos.
-        </Text>
       </Secao>
 
-      <Secao titulo="Botao — variantes">
-        <Linha>
+      <Secao titulo="Ícones">
+        <View style={styles.paleta}>
+          {Object.entries(ICONES).map(([nome, Icone]) => (
+            <View key={nome} style={styles.itemIcone}>
+              <Icone tamanho={28} cor={Cores.texto} />
+              <Texto variante="legenda" cor="texto3">
+                {nome}
+              </Texto>
+            </View>
+          ))}
+        </View>
+      </Secao>
+
+      <Secao titulo="Botao">
+        <View style={styles.pilha}>
           <Botao titulo="Primário" onPress={() => {}} />
+          <Botao titulo="Fazer check-in" icone={IconeLuva} grande onPress={() => {}} />
           <Botao titulo="Secundário" variante="secundario" onPress={() => {}} />
-        </Linha>
-        <Linha>
-          <Botao titulo="Fantasma" variante="fantasma" onPress={() => {}} />
-          <Botao titulo="Destrutivo" variante="destrutivo" onPress={() => {}} />
-        </Linha>
-        <Linha>
-          <Botao titulo="Carregando" onPress={() => {}} carregando />
-          <Botao titulo="Desabilitado" onPress={() => {}} desabilitado />
-        </Linha>
-        <Botao titulo="Texto (link)" variante="texto" onPress={() => {}} />
+          <Linha>
+            <Botao titulo="Fantasma" variante="fantasma" compacto onPress={() => {}} />
+            <Botao titulo="Destrutivo" variante="destrutivo" compacto onPress={() => {}} />
+            <Botao titulo="Nova turma" icone={IconeMais} variante="secundario" compacto onPress={() => {}} />
+          </Linha>
+          <Linha>
+            <Botao titulo="Carregando" carregando compacto onPress={() => {}} />
+            <Botao titulo="Desabilitado" desabilitado compacto onPress={() => {}} />
+            <Botao titulo="Desabilitado" variante="secundario" desabilitado compacto onPress={() => {}} />
+          </Linha>
+          <Botao variante="voltar" onPress={() => {}} />
+          <Botao titulo="Esqueci minha senha" variante="texto" onPress={() => {}} />
+        </View>
       </Secao>
 
-      <Secao titulo="Campo (CampoTexto)">
-        <CampoTexto rotulo="Texto" placeholder="Exemplo" valor="" onAlterar={() => {}} />
-        <CampoTexto rotulo="Senha" placeholder="••••••••" secureTextEntry valor="" onAlterar={() => {}} />
-        <CampoTexto rotulo="Com erro" placeholder="Exemplo" valor="" onAlterar={() => {}} erro="Mensagem de erro." />
+      <Secao titulo="CampoTexto">
+        <CampoTexto rotulo="E-mail" placeholder="seuemail@exemplo.com" valor="" onAlterar={() => {}} />
+        <CampoTexto rotulo="Senha" secureTextEntry valor={senha} onAlterar={setSenha} />
+        <CampoTexto rotulo="Com erro" valor="abc" onAlterar={() => {}} erro="E-mail inválido." />
+        <Linha>
+          <View style={styles.flex}>
+            <CampoTexto rotulo="Data (máscara)" valor={data} onAlterar={setData} mascara="data" />
+          </View>
+          <View style={styles.flex}>
+            <CampoTexto rotulo="Hora (máscara)" valor={hora} onAlterar={setHora} mascara="hora" />
+          </View>
+        </Linha>
+        <CampoTexto rotulo="Com ajuda" valor="" onAlterar={() => {}} ajuda="Aparece no seu perfil e no ranking." />
+      </Secao>
+
+      <Secao titulo="Etiqueta e ModalitySelector">
+        <Linha>
+          <Etiqueta texto="Muay Thai" />
+          <Etiqueta texto="Boxe" />
+        </Linha>
+        <Linha>
+          {['iniciante', 'intermediario', 'avancado'].map((n) => (
+            <Etiqueta
+              key={n}
+              texto={n === 'intermediario' ? 'Intermediário' : n === 'avancado' ? 'Avançado' : 'Iniciante'}
+              selecionada={nivel === n}
+              onPress={() => setNivel(n)}
+            />
+          ))}
+          <Etiqueta texto="Desabilitada" desabilitada onPress={() => {}} />
+        </Linha>
         <ModalitySelector
-          rotulo="Seleção (ModalitySelector)"
+          rotulo="Modalidades praticadas"
           selecionadas={modalidades}
           outraTexto={outraModalidade}
           onAlterarSelecionadas={setModalidades}
@@ -157,50 +243,7 @@ export default function GaleriaScreen() {
         />
       </Secao>
 
-      <Secao titulo="Cartao">
-        <Cartao>
-          <Text style={styles.textoDemo}>Cartão padrão (raio médio, borda 1px).</Text>
-        </Cartao>
-        <View style={styles.espaco} />
-        <Cartao raio={16}>
-          <Text style={styles.textoDemo}>Cartão com raio grande — tratamento distinto para outro tipo de conteúdo.</Text>
-        </Cartao>
-        <View style={styles.espaco} />
-        <Cartao corteDiagonal corFundo={Cores.superficie1}>
-          <Text style={styles.textoDemo}>corteDiagonal — script.md, item 1: "placa de ringue", não retângulo uniforme.</Text>
-        </Cartao>
-      </Secao>
-
-      <Secao titulo="TexturaLona — script.md, item 1 (fundo sutil para telas-chave)">
-        <View style={styles.amostraTextura}>
-          <TexturaLona opacidade={0.12} />
-          <Text style={styles.textoDemo}>opacidade ampliada aqui (0.12) só pra essa amostra ficar visível — uso real é bem mais discreto (0.05).</Text>
-        </View>
-      </Secao>
-
-      <Secao titulo="Etiqueta">
-        <Linha>
-          <Etiqueta texto="iniciante" onPress={() => {}} />
-          <Etiqueta texto="intermediario" selecionada onPress={() => {}} />
-          <Etiqueta texto="avancado" desabilitada onPress={() => {}} />
-        </Linha>
-      </Secao>
-
-      <Secao titulo="Avatar">
-        <Linha>
-          <Avatar nome="Maria Silva" tamanho={32} />
-          <Avatar nome="João" tamanho={40} />
-          <Avatar nome="Ana Beatriz Souza" tamanho={56} />
-        </Linha>
-      </Secao>
-
-      <Secao titulo="Divisor (LinhaFina)">
-        <Text style={styles.textoDemo}>Acima</Text>
-        <LinhaFina />
-        <Text style={styles.textoDemo}>Abaixo</Text>
-      </Secao>
-
-      <Secao titulo="Abas">
+      <Secao titulo="Abas, Toggle, Checkbox">
         <Abas
           opcoes={[
             { valor: 'em-curso', rotulo: 'Em curso' },
@@ -209,19 +252,85 @@ export default function GaleriaScreen() {
           selecionada={aba}
           onSelecionar={setAba}
         />
+        <Toggle rotulo="Lembrete de sessão" descricao="Avisa antes do horário dos seus treinos." valor={toggle} onAlterar={setToggle} />
+        <LinhaFina />
+        <Toggle rotulo="Desabilitado" valor={false} onAlterar={() => {}} desabilitado />
+        <Checkbox rotulo="Li e aceito a política de privacidade." marcado={check} onAlterar={setCheck} />
       </Secao>
 
-      <Secao titulo="Folha (bottom sheet)">
-        <Botao titulo="Abrir folha" variante="secundario" onPress={() => setFolhaAberta(true)} />
-        <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)}>
-          <Text style={styles.textoDemo}>Conteúdo da folha.</Text>
+      <Secao titulo="CabecalhoSecao, ItemMenu, Estatistica">
+        <CabecalhoSecao titulo="Próximos treinos" acaoTitulo="Ver agenda" onAcao={() => {}} semMargem />
+        <CabecalhoSecao titulo="Medalhas" contador="3 de 6" semMargem />
+        <ItemMenu rotulo="Turmas disponíveis" icone={IconeTatame} onPress={() => {}} />
+        <ItemMenu rotulo="Histórico" descricao="Seus check-ins validados e pendentes" icone={IconeFichaTecnica} onPress={() => {}} separador />
+        <ItemMenu rotulo="Solicitações pendentes" icone={IconeCorda} valor="3" onPress={() => {}} separador />
+        <ItemMenu rotulo="Sair" icone={IconeSair} destrutivo semChevron onPress={() => {}} separador />
+        <View style={[styles.linha, styles.estatisticas]}>
+          <Estatistica valor={7} rotulo="Nível" alinhamento="centro" />
+          <Estatistica valor={12} rotulo="Sequência" icone={IconeChama} alinhamento="centro" />
+          <Estatistica valor={86} rotulo="Treinos" alinhamento="centro" />
+        </View>
+        <Estatistica valor="18/24" rotulo="Presentes" tamanho="grande" />
+      </Secao>
+
+      <Secao titulo="BandaIdentidade">
+        <View style={styles.sangria}>
+          <BandaIdentidade
+            compacta
+            sobHeader
+            sobretitulo="Treinar"
+            nome="Ana Beatriz"
+            selo={<SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" />}
+          />
           <View style={styles.espaco} />
-          <Botao titulo="Fechar" onPress={() => setFolhaAberta(false)} />
-        </Folha>
+          <BandaIdentidade
+            sobHeader
+            nome="Ana Beatriz Souza"
+            selo={<SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" />}
+            detalhes={['Membro desde setembro de 2026']}
+          />
+          <View style={styles.espaco} />
+          <BandaIdentidade variante="gestor" compacta sobHeader sobretitulo="Hoje" nome="Academia Corner" detalhes={['Rua do Ringue, 120']} />
+        </View>
       </Secao>
 
-      <Secao titulo="Dialogo">
-        <Botao titulo="Abrir diálogo" variante="secundario" onPress={() => setDialogoAberto(true)} />
+      <Secao titulo="Cartao e TexturaLona">
+        <Cartao>
+          <Texto variante="corpo">Cartão padrão: superficie1, canto vivo, sem borda.</Texto>
+        </Cartao>
+        <View style={styles.espaco} />
+        <Cartao corteDiagonal corFilete={Cores.acento}>
+          <Texto variante="corpo">Corte diagonal com filete: uma vez por tela.</Texto>
+        </Cartao>
+        <View style={styles.espaco} />
+        <View style={styles.amostraTextura}>
+          <TexturaLona opacidade={0.1} />
+          <Texto variante="legenda">TexturaLona (opacidade 0,10 só nesta amostra).</Texto>
+        </View>
+        <View style={styles.espaco} />
+        <Linha>
+          <Avatar nome="Maria Silva" tamanho={32} />
+          <Avatar nome="João" tamanho={44} />
+          <Avatar nome="Ana Beatriz Souza" tamanho={64} />
+        </Linha>
+        <LinhaFina corda />
+      </Secao>
+
+      <Secao titulo="Folha, Diálogo, Aviso">
+        <View style={styles.pilha}>
+          <Botao titulo="Abrir folha" variante="secundario" onPress={() => setFolhaAberta(true)} />
+          <Botao titulo="Abrir diálogo" variante="secundario" onPress={() => setDialogoAberto(true)} />
+          <Linha>
+            <Botao titulo="Aviso sucesso" variante="fantasma" compacto onPress={() => setAviso('sucesso')} />
+            <Botao titulo="Aviso erro" variante="fantasma" compacto onPress={() => setAviso('erro')} />
+            <Botao titulo="Aviso info" variante="fantasma" compacto onPress={() => setAviso('info')} />
+          </Linha>
+        </View>
+        <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova missão">
+          <CampoTexto rotulo="Título" placeholder="Ex.: Treinar 3x na semana" valor="" onAlterar={() => {}} />
+          <CampoTexto rotulo="Descrição" placeholder="Critério de conclusão" valor="" onAlterar={() => {}} />
+          <Botao titulo="Criar missão" onPress={() => setFolhaAberta(false)} />
+        </Folha>
         <Dialogo
           visivel={dialogoAberto}
           titulo="Recusar solicitação?"
@@ -234,156 +343,86 @@ export default function GaleriaScreen() {
         />
       </Secao>
 
-      <Secao titulo="Aviso (toast)">
-        <Botao titulo="Mostrar aviso" variante="secundario" onPress={() => setAvisoVisivel(true)} />
-        <Aviso mensagem="Check-in registrado." visivel={avisoVisivel} onFechar={() => setAvisoVisivel(false)} />
-      </Secao>
-
-      <Secao titulo="EstadoVazio">
+      <Secao titulo="Estados">
         <EstadoVazio
+          icone={IconeTatame}
           titulo="Nenhuma turma criada ainda"
           descricao="Crie sua primeira turma para começar a receber alunos."
-          acaoTitulo="Criar turma"
+          acaoTitulo="Nova turma"
           onAcao={() => {}}
         />
+        <LinhaFina />
+        <EstadoErro compacto mensagem="Sem conexão com o servidor. Verifique sua internet e tente novamente." onTentarNovamente={() => {}} />
+        <LinhaFina />
+        <View style={styles.espaco} />
+        <Esqueleto forma="linha" repeticoes={2} />
+        <View style={styles.espaco} />
+        <Esqueleto altura={72} repeticoes={1} />
       </Secao>
 
-      <Secao titulo="EstadoErro">
-        <EstadoErro mensagem="Não foi possível carregar seus dados." onTentarNovamente={() => {}} />
-      </Secao>
-
-      <Secao titulo="Esqueleto (shimmer)">
-        <Esqueleto altura={72} repeticoes={3} />
-      </Secao>
-
-      <Secao titulo="BotaoCheckIn — 3 estados de RN08">
-        <Linha>
-          <BotaoCheckIn estado="disponivel" onPress={() => {}} />
-          <BotaoCheckIn estado="disponivel" carregando onPress={() => {}} />
-        </Linha>
+      <Secao titulo="Domínio">
+        <BotaoCheckIn estado={checkInDemoFeito ? 'realizado' : 'disponivel'} onPress={() => setCheckInDemoFeito(true)} />
+        {checkInDemoFeito ? <Botao titulo="Reiniciar demo" variante="texto" onPress={() => setCheckInDemoFeito(false)} /> : null}
         <View style={styles.espaco} />
         <BotaoCheckIn estado="foraDaJanela" motivo="Check-in ainda não abriu" />
-        <View style={styles.espaco} />
-        <BotaoCheckIn estado="realizado" />
-        <View style={styles.espaco} />
-        <Text style={styles.notaTecnica}>
-          Abaixo, um toque real dispara a transição pra "realizado" — é só nessa transição que o
-          shake/flash de impacto (script.md, item 3) aparece; o de cima já nasce "realizado", sem
-          transição, por isso fica parado.
-        </Text>
-        <BotaoCheckIn
-          estado={checkInDemoFeito ? 'realizado' : 'disponivel'}
-          onPress={() => setCheckInDemoFeito(true)}
-        />
-        {checkInDemoFeito ? (
-          <Botao titulo="Reiniciar demo" variante="texto" onPress={() => setCheckInDemoFeito(false)} />
-        ) : null}
-      </Secao>
-
-      <Secao titulo="CartaoSessao">
         <CartaoSessao nomeTurma="Muay Thai — Turma A" detalhe="Hoje, 19:00" estado="disponivel" onCheckIn={() => {}} />
         <LinhaFina />
-        <CartaoSessao nomeTurma="Boxe — Turma B" detalhe="Amanhã, 07:00 · Prof. Carlos" estado="foraDaJanela" motivo="Check-in ainda não abriu" />
+        <CartaoSessao nomeTurma="Boxe — Turma B" detalhe="Amanhã, 07:00" estado="foraDaJanela" motivo="Check-in ainda não abriu" />
         <LinhaFina />
-        <CartaoSessao nomeTurma="Jiu-Jitsu — Turma C" detalhe="Ontem, 20:00" estado="realizado" />
-      </Secao>
-
-      <Secao titulo="BarraProgresso (Ciclo 2, sem consumidor real ainda)">
+        <CartaoSessao nomeTurma="Muay Thai — Turma C" detalhe="Ontem, 20:00" estado="realizado" />
+        <View style={styles.espaco} />
         <BarraProgresso nivel={4} xpAtual={320} xpProximoNivel={500} />
-      </Secao>
-
-      <Secao titulo="CartaoMissao (Ciclo 2, sem consumidor real ainda)">
+        <View style={styles.espaco} />
+        <IndicadorSequencia dias={7} />
+        <View style={styles.espaco} />
         <CartaoMissao titulo="Treine 3 vezes esta semana" descricao="Missão semanal" progressoAtual={2} meta={3} />
         <View style={styles.espaco} />
-        <CartaoMissao titulo="Primeiro check-in" descricao="Missão de boas-vindas" progressoAtual={1} meta={1} concluida />
-      </Secao>
-
-      <Secao titulo="Medalha (Ciclo 2, sem consumidor real ainda)">
         <Linha>
           <Medalha rotulo="10 treinos" />
           <Medalha rotulo="30 dias seguidos" conquistada={false} />
         </Linha>
-      </Secao>
-
-      <Secao titulo="CelebracaoGraduacao — usada em RegistrarGraduacaoScreen">
-        <Botao titulo="Simular subida de faixa" onPress={() => setCelebracaoAberta(true)} />
+        <Botao titulo="Simular subida de faixa" variante="secundario" onPress={() => setCelebracaoAberta(true)} />
         <CelebracaoGraduacao
           visivel={celebracaoAberta}
           nomeAluno="Maria Silva"
           grau="Faixa azul"
-          modalidade="Jiu-Jitsu"
+          modalidade="Muay Thai"
           onFechar={() => setCelebracaoAberta(false)}
         />
-      </Secao>
-
-      <Secao titulo="IndicadorSequencia (Ciclo 2, sem consumidor real ainda)">
-        <IndicadorSequencia dias={7} />
-      </Secao>
-
-      <Secao titulo="Podio — top 3 do ranking (usado em ClassificacaoScreen)">
         <Podio
           primeiro={{ posicao: 1, nome: 'Ana Beatriz', pontos: 980, destaque: true }}
           segundo={{ posicao: 2, nome: 'Carlos Eduardo', pontos: 860 }}
           terceiro={{ posicao: 3, nome: 'João Pedro', pontos: 790 }}
         />
-      </Secao>
-
-      <Secao titulo="LinhaClassificacao — 4ª posição em diante (Ciclo 2, sem consumidor real ainda)">
         <LinhaClassificacao posicao={4} nome="Marina Costa" pontos={710} destaque />
         <LinhaFina />
         <LinhaClassificacao posicao={5} nome="Rafael Souza" pontos={640} />
-      </Secao>
-
-      <Secao titulo="SeloFaixa — usado na banda de topo do Dashboard do Aluno">
-        <SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" />
-        <View style={styles.amostraEscura}>
-          <SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" sobreEscuro />
-        </View>
-      </Secao>
-
-      <Secao titulo="CartaoAluno (Ciclo 3, sem consumidor real ainda)">
+        <View style={styles.espaco} />
+        <Linha>
+          {(Object.keys(CoresFaixa) as (keyof typeof CoresFaixa)[]).slice(0, 4).map((c) => (
+            <SeloFaixa key={c} faixaOuGrau={`Faixa ${c}`} />
+          ))}
+        </Linha>
         <CartaoAluno nome="Maria Silva" faixaOuGrau="Faixa azul" frequenciaRecente={[true, true, false, true, true]} />
-      </Secao>
-
-      <Secao titulo="IndicadorFrequencia (Ciclo 3, sem consumidor real ainda)">
         <IndicadorFrequencia presencas={[true, false, true, true, true]} />
       </Secao>
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  tituloGaleria: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto, marginBottom: Espacamento.padrao },
-
-  secao: { marginBottom: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.pequeno, fontWeight: '600' },
-
-  linha: { flexDirection: 'row', gap: Espacamento.pequeno, marginBottom: Espacamento.pequeno, flexWrap: 'wrap' },
-  espaco: { height: Espacamento.pequeno },
-  textoDemo: { fontSize: TamanhoFonte.sm, color: Cores.texto },
-  notaTecnica: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.pequeno },
-  linhaIcones: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.grande, marginBottom: Espacamento.pequeno },
-  itemIcone: { alignItems: 'center', width: 72, gap: Espacamento.minimo },
-  rotuloIcone: { fontSize: TamanhoFonte.xs, color: Cores.texto2, textAlign: 'center' },
-
-  tituloScreenHomebase: { fontFamily: FamiliaFonte.display, fontSize: TamanhoFonte.xxl, color: Cores.texto },
-
-  amostraEscura: {
-    backgroundColor: Cores.superficie2,
-    borderRadius: Raios.pequeno,
-    padding: Espacamento.padrao,
-    marginTop: Espacamento.pequeno,
-    alignItems: 'flex-start',
-  },
-  amostraTextura: {
-    position: 'relative',
-    backgroundColor: Cores.fundo,
-    borderWidth: 1,
-    borderColor: Cores.linha,
-    borderRadius: Raios.pequeno,
-    padding: Espacamento.padrao,
-    overflow: 'hidden',
-  },
+  tituloGaleria: { marginBottom: Espacamento.padrao },
+  secao: { marginBottom: Espacamento.extraGrande },
+  linha: { flexDirection: 'row', gap: Espacamento.pequeno, marginBottom: Espacamento.pequeno, flexWrap: 'wrap', alignItems: 'flex-start' },
+  pilha: { gap: Espacamento.pequeno },
+  flex: { flex: 1, minWidth: 140 },
+  espaco: { height: Espacamento.padrao },
+  amostraTipo: { marginBottom: Espacamento.medio },
+  paleta: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.padrao },
+  swatch: { width: 96 },
+  swatchCor: { height: 40, borderRadius: Raios.pequeno, borderWidth: 1, borderColor: Cores.linha, marginBottom: Espacamento.minimo },
+  itemIcone: { width: 64, alignItems: 'center', gap: Espacamento.minimo },
+  estatisticas: { marginTop: Espacamento.padrao, marginBottom: Espacamento.padrao },
+  sangria: { marginHorizontal: -Espacamento.padrao },
+  amostraTextura: { position: 'relative', backgroundColor: Cores.superficie1, borderRadius: Raios.pequeno, padding: Espacamento.padrao, overflow: 'hidden' },
 });

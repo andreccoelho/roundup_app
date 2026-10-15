@@ -7,6 +7,7 @@ import CadastroAlunoScreen from '../screens/auth/CadastroAlunoScreen';
 import CadastroProfessorScreen from '../screens/auth/CadastroProfessorScreen';
 import CadastroAcademiaScreen from '../screens/auth/CadastroAcademiaScreen';
 import GaleriaScreen from '../screens/dev/GaleriaScreen';
+import { opcoesHeader } from './opcoesCasca';
 
 // RF01: seleção de perfil decide qual dos 3 formulários de cadastro é aberto em seguida.
 // RF28: consentimento LGPD entra entre a seleção e o cadastro — as 3 telas de Cadastro exigem
@@ -30,7 +31,7 @@ const Stack = createNativeStackNavigator<AuthStackParamList>();
 
 export function AuthStack() {
   return (
-    <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName="Login" screenOptions={{ ...opcoesHeader, headerShown: false }}>
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="RecuperarSenha" component={RecuperarSenhaScreen} />
       <Stack.Screen name="SelecaoPerfil" component={SelecaoPerfilScreen} />

@@ -46,7 +46,7 @@ export default function SelecaoPerfilScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
-      <Botao titulo="‹ Voltar" variante="texto" onPress={() => navigation.goBack()} />
+      <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
       <Text style={styles.titulo}>Como você vai usar o RoundUp?</Text>
       <Text style={styles.subtitulo}>Isso define suas telas e permissões.</Text>
