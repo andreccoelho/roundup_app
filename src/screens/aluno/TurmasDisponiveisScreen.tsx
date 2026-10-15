@@ -1,12 +1,21 @@
 // RF11: turmas dos responsáveis com quem o aluno tem vínculo ativo, com opção de matrícula
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { StyleSheet, View } from 'react-native';
+import { Cores, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarTurmasDisponiveisParaAluno, listarTurmasDoAluno } from '../../services/turmas';
 import { matricularAluno } from '../../services/matriculas';
 import { Turma } from '../../types';
-import Cartao from '../../components/ui/Cartao';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Etiqueta from '../../components/ui/Etiqueta';
+import Aviso from '../../components/ui/Aviso';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import LinhaFina from '../../components/LinhaFina';
+import { IconeCheck, IconeTatame } from '../../components/icones';
+import { rotuloNivel } from '../../utils/apresentacao';
+import { mensagemErro } from '../../utils/mensagensErro';
 import Botao from '../../components/ui/Botao';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
@@ -21,6 +30,7 @@ export default function TurmasDisponiveisScreen() {
   const [matriculadasIds, setMatriculadasIds] = useState<Set<string>>(new Set());
   const [matriculando, setMatriculando] = useState<string | null>(null);
   const [erroMatricula, setErroMatricula] = useState<string | null>(null);
+  const [sucesso, setSucesso] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     if (!usuario) return;
@@ -33,8 +43,8 @@ export default function TurmasDisponiveisScreen() {
       ]);
       setTurmas(disponiveis);
       setMatriculadasIds(new Set(matriculadas.map((t) => t.id)));
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar as turmas agora.'));
     } finally {
       setCarregando(false);
     }
@@ -45,14 +55,15 @@ export default function TurmasDisponiveisScreen() {
   }, [carregar]);
 
   async function handleMatricular(turmaId: string) {
-    if (!usuario) return;
+    if (!usuario || matriculando) return;
     setMatriculando(turmaId);
     setErroMatricula(null);
     try {
       await matricularAluno(turmaId, usuario.id);
       setMatriculadasIds((prev) => new Set(prev).add(turmaId));
-    } catch (e: any) {
-      setErroMatricula(e.message);
+      setSucesso('Matrícula feita. A turma já aparece na sua agenda.');
+    } catch (e) {
+      setErroMatricula(mensagemErro(e, 'Não foi possível fazer a matrícula. Tente novamente.'));
     } finally {
       setMatriculando(null);
     }
@@ -60,9 +71,9 @@ export default function TurmasDisponiveisScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={72} repeticoes={4} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto forma="linha" repeticoes={4} />
+      </Tela>
     );
   }
 
@@ -72,56 +83,63 @@ export default function TurmasDisponiveisScreen() {
 
   if (turmas.length === 0) {
     return (
-      <View style={styles.container}>
+      <Tela largura="lista" centralizarVertical>
         <EstadoVazio
+          icone={IconeTatame}
           titulo="Nenhuma turma disponível"
           descricao="Você precisa ter vínculo ativo com uma academia ou professor para ver turmas aqui."
         />
-      </View>
+      </Tela>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {erroMatricula ? (
-        <Text style={styles.erroInline} accessibilityRole="alert">
-          {erroMatricula}
-        </Text>
-      ) : null}
-
-      {turmas.map((turma) => {
+    <Tela
+      largura="lista"
+      sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} />}
+    >
+      <MensagemErro mensagem={erroMatricula} />
+      <CabecalhoSecao titulo="Turmas" contador={`${matriculadasIds.size} matrícula${matriculadasIds.size === 1 ? '' : 's'}`} semMargem />
+      {turmas.map((turma, i) => {
         const jaMatriculado = matriculadasIds.has(turma.id);
         return (
-          <Cartao key={turma.id} style={styles.item}>
-            <View style={styles.itemLinha}>
-              <View style={styles.itemInfo}>
-                <Text style={styles.itemNome}>{turma.nome}</Text>
-                <Text style={styles.itemDetalhe}>
-                  {turma.modalidade} · {turma.nivel}
-                </Text>
+          <View key={turma.id}>
+            {i > 0 ? <LinhaFina /> : null}
+            <View style={styles.linha}>
+              <View style={styles.textos}>
+                <Texto variante="corpoForte">{turma.nome}</Texto>
+                <View style={styles.meta}>
+                  <Etiqueta texto={turma.modalidade} />
+                  <Etiqueta texto={rotuloNivel(turma.nivel)} />
+                </View>
               </View>
-              <Botao
-                titulo={jaMatriculado ? 'Matriculado' : 'Matricular'}
-                variante={jaMatriculado ? 'secundario' : 'primario'}
-                desabilitado={jaMatriculado}
-                carregando={matriculando === turma.id}
-                onPress={() => handleMatricular(turma.id)}
-              />
+              {jaMatriculado ? (
+                <View style={styles.matriculado} accessible accessibilityLabel="Matriculado">
+                  <IconeCheck tamanho={18} cor={Cores.sucesso} />
+                  <Texto variante="rotuloPlacar" cor="sucesso">
+                    Matriculado
+                  </Texto>
+                </View>
+              ) : (
+                <Botao
+                  titulo="Matricular"
+                  variante="secundario"
+                  compacto
+                  carregando={matriculando === turma.id}
+                  onPress={() => handleMatricular(turma.id)}
+                />
+              )}
             </View>
-          </Cartao>
+          </View>
         );
       })}
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
-  erroInline: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  item: { marginBottom: Espacamento.pequeno },
-  itemLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Espacamento.medio },
-  itemInfo: { flex: 1 },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, paddingVertical: Espacamento.padrao },
+  textos: { flex: 1, gap: Espacamento.pequeno },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.minimo + 2 },
+  matriculado: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.minimo, minHeight: 44 },
 });

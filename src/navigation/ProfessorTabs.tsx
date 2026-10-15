@@ -12,6 +12,7 @@ import PerfilScreen from '../screens/professor/PerfilScreen';
 import SolicitacoesScreen from '../screens/gestor/SolicitacoesScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
 import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
+import ContaPrivacidadeScreen from '../screens/compartilhado/ContaPrivacidadeScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
 import { IconeSino, IconeTatame, IconeFaixa, IconeBandeira, IconePerfil } from '../components/icones';
 import { iconeAba, opcoesHeader, useOpcoesTabBar } from './opcoesCasca';
@@ -24,6 +25,7 @@ export type PerfilProfessorStackParamList = {
   VincularProfessor: undefined;
   Solicitacoes: undefined;
   PreferenciasNotificacao: undefined;
+  ContaPrivacidade: undefined;
 };
 
 export type ProfessorTabParamList = {
@@ -66,6 +68,7 @@ function PerfilNavigator() {
         component={PreferenciasNotificacaoScreen}
         options={{ title: 'Preferências de notificação' }}
       />
+      <PerfilStack.Screen name="ContaPrivacidade" component={ContaPrivacidadeScreen} options={{ title: 'Conta e privacidade' }} />
     </PerfilStack.Navigator>
   );
 }

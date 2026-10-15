@@ -2,21 +2,28 @@
 // cadastro vivem em telas próprias (RecuperarSenhaScreen, SelecaoPerfilScreen).
 // Sem os 4 estados de carregando/vazio/erro/conteúdo: é um formulário sem busca de dados no
 // mount, só ação de envio (já representada pelo `carregando` do próprio Botao "Entrar").
-import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+//
+// Visual (docs/DESIGN.md): tela cheia escura, logo invertido, tagline display, CTA em acento.
+// Enter no e-mail vai para a senha; Enter na senha envia.
+import { useRef, useState } from 'react';
+import { Image, StyleSheet, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Espacamento, Sombras } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { emailValido } from '../../utils/validacaoCadastro';
 import { mensagemErroAutenticacao } from '../../utils/mensagensErro';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
+import MensagemErro from '../../components/ui/MensagemErro';
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Login'>>();
+  const refSenha = useRef<TextInput>(null);
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -34,6 +41,7 @@ export default function LoginScreen() {
   }
 
   async function handleLogin() {
+    if (carregando) return;
     setErroConta(null);
     if (!validar()) return;
     setCarregando(true);
@@ -47,95 +55,75 @@ export default function LoginScreen() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <View style={styles.banda}>
-          <Image
-            source={require('../../../assets/roundup_logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-            accessibilityRole="image"
-            accessibilityLabel="RoundUp"
-          />
-          <Text style={styles.tagline}>Treine. Evolua. Suba de nível.</Text>
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+      <View style={styles.marca}>
+        <Image
+          source={require('../../../assets/roundup_logo_invertida.png')}
+          style={styles.logo}
+          resizeMode="contain"
+          accessibilityRole="image"
+          accessibilityLabel="RoundUp"
+        />
+        <Texto variante="display" alinhamento="center" style={[styles.tagline, Sombras.duraAcento]}>
+          {'Treine. Evolua.\nSuba de nível.'}
+        </Texto>
+      </View>
+
+      <MensagemErro mensagem={erroConta} />
+
+      <CampoTexto
+        rotulo="E-mail"
+        placeholder="seuemail@exemplo.com"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        autoComplete="email"
+        textContentType="emailAddress"
+        returnKeyType="next"
+        onSubmitEditing={() => refSenha.current?.focus()}
+        valor={email}
+        onAlterar={setEmail}
+        erro={erros.email}
+      />
+      <CampoTexto
+        refCampo={refSenha}
+        rotulo="Senha"
+        secureTextEntry
+        autoComplete="password"
+        textContentType="password"
+        returnKeyType="go"
+        onSubmitEditing={handleLogin}
+        valor={senha}
+        onAlterar={setSenha}
+        erro={erros.senha}
+      />
+
+      <View style={styles.esqueci}>
+        <Botao titulo="Esqueci minha senha" variante="texto" alinhar="fim" onPress={() => navigation.navigate('RecuperarSenha')} />
+      </View>
+
+      <Botao titulo="Entrar" grande onPress={handleLogin} carregando={carregando} />
+
+      <View style={styles.rodape}>
+        <Texto variante="legenda">Não tem conta?</Texto>
+        <Botao titulo="Cadastre-se" variante="texto" onPress={() => navigation.navigate('SelecaoPerfil')} />
+      </View>
+
+      {__DEV__ ? (
+        <View style={styles.dev}>
+          <Botao titulo="Galeria de componentes (dev)" variante="texto" onPress={() => navigation.navigate('Galeria')} />
         </View>
-
-        <View style={styles.corpo}>
-          {erroConta ? (
-            <Text style={styles.erroConta} accessibilityRole="alert">
-              {erroConta}
-            </Text>
-          ) : null}
-
-          <CampoTexto
-            rotulo="E-mail"
-            placeholder="seuemail@exemplo.com"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            valor={email}
-            onAlterar={setEmail}
-            erro={erros.email}
-          />
-          <CampoTexto
-            rotulo="Senha"
-            placeholder="••••••••"
-            secureTextEntry
-            valor={senha}
-            onAlterar={setSenha}
-            erro={erros.senha}
-          />
-
-          <View style={styles.linhaEsqueci}>
-            <Botao
-              titulo="Esqueci minha senha"
-              variante="texto"
-              onPress={() => navigation.navigate('RecuperarSenha')}
-            />
-          </View>
-
-          <Botao titulo="Entrar" onPress={handleLogin} carregando={carregando} />
-
-          <View style={styles.rodape}>
-            <Text style={styles.rodapeTexto}>Não tem conta?</Text>
-            <Botao
-              titulo="Cadastre-se"
-              variante="texto"
-              onPress={() => navigation.navigate('SelecaoPerfil')}
-            />
-          </View>
-
-          {__DEV__ ? (
-            <View style={styles.rodapeDev}>
-              <Botao titulo="Galeria de componentes (dev)" variante="texto" onPress={() => navigation.navigate('Galeria')} />
-            </View>
-          ) : null}
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      ) : null}
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.fundo },
-  scroll: { flexGrow: 1 },
-  // Tela toda clara — a marca (assets/roundup_logo.png) é desenhada em preto, precisa de fundo
-  // claro para aparecer. Sem banda escura aqui, ao contrário do Dashboard do Aluno.
-  banda: {
-    backgroundColor: Cores.fundo,
-    paddingTop: Espacamento.enorme,
-    paddingBottom: Espacamento.grande,
-    alignItems: 'center',
-  },
-  logo: { width: 180, height: 180 },
-  tagline: { color: Cores.texto2, fontSize: TamanhoFonte.sm, marginTop: -Espacamento.padrao },
-  corpo: { paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.extraGrande, paddingBottom: Espacamento.grande },
-  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  linhaEsqueci: { alignItems: 'flex-end', marginBottom: Espacamento.grande, marginTop: -Espacamento.pequeno },
-  rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  rodapeTexto: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-  rodapeDev: { alignItems: 'center', marginTop: Espacamento.extraGrande },
+  marca: { alignItems: 'center', paddingTop: Espacamento.extraGrande, paddingBottom: Espacamento.extraGrande },
+  // O PNG tem ~20% de área transparente acima e abaixo da marca (1200×1200, marca em y 235-966).
+  logo: { width: 240, height: 240, marginVertical: -46 },
+  tagline: { marginTop: Espacamento.grande },
+  esqueci: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  rodape: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
+  dev: { marginTop: Espacamento.grande },
 });

@@ -2,14 +2,20 @@
 // academia/DashboardScreen.tsx) + indicador agregado de frequência (RF26/RF24 compostos em
 // src/services/frequencia.ts). Sem coleção nem regra nova, ver docs/PLANO_REGRAS_CICLO2_3.md.
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { StyleSheet, View } from 'react-native';
+import { Cores, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarTurmasPorResponsavel } from '../../services/turmas';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
 import { listarAlunosComFrequencia } from '../../services/frequencia';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoErro from '../../components/ui/EstadoErro';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Cartao from '../../components/ui/Cartao';
+import Estatistica from '../../components/ui/Estatistica';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 function frequenciaMedia(alunos: { frequenciaRecente: boolean[] }[]): number | null {
   const todas = alunos.flatMap((a) => a.frequenciaRecente);
@@ -41,8 +47,8 @@ export default function VisaoConsolidadaScreen() {
       setProfessores(vinculosProfessores.length);
       setAlunosVinculados(vinculosAlunos.length);
       setFrequencia(frequenciaMedia(alunosComFrequencia));
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar a visão consolidada agora.'));
     } finally {
       setCarregando(false);
     }
@@ -54,9 +60,9 @@ export default function VisaoConsolidadaScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={64} repeticoes={2} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto altura={72} repeticoes={2} />
+      </Tela>
     );
   }
 
@@ -65,49 +71,40 @@ export default function VisaoConsolidadaScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <View style={styles.contadoresLinha}>
-        <View style={styles.contadorItem}>
-          <Text style={styles.contadorValor}>{turmasAtivas}</Text>
-          <Text style={styles.contadorRotulo}>turmas ativas</Text>
-        </View>
-        <View style={styles.contadorItem}>
-          <Text style={styles.contadorValor}>{professores}</Text>
-          <Text style={styles.contadorRotulo}>professores</Text>
-        </View>
-        <View style={styles.contadorItem}>
-          <Text style={styles.contadorValor}>{alunosVinculados}</Text>
-          <Text style={styles.contadorRotulo}>alunos</Text>
-        </View>
+    <Tela largura="lista">
+      <CabecalhoSecao titulo="Unidade" semMargem />
+      <View style={styles.contadores}>
+        <Estatistica valor={turmasAtivas} rotulo="Turmas ativas" tamanho="grande" />
+        <Estatistica valor={professores} rotulo="Professores" tamanho="grande" />
+        <Estatistica valor={alunosVinculados} rotulo="Alunos" tamanho="grande" />
       </View>
 
-      <View style={styles.secao}>
-        <Text style={styles.secaoTitulo}>Frequência recente</Text>
-        {frequencia === null ? (
-          <Text style={styles.vazio}>Sem check-ins recentes para calcular frequência.</Text>
-        ) : (
-          <>
-            <Text style={styles.frequenciaValor}>{frequencia}%</Text>
-            <Text style={styles.frequenciaDetalhe}>
+      <CabecalhoSecao titulo="Frequência recente" />
+      {frequencia === null ? (
+        <Texto variante="legenda">Sem check-ins recentes para calcular frequência.</Texto>
+      ) : (
+        <Cartao>
+          <View style={styles.frequencia} accessible accessibilityLabel={`Frequência recente: ${frequencia}% dos últimos check-ins validados`}>
+            <Texto variante="placarGrande">{`${frequencia}%`}</Texto>
+            <Texto variante="legenda" style={styles.frequenciaTexto}>
               dos últimos check-ins de alunos matriculados foram validados
-            </Text>
-          </>
-        )}
-      </View>
-    </ScrollView>
+            </Texto>
+          </View>
+          <View style={styles.trilha} aria-hidden>
+            <View style={styles.trilhaVazia} />
+            <View style={[styles.trilhaCheia, { width: `${frequencia}%` }]} />
+          </View>
+        </Cartao>
+      )}
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
-  contadoresLinha: { flexDirection: 'row', gap: Espacamento.grande },
-  contadorItem: { flex: 1 },
-  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
-  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
-  secao: { marginTop: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.pequeno },
-  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-  frequenciaValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
-  frequenciaDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: 2 },
+  contadores: { flexDirection: 'row', gap: Espacamento.padrao },
+  frequencia: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.padrao },
+  frequenciaTexto: { flex: 1 },
+  trilha: { height: 8, justifyContent: 'center', marginTop: Espacamento.padrao },
+  trilhaVazia: { height: 2, backgroundColor: Cores.linhaForte },
+  trilhaCheia: { position: 'absolute', left: 0, top: 0, height: 8, backgroundColor: Cores.texto },
 });

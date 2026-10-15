@@ -1,18 +1,27 @@
 // RF13: janela de check-in calculada e lista de check-ins recebidos. Sem validação
 // de check-in ainda — isso é RF22 no Ciclo 3.
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRoute, RouteProp } from '@react-navigation/native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { buscarSessao, abrirSessao, encerrarSessao } from '../../services/sessoes';
 import { listarCheckInsPorSessao } from '../../services/checkins';
 import { buscarUsuario } from '../../services/usuarios';
 import { CheckIn, Sessao } from '../../types';
-import { formatarDataHora } from '../../utils/datas';
+import { paraData } from '../../utils/datas';
+import { formatarDiaHora, formatarHora, rotuloDia, ROTULO_STATUS_CHECKIN, ROTULO_STATUS_SESSAO } from '../../utils/apresentacao';
+import { mensagemErro } from '../../utils/mensagensErro';
 import { GestorStackParamList } from '../../navigation/types';
 import Botao from '../../components/ui/Botao';
 import Cartao from '../../components/ui/Cartao';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Avatar from '../../components/ui/Avatar';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import LinhaFina from '../../components/LinhaFina';
+import { IconeSino } from '../../components/icones';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
@@ -53,8 +62,8 @@ export default function SessaoDetalheScreen() {
         }),
       );
       setCheckIns(comNome);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar a sessão agora.'));
     } finally {
       setCarregando(false);
     }
@@ -70,8 +79,8 @@ export default function SessaoDetalheScreen() {
     try {
       await abrirSessao(sessaoId);
       await carregarTudo();
-    } catch (e: any) {
-      setErroAcao(e.message);
+    } catch (e) {
+      setErroAcao(mensagemErro(e, 'Não foi possível abrir a sessão. Tente novamente.'));
     } finally {
       setProcessando(false);
     }
@@ -83,8 +92,8 @@ export default function SessaoDetalheScreen() {
     try {
       await encerrarSessao(sessaoId);
       await carregarTudo();
-    } catch (e: any) {
-      setErroAcao(e.message);
+    } catch (e) {
+      setErroAcao(mensagemErro(e, 'Não foi possível encerrar a sessão. Tente novamente.'));
     } finally {
       setProcessando(false);
     }
@@ -92,9 +101,10 @@ export default function SessaoDetalheScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={64} repeticoes={3} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto altura={120} />
+        <Esqueleto forma="linha" repeticoes={3} />
+      </Tela>
     );
   }
 
@@ -104,58 +114,70 @@ export default function SessaoDetalheScreen() {
 
   if (!sessao) {
     return (
-      <View style={styles.container}>
-        <EstadoVazio titulo="Sessão não encontrada" descricao="Ela pode ter sido removida ou você não tem mais acesso a ela." />
-      </View>
+      <Tela largura="lista" centralizarVertical>
+        <EstadoVazio icone={IconeSino} titulo="Sessão não encontrada" descricao="Ela pode ter sido removida ou você não tem mais acesso a ela." />
+      </Tela>
     );
   }
 
+  const inicio = paraData(sessao.inicio);
+  const pendentes = checkIns.filter((c) => c.checkIn.status === 'pendente').length;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <Text style={styles.titulo}>{formatarDataHora(sessao.inicio)}</Text>
-      <Text style={styles.subtitulo}>status: {sessao.status}</Text>
-      <Text style={styles.subtitulo}>
-        Janela de check-in: {formatarDataHora(sessao.janelaCheckInInicio)} até {formatarDataHora(sessao.janelaCheckInFim)}
-      </Text>
+    <Tela largura="lista">
+      <Cartao>
+        <Texto variante="rotuloPlacar" cor={sessao.status === 'aberta' ? 'sucesso' : 'texto2'}>
+          {ROTULO_STATUS_SESSAO[sessao.status]}
+        </Texto>
+        <View style={styles.horario}>
+          <Texto variante="placarGrande">{formatarHora(inicio)}</Texto>
+          <Texto variante="rotuloPlacar">{rotuloDia(inicio)}</Texto>
+        </View>
+        <Texto variante="legenda">
+          {`Janela de check-in: ${formatarDiaHora(paraData(sessao.janelaCheckInInicio))} até ${formatarHora(paraData(sessao.janelaCheckInFim))}`}
+        </Texto>
+      </Cartao>
 
-      <View style={styles.linhaBotoes}>
-        <Botao titulo="Abrir sessão" variante="secundario" desabilitado={processando || sessao.status !== 'agendada'} onPress={handleAbrir} />
-        <Botao titulo="Encerrar sessão" variante="secundario" desabilitado={processando || sessao.status !== 'aberta'} onPress={handleEncerrar} />
+      <View style={styles.acao}>
+        {sessao.status === 'agendada' ? (
+          <Botao titulo="Abrir check-in" icone={IconeSino} onPress={handleAbrir} carregando={processando} />
+        ) : sessao.status === 'aberta' ? (
+          <Botao titulo="Encerrar sessão" onPress={handleEncerrar} carregando={processando} />
+        ) : (
+          <Texto variante="legenda" alinhamento="center">
+            {sessao.status === 'encerrada' ? 'Sessão encerrada. Os check-ins abaixo ficam no histórico.' : 'Sessão cancelada.'}
+          </Texto>
+        )}
       </View>
+      <MensagemErro mensagem={erroAcao} />
 
-      {erroAcao ? (
-        <Text style={styles.erroAcao} accessibilityRole="alert">
-          {erroAcao}
-        </Text>
-      ) : null}
-
-      <Text style={styles.secaoTitulo}>Check-ins recebidos</Text>
+      <CabecalhoSecao titulo="Check-ins recebidos" contador={pendentes > 0 ? `${checkIns.length} (${pendentes} aguardando)` : checkIns.length} />
       {checkIns.length === 0 ? (
-        <Text style={styles.vazio}>Nenhum check-in recebido ainda.</Text>
+        <Texto variante="legenda">Nenhum check-in recebido ainda.</Texto>
       ) : (
-        checkIns.map(({ checkIn, nomeAluno }) => (
-          <Cartao key={checkIn.id} style={styles.item}>
-            <Text style={styles.itemNome}>{nomeAluno}</Text>
-            <Text style={styles.itemDetalhe}>
-              {formatarDataHora(checkIn.dataHora)} · status: {checkIn.status}
-            </Text>
-          </Cartao>
+        checkIns.map(({ checkIn, nomeAluno }, i) => (
+          <View key={checkIn.id}>
+            {i > 0 ? <LinhaFina /> : null}
+            <View style={styles.linha} accessible accessibilityLabel={`${nomeAluno}, ${formatarHora(paraData(checkIn.dataHora))}, ${ROTULO_STATUS_CHECKIN[checkIn.status]}`}>
+              <Avatar nome={nomeAluno} tamanho={36} />
+              <View style={styles.textos}>
+                <Texto variante="corpoForte">{nomeAluno}</Texto>
+                <Texto variante="legenda">{`Check-in às ${formatarHora(paraData(checkIn.dataHora))}`}</Texto>
+              </View>
+              <Texto variante="rotuloPlacar" cor={checkIn.status === 'validado' ? 'sucesso' : checkIn.status === 'rejeitado' ? 'perigo' : 'texto2'}>
+                {ROTULO_STATUS_CHECKIN[checkIn.status]}
+              </Texto>
+            </View>
+          </View>
         ))
       )}
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
-  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
-  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.minimo },
-  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginTop: Espacamento.grande, marginBottom: Espacamento.pequeno },
-  linhaBotoes: { flexDirection: 'row', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  erroAcao: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
-  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-  item: { marginBottom: Espacamento.pequeno },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
+  horario: { flexDirection: 'row', alignItems: 'baseline', gap: Espacamento.pequeno, marginVertical: Espacamento.minimo },
+  acao: { marginTop: Espacamento.padrao, marginBottom: Espacamento.padrao },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 60, paddingVertical: Espacamento.pequeno },
+  textos: { flex: 1, gap: 2 },
 });

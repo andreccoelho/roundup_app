@@ -116,3 +116,26 @@ Screenshots em `docs/redesign/fase-3/`, incluindo as composições (`*-comp-home
 - **Visões de apresentação** (novas, usadas pelas telas reais na fase 4 e pela Galeria): `aluno/HomeAlunoVisao.tsx`, `aluno/PerfilAlunoVisao.tsx`, `aluno/ClassificacaoVisao.tsx`, `professor/HojeProfessorVisao.tsx`.
 - **Galeria → "Composições"**: as 4 visões montadas com dados fictícios (`src/screens/dev/composicoes.tsx`), cada uma abrindo em tela inteira. Seções novas: HeroCheckIn (3 estados), linhas de sessão, progresso, missões, medalhas, faixas interpretadas, classificação, gestor.
 - Ajustes de revisão visual: chip estático em `superficie2` (sumia sobre a banda); coluna de horário com rótulo do dia em 1 linha.
+
+## Fase 4 — Telas
+
+Screenshots em `docs/redesign/fase-4/` (auth em 3 viewports + Galeria + composições). Telas autenticadas validadas pelas composições da Galeria (Home, Perfil, Classificação, Hoje do Professor); as demais, por `tsc` e leitura — não há como renderizá-las sem login (ver `docs/REDESIGN_RESULTADO.md`).
+
+**Regras aplicadas em todas as telas**: raiz `<Tela>` (safe area, maxWidth 480/720), tipografia só via `<Texto>`/componentes (grep sem `fontSize`/`fontWeight`/`fontFamily` em `src/screens`, fora a Galeria), listas sem card com borda, nenhum metadado unido por ponto médio, enums humanizados (`utils/apresentacao.ts`), **zero `setErro(e.message)`** (todas via `mensagemErro`), `EstadoErro` com "Tentar novamente" nos dashboards e na Agenda, ações com proteção contra toque duplo.
+
+**Auth**: Login em tela cheia escura (logo invertido, tagline display em 2 linhas com sombra dura em acento, CTA "Entrar" grande, Enter no e-mail vai para a senha e na senha envia, `autoComplete`), Recuperar senha (confirmação com filete de sucesso), Seleção de perfil ("Quem entra no ringue?", opções com ícone em círculo + chevron, Aluno primeiro), LGPD (política rolável, Checkbox, ajuda quando o botão está desabilitado), Cadastros (seções "Conta" / "Ficha de atleta"/"Ficha técnica"/"Academia", senha com ajuda e mostrar/ocultar, data com máscara, prévia da faixa enquanto digita, responsável legal com filete). `MensagemErro` (novo) para erro de envio.
+
+**Aluno**
+- Home → `HomeAlunoVisao`: banda compacta → HeroCheckIn → progresso (XP + sequência) → próximos treinos → atalhos (Turmas disponíveis, Histórico) como ItemMenu. Erro de check-in vira Aviso (não esconde o hero).
+- Agenda: agrupada por dia ("Hoje", "Amanhã", "Qui 17/10"), linhas com bloco de horário, erro com retry, Aviso no erro de check-in.
+- Missões: `Abas` "Em curso (n)" / "Concluídas (n)", vazios específicos por aba.
+- Classificação → `ClassificacaoVisao` (pódio, "sua posição", lista); vazio com CTA "Ver agenda".
+- Histórico: resumo em Estatistica + linhas com status por ícone e texto.
+- Turmas disponíveis: linhas com chips de modalidade/nível, "Matricular" contornado, ✓ "Matriculado", Aviso de sucesso.
+- Vincular-se: busca local por nome/endereço (sem nova consulta), loading por item, "Enviado", Aviso de sucesso.
+- Bloqueio de vínculo: tela cheia com marca, "Escolha seu corner", CTA em acento.
+- Perfil → `PerfilAlunoVisao`; "Excluir conta" saiu da tela principal.
+
+**Professor/Academia**: Hoje do professor → `HojeProfessorVisao`; Hoje da academia com banda de gestor, contadores em Oswald (Estatistica) e lista de professores; Perfis com card de faixa (professor), ItemMenu de Gestão e Conta; Visão consolidada com Estatistica e barra de frequência; Turmas com **lista primeiro e "+ Nova turma" em Folha**; Turma (detalhe) com "+ Nova sessão" em Folha (campo "Semana de referência" explicado), sessões com horário em placar e status humanizado; Sessão com a **ação principal em botão primário** ("Abrir check-in"/"Encerrar sessão"); Alunos; Solicitações (Recusar/Aceitar abaixo do nome, "Encerrar" vínculo com diálogo).
+
+**Compartilhado**: nova `ContaPrivacidadeScreen` ("Conta e privacidade": e-mail, privacidade, zona de risco com "Excluir minha conta") registrada nos 3 stacks de Perfil; `ExcluirContaSecao` removida. `EditarPerfil` com prévia da faixa e erros traduzidos. `TelaEmBreve` e `LoadingScreen` no tema.
