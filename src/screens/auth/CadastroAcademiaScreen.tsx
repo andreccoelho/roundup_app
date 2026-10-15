@@ -99,7 +99,7 @@ export default function CadastroAcademiaScreen() {
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Botao titulo="‹ Voltar" variante="texto" onPress={() => navigation.goBack()} />
+        <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
         <Text style={styles.titulo}>Cadastro</Text>
         <Text style={styles.subtitulo}>Academia</Text>

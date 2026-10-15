@@ -66,3 +66,33 @@ Verificação por fase: `npx tsc --noEmit`. **Não há lint configurado no proje
 - Casca: `src/navigation/opcoesCasca.ts` → `.tsx` com `temaNavegacao` (DarkTheme com `background: fundo`, sem flash branco), header escuro, `useOpcoesTabBar()` (altura 56 + `insets.bottom`, rótulo Oswald) e `iconeAba()` (traço de 2px em acento na aba ativa).
 - Assets: `icon.png`, `android-icon-foreground/background/monochrome.png`, `splash-icon.png` e `favicon.png` gerados a partir de `assets/roundup_logo_invertida.png` sobre `#0B0B0C` (script temporário com Playwright + canvas, fora do repo, sem dependência nova). `app.json`: `userInterfaceStyle: "dark"`, `backgroundColor: "#0B0B0C"`, adaptive icon com fundo `#0B0B0C`, plugin `expo-splash-screen` configurado (`backgroundColor`, `image`, `imageWidth: 200`).
 - `docs/DESIGN.md` criado; nota de substituição no topo de `DESIGN_BRIEF.md`, `script.md` e `docs/AUDITORIA_UI.md`.
+
+## Fase 2 — Componentes base
+
+Validados na Galeria (`docs/redesign/fase-2/`, incluindo `*-modal-folha|dialogo|aviso.png`).
+
+**Refeitos**
+- `Botao`: `primario` em acento (texto `#0B0B0C`), `secundario` (contorno `linhaForte`), `fantasma`, `destrutivo` (perigo), `texto` (link), **`voltar`** (novo: seta + "Voltar", alinhado à esquerda — substitui o "‹ Voltar" centralizado). Rótulo Oswald caixa alta, raio 2, `grande` (56px) e `icone`. Pressionado = escala 0.97 (desligada com reduce motion). Foco de teclado = anel de 2px em acento (`useFocoVisivel`, só `:focus-visible` no web). Desabilitado = superficie2 + texto3, não opacidade.
+- `CampoTexto`: fundo superficie1, sublinhado `linhaForte` (3,6:1) → acento 2px no foco / perigo no erro; rótulo é o nome acessível do input; erro com `accessibilityLiveRegion`; mostrar/ocultar senha; `mascara="data|hora"` com number-pad; `ajuda`; `onSubmitEditing`/`returnKeyType`/`autoComplete` repassados.
+- `Etiqueta`: único chip do app (pílula). Estática (superficie1), seleção única (role radio) e múltipla (role checkbox); selecionada = preenchida em `texto`.
+- `ModalitySelector`: sem estilo próprio — Etiqueta (múltipla) + CampoTexto para "Outra".
+- `Abas`: rótulos Oswald caixa alta, sublinhado de 2px na ativa.
+- `Dialogo`: superficie2, canto vivo, filete superior (perigo quando destrutivo), `carregando` no confirmar.
+- `Folha`: alça, título, botão fechar, `KeyboardAvoidingView` + rolagem interna, inset inferior, maxWidth 720.
+- `Aviso`: variantes `sucesso|erro|info` com filete e ícone; fixo na viewport via `<Tela sobreposicao>`; entrada animada (reduce motion respeitado).
+- `Esqueleto`: superficie2, `forma="linha"` (imita linha de lista), reduce motion.
+- `EstadoVazio` / `EstadoErro`: ícone SVG em 64px + CTA; `EstadoErro compacto` para erro dentro de seção.
+- `LinhaFina`: linha simples em `linha`; `corda` = linha dupla para divisor de seção.
+- `Cartao`: superficie1, sem borda, raio 4; `corFilete`; `corteDiagonal` com corte fixo em px (28, até 40% da altura) medido por onLayout — em % ficava invisível em cards largos.
+- `Avatar`: superficie2 + contorno, iniciais em Oswald.
+- `TexturaLona`: id do pattern único (`useId`) e acessibilidade num View envoltório (`aria-hidden`) — **o warning "React does not recognize the prop" do console sumiu** (adiantado da fase 5).
+
+**Novos**: `Toggle` (Switch real, role switch, linha inteira tocável), `Checkbox` (com ✓), `CabecalhoSecao`, `ItemMenu`, `Estatistica`, `BandaIdentidade` (`aluno|gestor`, `compacta`, `sobHeader`, textura + marca d'água, inset superior), hooks `useMovimentoReduzido` e `useFocoVisivel`. Ícones novos: Voltar, Chevron, Fechar, Mais, Olho, OlhoFechado, Alerta, Relógio, Chama, Cinturão, Sair.
+
+**Trocas nas telas**
+- `TextInput` cru → `CampoTexto`: `RegistrarGraduacaoScreen`, `RelatorioFrequenciaScreen` (com máscara de data), `MissoesGestorScreen`, `ModalitySelector`. Nenhum `TextInput` fora do `CampoTexto` no projeto.
+- Toggles improvisados: atuação do `CadastroProfessorScreen` → `Abas`; `PreferenciasNotificacaoScreen` → `Toggle`; Ativa/Inativa de `MissoesGestorScreen` → `Toggle`; aceite do `ConsentimentoLGPDScreen` → `Checkbox`.
+- `MissoesGestorScreen`, `RegistrarGraduacaoScreen`, `RelatorioFrequenciaScreen` e `PreferenciasNotificacaoScreen` já migradas para `Tela`/`Texto` (adiantado da fase 4), com erros via `mensagemErro`.
+- `utils/mensagensErro.ts`: nova `mensagemErro(erro, padrao)` — traduz códigos do Firebase e preserva mensagens de negócio dos services (`throw new Error('...')` em PT).
+- `AuthStack` e `AlunoRaiz` passam a usar `opcoesHeader` (header da Galeria e de "Vincular-se" estava no estilo padrão).
+- Galeria reescrita: tipografia, paleta, ícones, todos os componentes base e de domínio.

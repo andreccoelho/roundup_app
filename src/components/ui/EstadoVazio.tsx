@@ -1,33 +1,47 @@
-// EstadoVazio — convite à ação, não lamento (ver DESIGN_BRIEF.md / SCRIPT.md, Passo 4).
-import { StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+// EstadoVazio — convite à ação: ícone próprio em 64px, título, descrição e CTA opcional.
+import type { ComponentType } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Cores, Espacamento } from '../../theme';
+import { IconeLuva } from '../icones';
 import Botao from './Botao';
+import Texto from './Texto';
 
 interface EstadoVazioProps {
   titulo: string;
   descricao?: string;
+  icone?: ComponentType<{ tamanho?: number; cor?: string; espessura?: number }>;
   acaoTitulo?: string;
   onAcao?: () => void;
+  // CTA em acento quando é a ação principal da tela (ex.: bloqueio de vínculo).
+  acaoPrimaria?: boolean;
 }
 
-export default function EstadoVazio({ titulo, descricao, acaoTitulo, onAcao }: EstadoVazioProps) {
+export default function EstadoVazio({ titulo, descricao, icone: Icone = IconeLuva, acaoTitulo, onAcao, acaoPrimaria }: EstadoVazioProps) {
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>{titulo}</Text>
-      {descricao ? <Text style={styles.descricao}>{descricao}</Text> : null}
+      <View aria-hidden importantForAccessibility="no-hide-descendants">
+        <Icone tamanho={64} cor={Cores.texto3} espessura={1.2} />
+      </View>
+      <Texto variante="titulo" alinhamento="center" style={styles.titulo}>
+        {titulo}
+      </Texto>
+      {descricao ? (
+        <Texto variante="legenda" alinhamento="center" style={styles.descricao}>
+          {descricao}
+        </Texto>
+      ) : null}
       {acaoTitulo && onAcao ? (
-        <>
-          <View style={styles.espaco} />
-          <Botao titulo={acaoTitulo} variante="secundario" onPress={onAcao} />
-        </>
+        <View style={styles.acao}>
+          <Botao titulo={acaoTitulo} variante={acaoPrimaria ? 'primario' : 'secundario'} onPress={onAcao} />
+        </View>
       ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
-  titulo: { color: Cores.texto, fontSize: TamanhoFonte.md, fontWeight: '600', textAlign: 'center' },
-  descricao: { color: Cores.texto2, fontSize: TamanhoFonte.sm, textAlign: 'center', marginTop: Espacamento.minimo },
-  espaco: { height: Espacamento.padrao },
+  container: { alignItems: 'center', justifyContent: 'center', paddingVertical: Espacamento.extraGrande, paddingHorizontal: Espacamento.grande },
+  titulo: { marginTop: Espacamento.padrao },
+  descricao: { marginTop: Espacamento.minimo, maxWidth: 360 },
+  acao: { marginTop: Espacamento.grande, alignSelf: 'stretch', maxWidth: 320, width: '100%', marginHorizontal: 'auto' },
 });
