@@ -2,8 +2,8 @@
 // academia). Campos usados são só os que existem em types/index.ts (Missao) — "público-alvo" e
 // "período de vigência" do RF23 original não têm campo modelado ainda, ficam de fora.
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { StyleSheet, View } from 'react-native';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { criarMissao, listarMissoesPorResponsavel, atualizarMissao } from '../../services/missoes';
 import { Missao, TipoMissao } from '../../types';
@@ -14,6 +14,13 @@ import LinhaFina from '../../components/LinhaFina';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Toggle from '../../components/ui/Toggle';
+import CampoTexto from '../../components/ui/CampoTexto';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import { IconeBandeira, IconeMais } from '../../components/icones';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 const TIPOS: { valor: TipoMissao; rotulo: string }[] = [
   { valor: 'presenca', rotulo: 'Presença' },
@@ -45,7 +52,7 @@ export default function MissoesGestorScreen() {
     try {
       setMissoes(await listarMissoesPorResponsavel(usuario.id));
     } catch (e: any) {
-      setErro(e.message);
+      setErro(mensagemErro(e));
     } finally {
       setCarregando(false);
     }
@@ -97,7 +104,7 @@ export default function MissoesGestorScreen() {
       setFolhaAberta(false);
       await carregar();
     } catch (e: any) {
-      setErroForm(e.message);
+      setErroForm(mensagemErro(e, 'Não foi possível criar a missão. Tente novamente.'));
     } finally {
       setCriando(false);
     }
@@ -109,99 +116,88 @@ export default function MissoesGestorScreen() {
       await atualizarMissao(missao.id, { ativa: !missao.ativa });
       setMissoes((prev) => prev.map((m) => (m.id === missao.id ? { ...m, ativa: !m.ativa } : m)));
     } catch (e: any) {
-      setErro(e.message);
+      setErro(mensagemErro(e, 'Não foi possível atualizar a missão. Tente novamente.'));
     } finally {
       setProcessandoId(null);
     }
   }
 
+
+  const ativas = missoes.filter((m) => m.ativa).length;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.cabecalho}>
-        <Botao titulo="Nova missão" onPress={() => setFolhaAberta(true)} />
-      </View>
+    <Tela largura="lista">
+      <Botao titulo="Nova missão" icone={IconeMais} onPress={() => setFolhaAberta(true)} />
 
       {carregando ? (
-        <View style={styles.conteudo}>
-          <Esqueleto altura={72} repeticoes={3} />
+        <View style={styles.espacoTopo}>
+          <Esqueleto forma="linha" repeticoes={3} />
         </View>
       ) : erro ? (
         <EstadoErro mensagem={erro} onTentarNovamente={carregar} />
       ) : missoes.length === 0 ? (
-        <View style={styles.conteudo}>
-          <EstadoVazio
-            titulo="Nenhuma missão criada"
-            descricao="Crie a primeira missão para seus alunos com o botão acima."
-          />
-        </View>
+        <EstadoVazio
+          icone={IconeBandeira}
+          titulo="Nenhuma missão criada"
+          descricao="Crie a primeira missão para seus alunos com o botão acima."
+        />
       ) : (
-        <ScrollView contentContainerStyle={styles.conteudo}>
+        <>
+          <CabecalhoSecao titulo="Missões" contador={`${ativas} de ${missoes.length} ativas`} />
           {missoes.map((missao, i) => (
             <View key={missao.id}>
-              <View style={styles.linhaMissao}>
-                <View style={styles.linhaMissaoTextos}>
-                  <Text style={styles.tituloMissao}>{missao.titulo}</Text>
-                  <Text style={styles.detalheMissao}>
-                    {TIPOS.find((t) => t.valor === missao.tipo)?.rotulo ?? missao.tipo} · meta {missao.meta} · {missao.pontos} pts
-                  </Text>
-                </View>
-                <Etiqueta
-                  texto={missao.ativa ? 'Ativa' : 'Inativa'}
-                  selecionada={missao.ativa}
-                  desabilitada={processandoId === missao.id}
-                  onPress={() => handleAlternarAtiva(missao)}
-                />
-              </View>
-              {i < missoes.length - 1 && <LinhaFina />}
+              {i > 0 ? <LinhaFina /> : null}
+              <Toggle
+                rotulo={missao.titulo}
+                descricao={`${TIPOS.find((t) => t.valor === missao.tipo)?.rotulo ?? missao.tipo}: meta ${missao.meta}, vale ${missao.pontos} pts`}
+                valor={missao.ativa}
+                desabilitado={processandoId === missao.id}
+                onAlterar={() => handleAlternarAtiva(missao)}
+              />
             </View>
           ))}
-        </ScrollView>
+        </>
       )}
 
-      <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)}>
-        <Text style={styles.tituloFolha}>Nova missão</Text>
-        {erroForm ? <Text style={styles.erroForm}>{erroForm}</Text> : null}
+      <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova missão">
+        {erroForm ? (
+          <Texto variante="legenda" cor="perigo" style={styles.erroForm} accessibilityRole="alert" accessibilityLiveRegion="polite">
+            {erroForm}
+          </Texto>
+        ) : null}
 
-        <Text style={styles.rotuloCampo}>Título</Text>
-        <TextInput style={styles.input} value={titulo} onChangeText={setTitulo} placeholder="Ex.: Treinar 3x na semana" />
+        <CampoTexto rotulo="Título" valor={titulo} onAlterar={setTitulo} placeholder="Ex.: Treinar 3x na semana" />
+        <CampoTexto rotulo="Descrição" valor={descricao} onAlterar={setDescricao} placeholder="Critério de conclusão" />
 
-        <Text style={styles.rotuloCampo}>Descrição</Text>
-        <TextInput style={styles.input} value={descricao} onChangeText={setDescricao} placeholder="Critério de conclusão" />
-
-        <Text style={styles.rotuloCampo}>Tipo</Text>
-        <View style={styles.linhaTipos}>
+        <Texto variante="legenda" style={styles.rotuloCampo}>
+          Tipo
+        </Texto>
+        <View style={styles.linhaTipos} accessibilityRole="radiogroup" accessibilityLabel="Tipo da missão">
           {TIPOS.map((opcao) => (
             <Etiqueta key={opcao.valor} texto={opcao.rotulo} selecionada={tipo === opcao.valor} onPress={() => setTipo(opcao.valor)} />
           ))}
         </View>
 
-        <Text style={styles.rotuloCampo}>Meta</Text>
-        <TextInput style={styles.input} value={meta} onChangeText={setMeta} placeholder="Ex.: 3" keyboardType="number-pad" />
+        <View style={styles.linhaNumeros}>
+          <View style={styles.campoNumero}>
+            <CampoTexto rotulo="Meta" valor={meta} onAlterar={setMeta} placeholder="Ex.: 3" keyboardType="number-pad" />
+          </View>
+          <View style={styles.campoNumero}>
+            <CampoTexto rotulo="Pontos" valor={pontos} onAlterar={setPontos} placeholder="Ex.: 30" keyboardType="number-pad" />
+          </View>
+        </View>
 
-        <Text style={styles.rotuloCampo}>Pontos de recompensa</Text>
-        <TextInput style={styles.input} value={pontos} onChangeText={setPontos} placeholder="Ex.: 30" keyboardType="number-pad" />
-
-        <View style={styles.espaco} />
         <Botao titulo="Criar missão" onPress={handleCriar} carregando={criando} />
       </Folha>
-    </View>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  cabecalho: { padding: Espacamento.padrao, paddingBottom: 0 },
-  conteudo: { padding: Espacamento.padrao },
-
-  linhaMissao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Espacamento.medio, gap: Espacamento.medio },
-  linhaMissaoTextos: { flex: 1 },
-  tituloMissao: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
-  detalheMissao: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
-
-  tituloFolha: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginBottom: Espacamento.medio },
-  erroForm: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
-  input: { borderBottomWidth: 1, borderBottomColor: Cores.linha, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.texto },
-  linhaTipos: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
-  espaco: { height: Espacamento.padrao },
+  espacoTopo: { marginTop: Espacamento.grande },
+  erroForm: { marginBottom: Espacamento.medio },
+  rotuloCampo: { marginBottom: Espacamento.pequeno },
+  linhaTipos: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  linhaNumeros: { flexDirection: 'row', gap: Espacamento.padrao },
+  campoNumero: { flex: 1 },
 });

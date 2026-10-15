@@ -3,15 +3,20 @@
 // de pontos, e a confirmação é o ponto onde a decisão humana fica explícita na interface.
 // Histórico é imutável depois de criado (ver firestore.rules) — sem tela de edição.
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { criarGraduacao } from '../../services/graduacoes';
 import { AlunosStackParamList } from '../../navigation/GestorTabsCompartilhado';
 import Botao from '../../components/ui/Botao';
 import Dialogo from '../../components/ui/Dialogo';
 import CelebracaoGraduacao from '../../components/ui/CelebracaoGraduacao';
+import CampoTexto from '../../components/ui/CampoTexto';
+import SeloFaixa from '../../components/ui/SeloFaixa';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 type Rota = RouteProp<AlunosStackParamList, 'RegistrarGraduacao'>;
 
@@ -58,32 +63,41 @@ export default function RegistrarGraduacaoScreen() {
       setObservacoes('');
     } catch (e: any) {
       setConfirmando(false);
-      setErro(e.message);
+      setErro(mensagemErro(e, 'Não foi possível registrar a graduação. Tente novamente.'));
     } finally {
       setSalvando(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.conteudo}>
-        <Text style={styles.titulo}>Registrar graduação</Text>
-        <Text style={styles.subtitulo}>{nomeAluno}</Text>
+    <Tela largura="formulario" teclado>
+      <Texto variante="rotuloPlacar">Aluno</Texto>
+      <Texto variante="titulo" style={styles.nome}>
+        {nomeAluno}
+      </Texto>
 
-        {erro ? <Text style={styles.erro}>{erro}</Text> : null}
+      {erro ? (
+        <Texto variante="legenda" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
+          {erro}
+        </Texto>
+      ) : null}
 
-        <Text style={styles.rotuloCampo}>Modalidade</Text>
-        <TextInput style={styles.input} value={modalidade} onChangeText={setModalidade} placeholder="Ex.: Jiu-Jitsu" />
+      <CampoTexto rotulo="Modalidade" valor={modalidade} onAlterar={setModalidade} placeholder="Ex.: Muay Thai" />
+      <CampoTexto rotulo="Grau" valor={grau} onAlterar={setGrau} placeholder="Ex.: Faixa azul, 2º grau" />
+      {grau.trim() ? (
+        <View style={styles.previa} accessibilityLabel="Prévia do selo">
+          <SeloFaixa faixaOuGrau={grau.trim()} />
+        </View>
+      ) : null}
+      <CampoTexto
+        rotulo="Observações (opcional)"
+        valor={observacoes}
+        onAlterar={setObservacoes}
+        placeholder="Ex.: Graduado no exame de setembro"
+        multiline
+      />
 
-        <Text style={styles.rotuloCampo}>Grau</Text>
-        <TextInput style={styles.input} value={grau} onChangeText={setGrau} placeholder="Ex.: Faixa azul" />
-
-        <Text style={styles.rotuloCampo}>Observações (opcional)</Text>
-        <TextInput style={styles.input} value={observacoes} onChangeText={setObservacoes} placeholder="Ex.: Graduado no exame de setembro" />
-
-        <View style={styles.espaco} />
-        <Botao titulo="Registrar graduação" onPress={handlePedirConfirmacao} />
-      </ScrollView>
+      <Botao titulo="Registrar graduação" onPress={handlePedirConfirmacao} />
 
       <Dialogo
         visivel={confirmando}
@@ -91,6 +105,7 @@ export default function RegistrarGraduacaoScreen() {
         mensagem={`Registrar ${grau} em ${modalidade} para ${nomeAluno}? Depois de criado, este registro não pode ser editado nem apagado.`}
         tituloConfirmar="Confirmar"
         onConfirmar={handleConfirmar}
+        carregando={salvando}
         tituloCancelar="Cancelar"
         onCancelar={() => setConfirmando(false)}
       />
@@ -107,17 +122,12 @@ export default function RegistrarGraduacaoScreen() {
           }}
         />
       ) : null}
-    </KeyboardAvoidingView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  titulo: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.texto },
-  subtitulo: { fontSize: TamanhoFonte.md, color: Cores.texto2, marginTop: Espacamento.minimo, marginBottom: Espacamento.grande },
-  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
-  input: { borderBottomWidth: 1, borderBottomColor: Cores.linha, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.texto },
-  espaco: { height: Espacamento.padrao },
+  nome: { marginBottom: Espacamento.grande },
+  erro: { marginBottom: Espacamento.medio },
+  previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
 });

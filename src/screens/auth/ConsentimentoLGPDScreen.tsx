@@ -15,6 +15,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Cores, Espacamento, FamiliaFonte, Raios, Sombras, TamanhoFonte } from '../../theme';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import Botao from '../../components/ui/Botao';
+import Checkbox from '../../components/ui/Checkbox';
 
 export const VERSAO_POLITICA_LGPD = '1.0';
 
@@ -35,7 +36,7 @@ export default function ConsentimentoLGPDScreen() {
   return (
     <View style={styles.flex}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Botao titulo="‹ Voltar" variante="texto" onPress={() => navigation.goBack()} />
+        <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
         <Text style={styles.titulo}>Privacidade dos seus dados</Text>
         <Text style={styles.subtitulo}>
@@ -52,16 +53,9 @@ export default function ConsentimentoLGPDScreen() {
           </Text>
         </View>
 
-        <TouchableOpacity
-          style={[styles.linhaAceite, semAnelDeFoco]}
-          onPress={() => setAceito((atual) => !atual)}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: aceito }}
-          accessibilityLabel="Li e aceito a política de privacidade"
-        >
-          <View style={[styles.caixa, aceito && styles.caixaMarcada]} />
-          <Text style={styles.textoAceite}>Li e aceito a política de privacidade.</Text>
-        </TouchableOpacity>
+        <View style={styles.linhaAceite}>
+          <Checkbox rotulo="Li e aceito a política de privacidade." marcado={aceito} onAlterar={setAceito} />
+        </View>
 
         <View style={styles.espaco} />
         <Botao titulo="Continuar" onPress={handleContinuar} desabilitado={!aceito} />
@@ -89,7 +83,7 @@ const styles = StyleSheet.create({
     maxHeight: 260,
   },
   politicaTexto: { fontSize: TamanhoFonte.sm, color: Cores.texto2, lineHeight: 20 },
-  linhaAceite: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, marginTop: Espacamento.grande, minHeight: 44 },
+  linhaAceite: { marginTop: Espacamento.grande },
   caixa: { width: 22, height: 22, borderRadius: Raios.pequeno, borderWidth: 1, borderColor: Cores.linhaForte },
   caixaMarcada: { backgroundColor: Cores.superficie2, borderColor: Cores.texto },
   textoAceite: { flex: 1, fontSize: TamanhoFonte.sm, color: Cores.texto },

@@ -10,12 +10,16 @@
 // certo (ex.: Cloud Function agendada para lembrete de sessão, ou disparada por
 // validarCheckIn()/criarMissao() para os outros dois) — nenhum dos dois existe no projeto hoje.
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { StyleSheet, View } from 'react-native';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { atualizarUsuario } from '../../services/usuarios';
 import { PreferenciasNotificacao } from '../../types';
-import Etiqueta from '../../components/ui/Etiqueta';
+import Toggle from '../../components/ui/Toggle';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import LinhaFina from '../../components/LinhaFina';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 const PADRAO: PreferenciasNotificacao = { lembreteSessao: true, novaMissao: true, conquista: true };
 
@@ -46,45 +50,40 @@ export default function PreferenciasNotificacaoScreen() {
       await atualizarUsuario(usuario.id, { preferenciasNotificacao: novasPreferencias });
       setPreferencias(novasPreferencias);
     } catch (e: any) {
-      setErro(e.message);
+      setErro(mensagemErro(e, 'Não foi possível salvar a preferência. Tente novamente.'));
     } finally {
       setSalvandoChave(null);
     }
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+    <Tela largura="lista">
+      <Texto variante="legenda" style={styles.intro}>
+        Escolha quais avisos o RoundUp pode mandar para você.
+      </Texto>
       {erro ? (
-        <Text style={styles.erro} accessibilityRole="alert">
+        <Texto variante="legenda" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {erro}
-        </Text>
+        </Texto>
       ) : null}
 
-      {TIPOS.map(({ chave, titulo, descricao }) => (
-        <View key={chave} style={styles.linha}>
-          <View style={styles.linhaTextos}>
-            <Text style={styles.linhaTitulo}>{titulo}</Text>
-            <Text style={styles.linhaDescricao}>{descricao}</Text>
-          </View>
-          <Etiqueta
-            texto={preferencias[chave] ? 'Ativado' : 'Desativado'}
-            selecionada={preferencias[chave]}
-            desabilitada={salvandoChave === chave}
-            onPress={() => handleAlternar(chave)}
-            accessibilityLabel={`${titulo}: ${preferencias[chave] ? 'ativado' : 'desativado'}. Toque para alternar.`}
+      {TIPOS.map(({ chave, titulo, descricao }, i) => (
+        <View key={chave}>
+          {i > 0 ? <LinhaFina /> : null}
+          <Toggle
+            rotulo={titulo}
+            descricao={descricao}
+            valor={preferencias[chave]}
+            desabilitado={salvandoChave === chave}
+            onAlterar={() => handleAlternar(chave)}
           />
         </View>
       ))}
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
-  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  linha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Espacamento.medio, paddingVertical: Espacamento.medio },
-  linhaTextos: { flex: 1 },
-  linhaTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
-  linhaDescricao: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
+  intro: { marginBottom: Espacamento.padrao },
+  erro: { marginBottom: Espacamento.padrao },
 });

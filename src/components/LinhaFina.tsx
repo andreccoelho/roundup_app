@@ -1,19 +1,21 @@
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Cores } from '../theme';
 
-// Separador de lista, no lugar do "card branco com borda" repetido em toda a tela.
-// script.md, item 1: "divisores de seção podem imitar corda de ringue (linha dupla) em vez de
-// linha reta simples" — duas linhas finas próximas, não uma linha grossa só.
-export default function LinhaFina() {
-  return (
-    <View style={styles.container}>
-      <View style={styles.linha} />
-      <View style={styles.linha} />
-    </View>
-  );
+// Separador de lista (docs/DESIGN.md: listas sem card — linhas sobre o fundo, separadas por
+// `linha`). `corda` = duas linhas próximas, para divisor de seção (corda do ringue).
+export default function LinhaFina({ corda }: { corda?: boolean }) {
+  if (corda) {
+    return (
+      <View style={styles.corda} aria-hidden>
+        <View style={styles.linha} />
+        <View style={styles.linha} />
+      </View>
+    );
+  }
+  return <View style={styles.linha} aria-hidden />;
 }
 
 const styles = StyleSheet.create({
-  container: { gap: 2 },
+  corda: { gap: 3 },
   linha: { height: 1, backgroundColor: Cores.linha },
 });

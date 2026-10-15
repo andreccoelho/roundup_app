@@ -1,5 +1,5 @@
-// Ícones do universo de luta (line-art), em vez de ícones-placeholder genéricos.
-// Ver DESIGN_BRIEF.md — vocabulário visual: luva, sino, corda, cadeado (janela fechada).
+// Ícones do universo de luta (line-art), viewBox 24, traço 1.4-2.0 — ver docs/DESIGN.md.
+// Decorativos por padrão: quem precisa de rótulo acessível coloca no elemento pai.
 import Svg, { Path, Circle, Line } from 'react-native-svg';
 import { Cores } from '../../theme';
 
@@ -214,6 +214,114 @@ export function IconeTatame({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }
       <Path d="M4 4h16v16H4V4Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
       <Line x1="4" y1="12" x2="20" y2="12" stroke={cor} strokeWidth={espessura} />
       <Line x1="12" y1="4" x2="12" y2="20" stroke={cor} strokeWidth={espessura} />
+    </Svg>
+  );
+}
+
+// ---- Utilitários de interface (mesmo traço do resto do conjunto) ----
+
+export function IconeVoltar({ tamanho = 24, cor = Cores.texto, espessura = 1.8 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M15 5 8 12l7 7" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function IconeChevron({ tamanho = 24, cor = Cores.texto, espessura = 1.8 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="m9 5 7 7-7 7" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+export function IconeFechar({ tamanho = 24, cor = Cores.texto, espessura = 1.8 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M6 6l12 12M18 6 6 18" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function IconeMais({ tamanho = 24, cor = Cores.texto, espessura = 2 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 5v14M5 12h14" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function IconeOlho({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
+      <Circle cx="12" cy="12" r="3" stroke={cor} strokeWidth={espessura} />
+    </Svg>
+  );
+}
+
+export function IconeOlhoFechado({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
+      <Circle cx="12" cy="12" r="3" stroke={cor} strokeWidth={espessura} />
+      <Line x1="4" y1="20" x2="20" y2="4" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+// Erro/alerta — triângulo de aviso, mesmo traço.
+export function IconeAlerta({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 3.5 21.5 20h-19L12 3.5Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
+      <Line x1="12" y1="10" x2="12" y2="14" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Circle cx="12" cy="17" r="0.6" stroke={cor} strokeWidth={espessura} />
+    </Svg>
+  );
+}
+
+// Relógio de round — contagem regressiva da janela de check-in.
+export function IconeRelogio({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="13" r="7.5" stroke={cor} strokeWidth={espessura} />
+      <Path d="M12 9v4l2.5 2M10 3h4" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+// RF21: sequência — chama.
+export function IconeChama({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 21c-3.6 0-6-2.4-6-5.6 0-3.4 2.6-5 3.4-8.4.9 1.6 1.6 2.4 2.6 3 .2-2.6 1.4-4.8 3.2-6.5-.3 3.3 2.8 5.6 2.8 9.6 0 3.4-2.4 7.9-6 7.9Z"
+        stroke={cor}
+        strokeWidth={espessura}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// RF19: cinturão de campeão (fivela central + correia) — medalhas e 1º lugar.
+export function IconeCinturao({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M2.5 9.5h4M17.5 9.5h4M2.5 14.5h4M17.5 14.5h4" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Path d="M6.5 7.5 12 5l5.5 2.5v9L12 19l-5.5-2.5v-9Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
+      <Circle cx="12" cy="12" r="2.4" stroke={cor} strokeWidth={espessura} />
+    </Svg>
+  );
+}
+
+export function IconeSair({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+  return (
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      <Path d="M14 4.5H6.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H14" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
+      <Path d="M10.5 12h9M16.5 8.5 20 12l-3.5 3.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }

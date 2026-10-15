@@ -1,6 +1,6 @@
 // Avatar circular — foto quando existir (Usuario.fotoUrl), iniciais do nome como fallback.
 import { Image, StyleSheet, Text, View } from 'react-native';
-import { Cores } from '../../theme';
+import { Cores, FamiliaFonte } from '../../theme';
 
 interface AvatarProps {
   nome: string;
@@ -38,7 +38,13 @@ export default function Avatar({ nome, fotoUrl, tamanho = 40 }: AvatarProps) {
 }
 
 const styles = StyleSheet.create({
-  imagem: { backgroundColor: Cores.superficie1 },
-  iniciais: { backgroundColor: Cores.linhaForte, alignItems: 'center', justifyContent: 'center' },
-  textoIniciais: { color: Cores.texto, fontWeight: '600' },
+  imagem: { backgroundColor: Cores.superficie2, borderWidth: 1, borderColor: Cores.linhaForte },
+  iniciais: {
+    backgroundColor: Cores.superficie2,
+    borderWidth: 1,
+    borderColor: Cores.linhaForte,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoIniciais: { color: Cores.texto, fontFamily: FamiliaFonte.placarSemiBold, letterSpacing: 0.5 },
 });

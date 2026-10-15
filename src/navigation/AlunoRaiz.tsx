@@ -9,6 +9,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import BloqueioVinculoScreen from '../screens/aluno/BloqueioVinculoScreen';
 import VincularAlunoScreen from '../screens/aluno/VincularAlunoScreen';
 import { AlunoTabs } from './AlunoTabs';
+import { opcoesHeader } from './opcoesCasca';
 
 type BloqueioStackParamList = {
   Bloqueio: undefined;
@@ -42,7 +43,7 @@ export function AlunoRaiz() {
   if (status === 'liberado') return <AlunoTabs />;
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator screenOptions={{ ...opcoesHeader, headerShown: false }}>
       <Stack.Screen name="Bloqueio">
         {({ navigation }) => (
           <BloqueioVinculoScreen onVincular={() => navigation.navigate('Vincular')} onAtualizar={verificar} />
