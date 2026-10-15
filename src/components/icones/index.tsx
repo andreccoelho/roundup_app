@@ -1,6 +1,7 @@
 // Ícones do universo de luta (line-art), em vez de ícones-placeholder genéricos.
 // Ver DESIGN_BRIEF.md — vocabulário visual: luva, sino, corda, cadeado (janela fechada).
 import Svg, { Path, Circle, Line } from 'react-native-svg';
+import { Cores } from '../../theme';
 
 interface IconeProps {
   tamanho?: number;
@@ -8,7 +9,7 @@ interface IconeProps {
   espessura?: number;
 }
 
-export function IconeLuva({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeLuva({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -27,7 +28,7 @@ export function IconeLuva({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: Ic
   );
 }
 
-export function IconeSino({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeSino({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -42,7 +43,7 @@ export function IconeSino({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: Ic
   );
 }
 
-export function IconeCadeado({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeCadeado({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -62,7 +63,7 @@ export function IconeCadeado({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }:
   );
 }
 
-export function IconeCheck({ tamanho = 24, cor = '#0A0A0A', espessura = 2 }: IconeProps) {
+export function IconeCheck({ tamanho = 24, cor = Cores.texto, espessura = 2 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -76,7 +77,7 @@ export function IconeCheck({ tamanho = 24, cor = '#0A0A0A', espessura = 2 }: Ico
   );
 }
 
-export function IconeCorda({ tamanho = 24, cor = '#0A0A0A', espessura = 1.4 }: IconeProps) {
+export function IconeCorda({ tamanho = 24, cor = Cores.texto, espessura = 1.4 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -95,7 +96,7 @@ export function IconeCorda({ tamanho = 24, cor = '#0A0A0A', espessura = 1.4 }: I
   );
 }
 
-export function IconeCirculo({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeCirculo({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Circle cx="12" cy="12" r="8" stroke={cor} strokeWidth={espessura} />
@@ -104,7 +105,7 @@ export function IconeCirculo({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }:
 }
 
 // RF06: faixa/grau — usado na seleção de perfil Aluno, em vez de ícone genérico de "estudante"
-export function IconeFaixa({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeFaixa({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -125,7 +126,7 @@ export function IconeFaixa({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: I
 }
 
 // RF04: poste de canto + cordas — usado na seleção de perfil Academia, em vez de prédio genérico
-export function IconePoste({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconePoste({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Line x1="12" y1="4" x2="12" y2="21" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
@@ -141,7 +142,7 @@ export function IconePoste({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: I
 // reaproveitados nas abas correspondentes — ver AlunoTabs.tsx/ProfessorTabs.tsx/AcademiaTabs.tsx.
 
 // RF14: ficha técnica (fight card) — lista de próximos compromissos, para a aba Agenda
-export function IconeFichaTecnica({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeFichaTecnica({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -164,7 +165,7 @@ export function IconeFichaTecnica({ tamanho = 24, cor = '#0A0A0A', espessura = 1
 }
 
 // RF18: bandeira de checkpoint — objetivo/meta, para a aba Missões (aluno e gestor)
-export function IconeBandeira({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeBandeira({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Line x1="6" y1="3.5" x2="6" y2="20.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
@@ -179,7 +180,7 @@ export function IconeBandeira({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }
 }
 
 // RF20: cartão de pontuação do juiz — ranking, para a aba Classificação
-export function IconeCartaoPontuacao({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeCartaoPontuacao({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path
@@ -197,7 +198,7 @@ export function IconeCartaoPontuacao({ tamanho = 24, cor = '#0A0A0A', espessura 
 }
 
 // RF06: silhueta simples — perfil/conta, para a aba Perfil (aluno e gestor)
-export function IconePerfil({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconePerfil({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Circle cx="12" cy="8" r="3.2" stroke={cor} strokeWidth={espessura} />
@@ -207,7 +208,7 @@ export function IconePerfil({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: 
 }
 
 // RF10: tatame visto de cima (piso dividido em módulos) — turmas, para a aba Turmas do gestor
-export function IconeTatame({ tamanho = 24, cor = '#0A0A0A', espessura = 1.6 }: IconeProps) {
+export function IconeTatame({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
       <Path d="M4 4h16v16H4V4Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />

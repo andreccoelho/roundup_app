@@ -44,9 +44,9 @@ export default function BarraProgresso({ nivel, xpAtual, xpProximoNivel }: Barra
 
 const styles = StyleSheet.create({
   cabecalho: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: Espacamento.minimo },
-  nivel: { fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.preto },
-  xp: { fontFamily: FamiliaFonte.placarRegular, fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },
+  nivel: { fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.texto },
+  xp: { fontFamily: FamiliaFonte.placarRegular, fontSize: TamanhoFonte.sm, color: Cores.texto2 },
   trilha: { flexDirection: 'row', gap: 2, height: 8 },
-  segmento: { flex: 1, borderRadius: Raios.pequeno, backgroundColor: Cores.cinzaFundo, overflow: 'hidden' },
-  segmentoPreenchimento: { height: '100%', backgroundColor: Cores.preto },
+  segmento: { flex: 1, borderRadius: Raios.pequeno, backgroundColor: Cores.superficie1, overflow: 'hidden' },
+  segmentoPreenchimento: { height: '100%', backgroundColor: Cores.superficie2 },
 });

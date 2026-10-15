@@ -19,24 +19,24 @@ interface BotaoProps {
 
 const ESTILOS_POR_VARIANTE: Record<VarianteCheia, { container: ViewStyle; texto: TextStyle; corIndicador: string }> = {
   primario: {
-    container: { backgroundColor: Cores.preto },
-    texto: { color: Cores.branco },
-    corIndicador: Cores.branco,
+    container: { backgroundColor: Cores.superficie2 },
+    texto: { color: Cores.texto },
+    corIndicador: Cores.texto,
   },
   secundario: {
-    container: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Cores.cinzaEscuro },
-    texto: { color: Cores.cinzaEscuro },
-    corIndicador: Cores.cinzaEscuro,
+    container: { backgroundColor: 'transparent', borderWidth: 1, borderColor: Cores.linhaForte },
+    texto: { color: Cores.linhaForte },
+    corIndicador: Cores.linhaForte,
   },
   fantasma: {
     container: { backgroundColor: 'transparent' },
-    texto: { color: Cores.preto },
-    corIndicador: Cores.preto,
+    texto: { color: Cores.texto },
+    corIndicador: Cores.texto,
   },
   destrutivo: {
-    container: { backgroundColor: Cores.alerta },
-    texto: { color: Cores.branco },
-    corIndicador: Cores.branco,
+    container: { backgroundColor: Cores.perigo },
+    texto: { color: Cores.texto },
+    corIndicador: Cores.texto,
   },
 };
 
@@ -93,5 +93,5 @@ const styles = StyleSheet.create({
   botaoCompacto: { paddingVertical: Espacamento.pequeno, paddingHorizontal: Espacamento.medio },
   textoCompacto: { fontSize: TamanhoFonte.sm },
   texto: { fontSize: TamanhoFonte.md, fontWeight: '600', letterSpacing: 0.3 },
-  textoLink: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, textDecorationLine: 'underline', textAlign: 'center' },
+  textoLink: { color: Cores.texto2, fontSize: TamanhoFonte.sm, textDecorationLine: 'underline', textAlign: 'center' },
 });

@@ -1,3 +1,5 @@
+> **SUBSTITUÍDO.** Este documento não vale mais como regra. A referência de design atual é [`docs/DESIGN.md`](docs/DESIGN.md) (direção "Noite de luta"). Mantido só como histórico.
+
 # RoundUp — Briefing de Design (para implementação direta em código)
 
 ## Como usar este documento

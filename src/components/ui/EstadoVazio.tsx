@@ -27,7 +27,7 @@ export default function EstadoVazio({ titulo, descricao, acaoTitulo, onAcao }: E
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
-  titulo: { color: Cores.preto, fontSize: TamanhoFonte.md, fontWeight: '600', textAlign: 'center' },
-  descricao: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, textAlign: 'center', marginTop: Espacamento.minimo },
+  titulo: { color: Cores.texto, fontSize: TamanhoFonte.md, fontWeight: '600', textAlign: 'center' },
+  descricao: { color: Cores.texto2, fontSize: TamanhoFonte.sm, textAlign: 'center', marginTop: Espacamento.minimo },
   espaco: { height: Espacamento.padrao },
 });

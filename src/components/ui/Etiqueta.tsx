@@ -38,13 +38,13 @@ export default function Etiqueta({ texto, selecionada, onPress, desabilitada, ac
 const styles = StyleSheet.create({
   etiqueta: {
     borderWidth: 1,
-    borderColor: Cores.cinzaEscuro,
-    borderRadius: Raios.grande,
+    borderColor: Cores.linhaForte,
+    borderRadius: Raios.pequeno,
     paddingVertical: Espacamento.pequeno,
     paddingHorizontal: Espacamento.medio,
   },
-  etiquetaSelecionada: { backgroundColor: Cores.preto, borderColor: Cores.preto },
+  etiquetaSelecionada: { backgroundColor: Cores.superficie2, borderColor: Cores.texto },
   etiquetaDesabilitada: { opacity: 0.4 },
-  texto: { fontSize: TamanhoFonte.sm, color: Cores.cinzaEscuro },
-  textoSelecionado: { color: Cores.branco, fontWeight: '600' },
+  texto: { fontSize: TamanhoFonte.sm, color: Cores.linhaForte },
+  textoSelecionado: { color: Cores.texto, fontWeight: '600' },
 });

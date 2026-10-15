@@ -126,7 +126,7 @@ export default function ClassificacaoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
-  legendaJanela: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.medio, textTransform: 'capitalize' },
+  legendaJanela: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.medio, textTransform: 'capitalize' },
 });

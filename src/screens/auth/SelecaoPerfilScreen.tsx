@@ -61,7 +61,7 @@ export default function SelecaoPerfilScreen() {
               accessibilityRole="button"
               accessibilityLabel={`${titulo}. ${descricao}`}
             >
-              <Icone tamanho={28} cor={Cores.preto} />
+              <Icone tamanho={28} cor={Cores.texto} />
               <View style={styles.linhaTextos}>
                 <Text style={styles.linhaTitulo}>{titulo}</Text>
                 <Text style={styles.linhaDescricao}>{descricao}</Text>
@@ -81,19 +81,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: Espacamento.grande,
     paddingTop: Espacamento.grande,
     paddingBottom: Espacamento.extraGrande,
-    backgroundColor: Cores.branco,
+    backgroundColor: Cores.fundo,
   },
   // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
   titulo: {
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.preto,
+    color: Cores.texto,
     marginTop: Espacamento.padrao,
-    ...Sombras.duraTitulo,
   },
   subtitulo: {
     fontSize: TamanhoFonte.sm,
-    color: Cores.cinzaMedio,
+    color: Cores.texto2,
     marginTop: Espacamento.pequeno,
     marginBottom: Espacamento.grande + Espacamento.minimo,
   },
@@ -106,6 +105,6 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   linhaTextos: { flex: 1 },
-  linhaTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.minimo },
-  linhaDescricao: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, lineHeight: 20 },
+  linhaTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.minimo },
+  linhaDescricao: { fontSize: TamanhoFonte.sm, color: Cores.texto2, lineHeight: 20 },
 });

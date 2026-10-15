@@ -88,37 +88,37 @@ export default function GaleriaScreen() {
       <Secao titulo="Ícones da tab bar — uma metáfora por aba">
         <View style={styles.linhaIcones}>
           <View style={styles.itemIcone}>
-            <IconeLuva tamanho={24} cor={Cores.preto} />
+            <IconeLuva tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Treinar</Text>
           </View>
           <View style={styles.itemIcone}>
-            <IconeFichaTecnica tamanho={24} cor={Cores.preto} />
+            <IconeFichaTecnica tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Agenda</Text>
           </View>
           <View style={styles.itemIcone}>
-            <IconeBandeira tamanho={24} cor={Cores.preto} />
+            <IconeBandeira tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Missões</Text>
           </View>
           <View style={styles.itemIcone}>
-            <IconeCartaoPontuacao tamanho={24} cor={Cores.preto} />
+            <IconeCartaoPontuacao tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Classificação</Text>
           </View>
           <View style={styles.itemIcone}>
-            <IconePerfil tamanho={24} cor={Cores.preto} />
+            <IconePerfil tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Perfil</Text>
           </View>
         </View>
         <View style={styles.linhaIcones}>
           <View style={styles.itemIcone}>
-            <IconeSino tamanho={24} cor={Cores.preto} />
+            <IconeSino tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Hoje</Text>
           </View>
           <View style={styles.itemIcone}>
-            <IconeTatame tamanho={24} cor={Cores.preto} />
+            <IconeTatame tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Turmas</Text>
           </View>
           <View style={styles.itemIcone}>
-            <IconeFaixa tamanho={24} cor={Cores.preto} />
+            <IconeFaixa tamanho={24} cor={Cores.texto} />
             <Text style={styles.rotuloIcone}>Alunos</Text>
           </View>
         </View>
@@ -166,7 +166,7 @@ export default function GaleriaScreen() {
           <Text style={styles.textoDemo}>Cartão com raio grande — tratamento distinto para outro tipo de conteúdo.</Text>
         </Cartao>
         <View style={styles.espaco} />
-        <Cartao corteDiagonal corFundo={Cores.cinzaFundo}>
+        <Cartao corteDiagonal corFundo={Cores.superficie1}>
           <Text style={styles.textoDemo}>corteDiagonal — script.md, item 1: "placa de ringue", não retângulo uniforme.</Text>
         </Cartao>
       </Secao>
@@ -353,36 +353,36 @@ export default function GaleriaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  tituloGaleria: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto, marginBottom: Espacamento.padrao },
+  tituloGaleria: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto, marginBottom: Espacamento.padrao },
 
   secao: { marginBottom: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.pequeno, fontWeight: '600' },
+  secaoTitulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.pequeno, fontWeight: '600' },
 
   linha: { flexDirection: 'row', gap: Espacamento.pequeno, marginBottom: Espacamento.pequeno, flexWrap: 'wrap' },
   espaco: { height: Espacamento.pequeno },
-  textoDemo: { fontSize: TamanhoFonte.sm, color: Cores.preto },
-  notaTecnica: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.pequeno },
+  textoDemo: { fontSize: TamanhoFonte.sm, color: Cores.texto },
+  notaTecnica: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.pequeno },
   linhaIcones: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.grande, marginBottom: Espacamento.pequeno },
   itemIcone: { alignItems: 'center', width: 72, gap: Espacamento.minimo },
-  rotuloIcone: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, textAlign: 'center' },
+  rotuloIcone: { fontSize: TamanhoFonte.xs, color: Cores.texto2, textAlign: 'center' },
 
-  tituloScreenHomebase: { fontFamily: FamiliaFonte.homebaseDisplay, fontSize: TamanhoFonte.xxl, color: Cores.preto },
+  tituloScreenHomebase: { fontFamily: FamiliaFonte.display, fontSize: TamanhoFonte.xxl, color: Cores.texto },
 
   amostraEscura: {
-    backgroundColor: Cores.preto,
-    borderRadius: Raios.medio,
+    backgroundColor: Cores.superficie2,
+    borderRadius: Raios.pequeno,
     padding: Espacamento.padrao,
     marginTop: Espacamento.pequeno,
     alignItems: 'flex-start',
   },
   amostraTextura: {
     position: 'relative',
-    backgroundColor: Cores.branco,
+    backgroundColor: Cores.fundo,
     borderWidth: 1,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Raios.medio,
+    borderColor: Cores.linha,
+    borderRadius: Raios.pequeno,
     padding: Espacamento.padrao,
     overflow: 'hidden',
   },

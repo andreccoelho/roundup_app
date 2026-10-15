@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { View } from 'react-native';
 import {
   Oswald_400Regular,
   Oswald_600SemiBold,
@@ -7,8 +8,10 @@ import {
 } from '@expo-google-fonts/oswald';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/AuthContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { Cores } from './src/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,7 +20,7 @@ export default function App() {
     Oswald_400Regular,
     Oswald_600SemiBold,
     Oswald_700Bold,
-    // Fonte da marca — só lettering "RNDP"/wordmark e título de tela, nunca placar nem corpo.
+    // Fonte da marca — títulos display e wordmark (docs/DESIGN.md).
     Homebase: require('./assets/fonts/homebase.ttf'),
   });
 
@@ -32,10 +35,14 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      {/* Padrão do app: fundo claro nas telas, ícones escuros. LoginScreen (banda preta) sobrescreve com style="light". */}
-      <StatusBar style="dark" />
-      <RootNavigator />
-    </AuthProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics} style={{ backgroundColor: Cores.fundo }}>
+      <View style={{ flex: 1, backgroundColor: Cores.fundo }}>
+        <AuthProvider>
+          {/* Tema só escuro: ícones claros na status bar em todas as telas. */}
+          <StatusBar style="light" />
+          <RootNavigator />
+        </AuthProvider>
+      </View>
+    </SafeAreaProvider>
   );
 }

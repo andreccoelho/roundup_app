@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   // Wrapper só do botão, não do texto acima: alignItems:'flex-start' no container inteiro
   // quebraria o wrap do parágrafo de descrição (Text sem stretch tenta caber numa linha só).
   botaoWrapper: { alignItems: 'flex-start' },
-  titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
-  descricao: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
+  descricao: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.minimo },
   espaco: { height: Espacamento.medio },
 });

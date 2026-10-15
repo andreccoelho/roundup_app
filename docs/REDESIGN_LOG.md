@@ -46,3 +46,23 @@ Executado em 8 fases, na ordem definida pelo próprio `script.md`, um commit por
 - Nenhuma mudança de API pública em componente já consumido em produção (`Cartao`, `BarraProgresso`, `Medalha`, `BotaoCheckIn`, `LinhaFina` continuam aceitando exatamente as mesmas props de antes).
 - `npx tsc --noEmit` limpo depois de cada fase.
 - Paleta monocromática (preto/branco/cinza + verde/vermelho funcionais) respeitada em 100% do trabalho — nenhuma cor decorativa nova, `Cores.impacto` é uma variante do verde funcional já existente, não uma cor nova.
+
+---
+
+# Redesign "Noite de luta" (docs/DESIGN.md)
+
+Rodada baseada em `RELATORIO_UI_UX.md`. Regra de origem: `docs/DESIGN.md` (substitui `DESIGN_BRIEF.md`, `script.md` e `docs/AUDITORIA_UI.md`). Screenshots por fase em `docs/redesign/fase-N/` (375×812, 768×1024, 1440×900; Firebase bloqueado no navegador). "Antes" em `docs/redesign/antes/`.
+
+Verificação por fase: `npx tsc --noEmit`. **Não há lint configurado no projeto** (sem ESLint, sem script `lint`); configurar exigiria dependências não aprovadas — ver `docs/DECISOES_PENDENTES.md`.
+
+## Fase 1 — Fundação
+
+- `src/theme/tokens.ts` reescrito com tokens semânticos: `fundo`, `superficie1/2`, `linha`, `linhaForte`, `texto/2/3`, `acento`, `sucesso`, `perigo`, `ouro`, `sobreCor`, `overlay`, `foco`; mais `CoresFaixa` (domínio, só SeloFaixa), `LarguraMaxima` (480/720), `Alturas`, `Raios` de canto vivo (`vivo` 2, `pequeno` 4, `pilula`), `Sombras.duraAcento`. Removidos: `placarLg`, `impacto`, `cinza*`, `checkinValidado`, `alerta`, `Sombras.duraTitulo`.
+- Camadas legadas `src/constants/colors.ts` (`Colors`) e `src/constants/typography.ts` (`FontSize`) removidas; imports migrados para `src/theme`. Migração mecânica dos nomes antigos para os semânticos em todas as telas (refinadas nas fases 2-4).
+- Ícones (`src/components/icones/index.tsx`) usam `Cores.texto` em vez de `'#0A0A0A'`.
+- Novo `src/components/ui/Texto.tsx`: variantes `display`, `titulo`, `secao`, `corpo`, `corpoForte`, `legenda`, `rotuloPlacar`, `placar`, `placarGrande`, `placarXL`, com lineHeight, `tabular-nums` no placar e `accessibilityRole="header"` automático nos títulos.
+- Novo `src/components/ui/Tela.tsx`: fundo do tema, safe area por borda (`topo`/`base`), coluna centralizada com `maxWidth` (480/720), ScrollView e KeyboardAvoidingView opcionais, `sobreposicao` fora da rolagem.
+- `App.tsx`: `SafeAreaProvider` (com `initialWindowMetrics`), raiz em `fundo`, `StatusBar` `light` global. Os 3 `StatusBar` por tela dos dashboards foram removidos.
+- Casca: `src/navigation/opcoesCasca.ts` → `.tsx` com `temaNavegacao` (DarkTheme com `background: fundo`, sem flash branco), header escuro, `useOpcoesTabBar()` (altura 56 + `insets.bottom`, rótulo Oswald) e `iconeAba()` (traço de 2px em acento na aba ativa).
+- Assets: `icon.png`, `android-icon-foreground/background/monochrome.png`, `splash-icon.png` e `favicon.png` gerados a partir de `assets/roundup_logo_invertida.png` sobre `#0B0B0C` (script temporário com Playwright + canvas, fora do repo, sem dependência nova). `app.json`: `userInterfaceStyle: "dark"`, `backgroundColor: "#0B0B0C"`, adaptive icon com fundo `#0B0B0C`, plugin `expo-splash-screen` configurado (`backgroundColor`, `image`, `imageWidth: 200`).
+- `docs/DESIGN.md` criado; nota de substituição no topo de `DESIGN_BRIEF.md`, `script.md` e `docs/AUDITORIA_UI.md`.

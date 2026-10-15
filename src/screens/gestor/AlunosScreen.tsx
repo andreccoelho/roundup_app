@@ -83,6 +83,6 @@ export default function AlunosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
 });

@@ -86,23 +86,22 @@ export default function RecuperarSenhaScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.branco },
+  flex: { flex: 1, backgroundColor: Cores.fundo },
   scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.grande },
   // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
   titulo: {
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.preto,
+    color: Cores.texto,
     marginTop: Espacamento.padrao,
-    ...Sombras.duraTitulo,
   },
   subtitulo: {
     fontSize: TamanhoFonte.sm,
-    color: Cores.cinzaMedio,
+    color: Cores.texto2,
     marginTop: Espacamento.pequeno,
     marginBottom: Espacamento.grande + Espacamento.minimo,
   },
-  confirmacao: { fontSize: TamanhoFonte.md, color: Cores.preto },
-  erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  confirmacao: { fontSize: TamanhoFonte.md, color: Cores.texto },
+  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
   espaco: { height: Espacamento.pequeno },
 });

@@ -99,15 +99,15 @@ export default function VisaoConsolidadaScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
   contadoresLinha: { flexDirection: 'row', gap: Espacamento.grande },
   contadorItem: { flex: 1 },
-  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
-  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
+  contadorValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
+  contadorRotulo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
   secao: { marginTop: Espacamento.grande },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, marginBottom: Espacamento.pequeno },
-  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
-  frequenciaValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
-  frequenciaDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: 2 },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.pequeno },
+  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
+  frequenciaValor: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
+  frequenciaDetalhe: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: 2 },
 });

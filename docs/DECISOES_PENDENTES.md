@@ -100,3 +100,13 @@ Não desbloqueei essa coleção nesta rodada — nenhum código lê ou escreve n
 ## 9. `Alunos` e `Visão consolidada` (RF24, RF27) seguem em `TelaEmBreve`
 
 Confirmado no plano anterior (`docs/PLANO_REGRAS_CICLO2_3.md`): essas duas não precisam de regra nova (dado já desbloqueado), só de função de serviço que componha e da tela — não fizeram parte deste pacote, que ficou restrito a RF16–RF21.
+
+---
+
+## Redesign "Noite de luta" — decisões tomadas pela opção conservadora
+
+### R-01 — Lint não existe no projeto
+O pedido de rodar "o lint" ao fim de cada fase não tem alvo: não há ESLint, config nem script `lint` no `package.json`. `npx expo lint` instalaria `eslint` e `eslint-config-expo` e criaria um arquivo de config — dependências fora da lista aprovada (só `expo-haptics`). **Decisão:** não configurar; a verificação por fase é `npx tsc --noEmit` (modo `strict`). **A validar:** aprovar `npx expo lint` numa rodada própria.
+
+### R-02 — `userInterfaceStyle: "dark"` e `backgroundColor` raiz exigem `expo-system-ui`
+Pela doc do SDK 57 (`config/app`), `userInterfaceStyle` no Android e o `backgroundColor` raiz no iOS só têm efeito com `expo-system-ui` instalado. Não está na lista aprovada. **Decisão:** configurar os dois campos no `app.json` mesmo assim (inofensivos sem o pacote) e garantir o fundo escuro pelo próprio app (`App.tsx` + tema do React Navigation). Sem o pacote, pode haver um frame da cor padrão do sistema atrás da raiz em transições nativas. **A validar:** aprovar `npx expo install expo-system-ui`.

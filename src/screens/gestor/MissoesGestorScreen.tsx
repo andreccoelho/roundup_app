@@ -189,19 +189,19 @@ export default function MissoesGestorScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   cabecalho: { padding: Espacamento.padrao, paddingBottom: 0 },
   conteudo: { padding: Espacamento.padrao },
 
   linhaMissao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: Espacamento.medio, gap: Espacamento.medio },
   linhaMissaoTextos: { flex: 1 },
-  tituloMissao: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
-  detalheMissao: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
+  tituloMissao: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
+  detalheMissao: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
 
-  tituloFolha: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.preto, marginBottom: Espacamento.medio },
-  erroForm: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
-  input: { borderBottomWidth: 1, borderBottomColor: Cores.cinzaBorda, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.preto },
+  tituloFolha: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginBottom: Espacamento.medio },
+  erroForm: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
+  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
+  input: { borderBottomWidth: 1, borderBottomColor: Cores.linha, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.texto },
   linhaTipos: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
   espaco: { height: Espacamento.padrao },
 });
