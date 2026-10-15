@@ -1,4 +1,5 @@
 import { NavigationContainer } from '@react-navigation/native';
+import { temaNavegacao } from './opcoesCasca';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthStack } from './AuthStack';
 import { AlunoRaiz } from './AlunoRaiz';
@@ -27,5 +28,5 @@ export function RootNavigator() {
     }
   }
 
-  return <NavigationContainer>{renderRaiz()}</NavigationContainer>;
+  return <NavigationContainer theme={temaNavegacao}>{renderRaiz()}</NavigationContainer>;
 }

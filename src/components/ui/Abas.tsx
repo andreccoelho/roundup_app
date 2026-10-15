@@ -37,9 +37,9 @@ export default function Abas<T extends string>({ opcoes, selecionada, onSelecion
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', borderWidth: 1, borderColor: Cores.cinzaEscuro, borderRadius: Raios.pilula, overflow: 'hidden' },
+  container: { flexDirection: 'row', borderWidth: 1, borderColor: Cores.linhaForte, borderRadius: Raios.pilula, overflow: 'hidden' },
   aba: { flex: 1, paddingVertical: Espacamento.pequeno, alignItems: 'center', justifyContent: 'center', minHeight: 44 },
-  abaAtiva: { backgroundColor: Cores.preto },
-  texto: { fontSize: TamanhoFonte.sm, color: Cores.cinzaEscuro },
-  textoAtivo: { color: Cores.branco, fontWeight: '600' },
+  abaAtiva: { backgroundColor: Cores.superficie2 },
+  texto: { fontSize: TamanhoFonte.sm, color: Cores.linhaForte },
+  textoAtivo: { color: Cores.texto, fontWeight: '600' },
 });

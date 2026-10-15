@@ -18,6 +18,6 @@ export default function IndicadorSequencia({ dias }: IndicadorSequenciaProps) {
 
 const styles = StyleSheet.create({
   container: { flexDirection: 'row', alignItems: 'baseline', gap: Espacamento.minimo },
-  numero: { fontFamily: FamiliaFonte.placarBold, fontSize: TamanhoFonte.placar, color: Cores.preto },
-  rotulo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },
+  numero: { fontFamily: FamiliaFonte.placarBold, fontSize: TamanhoFonte.placar, color: Cores.texto },
+  rotulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2 },
 });

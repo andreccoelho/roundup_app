@@ -1,1 +1,14 @@
-export { Cores, FamiliaFonte, TamanhoFonte, Espacamento, Raios, DuracaoAnimacao, Sombras, Geometria } from './tokens';
+export {
+  Cores,
+  CoresFaixa,
+  FamiliaFonte,
+  TamanhoFonte,
+  Espacamento,
+  Raios,
+  LarguraMaxima,
+  Alturas,
+  DuracaoAnimacao,
+  Sombras,
+  Geometria,
+} from './tokens';
+export type { NomeCor } from './tokens';

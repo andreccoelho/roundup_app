@@ -25,8 +25,8 @@ export default function LinhaClassificacao({ posicao, nome, pontos, fotoUrl, des
 
 const styles = StyleSheet.create({
   linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, paddingVertical: Espacamento.pequeno },
-  linhaDestaque: { backgroundColor: Cores.cinzaFundo },
-  posicao: { width: 24, fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.cinzaMedio, textAlign: 'center' },
-  nome: { flex: 1, fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600' },
-  pontos: { fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.preto },
+  linhaDestaque: { backgroundColor: Cores.superficie1 },
+  posicao: { width: 24, fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.texto2, textAlign: 'center' },
+  nome: { flex: 1, fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
+  pontos: { fontFamily: FamiliaFonte.placarSemiBold, fontSize: TamanhoFonte.md, color: Cores.texto },
 });

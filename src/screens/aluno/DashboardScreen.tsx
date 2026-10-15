@@ -6,7 +6,6 @@
 // docs/DECISOES_PENDENTES.md. Missões e ranking têm telas próprias (abas Missões/Classificação).
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -114,12 +113,11 @@ export default function DashboardScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
       {/* Banda full-bleed encosta no topo, igual à do LoginScreen — ícones da status bar claros. */}
-      <StatusBar style="light" />
       {/* Banda full-bleed, não card — ficha de pesagem, não dashboard de SaaS (DESIGN_BRIEF.md). */}
       <View style={styles.cabecalho}>
         {/* script.md, item 1: textura de lona sutil na tela-chave (Home) — bem apagada, só dá
             corpo ao preto, não compete com a marca-d'água abaixo. */}
-        <TexturaLona opacidade={0.08} cor={Cores.branco} />
+        <TexturaLona opacidade={0.08} cor={Cores.texto} />
         {/* Marca invertida como textura de fundo, deslocada para o canto — detalhe único desta
             tela, não repetição decorativa (DESIGN_BRIEF.md, motivo assinatura). */}
         <Image
@@ -168,7 +166,7 @@ export default function DashboardScreen() {
         {erro ? <Text style={styles.erro}>{erro}</Text> : null}
 
         {carregando ? (
-          <ActivityIndicator color={Cores.preto} style={styles.carregandoLista} />
+          <ActivityIndicator color={Cores.texto} style={styles.carregandoLista} />
         ) : itens.length === 0 ? (
           <Text style={styles.vazio}>Nenhuma sessão agendada nas suas turmas.</Text>
         ) : (
@@ -201,14 +199,14 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco },
+  container: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { paddingBottom: Espacamento.extraGrande, flexGrow: 1 },
 
   // Banda full-bleed preta — hero de identidade do aluno, não um card branco a mais (anti-padrão
   // "kit de card de SaaS" do DESIGN_BRIEF.md). overflow hidden para a marca de fundo não vazar
   // do recorte.
   cabecalho: {
-    backgroundColor: Cores.preto,
+    backgroundColor: Cores.superficie2,
     paddingHorizontal: Espacamento.grande,
     paddingTop: Espacamento.extraGrande,
     paddingBottom: Espacamento.grande,
@@ -232,12 +230,11 @@ const styles = StyleSheet.create({
   // pra ficar visível sem sair da paleta.
   saudacaoNome: {
     flex: 1,
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.branco,
+    color: Cores.texto,
     letterSpacing: 1,
-    ...Sombras.duraTitulo,
-    textShadowColor: Cores.cinzaClaro,
+    textShadowColor: Cores.texto3,
   },
   seloLinha: { marginTop: Espacamento.padrao },
 
@@ -254,11 +251,11 @@ const styles = StyleSheet.create({
 
   secao: { paddingHorizontal: Espacamento.grande, marginTop: Espacamento.grande },
   secaoCabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
-  linkVerMais: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio },
+  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
+  linkVerMais: { fontSize: TamanhoFonte.sm, color: Cores.texto2 },
   carregandoLista: { marginTop: Espacamento.medio },
-  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
-  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.pequeno },
+  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
+  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginTop: Espacamento.pequeno },
 
   rodape: {
     paddingHorizontal: Espacamento.grande,
@@ -266,5 +263,5 @@ const styles = StyleSheet.create({
     marginTop: Espacamento.grande + Espacamento.minimo,
     paddingTop: Espacamento.padrao,
   },
-  linkRodape: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  linkRodape: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
 });

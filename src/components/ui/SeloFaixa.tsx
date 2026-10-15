@@ -25,7 +25,7 @@ export default function SeloFaixa({ faixaOuGrau, sobreEscuro }: SeloFaixaProps) 
 const styles = StyleSheet.create({
   selo: {
     alignSelf: 'flex-start',
-    backgroundColor: Cores.preto,
+    backgroundColor: Cores.superficie2,
     borderRadius: Raios.pilula,
     paddingVertical: Espacamento.minimo,
     paddingHorizontal: Espacamento.medio,
@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
   seloSobreEscuro: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: Cores.branco,
+    borderColor: Cores.texto,
   },
-  texto: { color: Cores.branco, fontSize: TamanhoFonte.sm, fontWeight: '600' },
+  texto: { color: Cores.texto, fontSize: TamanhoFonte.sm, fontWeight: '600' },
 });

@@ -1,5 +1,5 @@
 import { View, StyleSheet } from 'react-native';
-import { Colors } from '../constants/colors';
+import { Cores } from '../theme';
 
 // Separador de lista, no lugar do "card branco com borda" repetido em toda a tela.
 // script.md, item 1: "divisores de seção podem imitar corda de ringue (linha dupla) em vez de
@@ -15,5 +15,5 @@ export default function LinhaFina() {
 
 const styles = StyleSheet.create({
   container: { gap: 2 },
-  linha: { height: 1, backgroundColor: Colors.cinzaBorda },
+  linha: { height: 1, backgroundColor: Cores.linha },
 });

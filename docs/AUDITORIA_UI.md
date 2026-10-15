@@ -1,3 +1,5 @@
+> **SUBSTITUÍDO.** Esta auditoria descreve um estado anterior e não vale mais como regra. A referência de design atual é [`docs/DESIGN.md`](DESIGN.md).
+
 # Auditoria de UI — RoundUp
 
 Passo 0 do `SCRIPT.md`. Leitura completa do repositório em `dev`, antes de qualquer código de interface. Não há `app/` (Expo Router) neste projeto — toda a navegação é React Navigation, em `src/navigation/`.

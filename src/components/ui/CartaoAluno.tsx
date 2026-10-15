@@ -1,5 +1,5 @@
 // CartaoAluno — nome, faixa, frequência recente (RF24). `alerta` (RF32, opcional) sinaliza
-// queda de frequência — só um rótulo curto em Cores.alerta, sem nova variante visual.
+// queda de frequência — só um rótulo curto em Cores.perigo, sem nova variante visual.
 import { StyleSheet, Text, View } from 'react-native';
 import { Cores, Espacamento, TamanhoFonte } from '../../theme';
 import Avatar from './Avatar';
@@ -35,6 +35,6 @@ export default function CartaoAluno({ nome, faixaOuGrau, fotoUrl, frequenciaRece
 const styles = StyleSheet.create({
   linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, paddingVertical: Espacamento.pequeno },
   textos: { flex: 1, gap: Espacamento.minimo },
-  nome: { fontSize: TamanhoFonte.md, color: Cores.preto, fontWeight: '600' },
-  alerta: { fontSize: TamanhoFonte.xs, color: Cores.alerta, fontWeight: '600' },
+  nome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600' },
+  alerta: { fontSize: TamanhoFonte.xs, color: Cores.perigo, fontWeight: '600' },
 });

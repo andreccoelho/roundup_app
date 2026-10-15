@@ -49,7 +49,7 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
         accessibilityLabel="Check-in feito"
       >
         <Animated.View style={[styles.flash, { opacity: flash }]} />
-        <IconeCheck cor={Cores.checkinValidado} tamanho={18} />
+        <IconeCheck cor={Cores.sucesso} tamanho={18} />
         <Text style={styles.seloTexto}>Feito</Text>
       </Animated.View>
     );
@@ -58,7 +58,7 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
   if (estado === 'foraDaJanela') {
     return (
       <View style={styles.selo} accessibilityRole="text" accessibilityLabel={motivo ?? 'Check-in indisponível'}>
-        <IconeCadeado cor={Cores.alerta} tamanho={16} />
+        <IconeCadeado cor={Cores.perigo} tamanho={16} />
         <Text style={styles.seloTextoFechado}>{motivo}</Text>
       </View>
     );
@@ -74,10 +74,10 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
       accessibilityState={{ disabled: Boolean(carregando), busy: Boolean(carregando) }}
     >
       {carregando ? (
-        <ActivityIndicator color={Cores.branco} size="small" />
+        <ActivityIndicator color={Cores.texto} size="small" />
       ) : (
         <>
-          <IconeLuva cor={Cores.branco} tamanho={16} />
+          <IconeLuva cor={Cores.texto} tamanho={16} />
           <Text style={styles.textoBotao}>Fazer check-in</Text>
         </>
       )}
@@ -91,15 +91,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: Espacamento.minimo,
-    backgroundColor: Cores.preto,
-    borderRadius: Raios.medio,
+    backgroundColor: Cores.superficie2,
+    borderRadius: Raios.pequeno,
     paddingVertical: Espacamento.pequeno,
     paddingHorizontal: Espacamento.medio,
     minHeight: 44,
     minWidth: 44,
   },
   botaoCarregando: { opacity: 0.7 },
-  textoBotao: { color: Cores.branco, fontWeight: '600', fontSize: TamanhoFonte.xs },
+  textoBotao: { color: Cores.texto, fontWeight: '600', fontSize: TamanhoFonte.xs },
 
   selo: {
     flexDirection: 'row',
@@ -107,13 +107,13 @@ const styles = StyleSheet.create({
     gap: Espacamento.minimo,
     minHeight: 44,
     paddingHorizontal: Espacamento.pequeno,
-    borderRadius: Raios.medio,
+    borderRadius: Raios.pequeno,
     position: 'relative',
     overflow: 'hidden',
   },
-  // Flash de "impacto" (script.md, item 3) — Cores.impacto, não checkinValidado: é o mesmo verde
+  // Flash de "impacto" (script.md, item 3) — Cores.sucesso, não checkinValidado: é o mesmo verde
   // só que mais saturado, reservado pra esse instante de meio segundo, nunca pro selo em repouso.
-  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Cores.impacto },
-  seloTexto: { color: Cores.checkinValidado, fontSize: TamanhoFonte.xs, fontWeight: '600' },
-  seloTextoFechado: { color: Cores.alerta, fontSize: TamanhoFonte.xs, maxWidth: 120, textAlign: 'right' },
+  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Cores.sucesso },
+  seloTexto: { color: Cores.sucesso, fontSize: TamanhoFonte.xs, fontWeight: '600' },
+  seloTextoFechado: { color: Cores.perigo, fontSize: TamanhoFonte.xs, maxWidth: 120, textAlign: 'right' },
 });

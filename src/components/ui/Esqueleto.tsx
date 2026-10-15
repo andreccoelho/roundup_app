@@ -51,6 +51,6 @@ export default function Esqueleto({ altura = 16, largura = '100%', raio = Raios.
 }
 
 const styles = StyleSheet.create({
-  bloco: { backgroundColor: Cores.cinzaBorda },
+  bloco: { backgroundColor: Cores.linha },
   espacoEntreBlocos: { marginTop: Espacamento.pequeno },
 });

@@ -147,15 +147,15 @@ export default function SessaoDetalheScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
-  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.preto },
-  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
-  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.grande, marginBottom: Espacamento.pequeno },
+  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
+  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.minimo },
+  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginTop: Espacamento.grande, marginBottom: Espacamento.pequeno },
   linhaBotoes: { flexDirection: 'row', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  erroAcao: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
-  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  erroAcao: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
+  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
   item: { marginBottom: Espacamento.pequeno },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
+  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
 });

@@ -225,27 +225,26 @@ export default function CadastroAlunoScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.branco },
+  flex: { flex: 1, backgroundColor: Cores.fundo },
   scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
   // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
   titulo: {
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.preto,
+    color: Cores.texto,
     marginTop: Espacamento.padrao,
-    ...Sombras.duraTitulo,
   },
   subtitulo: {
     fontSize: TamanhoFonte.md,
-    color: Cores.cinzaMedio,
+    color: Cores.texto2,
     marginTop: Espacamento.minimo / 2,
     marginBottom: Espacamento.grande + Espacamento.minimo,
   },
-  erroConta: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
   blocoResponsavel: { marginTop: Espacamento.minimo, marginBottom: Espacamento.padrao },
-  rotuloBloco: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
-  ajudaBloco: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo, marginBottom: Espacamento.medio },
+  rotuloBloco: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
+  ajudaBloco: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo, marginBottom: Espacamento.medio },
   espaco: { height: Espacamento.pequeno },
   rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  rodapeTexto: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm },
+  rodapeTexto: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
 });

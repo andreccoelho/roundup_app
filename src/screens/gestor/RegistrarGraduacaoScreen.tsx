@@ -112,12 +112,12 @@ export default function RegistrarGraduacaoScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.branco },
+  flex: { flex: 1, backgroundColor: Cores.fundo },
   conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  titulo: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.preto },
-  subtitulo: { fontSize: TamanhoFonte.md, color: Cores.cinzaMedio, marginTop: Espacamento.minimo, marginBottom: Espacamento.grande },
-  erro: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
-  input: { borderBottomWidth: 1, borderBottomColor: Cores.cinzaBorda, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.preto },
+  titulo: { fontSize: TamanhoFonte.xl, fontWeight: '700', color: Cores.texto },
+  subtitulo: { fontSize: TamanhoFonte.md, color: Cores.texto2, marginTop: Espacamento.minimo, marginBottom: Espacamento.grande },
+  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
+  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.minimo, marginTop: Espacamento.medio },
+  input: { borderBottomWidth: 1, borderBottomColor: Cores.linha, paddingVertical: Espacamento.pequeno, fontSize: TamanhoFonte.md, color: Cores.texto },
   espaco: { height: Espacamento.padrao },
 });

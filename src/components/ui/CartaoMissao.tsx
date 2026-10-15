@@ -37,10 +37,10 @@ export default function CartaoMissao({ titulo, descricao, progressoAtual, meta, 
 
 const styles = StyleSheet.create({
   cabecalho: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto, flexShrink: 1 },
-  selo: { fontSize: TamanhoFonte.xs, color: Cores.checkinValidado, fontWeight: '600' },
-  descricao: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
-  trilha: { height: 6, borderRadius: Raios.pequeno, backgroundColor: Cores.cinzaFundo, overflow: 'hidden', marginTop: Espacamento.pequeno },
-  preenchimento: { height: '100%', backgroundColor: Cores.preto, borderRadius: Raios.pequeno },
-  progressoTexto: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, flexShrink: 1 },
+  selo: { fontSize: TamanhoFonte.xs, color: Cores.sucesso, fontWeight: '600' },
+  descricao: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.minimo },
+  trilha: { height: 6, borderRadius: Raios.pequeno, backgroundColor: Cores.superficie1, overflow: 'hidden', marginTop: Espacamento.pequeno },
+  preenchimento: { height: '100%', backgroundColor: Cores.superficie2, borderRadius: Raios.pequeno },
+  progressoTexto: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
 });

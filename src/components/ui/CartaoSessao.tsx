@@ -29,9 +29,9 @@ const ICONE_POR_ESTADO: Record<EstadoCheckIn, ComponentType<IconeEstadoProps>> =
 };
 
 const COR_ICONE_POR_ESTADO: Record<EstadoCheckIn, string> = {
-  disponivel: Cores.preto,
-  foraDaJanela: Cores.alerta,
-  realizado: Cores.checkinValidado,
+  disponivel: Cores.texto,
+  foraDaJanela: Cores.perigo,
+  realizado: Cores.sucesso,
 };
 
 export default function CartaoSessao({ nomeTurma, detalhe, estado, motivo, carregando, onCheckIn }: CartaoSessaoProps) {
@@ -51,6 +51,6 @@ export default function CartaoSessao({ nomeTurma, detalhe, estado, motivo, carre
 const styles = StyleSheet.create({
   linha: { flexDirection: 'row', alignItems: 'center', paddingVertical: Espacamento.medio, gap: Espacamento.medio },
   textos: { flex: 1 },
-  titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.preto },
-  detalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: 2 },
+  titulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
+  detalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
 });

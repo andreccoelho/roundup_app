@@ -31,6 +31,6 @@ export default function BloqueioVinculoScreen({ onVincular, onAtualizar }: Bloqu
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: Cores.fundo, justifyContent: 'center' },
   rodape: { alignItems: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.grande },
 });

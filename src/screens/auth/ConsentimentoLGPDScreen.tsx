@@ -71,28 +71,27 @@ export default function ConsentimentoLGPDScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.branco },
+  flex: { flex: 1, backgroundColor: Cores.fundo },
   scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
   // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
   titulo: {
-    fontFamily: FamiliaFonte.homebaseDisplay,
+    fontFamily: FamiliaFonte.display,
     fontSize: TamanhoFonte.xxl,
-    color: Cores.preto,
+    color: Cores.texto,
     marginTop: Espacamento.padrao,
-    ...Sombras.duraTitulo,
   },
-  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
+  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
   politica: {
     borderWidth: 1,
-    borderColor: Cores.cinzaBorda,
-    borderRadius: Raios.medio,
+    borderColor: Cores.linha,
+    borderRadius: Raios.pequeno,
     padding: Espacamento.padrao,
     maxHeight: 260,
   },
-  politicaTexto: { fontSize: TamanhoFonte.sm, color: Cores.cinzaMedio, lineHeight: 20 },
+  politicaTexto: { fontSize: TamanhoFonte.sm, color: Cores.texto2, lineHeight: 20 },
   linhaAceite: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, marginTop: Espacamento.grande, minHeight: 44 },
-  caixa: { width: 22, height: 22, borderRadius: Raios.pequeno, borderWidth: 1, borderColor: Cores.cinzaEscuro },
-  caixaMarcada: { backgroundColor: Cores.preto, borderColor: Cores.preto },
-  textoAceite: { flex: 1, fontSize: TamanhoFonte.sm, color: Cores.preto },
+  caixa: { width: 22, height: 22, borderRadius: Raios.pequeno, borderWidth: 1, borderColor: Cores.linhaForte },
+  caixaMarcada: { backgroundColor: Cores.superficie2, borderColor: Cores.texto },
+  textoAceite: { flex: 1, fontSize: TamanhoFonte.sm, color: Cores.texto },
   espaco: { height: Espacamento.padrao },
 });

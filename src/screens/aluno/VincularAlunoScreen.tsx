@@ -123,14 +123,14 @@ export default function VincularAlunoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
-  erroInline: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.preto, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
-  vazio: { color: Cores.cinzaMedio, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.pequeno },
+  erroInline: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
+  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.pequeno },
   item: { marginBottom: Espacamento.pequeno },
   itemLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Espacamento.medio },
   itemInfo: { flex: 1 },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
-  itemTipo: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
+  itemTipo: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
 });

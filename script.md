@@ -1,3 +1,5 @@
+> **SUBSTITUÍDO.** Este documento não vale mais como regra. A referência de design atual é [`docs/DESIGN.md`](docs/DESIGN.md) (direção "Noite de luta"). Mantido só como histórico.
+
 # Prompt para Claude Code — Redesign de UI do RoundUp (identidade "cara de luta")
 
 Cole este prompt inteiro no Claude Code, rodando dentro do repositório `roundup_app`, branch `dev`.

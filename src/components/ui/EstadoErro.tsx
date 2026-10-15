@@ -21,6 +21,6 @@ export default function EstadoErro({ mensagem, onTentarNovamente }: EstadoErroPr
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
-  mensagem: { color: Cores.alerta, fontSize: TamanhoFonte.md, textAlign: 'center' },
+  mensagem: { color: Cores.perigo, fontSize: TamanhoFonte.md, textAlign: 'center' },
   espaco: { height: Espacamento.padrao },
 });

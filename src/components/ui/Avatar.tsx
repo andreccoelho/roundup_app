@@ -38,7 +38,7 @@ export default function Avatar({ nome, fotoUrl, tamanho = 40 }: AvatarProps) {
 }
 
 const styles = StyleSheet.create({
-  imagem: { backgroundColor: Cores.cinzaFundo },
-  iniciais: { backgroundColor: Cores.cinzaEscuro, alignItems: 'center', justifyContent: 'center' },
-  textoIniciais: { color: Cores.branco, fontWeight: '600' },
+  imagem: { backgroundColor: Cores.superficie1 },
+  iniciais: { backgroundColor: Cores.linhaForte, alignItems: 'center', justifyContent: 'center' },
+  textoIniciais: { color: Cores.texto, fontWeight: '600' },
 });

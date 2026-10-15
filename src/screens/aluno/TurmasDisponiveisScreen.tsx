@@ -116,12 +116,12 @@ export default function TurmasDisponiveisScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
-  erroInline: { color: Cores.alerta, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  erroInline: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
   item: { marginBottom: Espacamento.pequeno },
   itemLinha: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Espacamento.medio },
   itemInfo: { flex: 1 },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio, marginTop: Espacamento.minimo },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
+  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
 });

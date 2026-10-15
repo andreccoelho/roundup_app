@@ -28,9 +28,9 @@ const ROTULO_STATUS: Record<StatusCheckIn, string> = {
 };
 
 const COR_STATUS: Record<StatusCheckIn, string> = {
-  pendente: Cores.cinzaMedio,
-  validado: Cores.checkinValidado,
-  rejeitado: Cores.alerta,
+  pendente: Cores.texto2,
+  validado: Cores.sucesso,
+  rejeitado: Cores.perigo,
 };
 
 export default function HistoricoScreen() {
@@ -100,11 +100,11 @@ export default function HistoricoScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.branco, padding: Espacamento.padrao },
+  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
   conteudo: { paddingBottom: Espacamento.enorme },
   item: { marginBottom: Espacamento.pequeno },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.preto },
+  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
   itemLinha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Espacamento.minimo },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.cinzaMedio },
+  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2 },
   itemStatus: { fontSize: TamanhoFonte.xs, fontWeight: '600' },
 });
