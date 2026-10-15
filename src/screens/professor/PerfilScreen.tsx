@@ -36,7 +36,7 @@ export default function PerfilScreen() {
         </Text>
         {usuario?.graduacao ? (
           <View style={styles.seloLinha}>
-            <SeloFaixa faixaOuGrau={usuario.graduacao} sobreEscuro />
+            <SeloFaixa faixaOuGrau={usuario.graduacao} />
           </View>
         ) : (
           <Text style={styles.detalheEscuro}>Graduação não informada</Text>

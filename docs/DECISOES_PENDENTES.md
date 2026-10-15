@@ -110,3 +110,12 @@ O pedido de rodar "o lint" ao fim de cada fase não tem alvo: não há ESLint, c
 
 ### R-02 — `userInterfaceStyle: "dark"` e `backgroundColor` raiz exigem `expo-system-ui`
 Pela doc do SDK 57 (`config/app`), `userInterfaceStyle` no Android e o `backgroundColor` raiz no iOS só têm efeito com `expo-system-ui` instalado. Não está na lista aprovada. **Decisão:** configurar os dois campos no `app.json` mesmo assim (inofensivos sem o pacote) e garantir o fundo escuro pelo próprio app (`App.tsx` + tema do React Navigation). Sem o pacote, pode haver um frame da cor padrão do sistema atrás da raiz em transições nativas. **A validar:** aprovar `npx expo install expo-system-ui`.
+
+### R-03 — Qual é a "medalha de nível máximo" (única em ouro)
+`docs/DESIGN.md` reserva o ouro para o 1º do ranking e a "medalha de nível máximo", mas os marcos de `src/config/gamificacao.ts` não têm uma medalha de nível. **Decisão:** a medalha mais alta da progressão principal (`treinos-100`, "100 treinos") é a única marcada como `maxima`. **A validar:** se deve ser outra (ex.: uma medalha nova de "nível 11"), o que exigiria mudar a config de marcos.
+
+### R-04 — Texto da Classificação deixa de dizer "Ranking mensal"
+RN04 (janela de tempo com reset) não está implementada e a pontuação é cumulativa (item 1 acima). Exibir "Ranking mensal" prometia algo que o app não faz (RELATORIO_UI_UX.md, UX-07). **Decisão:** a tela mostra "Pontos acumulados nos treinos validados da sua academia ou professor". `JANELA_RANKING` continua em `src/config/gamificacao.ts`, sem uso na UI. **A validar:** voltar ao rótulo mensal quando RN04 for implementada.
+
+### R-05 — Faixa interpretada a partir do texto livre
+O `SeloFaixa` deduz cor e graus de `faixaOuGrau`/`graduacao` (texto livre) sem mudar o modelo. Termos fora da lista (ex.: "Kruang 5", "prajied rosa") caem no visual neutro com o texto original. **A validar:** se o produto quer um campo estruturado de faixa no futuro (mudança de modelo e de Firestore, fora deste redesign).

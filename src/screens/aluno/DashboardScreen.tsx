@@ -132,7 +132,7 @@ export default function DashboardScreen() {
           </Text>
         </View>
         <View style={styles.seloLinha}>
-          <SeloFaixa faixaOuGrau={usuario?.faixaOuGrau ?? 'Faixa não informada'} sobreEscuro />
+          <SeloFaixa faixaOuGrau={usuario?.faixaOuGrau ?? 'Faixa não informada'} />
         </View>
       </View>
 
