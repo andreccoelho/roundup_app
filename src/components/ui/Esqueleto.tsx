@@ -4,6 +4,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { Cores, Espacamento, Raios } from '../../theme';
+import { DRIVER_NATIVO } from '../../utils/animacao';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 
 interface EsqueletoProps {
@@ -22,8 +23,8 @@ export default function Esqueleto({ altura = 16, largura = '100%', raio = Raios.
     if (reduzido) return;
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacidade, { toValue: 1, duration: 650, useNativeDriver: true }),
-        Animated.timing(opacidade, { toValue: 0.5, duration: 650, useNativeDriver: true }),
+        Animated.timing(opacidade, { toValue: 1, duration: 650, useNativeDriver: DRIVER_NATIVO }),
+        Animated.timing(opacidade, { toValue: 0.5, duration: 650, useNativeDriver: DRIVER_NATIVO }),
       ]),
     );
     loop.start();

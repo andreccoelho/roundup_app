@@ -19,6 +19,7 @@ import Texto from '../../components/ui/Texto';
 import Toggle from '../../components/ui/Toggle';
 import CampoTexto from '../../components/ui/CampoTexto';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import MensagemErro from '../../components/ui/MensagemErro';
 import { IconeBandeira, IconeMais } from '../../components/icones';
 import { mensagemErro } from '../../utils/mensagensErro';
 
@@ -160,11 +161,7 @@ export default function MissoesGestorScreen() {
       )}
 
       <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova missão">
-        {erroForm ? (
-          <Texto variante="legenda" cor="perigo" style={styles.erroForm} accessibilityRole="alert" accessibilityLiveRegion="polite">
-            {erroForm}
-          </Texto>
-        ) : null}
+        <MensagemErro mensagem={erroForm} />
 
         <CampoTexto rotulo="Título" valor={titulo} onAlterar={setTitulo} placeholder="Ex.: Treinar 3x na semana" />
         <CampoTexto rotulo="Descrição" valor={descricao} onAlterar={setDescricao} placeholder="Critério de conclusão" />
@@ -195,7 +192,6 @@ export default function MissoesGestorScreen() {
 
 const styles = StyleSheet.create({
   espacoTopo: { marginTop: Espacamento.grande },
-  erroForm: { marginBottom: Espacamento.medio },
   rotuloCampo: { marginBottom: Espacamento.pequeno },
   linhaTipos: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   linhaNumeros: { flexDirection: 'row', gap: Espacamento.padrao },

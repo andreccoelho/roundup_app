@@ -20,6 +20,8 @@ export default function Checkbox({ rotulo, marcado, onAlterar, erro }: CheckboxP
       onPress={() => onAlterar(!marcado)}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: marcado }}
+      // react-native-web não emite aria-checked="false" a partir do accessibilityState.
+      aria-checked={marcado}
       accessibilityLabel={rotulo}
       {...propsFoco}
     >

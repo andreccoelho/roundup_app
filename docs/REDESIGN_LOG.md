@@ -139,3 +139,19 @@ Screenshots em `docs/redesign/fase-4/` (auth em 3 viewports + Galeria + composi�
 **Professor/Academia**: Hoje do professor → `HojeProfessorVisao`; Hoje da academia com banda de gestor, contadores em Oswald (Estatistica) e lista de professores; Perfis com card de faixa (professor), ItemMenu de Gestão e Conta; Visão consolidada com Estatistica e barra de frequência; Turmas com **lista primeiro e "+ Nova turma" em Folha**; Turma (detalhe) com "+ Nova sessão" em Folha (campo "Semana de referência" explicado), sessões com horário em placar e status humanizado; Sessão com a **ação principal em botão primário** ("Abrir check-in"/"Encerrar sessão"); Alunos; Solicitações (Recusar/Aceitar abaixo do nome, "Encerrar" vínculo com diálogo).
 
 **Compartilhado**: nova `ContaPrivacidadeScreen` ("Conta e privacidade": e-mail, privacidade, zona de risco com "Excluir minha conta") registrada nos 3 stacks de Perfil; `ExcluirContaSecao` removida. `EditarPerfil` com prévia da faixa e erros traduzidos. `TelaEmBreve` e `LoadingScreen` no tema.
+
+## Fase 5 — Polimento
+
+Screenshots em `docs/redesign/fase-5/` (padrão, composições, `*-modal-conquista-nivel|faixa|medalha.png`, `*-modal-folha.png`, `mobile-foco-01..05-*.png`), relatório do axe em `docs/redesign/fase-5/axe.json` e tabela de contraste em `docs/redesign/fase-5/contraste.md`.
+
+- **`MomentoConquista`** (novo): tela cheia sobre o fundo, lona, flash de acento, título display com sombra dura em acento, número em `placarXL` (nível/medalha) ou faixa grande (faixa), haptic (impacto + sucesso), "Continuar". Reduce motion: sem flash e sem entrada animada (haptic mantido). Demos na Galeria.
+- **`useConquistas`** (novo hook): na Home do Aluno, compara nível, faixa e medalhas (treinos e sequência) com o último estado salvo **localmente** (AsyncStorage, chave por usuário) e mostra a fila de conquistas novas ("Mais N a seguir"). Primeira abertura no aparelho só grava, não celebra. Nada vai para o Firebase.
+- **Motion**: contador de XP e preenchimento da barra (fase 3), troca de abas em fade, modais (`Dialogo`, `Folha`, `CelebracaoGraduacao`, `MomentoConquista`) sem animação com reduce motion; punch do check-in, escala do botão, shimmer e Aviso também respeitam. `utils/animacao.ts` (`DRIVER_NATIVO`): driver nativo só fora do web, o que eliminou o warning "useNativeDriver is not supported".
+- **Acessibilidade**:
+  - axe-core (WCAG 2.1 A/AA) em Login, Seleção de perfil, LGPD, Cadastro, Recuperar senha e nas 4 composições: **0 violações** após corrigir `autoComplete="current-password"`, `aria-checked` explícito (o react-native-web não emite `aria-checked="false"` a partir do `accessibilityState`) em Checkbox/Etiqueta/Toggle/presença, `aria-selected` nas Abas e `role="group"` no ModalitySelector.
+  - Contraste: todos os pares usados passam (tabela em `fase-5/contraste.md`). Corrigidos nesta fase: trilha do Toggle desligado (`superficie2` 1,24:1 → `linhaForte` 3,88:1) e fundo da Folha (`superficie1` → `fundo`, para o texto de erro em `perigo` manter 4,5:1 dentro dela).
+  - Foco de teclado: anel de 2px em acento nos botões/links/chips; nos campos, sublinhado em acento 2px. Corrigido o anel nativo do Chrome nos inputs (`outlineStyle: 'none'`).
+  - `accessibilityRole="header"` automático nos títulos (`Texto`), `hitSlop`/altura mínima de 44 nos alvos pequenos, decorativos (textura, marca d'água, ícones de estado vazio, alça) fora da árvore de acessibilidade.
+- **Sombra dura**: no web via propriedade CSS `textShadow` (o react-native-web 0.21 descontinuou `textShadow*`); no nativo, as props de sempre.
+- `TexturaLona`: id único e sem o warning de prop desconhecida (feito na fase 2).
+- Console do web ao fim da fase: só `props.pointerEvents is deprecated`, emitido por dentro do `@react-navigation/bottom-tabs` (`BottomTabBar.tsx`), não pelo código do app.

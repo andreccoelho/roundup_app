@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Cores, DuracaoAnimacao, Espacamento, LarguraMaxima, Raios } from '../../theme';
+import { DRIVER_NATIVO } from '../../utils/animacao';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import { IconeAlerta, IconeCheck, IconeSino } from '../icones';
 import Texto from './Texto';
@@ -32,7 +33,7 @@ export default function Aviso({ mensagem, tipo = 'info', visivel, onFechar, dura
   useEffect(() => {
     if (!visivel) return;
     entrada.setValue(reduzido ? 1 : 0);
-    if (!reduzido) Animated.timing(entrada, { toValue: 1, duration: DuracaoAnimacao.base, useNativeDriver: true }).start();
+    if (!reduzido) Animated.timing(entrada, { toValue: 1, duration: DuracaoAnimacao.base, useNativeDriver: DRIVER_NATIVO }).start();
     const temporizador = setTimeout(onFechar, duracaoMs);
     return () => clearTimeout(temporizador);
   }, [visivel, duracaoMs, onFechar, reduzido, entrada]);

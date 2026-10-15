@@ -7,6 +7,7 @@ import type { NativeStackNavigationOptions } from '@react-navigation/native-stac
 import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Alturas, Cores, FamiliaFonte, TamanhoFonte } from '../theme';
+import { useMovimentoReduzido } from '../hooks/useMovimentoReduzido';
 
 // Tema do NavigationContainer: background = fundo evita o "flash" branco entre telas e atrás de
 // transições/modais nativos.
@@ -41,8 +42,11 @@ export const opcoesHeader: NativeStackNavigationOptions = {
 // inset calculado pelo bottom-tabs e jogava os rótulos em cima do indicador.
 export function useOpcoesTabBar(): BottomTabNavigationOptions {
   const insets = useSafeAreaInsets();
+  const reduzido = useMovimentoReduzido();
   return {
     headerShown: false,
+    // Troca de aba em fade curto; sem animação com reduce motion.
+    animation: reduzido ? 'none' : 'fade',
     tabBarActiveTintColor: Cores.texto,
     // texto3 sobre fundo: 5,6:1.
     tabBarInactiveTintColor: Cores.texto3,

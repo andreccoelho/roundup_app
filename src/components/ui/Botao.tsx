@@ -4,6 +4,7 @@
 import { useRef, type ComponentType } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
 import { Alturas, Cores, DuracaoAnimacao, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
+import { DRIVER_NATIVO } from '../../utils/animacao';
 import { useFocoVisivel, estiloAnelFoco, estiloSemOutline } from '../../hooks/useFocoVisivel';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import { IconeVoltar } from '../icones';
@@ -60,7 +61,7 @@ export default function Botao({
 
   function animar(para: number) {
     if (reduzido) return;
-    Animated.timing(escala, { toValue: para, duration: DuracaoAnimacao.rapida / 2, useNativeDriver: true }).start();
+    Animated.timing(escala, { toValue: para, duration: DuracaoAnimacao.rapida / 2, useNativeDriver: DRIVER_NATIVO }).start();
   }
 
   if (variante === 'texto' || variante === 'voltar') {

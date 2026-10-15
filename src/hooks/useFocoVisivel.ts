@@ -26,7 +26,9 @@ export function useFocoVisivel() {
 
 // Anel de foco: 2px em `foco` (= acento), afastado 2px do controle. O outline nativo do navegador
 // fica sempre desligado — este anel é o substituto, não uma remoção.
-export const estiloSemOutline: ViewStyle = { outlineWidth: 0 } as ViewStyle;
+// outlineStyle 'none' é necessário: com 'auto' (padrão do input no Chrome) o navegador desenha o
+// anel nativo mesmo com largura 0.
+export const estiloSemOutline: ViewStyle = { outlineWidth: 0, outlineStyle: 'none' } as unknown as ViewStyle;
 export const estiloAnelFoco: ViewStyle = {
   outlineStyle: 'solid',
   outlineWidth: 2,

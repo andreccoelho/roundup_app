@@ -128,3 +128,9 @@ O HeroCheckIn aceita `professor`, mas a Home não buscava o professor de cada se
 
 ### R-08 — "Encerrar sessão" sem confirmação
 A ação principal da sessão virou botão primário, mas segue sem diálogo de confirmação (comportamento original). **A validar:** se encerrar por engano é um risco real (a sessão encerrada não reabre).
+
+### R-09 — Conquistas: medalha de graduação fora da detecção
+O `useConquistas` só detecta medalhas de treinos e de sequência. A de "Primeira graduação" depende de `graduacoes`, que a Home não lê; ler exigiria uma consulta nova ao Firestore. A subida de faixa em si é detectada (pelo `usuario.faixaOuGrau`). **A validar:** se vale adicionar a leitura de graduações na Home.
+
+### R-10 — Conquistas detectadas por aparelho
+O "último estado" fica no AsyncStorage do aparelho: num aparelho novo, a primeira abertura só grava (não celebra), e o mesmo aluno em dois aparelhos pode ver a mesma conquista duas vezes. Persistir no Firebase resolveria, mas o pedido foi não gravar nada lá. **A validar:** se isso basta.
