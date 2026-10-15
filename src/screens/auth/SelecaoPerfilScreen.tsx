@@ -2,30 +2,27 @@
 // Toque na linha já navega — sem botão "Continuar" extra, um toque a menos no fluxo.
 // Sem os 4 estados de carregando/vazio/erro: lista estática de 3 opções, não vem de busca de
 // dados.
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
+import { Alturas, Cores, Espacamento } from '../../theme';
 import { AuthStackParamList } from '../../navigation/AuthStack';
+import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
 import LinhaFina from '../../components/LinhaFina';
 import Botao from '../../components/ui/Botao';
-import { IconeFaixa, IconeLuva, IconePoste } from '../../components/icones';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import { IconeChevron, IconeFaixa, IconeLuva, IconePoste } from '../../components/icones';
 
 type Navegacao = NativeStackNavigationProp<AuthStackParamList, 'SelecaoPerfil'>;
+type Destino = 'CadastroAcademia' | 'CadastroProfessor' | 'CadastroAluno';
 
-const semAnelDeFoco = { outlineWidth: 0 } as const;
-
-const OPCOES: Array<{
-  destino: 'CadastroAcademia' | 'CadastroProfessor' | 'CadastroAluno';
-  titulo: string;
-  descricao: string;
-  Icone: typeof IconeFaixa;
-}> = [
+const OPCOES: Array<{ destino: Destino; titulo: string; descricao: string; Icone: typeof IconeFaixa }> = [
   {
-    destino: 'CadastroAcademia',
-    titulo: 'Academia',
-    descricao: 'Sou dono ou gestor de uma academia. Vinculo professores e alunos, acompanho as métricas da unidade.',
-    Icone: IconePoste,
+    destino: 'CadastroAluno',
+    titulo: 'Aluno',
+    descricao: 'Treino e quero acompanhar meu progresso: check-in, missões, XP, ranking e faixas.',
+    Icone: IconeFaixa,
   },
   {
     destino: 'CadastroProfessor',
@@ -34,77 +31,72 @@ const OPCOES: Array<{
     Icone: IconeLuva,
   },
   {
-    destino: 'CadastroAluno',
-    titulo: 'Aluno',
-    descricao: 'Treino e quero acompanhar meu progresso: check-in, missões, XP, ranking e faixas.',
-    Icone: IconeFaixa,
+    destino: 'CadastroAcademia',
+    titulo: 'Academia',
+    descricao: 'Sou dono ou gestor de uma academia. Vinculo professores e alunos, acompanho as métricas da unidade.',
+    Icone: IconePoste,
   },
 ];
+
+function Opcao({ titulo, descricao, Icone, onPress }: { titulo: string; descricao: string; Icone: typeof IconeFaixa; onPress: () => void }) {
+  const { focado, propsFoco } = useFocoVisivel();
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.linha, pressed && styles.pressionada, estiloSemOutline, focado && estiloAnelFoco]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${titulo}. ${descricao}`}
+      {...propsFoco}
+    >
+      <View style={styles.icone}>
+        <Icone tamanho={32} cor={Cores.texto} />
+      </View>
+      <View style={styles.textos}>
+        <Texto variante="titulo" cabecalho={false}>
+          {titulo}
+        </Texto>
+        <Texto variante="legenda">{descricao}</Texto>
+      </View>
+      <IconeChevron tamanho={20} cor={Cores.texto3} />
+    </Pressable>
+  );
+}
 
 export default function SelecaoPerfilScreen() {
   const navigation = useNavigation<Navegacao>();
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll}>
+    <Tela largura="formulario" bordas={['topo', 'base']}>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-      <Text style={styles.titulo}>Como você vai usar o RoundUp?</Text>
-      <Text style={styles.subtitulo}>Isso define suas telas e permissões.</Text>
+      <Texto variante="display" style={styles.titulo}>
+        Quem entra no ringue?
+      </Texto>
+      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+        Escolha como você vai usar o RoundUp. Isso define suas telas e permissões.
+      </Texto>
 
-      <View style={styles.lista}>
-        <LinhaFina />
-        {OPCOES.map(({ destino, titulo, descricao, Icone }) => (
-          <View key={destino}>
-            <TouchableOpacity
-              style={[styles.linha, semAnelDeFoco]}
-              onPress={() => navigation.navigate('ConsentimentoLGPD', { destino })}
-              accessibilityRole="button"
-              accessibilityLabel={`${titulo}. ${descricao}`}
-            >
-              <Icone tamanho={28} cor={Cores.texto} />
-              <View style={styles.linhaTextos}>
-                <Text style={styles.linhaTitulo}>{titulo}</Text>
-                <Text style={styles.linhaDescricao}>{descricao}</Text>
-              </View>
-            </TouchableOpacity>
-            <LinhaFina />
-          </View>
-        ))}
-      </View>
-    </ScrollView>
+      {OPCOES.map(({ destino, titulo, descricao, Icone }, i) => (
+        <View key={destino}>
+          {i > 0 ? <LinhaFina /> : null}
+          <Opcao titulo={titulo} descricao={descricao} Icone={Icone} onPress={() => navigation.navigate('ConsentimentoLGPD', { destino })} />
+        </View>
+      ))}
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: {
-    flexGrow: 1,
-    paddingHorizontal: Espacamento.grande,
-    paddingTop: Espacamento.grande,
-    paddingBottom: Espacamento.extraGrande,
-    backgroundColor: Cores.fundo,
-  },
-  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
-  titulo: {
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    marginTop: Espacamento.padrao,
-  },
-  subtitulo: {
-    fontSize: TamanhoFonte.sm,
-    color: Cores.texto2,
-    marginTop: Espacamento.pequeno,
-    marginBottom: Espacamento.grande + Espacamento.minimo,
-  },
-  lista: { flexGrow: 0 },
+  titulo: { marginTop: Espacamento.grande },
+  subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
   linha: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingVertical: Espacamento.padrao + Espacamento.minimo,
+    alignItems: 'center',
     gap: Espacamento.padrao,
-    minHeight: 44,
+    minHeight: Alturas.botaoHero + 24,
+    paddingVertical: Espacamento.padrao,
   },
-  linhaTextos: { flex: 1 },
-  linhaTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.minimo },
-  linhaDescricao: { fontSize: TamanhoFonte.sm, color: Cores.texto2, lineHeight: 20 },
+  pressionada: { backgroundColor: Cores.superficie1 },
+  icone: { width: 48, height: 48, borderRadius: 24, borderWidth: 1, borderColor: Cores.linhaForte, alignItems: 'center', justifyContent: 'center' },
+  textos: { flex: 1, gap: 2 },
 });

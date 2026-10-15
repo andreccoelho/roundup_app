@@ -4,10 +4,10 @@
 // Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, FamiliaFonte, Raios, Sombras, TamanhoFonte } from '../../theme';
+import { Espacamento } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
@@ -19,10 +19,13 @@ import Botao from '../../components/ui/Botao';
 import Abas from '../../components/ui/Abas';
 import Texto from '../../components/ui/Texto';
 import ModalitySelector from '../../components/ui/ModalitySelector';
+import Tela from '../../components/ui/Tela';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import SeloFaixa from '../../components/ui/SeloFaixa';
 
 type Rota = RouteProp<AuthStackParamList, 'CadastroProfessor'>;
 
-const semAnelDeFoco = { outlineWidth: 0 } as const;
 
 interface Erros {
   nome?: string;
@@ -68,6 +71,7 @@ export default function CadastroProfessorScreen() {
   }
 
   async function handleCadastrar() {
+    if (carregando) return;
     setErroConta(null);
     if (!validar()) return;
     setCarregando(true);
@@ -99,121 +103,108 @@ export default function CadastroProfessorScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Botao variante="voltar" onPress={() => navigation.goBack()} />
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+      <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-        <Text style={styles.titulo}>Cadastro</Text>
-        <Text style={styles.subtitulo}>Professor</Text>
+      <Texto variante="rotuloPlacar" style={styles.etapa}>
+        Cadastro de professor
+      </Texto>
+      <Texto variante="display">Seu corner</Texto>
+      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+        Você vai controlar turmas, presença e graduação dos seus alunos.
+      </Texto>
 
-        {erroConta ? (
-          <Text style={styles.erroConta} accessibilityRole="alert">
-            {erroConta}
-          </Text>
-        ) : null}
+      <MensagemErro mensagem={erroConta} />
 
-        <CampoTexto rotulo="Nome" placeholder="Seu nome completo" valor={nome} onAlterar={setNome} erro={erros.nome} />
-        <CampoTexto
-          rotulo="E-mail"
-          placeholder="seuemail@exemplo.com"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          valor={email}
-          onAlterar={setEmail}
-          erro={erros.email}
-        />
-        <CampoTexto rotulo="Senha" placeholder="••••••••" secureTextEntry valor={senha} onAlterar={setSenha} erro={erros.senha} />
-        <CampoTexto
-          rotulo="Confirmar senha"
-          placeholder="••••••••"
-          secureTextEntry
-          valor={confirmarSenha}
-          onAlterar={setConfirmarSenha}
-          erro={erros.confirmarSenha}
-        />
+      <CabecalhoSecao titulo="Conta" semMargem />
+      <CampoTexto rotulo="Nome" placeholder="Seu nome completo" autoComplete="name" valor={nome} onAlterar={setNome} erro={erros.nome} />
+      <CampoTexto
+        rotulo="E-mail"
+        placeholder="seuemail@exemplo.com"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        autoComplete="email"
+        valor={email}
+        onAlterar={setEmail}
+        erro={erros.email}
+      />
+      <CampoTexto
+        rotulo="Senha"
+        secureTextEntry
+        autoComplete="new-password"
+        valor={senha}
+        onAlterar={setSenha}
+        erro={erros.senha}
+        ajuda={erros.senha ? undefined : `Ao menos ${TAMANHO_MINIMO_SENHA} caracteres.`}
+      />
+      <CampoTexto
+        rotulo="Confirmar senha"
+        secureTextEntry
+        autoComplete="new-password"
+        valor={confirmarSenha}
+        onAlterar={setConfirmarSenha}
+        erro={erros.confirmarSenha}
+      />
 
-        <ModalitySelector
-          rotulo="Modalidade(s) que leciona"
-          selecionadas={modalidades}
-          outraTexto={outraModalidade}
-          onAlterarSelecionadas={setModalidades}
-          onAlterarOutraTexto={setOutraModalidade}
-          erro={erros.modalidades}
-        />
-
-        <CampoTexto
-          rotulo="Graduação"
-          placeholder="Ex.: Faixa preta, 1º grau"
-          valor={graduacao}
-          onAlterar={setGraduacao}
-          erro={erros.graduacao}
-        />
-
-        <View style={styles.campoToggle}>
-          <Texto variante="legenda" style={styles.rotuloToggle}>
-            Atuação
-          </Texto>
-          <Abas
-            accessibilityLabel="Atuação"
-            opcoes={[
-              { valor: 'autonomo', rotulo: 'Autônomo' },
-              { valor: 'vinculado', rotulo: 'Vinculado a academia' },
-            ]}
-            selecionada={autonomo ? 'autonomo' : 'vinculado'}
-            onSelecionar={(valor) => setAutonomo(valor === 'autonomo')}
-          />
-          <Texto variante="legenda" cor="texto3" style={styles.ajudaToggle}>
-            {autonomo
-              ? 'Você mantém suas próprias turmas e alunos.'
-              : 'Você poderá solicitar o vínculo com uma academia depois de entrar.'}
-          </Texto>
+      <CabecalhoSecao titulo="Ficha técnica" />
+      <ModalitySelector
+        rotulo="Modalidade(s) lecionada(s)"
+        selecionadas={modalidades}
+        outraTexto={outraModalidade}
+        onAlterarSelecionadas={setModalidades}
+        onAlterarOutraTexto={setOutraModalidade}
+        erro={erros.modalidades}
+      />
+      <CampoTexto
+        rotulo="Graduação"
+        placeholder="Ex.: Faixa preta, 3º grau"
+        valor={graduacao}
+        onAlterar={setGraduacao}
+        erro={erros.graduacao}
+      />
+      {graduacao.trim() ? (
+        <View style={styles.previa}>
+          <SeloFaixa faixaOuGrau={graduacao.trim()} />
         </View>
+      ) : null}
 
-        <View style={styles.espaco} />
-        <Botao titulo="Criar conta" onPress={handleCadastrar} carregando={carregando} />
+      <View style={styles.campoToggle}>
+        <Texto variante="legenda" style={styles.rotuloToggle}>
+          Atuação
+        </Texto>
+        <Abas
+          accessibilityLabel="Atuação"
+          opcoes={[
+            { valor: 'autonomo', rotulo: 'Autônomo' },
+            { valor: 'vinculado', rotulo: 'Vinculado a academia' },
+          ]}
+          selecionada={autonomo ? 'autonomo' : 'vinculado'}
+          onSelecionar={(valor) => setAutonomo(valor === 'autonomo')}
+        />
+        <Texto variante="legenda" cor="texto3" style={styles.ajudaToggle}>
+          {autonomo
+            ? 'Você mantém suas próprias turmas e alunos.'
+            : 'Você poderá solicitar o vínculo com uma academia depois de entrar.'}
+        </Texto>
+      </View>
 
-        <View style={styles.rodape}>
-          <Text style={styles.rodapeTexto}>Já tem conta?</Text>
-          <Botao titulo="Entrar" variante="texto" onPress={() => navigation.navigate('Login')} />
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
+
+      <View style={styles.rodape}>
+        <Texto variante="legenda">Já tem conta?</Texto>
+        <Botao titulo="Entrar" variante="texto" onPress={() => navigation.navigate('Login')} />
+      </View>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.fundo },
-  scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
-  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
-  titulo: {
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    marginTop: Espacamento.padrao,
-  },
-  subtitulo: {
-    fontSize: TamanhoFonte.md,
-    color: Cores.texto2,
-    marginTop: Espacamento.minimo / 2,
-    marginBottom: Espacamento.grande + Espacamento.minimo,
-  },
-  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  campoToggle: { marginBottom: Espacamento.padrao },
-  rotuloToggle: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.pequeno },
-  toggle: { flexDirection: 'row', borderWidth: 1, borderColor: Cores.linhaForte, borderRadius: Raios.pilula, overflow: 'hidden' },
-  opcaoToggle: {
-    flex: 1,
-    paddingVertical: Espacamento.medio - Espacamento.minimo / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: 44,
-  },
-  opcaoToggleAtiva: { backgroundColor: Cores.superficie2 },
-  textoToggle: { fontSize: TamanhoFonte.sm, color: Cores.linhaForte },
-  textoToggleAtivo: { color: Cores.texto, fontWeight: '600' },
-  ajudaToggle: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.pequeno },
-  espaco: { height: Espacamento.pequeno },
-  rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  rodapeTexto: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
+  etapa: { marginTop: Espacamento.grande, marginBottom: Espacamento.minimo },
+  subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
+  previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  campoToggle: { marginBottom: Espacamento.grande },
+  rotuloToggle: { marginBottom: Espacamento.minimo },
+  ajudaToggle: { marginTop: Espacamento.pequeno },
+  rodape: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
 });

@@ -5,12 +5,12 @@
 // Foto: expo-image-picker (já era dependência instalada, nunca usada) + upload real para
 // Firebase Storage (services/storage.ts). PENDÊNCIA SINALIZADA: storage.rules foi escrito nesta
 // rodada mas só funciona depois de `firebase deploy --only storage` — até lá, o upload falha por
-// permissão e a tela mostra um aviso fixo em vez do erro cru (mesmo padrão de RF29/ExcluirContaSecao).
+// permissão e a tela mostra um aviso fixo em vez do erro cru (mesmo padrão de RF29/ContaPrivacidadeScreen).
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { enviarFotoPerfil } from '../../services/storage';
 import { MODALIDADES, MODALIDADE_OUTRA } from '../../constants/modalidades';
@@ -20,6 +20,10 @@ import CampoTexto from '../../components/ui/CampoTexto';
 import ModalitySelector from '../../components/ui/ModalitySelector';
 import Botao from '../../components/ui/Botao';
 import Aviso from '../../components/ui/Aviso';
+import Tela from '../../components/ui/Tela';
+import SeloFaixa from '../../components/ui/SeloFaixa';
+import MensagemErro from '../../components/ui/MensagemErro';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 const LISTA_FIXA: readonly string[] = MODALIDADES;
 
@@ -87,7 +91,7 @@ export default function EditarPerfilScreen() {
   }
 
   async function handleSalvar() {
-    if (!usuario) return;
+    if (!usuario || salvando) return;
     setErro(null);
     setSalvando(true);
     try {
@@ -105,8 +109,8 @@ export default function EditarPerfilScreen() {
 
       await atualizarPerfil(dados);
       navigation.goBack();
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível salvar seu perfil. Tente novamente.'));
     } finally {
       setSalvando(false);
     }
@@ -115,44 +119,54 @@ export default function EditarPerfilScreen() {
   if (!usuario) return null;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
+    <Tela
+      largura="formulario"
+      teclado
+      sobreposicao={<Aviso mensagem={aviso ?? ''} visivel={aviso !== null} tipo="erro" onFechar={() => setAviso(null)} acimaDaTabBar />}
+    >
       <View style={styles.fotoSecao}>
-        <TouchableOpacity
+        <Pressable
           onPress={handleTrocarFoto}
           disabled={enviandoFoto}
           accessibilityRole="button"
           accessibilityLabel="Trocar foto de perfil"
+          style={({ pressed }) => pressed && styles.pressionada}
         >
-          <Avatar nome={nome || usuario.nome} fotoUrl={fotoUrl} tamanho={88} />
-        </TouchableOpacity>
-        <Botao
-          titulo={enviandoFoto ? 'Enviando...' : 'Trocar foto'}
-          variante="texto"
-          onPress={handleTrocarFoto}
-          desabilitado={enviandoFoto}
-        />
+          <Avatar nome={nome || usuario.nome} fotoUrl={fotoUrl} tamanho={96} />
+        </Pressable>
+        <Botao titulo={enviandoFoto ? 'Enviando...' : 'Trocar foto'} variante="texto" onPress={handleTrocarFoto} desabilitado={enviandoFoto} />
       </View>
 
-      {erro ? (
-        <Text style={styles.erro} accessibilityRole="alert">
-          {erro}
-        </Text>
-      ) : null}
+      <MensagemErro mensagem={erro} />
 
-      <CampoTexto rotulo="Nome" valor={nome} onAlterar={setNome} />
+      <CampoTexto rotulo="Nome" valor={nome} onAlterar={setNome} autoComplete="name" />
 
       {usuario.perfil === 'aluno' ? (
-        <CampoTexto rotulo="Faixa ou grau" valor={faixaOuGrau} onAlterar={setFaixaOuGrau} placeholder="Ex.: Faixa roxa, 2º grau" />
+        <>
+          <CampoTexto rotulo="Faixa ou grau" valor={faixaOuGrau} onAlterar={setFaixaOuGrau} placeholder="Ex.: Faixa roxa, 2º grau" />
+          {faixaOuGrau.trim() ? (
+            <View style={styles.previa}>
+              <SeloFaixa faixaOuGrau={faixaOuGrau.trim()} />
+            </View>
+          ) : null}
+        </>
       ) : null}
 
       {usuario.perfil === 'professor' ? (
-        <CampoTexto rotulo="Graduação" valor={graduacao} onAlterar={setGraduacao} placeholder="Ex.: Faixa preta, 3º grau" />
+        <>
+          <CampoTexto rotulo="Graduação" valor={graduacao} onAlterar={setGraduacao} placeholder="Ex.: Faixa preta, 3º grau" />
+          {graduacao.trim() ? (
+            <View style={styles.previa}>
+              <SeloFaixa faixaOuGrau={graduacao.trim()} />
+            </View>
+          ) : null}
+        </>
       ) : null}
 
       {usuario.perfil === 'academia' ? (
         <>
           <CampoTexto rotulo="Nome da academia" valor={nomeAcademia} onAlterar={setNomeAcademia} />
-          <CampoTexto rotulo="Endereço" valor={endereco} onAlterar={setEndereco} />
+          <CampoTexto rotulo="Endereço" valor={endereco} onAlterar={setEndereco} autoComplete="street-address" />
         </>
       ) : null}
 
@@ -167,15 +181,12 @@ export default function EditarPerfilScreen() {
       />
 
       <Botao titulo="Salvar" onPress={handleSalvar} carregando={salvando} />
-
-      <Aviso mensagem={aviso ?? ''} visivel={aviso !== null} tipo="erro" onFechar={() => setAviso(null)} />
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  fotoSecao: { alignItems: 'center', marginBottom: Espacamento.grande },
-  erro: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
+  fotoSecao: { alignItems: 'center', gap: Espacamento.minimo, marginBottom: Espacamento.grande },
+  pressionada: { opacity: 0.8 },
+  previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
 });

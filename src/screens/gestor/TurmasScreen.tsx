@@ -1,10 +1,10 @@
 // RF10: lista as turmas do responsável e permite criar uma nova — com grade recorrente (dias da
 // semana + horário) e professor vinculado, quando o responsável é uma academia.
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { criarTurma, listarTurmasPorResponsavel } from '../../services/turmas';
 import { criarSessao } from '../../services/sessoes';
@@ -17,7 +17,16 @@ import { GestorStackParamList } from '../../navigation/types';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Botao from '../../components/ui/Botao';
-import Cartao from '../../components/ui/Cartao';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Folha from '../../components/ui/Folha';
+import Aviso from '../../components/ui/Aviso';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import LinhaFina from '../../components/LinhaFina';
+import { IconeChevron, IconeMais, IconeTatame } from '../../components/icones';
+import { rotuloNivel } from '../../utils/apresentacao';
+import { mensagemErro } from '../../utils/mensagensErro';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
@@ -48,6 +57,8 @@ export default function TurmasScreen() {
   const [professores, setProfessores] = useState<ProfessorVinculado[]>([]);
   const [criando, setCriando] = useState(false);
   const [erroForm, setErroForm] = useState<string | null>(null);
+  const [folhaAberta, setFolhaAberta] = useState(false);
+  const [sucesso, setSucesso] = useState<string | null>(null);
 
   function alternarDiaSemana(valor: number) {
     setDiasSemana((atual) => (atual.includes(valor) ? atual.filter((d) => d !== valor) : [...atual, valor]));
@@ -59,8 +70,8 @@ export default function TurmasScreen() {
     setErro(null);
     try {
       setTurmas(await listarTurmasPorResponsavel(usuario.id));
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar suas turmas agora.'));
     } finally {
       setCarregando(false);
     }
@@ -88,7 +99,7 @@ export default function TurmasScreen() {
   }, [usuario]);
 
   async function handleCriar() {
-    if (!usuario || !nome.trim() || !modalidade.trim()) return;
+    if (!usuario || criando || !nome.trim() || !modalidade.trim()) return;
     setErroForm(null);
 
     // Grade recorrente é opcional: uma turma pode nascer sem dia/horário e ganhar sessões
@@ -144,118 +155,153 @@ export default function TurmasScreen() {
       setHorarioInicio('');
       setHorarioFim('');
       setProfessorId(null);
+      setFolhaAberta(false);
+      setSucesso(datasSessoes.length > 0 ? `Turma criada com ${datasSessoes.length} sessões.` : 'Turma criada.');
       await carregarTurmas();
-    } catch (e: any) {
-      setErroForm(e.message);
+    } catch (e) {
+      setErroForm(mensagemErro(e, 'Não foi possível criar a turma. Tente novamente.'));
     } finally {
       setCriando(false);
     }
   }
 
+  const ativas = turmas.filter((t) => t.ativa).length;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <Text style={styles.secaoTitulo}>Nova turma</Text>
-      <CampoTexto rotulo="Nome da turma" placeholder="Ex.: Muay Thai — Turma A" valor={nome} onAlterar={setNome} />
-      <CampoTexto rotulo="Modalidade" placeholder="Ex.: Muay Thai" valor={modalidade} onAlterar={setModalidade} />
+    <Tela
+      largura="lista"
+      sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} acimaDaTabBar />}
+    >
+      <Botao titulo="Nova turma" icone={IconeMais} onPress={() => setFolhaAberta(true)} />
 
-      <Text style={styles.rotuloCampo}>Nível</Text>
-      <View style={styles.linhaNiveis}>
-        {NIVEIS.map((opcao) => (
-          <Etiqueta key={opcao} texto={opcao} selecionada={nivel === opcao} onPress={() => setNivel(opcao)} />
-        ))}
-      </View>
-
-      {usuario?.perfil === 'academia' ? (
-        <>
-          <Text style={styles.rotuloCampo}>Professor</Text>
-          {professores.length === 0 ? (
-            <Text style={styles.vazio}>Nenhum professor vinculado ainda — a turma pode ser criada sem professor por enquanto.</Text>
-          ) : (
-            <View style={styles.linhaNiveis}>
-              {professores.map((professor) => (
-                <Etiqueta
-                  key={professor.id}
-                  texto={professor.nome}
-                  selecionada={professorId === professor.id}
-                  onPress={() => setProfessorId((atual) => (atual === professor.id ? null : professor.id))}
-                />
-              ))}
-            </View>
-          )}
-        </>
-      ) : null}
-
-      <Text style={styles.rotuloCampo}>Grade recorrente (opcional)</Text>
-      <View style={styles.linhaNiveis}>
-        {DIAS_SEMANA.map(({ valor, rotulo }) => (
-          <Etiqueta key={valor} texto={rotulo} selecionada={diasSemana.includes(valor)} onPress={() => alternarDiaSemana(valor)} />
-        ))}
-      </View>
-      <View style={styles.linhaHorarios}>
-        <View style={styles.campoHorario}>
-          <CampoTexto rotulo="Início" placeholder="HH:MM" valor={horarioInicio} onAlterar={setHorarioInicio} />
-        </View>
-        <View style={styles.campoHorario}>
-          <CampoTexto rotulo="Fim" placeholder="HH:MM" valor={horarioFim} onAlterar={setHorarioFim} />
-        </View>
-      </View>
-      {diasSemana.length > 0 ? (
-        <Text style={styles.notaGrade}>
-          Cria sessões toda semana nesses dias pelas próximas {SEMANAS_GRADE_INICIAL} semanas — dá pra gerar mais depois, na tela da turma.
-        </Text>
-      ) : null}
-
-      {erroForm ? (
-        <Text style={styles.erroForm} accessibilityRole="alert">
-          {erroForm}
-        </Text>
-      ) : null}
-
-      <View style={styles.espaco} />
-      <Botao titulo="Criar turma" onPress={handleCriar} carregando={criando} desabilitado={!nome.trim() || !modalidade.trim()} />
-
-      <Text style={[styles.secaoTitulo, styles.secaoListaTitulo]}>Minhas turmas</Text>
       {carregando ? (
-        <Esqueleto altura={64} repeticoes={3} />
+        <View style={styles.topo}>
+          <Esqueleto forma="linha" repeticoes={4} />
+        </View>
       ) : erro ? (
         <EstadoErro mensagem={erro} onTentarNovamente={carregarTurmas} />
       ) : turmas.length === 0 ? (
-        <EstadoVazio titulo="Nenhuma turma criada ainda" descricao="Crie sua primeira turma no formulário acima." />
+        <EstadoVazio icone={IconeTatame} titulo="Nenhuma turma criada ainda" descricao="Toque em Nova turma para criar a primeira." />
       ) : (
-        turmas.map((turma) => (
-          <TouchableOpacity
-            key={turma.id}
-            onPress={() => navigation.navigate('TurmaDetalhe', { turmaId: turma.id })}
-            accessibilityRole="button"
-            accessibilityLabel={`${turma.nome}, ${turma.modalidade}, ${turma.nivel}, ${turma.ativa ? 'ativa' : 'inativa'}`}
-          >
-            <Cartao style={styles.item}>
-              <Text style={styles.itemNome}>{turma.nome}</Text>
-              <Text style={styles.itemDetalhe}>
-                {turma.modalidade} · {turma.nivel} · {turma.ativa ? 'ativa' : 'inativa'}
-              </Text>
-            </Cartao>
-          </TouchableOpacity>
-        ))
+        <>
+          <CabecalhoSecao titulo="Minhas turmas" contador={`${ativas} de ${turmas.length} ativas`} />
+          {turmas.map((turma, i) => (
+            <View key={turma.id}>
+              {i > 0 ? <LinhaFina /> : null}
+              <Pressable
+                onPress={() => navigation.navigate('TurmaDetalhe', { turmaId: turma.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`${turma.nome}, ${turma.modalidade}, ${rotuloNivel(turma.nivel)}, ${turma.ativa ? 'ativa' : 'inativa'}`}
+                style={({ pressed }) => [styles.linha, pressed && styles.pressionada]}
+              >
+                <View style={styles.textos}>
+                  <Texto variante="corpoForte">{turma.nome}</Texto>
+                  <View style={styles.meta}>
+                    <Etiqueta texto={turma.modalidade} />
+                    <Etiqueta texto={rotuloNivel(turma.nivel)} />
+                    {!turma.ativa ? (
+                      <Texto variante="rotuloPlacar" cor="texto3">
+                        Inativa
+                      </Texto>
+                    ) : null}
+                  </View>
+                  {turma.diasSemana && turma.diasSemana.length > 0 ? (
+                    <Texto variante="legenda">
+                      {DIAS_SEMANA.filter((d) => turma.diasSemana!.includes(d.valor))
+                        .map((d) => d.rotulo)
+                        .join(', ')}
+                      {turma.horarioInicio && turma.horarioFim ? `, ${turma.horarioInicio} às ${turma.horarioFim}` : ''}
+                    </Texto>
+                  ) : null}
+                </View>
+                <IconeChevron tamanho={20} cor={Cores.texto3} />
+              </Pressable>
+            </View>
+          ))}
+        </>
       )}
-    </ScrollView>
+
+      <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova turma">
+        <MensagemErro mensagem={erroForm} />
+        <CampoTexto rotulo="Nome da turma" placeholder="Ex.: Muay Thai — Turma A" valor={nome} onAlterar={setNome} />
+        <CampoTexto rotulo="Modalidade" placeholder="Ex.: Muay Thai" valor={modalidade} onAlterar={setModalidade} />
+
+        <Texto variante="legenda" style={styles.rotuloCampo}>
+          Nível
+        </Texto>
+        <View style={styles.linhaChips} accessibilityRole="radiogroup" accessibilityLabel="Nível">
+          {NIVEIS.map((opcao) => (
+            <Etiqueta key={opcao} texto={rotuloNivel(opcao)} selecionada={nivel === opcao} onPress={() => setNivel(opcao)} />
+          ))}
+        </View>
+
+        {usuario?.perfil === 'academia' ? (
+          <>
+            <Texto variante="legenda" style={styles.rotuloCampo}>
+              Professor
+            </Texto>
+            {professores.length === 0 ? (
+              <Texto variante="legenda" cor="texto3" style={styles.ajuda}>
+                Nenhum professor vinculado ainda. A turma pode ser criada sem professor por enquanto.
+              </Texto>
+            ) : (
+              <View style={styles.linhaChips} accessibilityRole="radiogroup" accessibilityLabel="Professor">
+                {professores.map((professor) => (
+                  <Etiqueta
+                    key={professor.id}
+                    texto={professor.nome}
+                    selecionada={professorId === professor.id}
+                    onPress={() => setProfessorId((atual) => (atual === professor.id ? null : professor.id))}
+                  />
+                ))}
+              </View>
+            )}
+          </>
+        ) : null}
+
+        <Texto variante="legenda" style={styles.rotuloCampo}>
+          Grade recorrente (opcional)
+        </Texto>
+        <View style={styles.linhaChips}>
+          {DIAS_SEMANA.map(({ valor, rotulo }) => (
+            <Etiqueta key={valor} texto={rotulo} modo="multiplo" selecionada={diasSemana.includes(valor)} onPress={() => alternarDiaSemana(valor)} />
+          ))}
+        </View>
+        <View style={styles.linhaHorarios}>
+          <View style={styles.campoHorario}>
+            <CampoTexto rotulo="Início" mascara="hora" valor={horarioInicio} onAlterar={setHorarioInicio} />
+          </View>
+          <View style={styles.campoHorario}>
+            <CampoTexto rotulo="Fim" mascara="hora" valor={horarioFim} onAlterar={setHorarioFim} />
+          </View>
+        </View>
+        {diasSemana.length > 0 ? (
+          <Texto variante="legenda" cor="texto3" style={styles.ajuda}>
+            {`Cria sessões nesses dias pelas próximas ${SEMANAS_GRADE_INICIAL} semanas. Dá pra gerar mais depois, na tela da turma.`}
+          </Texto>
+        ) : null}
+
+        <Botao titulo="Criar turma" onPress={handleCriar} carregando={criando} desabilitado={!nome.trim() || !modalidade.trim()} />
+        {!nome.trim() || !modalidade.trim() ? (
+          <Texto variante="legenda" cor="texto3" alinhamento="center" style={styles.ajudaBotao}>
+            Preencha nome e modalidade para criar.
+          </Texto>
+        ) : null}
+      </Folha>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginBottom: Espacamento.pequeno },
-  secaoListaTitulo: { marginTop: Espacamento.grande },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.pequeno },
-  linhaNiveis: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  topo: { marginTop: Espacamento.grande },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 72, paddingVertical: Espacamento.medio },
+  pressionada: { backgroundColor: Cores.superficie1 },
+  textos: { flex: 1, gap: Espacamento.minimo + 2 },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Espacamento.minimo + 2 },
+  rotuloCampo: { marginBottom: Espacamento.pequeno },
+  linhaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   linhaHorarios: { flexDirection: 'row', gap: Espacamento.padrao },
   campoHorario: { flex: 1 },
-  notaGrade: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
-  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  erroForm: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.medio },
-  espaco: { height: Espacamento.minimo },
-  item: { marginBottom: Espacamento.pequeno },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
+  ajuda: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  ajudaBotao: { marginTop: Espacamento.pequeno },
 });

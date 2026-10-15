@@ -10,9 +10,9 @@
 // ambiguidade — e por isso também não mostra a seção "Vinculados" (só a academia tem os dois
 // tipos de vínculo para gerenciar separadamente).
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   encerrarVinculo,
@@ -29,6 +29,13 @@ import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Esqueleto from '../../components/ui/Esqueleto';
 import Dialogo from '../../components/ui/Dialogo';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Avatar from '../../components/ui/Avatar';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import { IconeCorda } from '../../components/icones';
+import { mensagemErro } from '../../utils/mensagensErro';
 
 interface SolicitacaoComSolicitante {
   vinculo: Vinculo;
@@ -95,8 +102,8 @@ export default function SolicitacoesScreen() {
     setErro(null);
     try {
       await buscarDados();
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar as solicitações agora.'));
     } finally {
       setCarregando(false);
     }
@@ -119,8 +126,8 @@ export default function SolicitacoesScreen() {
       } else {
         setSolicitacoes((prev) => prev.filter((s) => s.vinculo.id !== vinculoId));
       }
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível responder a solicitação. Tente novamente.'));
     } finally {
       setRespondendoId(null);
     }
@@ -135,8 +142,8 @@ export default function SolicitacoesScreen() {
     try {
       await encerrarVinculo(vinculoId);
       setVinculados((prev) => prev.filter((v) => v.vinculoId !== vinculoId));
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível encerrar o vínculo. Tente novamente.'));
     } finally {
       setEncerrandoId(null);
     }
@@ -144,9 +151,9 @@ export default function SolicitacoesScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={72} repeticoes={4} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto forma="linha" repeticoes={4} />
+      </Tela>
     );
   }
 
@@ -158,106 +165,108 @@ export default function SolicitacoesScreen() {
   const tituloSecaoVinculados = perfilFiltro === 'aluno' ? 'Alunos vinculados' : 'Professores vinculados';
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {mostrarVinculados ? <Text style={styles.secaoTitulo}>Pendentes</Text> : null}
+    <Tela largura="lista">
+      <MensagemErro mensagem={erro} />
 
+      <CabecalhoSecao titulo="Pendentes" contador={solicitacoes.length} semMargem />
       {solicitacoes.length === 0 ? (
         <EstadoVazio
+          icone={IconeCorda}
           titulo={mostrarVinculados ? `Nenhum ${rotuloPerfil} pendente` : 'Nenhuma solicitação pendente'}
           descricao={`Quando um ${rotuloPerfil} pedir vínculo, a solicitação aparece aqui.`}
         />
       ) : (
         solicitacoes.map(({ vinculo, nomeSolicitante }, i) => (
           <View key={vinculo.id}>
+            {i > 0 ? <LinhaFina /> : null}
             <View style={styles.linha}>
-              <Text style={styles.nome}>{nomeSolicitante}</Text>
-              <View style={styles.acoes}>
+              <Avatar nome={nomeSolicitante} tamanho={40} />
+              <View style={styles.textos}>
+                <Texto variante="corpoForte">{nomeSolicitante}</Texto>
+                <Texto variante="legenda">{vinculo.perfilSolicitante === 'aluno' ? 'Quer treinar com você' : 'Quer dar aula na academia'}</Texto>
+              </View>
+            </View>
+            <View style={styles.acoes}>
+              <View style={styles.acao}>
                 <Botao
                   titulo="Recusar"
-                  variante="secundario"
+                  variante="fantasma"
+                  compacto
                   onPress={() => handleResponder(vinculo.id, 'recusado')}
                   desabilitado={respondendoId === vinculo.id}
+                  accessibilityLabel={`Recusar ${nomeSolicitante}`}
                 />
+              </View>
+              <View style={styles.acao}>
                 <Botao
                   titulo="Aceitar"
+                  variante="secundario"
+                  compacto
                   onPress={() => handleResponder(vinculo.id, 'aceito')}
                   carregando={respondendoId === vinculo.id}
+                  accessibilityLabel={`Aceitar ${nomeSolicitante}`}
                 />
               </View>
             </View>
-            {i < solicitacoes.length - 1 && <LinhaFina />}
           </View>
         ))
       )}
 
       {mostrarVinculados ? (
-        <View style={styles.secaoVinculados}>
-          <Text style={styles.secaoTitulo}>{tituloSecaoVinculados}</Text>
+        <>
+          <CabecalhoSecao titulo={tituloSecaoVinculados} contador={vinculados.length} />
           {vinculados.length === 0 ? (
-            <Text style={styles.vazioVinculados}>Nenhum {rotuloPerfil} vinculado ainda.</Text>
+            <Texto variante="legenda">{`Nenhum ${rotuloPerfil} vinculado ainda.`}</Texto>
           ) : (
             vinculados.map((vinculado, i) => (
               <View key={vinculado.vinculoId}>
+                {i > 0 ? <LinhaFina /> : null}
                 <View style={styles.linha}>
-                  <View style={styles.vinculadoTextos}>
-                    <Text style={styles.nome}>{vinculado.nome}</Text>
+                  <Avatar nome={vinculado.nome} tamanho={40} />
+                  <View style={styles.textos}>
+                    <Texto variante="corpoForte">{vinculado.nome}</Texto>
                     {vinculado.matriculado !== undefined ? (
-                      <Text style={vinculado.matriculado ? styles.matriculado : styles.semMatricula}>
+                      <Texto variante="legenda" cor={vinculado.matriculado ? 'texto2' : 'texto3'}>
                         {vinculado.matriculado ? 'Matriculado em uma turma' : 'Vinculado, sem matrícula ainda'}
-                      </Text>
+                      </Texto>
                     ) : null}
                   </View>
                   <Botao
-                    titulo="Excluir"
-                    variante="secundario"
+                    titulo="Encerrar"
+                    variante="fantasma"
+                    compacto
                     onPress={() => setVinculoParaEncerrar(vinculado)}
                     carregando={encerrandoId === vinculado.vinculoId}
+                    accessibilityLabel={`Encerrar vínculo com ${vinculado.nome}`}
                   />
                 </View>
-                {i < vinculados.length - 1 && <LinhaFina />}
               </View>
             ))
           )}
-        </View>
+        </>
       ) : null}
-
-      {erro ? <Text style={styles.erroInline}>{erro}</Text> : null}
 
       <Dialogo
         visivel={vinculoParaEncerrar !== null}
-        titulo={`Excluir vínculo com ${vinculoParaEncerrar?.nome ?? ''}?`}
+        titulo={`Encerrar vínculo com ${vinculoParaEncerrar?.nome ?? ''}?`}
         mensagem={
           perfilFiltro === 'aluno'
             ? 'O aluno deixa de ter você como responsável. Matrículas e histórico já registrados não são apagados.'
             : 'O professor deixa de ter você como academia e volta a atuar como autônomo. Turmas já criadas não são apagadas.'
         }
-        tituloConfirmar="Excluir"
+        tituloConfirmar="Encerrar"
         onConfirmar={handleEncerrar}
         tituloCancelar="Cancelar"
         onCancelar={() => setVinculoParaEncerrar(null)}
         destrutivo
       />
-    </ScrollView>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo },
-  conteudo: { padding: Espacamento.padrao, paddingBottom: Espacamento.enorme },
-  secaoTitulo: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto, marginBottom: Espacamento.pequeno },
-  secaoVinculados: { marginTop: Espacamento.grande },
-  vazioVinculados: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-  linha: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Espacamento.medio,
-    gap: Espacamento.medio,
-  },
-  nome: { fontSize: TamanhoFonte.md, color: Cores.texto, fontWeight: '600', flexShrink: 1 },
-  acoes: { flexDirection: 'row', gap: Espacamento.pequeno },
-  vinculadoTextos: { flex: 1 },
-  matriculado: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: 2 },
-  semMatricula: { fontSize: TamanhoFonte.xs, color: Cores.texto3, marginTop: 2 },
-  erroInline: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginTop: Espacamento.medio },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 60, paddingVertical: Espacamento.pequeno },
+  textos: { flex: 1, gap: 2 },
+  acoes: { flexDirection: 'row', gap: Espacamento.pequeno, paddingBottom: Espacamento.medio, paddingLeft: 52 },
+  acao: { flex: 1 },
 });

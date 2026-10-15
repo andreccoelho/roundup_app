@@ -3,10 +3,10 @@
 // Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, FamiliaFonte, Sombras, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
@@ -17,6 +17,11 @@ import { parseDataBr, paraTimestamp } from '../../utils/datas';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
 import ModalitySelector from '../../components/ui/ModalitySelector';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import SeloFaixa from '../../components/ui/SeloFaixa';
 
 type Rota = RouteProp<AuthStackParamList, 'CadastroAluno'>;
 
@@ -93,6 +98,7 @@ export default function CadastroAlunoScreen() {
   }
 
   async function handleCadastrar() {
+    if (carregando) return;
     setErroConta(null);
     if (!validar()) return;
     setCarregando(true);
@@ -130,121 +136,119 @@ export default function CadastroAlunoScreen() {
   }
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Botao variante="voltar" onPress={() => navigation.goBack()} />
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+      <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-        <Text style={styles.titulo}>Cadastro</Text>
-        <Text style={styles.subtitulo}>Aluno</Text>
+      <Texto variante="rotuloPlacar" style={styles.etapa}>
+        Cadastro de aluno
+      </Texto>
+      <Texto variante="display">Monte sua ficha</Texto>
+      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+        Seus dados de atleta aparecem no seu perfil e para o seu professor.
+      </Texto>
 
-        {erroConta ? (
-          <Text style={styles.erroConta} accessibilityRole="alert">
-            {erroConta}
-          </Text>
-        ) : null}
+      <MensagemErro mensagem={erroConta} />
 
-        <CampoTexto rotulo="Nome" placeholder="Seu nome completo" valor={nome} onAlterar={setNome} erro={erros.nome} />
-        <CampoTexto
-          rotulo="E-mail"
-          placeholder="seuemail@exemplo.com"
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          valor={email}
-          onAlterar={setEmail}
-          erro={erros.email}
-        />
-        <CampoTexto rotulo="Senha" placeholder="••••••••" secureTextEntry valor={senha} onAlterar={setSenha} erro={erros.senha} />
-        <CampoTexto
-          rotulo="Confirmar senha"
-          placeholder="••••••••"
-          secureTextEntry
-          valor={confirmarSenha}
-          onAlterar={setConfirmarSenha}
-          erro={erros.confirmarSenha}
-        />
+      <CabecalhoSecao titulo="Conta" semMargem />
+      <CampoTexto rotulo="Nome" placeholder="Seu nome completo" autoComplete="name" valor={nome} onAlterar={setNome} erro={erros.nome} />
+      <CampoTexto
+        rotulo="E-mail"
+        placeholder="seuemail@exemplo.com"
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        autoComplete="email"
+        valor={email}
+        onAlterar={setEmail}
+        erro={erros.email}
+      />
+      <CampoTexto
+        rotulo="Senha"
+        secureTextEntry
+        autoComplete="new-password"
+        valor={senha}
+        onAlterar={setSenha}
+        erro={erros.senha}
+        ajuda={erros.senha ? undefined : `Ao menos ${TAMANHO_MINIMO_SENHA} caracteres.`}
+      />
+      <CampoTexto
+        rotulo="Confirmar senha"
+        secureTextEntry
+        autoComplete="new-password"
+        valor={confirmarSenha}
+        onAlterar={setConfirmarSenha}
+        erro={erros.confirmarSenha}
+      />
 
-        <ModalitySelector
-          rotulo="Modalidade(s) praticada(s)"
-          selecionadas={modalidades}
-          outraTexto={outraModalidade}
-          onAlterarSelecionadas={setModalidades}
-          onAlterarOutraTexto={setOutraModalidade}
-          erro={erros.modalidades}
-        />
-
-        <CampoTexto
-          rotulo="Faixa ou grau atual"
-          placeholder="Ex.: Faixa roxa, 2º grau"
-          valor={faixaOuGrau}
-          onAlterar={setFaixaOuGrau}
-          erro={erros.faixaOuGrau}
-        />
-
-        <CampoTexto
-          rotulo="Data de nascimento"
-          placeholder="DD/MM/AAAA"
-          keyboardType="number-pad"
-          valor={dataNascimento}
-          onAlterar={setDataNascimento}
-          erro={erros.dataNascimento}
-        />
-
-        {ehMenorDeIdade ? (
-          <View style={styles.blocoResponsavel}>
-            {/* RF30: obrigatório para menores de 18 anos — identificação do responsável legal */}
-            <Text style={styles.rotuloBloco}>Responsável legal</Text>
-            <Text style={styles.ajudaBloco}>Como você é menor de 18 anos, precisamos dos dados de um responsável.</Text>
-            <CampoTexto
-              rotulo="Nome do responsável"
-              placeholder="Nome completo"
-              valor={nomeResponsavel}
-              onAlterar={setNomeResponsavel}
-              erro={erros.nomeResponsavel}
-            />
-            <CampoTexto
-              rotulo="Contato do responsável"
-              placeholder="E-mail ou telefone"
-              valor={contatoResponsavel}
-              onAlterar={setContatoResponsavel}
-              erro={erros.contatoResponsavel}
-            />
-          </View>
-        ) : null}
-
-        <View style={styles.espaco} />
-        <Botao titulo="Criar conta" onPress={handleCadastrar} carregando={carregando} />
-
-        <View style={styles.rodape}>
-          <Text style={styles.rodapeTexto}>Já tem conta?</Text>
-          <Botao titulo="Entrar" variante="texto" onPress={() => navigation.navigate('Login')} />
+      <CabecalhoSecao titulo="Ficha de atleta" />
+      <ModalitySelector
+        rotulo="Modalidade(s) praticada(s)"
+        selecionadas={modalidades}
+        outraTexto={outraModalidade}
+        onAlterarSelecionadas={setModalidades}
+        onAlterarOutraTexto={setOutraModalidade}
+        erro={erros.modalidades}
+      />
+      <CampoTexto
+        rotulo="Faixa ou grau atual"
+        placeholder="Ex.: Faixa roxa, 2º grau"
+        valor={faixaOuGrau}
+        onAlterar={setFaixaOuGrau}
+        erro={erros.faixaOuGrau}
+      />
+      {faixaOuGrau.trim() ? (
+        <View style={styles.previa}>
+          <SeloFaixa faixaOuGrau={faixaOuGrau.trim()} />
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      ) : null}
+      <CampoTexto rotulo="Data de nascimento" mascara="data" valor={dataNascimento} onAlterar={setDataNascimento} erro={erros.dataNascimento} />
+
+      {ehMenorDeIdade ? (
+        <View style={styles.blocoResponsavel}>
+          <CabecalhoSecao titulo="Responsável legal" semMargem />
+          <Texto variante="legenda" style={styles.ajudaBloco}>
+            Como você é menor de 18 anos, precisamos dos dados de um responsável.
+          </Texto>
+          <CampoTexto
+            rotulo="Nome do responsável"
+            placeholder="Nome completo"
+            valor={nomeResponsavel}
+            onAlterar={setNomeResponsavel}
+            erro={erros.nomeResponsavel}
+          />
+          <CampoTexto
+            rotulo="Contato do responsável"
+            placeholder="Telefone ou e-mail"
+            valor={contatoResponsavel}
+            onAlterar={setContatoResponsavel}
+            erro={erros.contatoResponsavel}
+          />
+        </View>
+      ) : null}
+
+      <View style={styles.espaco} />
+      <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
+
+      <View style={styles.rodape}>
+        <Texto variante="legenda">Já tem conta?</Texto>
+        <Botao titulo="Entrar" variante="texto" onPress={() => navigation.navigate('Login')} />
+      </View>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: Cores.fundo },
-  scroll: { flexGrow: 1, paddingHorizontal: Espacamento.grande, paddingTop: Espacamento.grande, paddingBottom: Espacamento.extraGrande },
-  // script.md, item 2: título de tela em Homebase com efeito de "batida" (sombra dura).
-  titulo: {
-    fontFamily: FamiliaFonte.display,
-    fontSize: TamanhoFonte.xxl,
-    color: Cores.texto,
-    marginTop: Espacamento.padrao,
+  etapa: { marginTop: Espacamento.grande, marginBottom: Espacamento.minimo },
+  subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
+  previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  blocoResponsavel: {
+    marginTop: Espacamento.pequeno,
+    marginBottom: Espacamento.padrao,
+    paddingLeft: Espacamento.medio,
+    borderLeftWidth: 2,
+    borderLeftColor: Cores.linhaForte,
   },
-  subtitulo: {
-    fontSize: TamanhoFonte.md,
-    color: Cores.texto2,
-    marginTop: Espacamento.minimo / 2,
-    marginBottom: Espacamento.grande + Espacamento.minimo,
-  },
-  erroConta: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginBottom: Espacamento.padrao },
-  blocoResponsavel: { marginTop: Espacamento.minimo, marginBottom: Espacamento.padrao },
-  rotuloBloco: { fontSize: TamanhoFonte.md, fontWeight: '600', color: Cores.texto },
-  ajudaBloco: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo, marginBottom: Espacamento.medio },
+  ajudaBloco: { marginBottom: Espacamento.medio },
   espaco: { height: Espacamento.pequeno },
-  rodape: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  rodapeTexto: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
+  rodape: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
 });

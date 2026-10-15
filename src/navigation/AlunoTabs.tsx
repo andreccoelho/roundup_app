@@ -17,6 +17,7 @@ import MissoesScreen from '../screens/aluno/MissoesScreen';
 import ClassificacaoScreen from '../screens/aluno/ClassificacaoScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
 import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
+import ContaPrivacidadeScreen from '../screens/compartilhado/ContaPrivacidadeScreen';
 import { IconeLuva, IconeFichaTecnica, IconeBandeira, IconeCartaoPontuacao, IconePerfil } from '../components/icones';
 import { iconeAba, opcoesHeader, useOpcoesTabBar } from './opcoesCasca';
 
@@ -31,6 +32,7 @@ export type PerfilAlunoStackParamList = {
   EditarPerfil: undefined;
   VincularAluno: undefined;
   PreferenciasNotificacao: undefined;
+  ContaPrivacidade: undefined;
 };
 
 export type AlunoTabParamList = {
@@ -100,12 +102,13 @@ function PerfilNavigator() {
     <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
       <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
       <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: 'Editar perfil' }} />
-      <PerfilStack.Screen name="VincularAluno" component={VincularAlunoScreen} options={{ title: 'Meus vínculos' }} />
+      <PerfilStack.Screen name="VincularAluno" component={VincularAlunoScreen} options={{ title: 'Vincular-se' }} />
       <PerfilStack.Screen
         name="PreferenciasNotificacao"
         component={PreferenciasNotificacaoScreen}
         options={{ title: 'Preferências de notificação' }}
       />
+      <PerfilStack.Screen name="ContaPrivacidade" component={ContaPrivacidadeScreen} options={{ title: 'Conta e privacidade' }} />
     </PerfilStack.Navigator>
   );
 }

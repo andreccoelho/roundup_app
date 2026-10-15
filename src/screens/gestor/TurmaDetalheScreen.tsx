@@ -1,22 +1,33 @@
 // RF10, RF11, RF12: detalhe da turma — alunos matriculados, sessões e criação de sessão
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { Cores, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { buscarTurma } from '../../services/turmas';
 import { listarMatriculasPorTurma } from '../../services/matriculas';
 import { listarSessoesPorTurma, criarSessao } from '../../services/sessoes';
 import { buscarUsuario } from '../../services/usuarios';
 import { Matricula, Sessao, Turma } from '../../types';
-import { combinarDataHora, formatarDataHora, gerarDatasRecorrentes, parseDataBr, semanaContendo } from '../../utils/datas';
+import { combinarDataHora, gerarDatasRecorrentes, paraData, parseDataBr, semanaContendo } from '../../utils/datas';
+import { formatarDiaHora, formatarHora, rotuloDia, rotuloNivel, ROTULO_STATUS_SESSAO } from '../../utils/apresentacao';
+import { mensagemErro } from '../../utils/mensagensErro';
 import { GestorStackParamList } from '../../navigation/types';
 import { DIAS_SEMANA } from '../../constants/diasSemana';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Botao from '../../components/ui/Botao';
-import Cartao from '../../components/ui/Cartao';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Folha from '../../components/ui/Folha';
+import Aviso from '../../components/ui/Aviso';
+import Avatar from '../../components/ui/Avatar';
+import ItemMenu from '../../components/ui/ItemMenu';
+import MensagemErro from '../../components/ui/MensagemErro';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import LinhaFina from '../../components/LinhaFina';
+import { IconeChevron, IconeFichaTecnica, IconeMais, IconeTatame } from '../../components/icones';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
@@ -48,6 +59,8 @@ export default function TurmaDetalheScreen() {
   const [descricao, setDescricao] = useState('');
   const [criando, setCriando] = useState(false);
   const [erroForm, setErroForm] = useState<string | null>(null);
+  const [folhaAberta, setFolhaAberta] = useState(false);
+  const [sucesso, setSucesso] = useState<string | null>(null);
 
   function alternarDiaSemana(valor: number) {
     setDiasSemana((atual) => (atual.includes(valor) ? atual.filter((d) => d !== valor) : [...atual, valor]));
@@ -78,8 +91,8 @@ export default function TurmaDetalheScreen() {
           }),
       );
       setMatriculas(comNome);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar a turma agora.'));
     } finally {
       setCarregando(false);
     }
@@ -93,7 +106,7 @@ export default function TurmaDetalheScreen() {
   // que contém a data informada — "grade semanal" da RF12, não apenas uma sessão avulsa, sem
   // exigir uma data final separada.
   async function handleCriarSessao() {
-    if (!usuario) return;
+    if (!usuario || criando) return;
     setErroForm(null);
 
     const referencia = parseDataBr(data);
@@ -138,9 +151,11 @@ export default function TurmaDetalheScreen() {
       setHoraInicio('');
       setHoraFim('');
       setDescricao('');
+      setFolhaAberta(false);
+      setSucesso(datas.length > 1 ? `${datas.length} sessões criadas.` : 'Sessão criada.');
       await carregarTudo();
-    } catch (e: any) {
-      setErroForm(e.message);
+    } catch (e) {
+      setErroForm(mensagemErro(e, 'Não foi possível criar a sessão. Tente novamente.'));
     } finally {
       setCriando(false);
     }
@@ -148,9 +163,10 @@ export default function TurmaDetalheScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={72} repeticoes={3} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto altura={96} />
+        <Esqueleto forma="linha" repeticoes={3} />
+      </Tela>
     );
   }
 
@@ -160,107 +176,136 @@ export default function TurmaDetalheScreen() {
 
   if (!turma) {
     return (
-      <View style={styles.container}>
-        <EstadoVazio titulo="Turma não encontrada" descricao="Ela pode ter sido removida ou você não tem mais acesso a ela." />
-      </View>
+      <Tela largura="lista" centralizarVertical>
+        <EstadoVazio icone={IconeTatame} titulo="Turma não encontrada" descricao="Ela pode ter sido removida ou você não tem mais acesso a ela." />
+      </Tela>
     );
   }
 
+  const grade =
+    turma.diasSemana && turma.diasSemana.length > 0
+      ? `${DIAS_SEMANA.filter((item) => turma.diasSemana!.includes(item.valor))
+          .map((item) => item.rotulo)
+          .join(', ')}${turma.horarioInicio && turma.horarioFim ? `, ${turma.horarioInicio} às ${turma.horarioFim}` : ''}`
+      : null;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      <Text style={styles.titulo}>{turma.nome}</Text>
-      <Text style={styles.subtitulo}>
-        {turma.modalidade} · {turma.nivel} · {turma.ativa ? 'ativa' : 'inativa'}
-      </Text>
-      {nomeProfessor ? <Text style={styles.subtitulo}>Professor: {nomeProfessor}</Text> : null}
-      {turma.diasSemana && turma.diasSemana.length > 0 ? (
-        <Text style={styles.subtitulo}>
-          Grade:{' '}
-          {DIAS_SEMANA.filter((item) => turma.diasSemana!.includes(item.valor))
-            .map((item) => item.rotulo)
-            .join(', ')}
-          {turma.horarioInicio && turma.horarioFim ? ` às ${turma.horarioInicio}–${turma.horarioFim}` : ''}
-        </Text>
-      ) : null}
-
-      <TouchableOpacity
-        style={styles.linkRelatorioToque}
-        onPress={() => navigation.navigate('RelatorioFrequencia', { turmaId })}
-        accessibilityRole="button"
-        accessibilityLabel="Relatório de frequência"
-      >
-        <Text style={styles.linkRelatorio}>Relatório de frequência</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.secaoTitulo}>Alunos matriculados</Text>
-      {matriculas.length === 0 ? (
-        <Text style={styles.vazio}>Nenhum aluno matriculado ainda.</Text>
-      ) : (
-        matriculas.map(({ matricula, nomeAluno }) => (
-          <Cartao key={matricula.id} style={styles.itemSimples}>
-            <Text style={styles.itemNome}>{nomeAluno}</Text>
-          </Cartao>
-        ))
-      )}
-
-      <Text style={styles.secaoTitulo}>Nova sessão</Text>
-      <Text style={styles.rotuloCampo}>Dias da semana</Text>
-      <View style={styles.linhaNiveis}>
-        {DIAS_SEMANA.map(({ valor, rotulo }) => (
-          <Etiqueta key={valor} texto={rotulo} selecionada={diasSemana.includes(valor)} onPress={() => alternarDiaSemana(valor)} />
-        ))}
+    <Tela
+      largura="lista"
+      sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} acimaDaTabBar />}
+    >
+      <Texto variante="display">{turma.nome}</Texto>
+      <View style={styles.meta}>
+        <Etiqueta texto={turma.modalidade} />
+        <Etiqueta texto={rotuloNivel(turma.nivel)} />
+        <Texto variante="rotuloPlacar" cor={turma.ativa ? 'sucesso' : 'texto3'}>
+          {turma.ativa ? 'Ativa' : 'Inativa'}
+        </Texto>
       </View>
-      <CampoTexto rotulo="Data" placeholder="DD/MM/AAAA" valor={data} onAlterar={setData} />
-      <CampoTexto rotulo="Início" placeholder="HH:MM" valor={horaInicio} onAlterar={setHoraInicio} />
-      <CampoTexto rotulo="Fim" placeholder="HH:MM" valor={horaFim} onAlterar={setHoraFim} />
-      <CampoTexto rotulo="Descrição (opcional)" placeholder="Ex.: Foco em defesa pessoal" valor={descricao} onAlterar={setDescricao} />
+      {nomeProfessor ? <Texto variante="legenda">{`Professor: ${nomeProfessor}`}</Texto> : null}
+      {grade ? <Texto variante="legenda">{`Grade: ${grade}`}</Texto> : null}
 
-      {erroForm ? (
-        <Text style={styles.erroForm} accessibilityRole="alert">
-          {erroForm}
-        </Text>
-      ) : null}
+      <View style={styles.acoes}>
+        <Botao titulo="Nova sessão" icone={IconeMais} onPress={() => setFolhaAberta(true)} />
+      </View>
+      <ItemMenu
+        rotulo="Relatório de frequência"
+        descricao="Presenças por aluno num período"
+        icone={IconeFichaTecnica}
+        onPress={() => navigation.navigate('RelatorioFrequencia', { turmaId })}
+      />
 
-      <View style={styles.espaco} />
-      <Botao titulo="Criar sessão" onPress={handleCriarSessao} carregando={criando} />
-
-      <Text style={styles.secaoTitulo}>Sessões</Text>
+      <CabecalhoSecao titulo="Sessões" contador={sessoes.length} />
       {sessoes.length === 0 ? (
-        <Text style={styles.vazio}>Nenhuma sessão criada ainda.</Text>
+        <Texto variante="legenda">Nenhuma sessão criada ainda.</Texto>
       ) : (
-        sessoes.map((sessao) => (
-          <TouchableOpacity
-            key={sessao.id}
-            onPress={() => navigation.navigate('SessaoDetalhe', { sessaoId: sessao.id })}
-            accessibilityRole="button"
-            accessibilityLabel={`Sessão de ${formatarDataHora(sessao.inicio)}, status ${sessao.status}`}
-          >
-            <Cartao style={styles.item}>
-              <Text style={styles.itemNome}>{formatarDataHora(sessao.inicio)}</Text>
-              <Text style={styles.itemDetalhe}>status: {sessao.status}</Text>
-            </Cartao>
-          </TouchableOpacity>
+        sessoes.map((sessao, i) => {
+          const inicio = paraData(sessao.inicio);
+          return (
+            <View key={sessao.id}>
+              {i > 0 ? <LinhaFina /> : null}
+              <Pressable
+                onPress={() => navigation.navigate('SessaoDetalhe', { sessaoId: sessao.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`Sessão de ${formatarDiaHora(inicio)}, ${ROTULO_STATUS_SESSAO[sessao.status]}`}
+                style={({ pressed }) => [styles.linha, pressed && styles.pressionada]}
+              >
+                <View style={styles.horario}>
+                  <Texto variante="placar">{formatarHora(inicio)}</Texto>
+                  <Texto variante="rotuloPlacar" cor="texto3" numberOfLines={1}>
+                    {rotuloDia(inicio)}
+                  </Texto>
+                </View>
+                <View style={styles.textos}>
+                  <Texto variante="rotuloPlacar" cor={sessao.status === 'aberta' ? 'sucesso' : sessao.status === 'cancelada' ? 'texto3' : 'texto2'}>
+                    {ROTULO_STATUS_SESSAO[sessao.status]}
+                  </Texto>
+                  {sessao.descricao ? <Texto variante="legenda">{sessao.descricao}</Texto> : null}
+                </View>
+                <IconeChevron tamanho={20} cor={Cores.texto3} />
+              </Pressable>
+            </View>
+          );
+        })
+      )}
+
+      <CabecalhoSecao titulo="Alunos matriculados" contador={matriculas.length} />
+      {matriculas.length === 0 ? (
+        <Texto variante="legenda">Nenhum aluno matriculado ainda.</Texto>
+      ) : (
+        matriculas.map(({ matricula, nomeAluno }, i) => (
+          <View key={matricula.id}>
+            {i > 0 ? <LinhaFina /> : null}
+            <View style={styles.linhaAluno}>
+              <Avatar nome={nomeAluno} tamanho={32} />
+              <Texto variante="corpo">{nomeAluno}</Texto>
+            </View>
+          </View>
         ))
       )}
-    </ScrollView>
+
+      <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova sessão">
+        <MensagemErro mensagem={erroForm} />
+        <CampoTexto
+          rotulo="Semana de referência"
+          mascara="data"
+          valor={data}
+          onAlterar={setData}
+          ajuda="Qualquer data da semana desejada. Uma sessão é criada em cada dia marcado abaixo, nessa semana."
+        />
+        <Texto variante="legenda" style={styles.rotuloCampo}>
+          Dias da semana
+        </Texto>
+        <View style={styles.linhaChips}>
+          {DIAS_SEMANA.map(({ valor, rotulo }) => (
+            <Etiqueta key={valor} texto={rotulo} modo="multiplo" selecionada={diasSemana.includes(valor)} onPress={() => alternarDiaSemana(valor)} />
+          ))}
+        </View>
+        <View style={styles.linhaHorarios}>
+          <View style={styles.campoHorario}>
+            <CampoTexto rotulo="Início" mascara="hora" valor={horaInicio} onAlterar={setHoraInicio} />
+          </View>
+          <View style={styles.campoHorario}>
+            <CampoTexto rotulo="Fim" mascara="hora" valor={horaFim} onAlterar={setHoraFim} />
+          </View>
+        </View>
+        <CampoTexto rotulo="Descrição (opcional)" placeholder="Ex.: Foco em defesa pessoal" valor={descricao} onAlterar={setDescricao} />
+        <Botao titulo={diasSemana.length > 1 ? `Criar ${diasSemana.length} sessões` : 'Criar sessão'} onPress={handleCriarSessao} carregando={criando} />
+      </Folha>
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
-  titulo: { fontSize: TamanhoFonte.xxl, fontWeight: '700', color: Cores.texto },
-  subtitulo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginTop: Espacamento.minimo },
-  linkRelatorioToque: { marginTop: Espacamento.medio, minHeight: 44, justifyContent: 'center' },
-  linkRelatorio: { fontSize: TamanhoFonte.sm, color: Cores.texto2, textDecorationLine: 'underline' },
-  secaoTitulo: { fontSize: TamanhoFonte.lg, fontWeight: '700', color: Cores.texto, marginTop: Espacamento.grande, marginBottom: Espacamento.pequeno },
-  rotuloCampo: { fontSize: TamanhoFonte.sm, color: Cores.texto2, marginBottom: Espacamento.minimo },
-  linhaNiveis: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
-  erroForm: { color: Cores.perigo, fontSize: TamanhoFonte.sm, marginTop: Espacamento.pequeno },
-  espaco: { height: Espacamento.minimo },
-  vazio: { color: Cores.texto2, fontSize: TamanhoFonte.sm },
-  item: { marginBottom: Espacamento.pequeno },
-  itemSimples: { marginBottom: Espacamento.pequeno },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2, marginTop: Espacamento.minimo },
+  meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Espacamento.minimo + 2, marginTop: Espacamento.pequeno, marginBottom: Espacamento.pequeno },
+  acoes: { marginTop: Espacamento.grande, marginBottom: Espacamento.pequeno },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 64, paddingVertical: Espacamento.medio },
+  pressionada: { backgroundColor: Cores.superficie1 },
+  horario: { width: 76 },
+  textos: { flex: 1, gap: 2 },
+  linhaAluno: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 52 },
+  rotuloCampo: { marginBottom: Espacamento.pequeno },
+  linhaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  linhaHorarios: { flexDirection: 'row', gap: Espacamento.padrao },
+  campoHorario: { flex: 1 },
 });

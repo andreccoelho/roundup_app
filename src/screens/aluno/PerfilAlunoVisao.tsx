@@ -109,7 +109,7 @@ export default function PerfilAlunoVisao({
 
         <CabecalhoSecao titulo="Conta" />
         <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={onEditar} />
-        <ItemMenu rotulo="Meus vínculos" icone={IconeCorda} onPress={onVinculos} separador />
+        <ItemMenu rotulo="Vincular-se" descricao="Academias e professores autônomos" icone={IconeCorda} onPress={onVinculos} separador />
         <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={onNotificacoes} separador />
         <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={onContaPrivacidade} separador />
         <ItemMenu rotulo="Sair" icone={IconeSair} semChevron onPress={onSair} separador />

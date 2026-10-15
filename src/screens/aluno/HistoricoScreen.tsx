@@ -4,14 +4,21 @@
 // somente leitura, com o enum diferente StatusCheckIn 'pendente'/'validado'/'rejeitado' — forçar
 // o componente errado esconderia esse status atrás de um rótulo que não é o dele.
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Cores, Espacamento, TamanhoFonte } from '../../theme';
+import { StyleSheet, View } from 'react-native';
+import { Cores, Espacamento, type NomeCor } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarHistoricoDoAluno } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
 import { CheckIn, StatusCheckIn } from '../../types';
-import { formatarDataHora } from '../../utils/datas';
-import Cartao from '../../components/ui/Cartao';
+import { paraData } from '../../utils/datas';
+import { formatarDiaHora, ROTULO_STATUS_CHECKIN } from '../../utils/apresentacao';
+import { mensagemErro } from '../../utils/mensagensErro';
+import Tela from '../../components/ui/Tela';
+import Texto from '../../components/ui/Texto';
+import Estatistica from '../../components/ui/Estatistica';
+import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import LinhaFina from '../../components/LinhaFina';
+import { IconeCheck, IconeFichaTecnica, IconeRelogio, IconeAlerta } from '../../components/icones';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
@@ -21,17 +28,14 @@ interface ItemHistorico {
   nomeTurma: string;
 }
 
-const ROTULO_STATUS: Record<StatusCheckIn, string> = {
-  pendente: 'Pendente',
-  validado: 'Validado',
-  rejeitado: 'Rejeitado',
+const COR_STATUS: Record<StatusCheckIn, NomeCor> = {
+  pendente: 'texto2',
+  validado: 'sucesso',
+  rejeitado: 'perigo',
 };
 
-const COR_STATUS: Record<StatusCheckIn, string> = {
-  pendente: Cores.texto2,
-  validado: Cores.sucesso,
-  rejeitado: Cores.perigo,
-};
+// Status com ícone + texto, nunca só cor.
+const ICONE_STATUS = { pendente: IconeRelogio, validado: IconeCheck, rejeitado: IconeAlerta };
 
 export default function HistoricoScreen() {
   const { usuario } = useAuth();
@@ -53,8 +57,8 @@ export default function HistoricoScreen() {
         }),
       );
       setItens(comNomeTurma);
-    } catch (e: any) {
-      setErro(e.message);
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível carregar seu histórico agora.'));
     } finally {
       setCarregando(false);
     }
@@ -66,9 +70,9 @@ export default function HistoricoScreen() {
 
   if (carregando) {
     return (
-      <View style={styles.container}>
-        <Esqueleto altura={64} repeticoes={5} />
-      </View>
+      <Tela largura="lista">
+        <Esqueleto forma="linha" repeticoes={6} />
+      </Tela>
     );
   }
 
@@ -78,33 +82,52 @@ export default function HistoricoScreen() {
 
   if (itens.length === 0) {
     return (
-      <View style={styles.container}>
-        <EstadoVazio titulo="Nenhum check-in registrado ainda" descricao="Seus check-ins validados e pendentes aparecem aqui." />
-      </View>
+      <Tela largura="lista" centralizarVertical>
+        <EstadoVazio icone={IconeFichaTecnica} titulo="Nenhum check-in registrado ainda" descricao="Seus check-ins validados e pendentes aparecem aqui." />
+      </Tela>
     );
   }
 
+  const validados = itens.filter((i) => i.checkIn.status === 'validado').length;
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.conteudo}>
-      {itens.map(({ checkIn, nomeTurma }) => (
-        <Cartao key={checkIn.id} style={styles.item}>
-          <Text style={styles.itemNome}>{nomeTurma}</Text>
-          <View style={styles.itemLinha}>
-            <Text style={styles.itemDetalhe}>{formatarDataHora(checkIn.dataHora)}</Text>
-            <Text style={[styles.itemStatus, { color: COR_STATUS[checkIn.status] }]}>{ROTULO_STATUS[checkIn.status]}</Text>
+    <Tela largura="lista">
+      <View style={styles.resumo}>
+        <Estatistica valor={itens.length} rotulo="Check-ins" />
+        <Estatistica valor={validados} rotulo="Validados" />
+      </View>
+      <CabecalhoSecao titulo="Registros" />
+      {itens.map(({ checkIn, nomeTurma }, i) => {
+        const Icone = ICONE_STATUS[checkIn.status];
+        return (
+          <View key={checkIn.id}>
+            {i > 0 ? <LinhaFina /> : null}
+            <View
+              style={styles.linha}
+              accessible
+              accessibilityLabel={`${nomeTurma}, ${formatarDiaHora(paraData(checkIn.dataHora))}, ${ROTULO_STATUS_CHECKIN[checkIn.status]}`}
+            >
+              <View style={styles.textos}>
+                <Texto variante="corpoForte">{nomeTurma}</Texto>
+                <Texto variante="legenda">{formatarDiaHora(paraData(checkIn.dataHora))}</Texto>
+              </View>
+              <View style={styles.status}>
+                <Icone tamanho={16} cor={Cores[COR_STATUS[checkIn.status]]} />
+                <Texto variante="rotuloPlacar" cor={COR_STATUS[checkIn.status]}>
+                  {ROTULO_STATUS_CHECKIN[checkIn.status]}
+                </Texto>
+              </View>
+            </View>
           </View>
-        </Cartao>
-      ))}
-    </ScrollView>
+        );
+      })}
+    </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Cores.fundo, padding: Espacamento.padrao },
-  conteudo: { paddingBottom: Espacamento.enorme },
-  item: { marginBottom: Espacamento.pequeno },
-  itemNome: { fontSize: TamanhoFonte.md, fontWeight: '700', color: Cores.texto },
-  itemLinha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: Espacamento.minimo },
-  itemDetalhe: { fontSize: TamanhoFonte.xs, color: Cores.texto2 },
-  itemStatus: { fontSize: TamanhoFonte.xs, fontWeight: '600' },
+  resumo: { flexDirection: 'row', gap: Espacamento.grande },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 64, paddingVertical: Espacamento.medio },
+  textos: { flex: 1, gap: 2 },
+  status: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.minimo, maxWidth: 160 },
 });
