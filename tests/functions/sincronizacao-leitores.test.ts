@@ -8,6 +8,7 @@ import {
   iniciarAmbiente, encerrarAmbiente, limparDados, semear,
   usuarioBase, turmaBase, matriculaBase, sessaoBase, minutosAPartirDeAgora,
 } from '../rules/helpers';
+import { aguardar } from './emuladores';
 
 beforeAll(iniciarAmbiente);
 afterAll(encerrarAmbiente);
@@ -15,16 +16,6 @@ afterEach(limparDados);
 
 // `aguardar` sonda por até 10 s (20 × 500 ms); o padrão de 5 s do Jest cortaria o teste antes.
 jest.setTimeout(20000);
-
-// As Cloud Functions rodam de forma assíncrona em reação ao gatilho — não há como "esperar"
-// de outro jeito a não ser sondar o resultado esperado com um tempo limite.
-async function aguardar(condicao: () => Promise<boolean>, tentativas = 20, intervaloMs = 500): Promise<void> {
-  for (let i = 0; i < tentativas; i += 1) {
-    if (await condicao()) return;
-    await new Promise((resolve) => setTimeout(resolve, intervaloMs));
-  }
-  throw new Error('Condição não satisfeita a tempo — a Cloud Function não reagiu (ou não está rodando).');
-}
 
 async function leitoresDaSessao(sessaoId: string): Promise<string[]> {
   let leitores: string[] = [];

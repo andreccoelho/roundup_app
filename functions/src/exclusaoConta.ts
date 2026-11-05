@@ -57,10 +57,14 @@ async function apagarDadosDoAluno(db: Firestore, uid: string): Promise<void> {
   await gravarEmLotes(db, todas.map((ref) => ({ tipo: 'apagar', ref })));
 }
 
-// RF14, RNF04: o uid sai de leitoresIds de todas as sessões (aluno, professor ou responsável)
+// RF14, RN09, RNF04: o uid sai de leitoresIds de todas as sessões e classificações (aluno,
+// professor ou responsável)
 async function removerDosLeitores(db: Firestore, uid: string): Promise<void> {
-  const sessoes = await refs(db.collection('sessoes').where('leitoresIds', 'array-contains', uid));
-  await gravarEmLotes(db, sessoes.map((ref) => ({
+  const documentos = (await Promise.all([
+    refs(db.collection('sessoes').where('leitoresIds', 'array-contains', uid)),
+    refs(db.collection('classificacoes').where('leitoresIds', 'array-contains', uid)),
+  ])).flat();
+  await gravarEmLotes(db, documentos.map((ref) => ({
     tipo: 'atualizar',
     ref,
     dados: { leitoresIds: FieldValue.arrayRemove(uid) },

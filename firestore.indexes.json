@@ -46,6 +46,8 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "responsavelId", "order": "ASCENDING" },
+        { "fieldPath": "periodo", "order": "ASCENDING" },
+        { "fieldPath": "leitoresIds", "arrayConfig": "CONTAINS" },
         { "fieldPath": "pontos", "order": "DESCENDING" }
       ]
     }

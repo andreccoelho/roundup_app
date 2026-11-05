@@ -2,7 +2,8 @@
 // aluno/PerfilScreen.tsx; a Galeria monta a mesma visão com dados fictícios.
 // Banda de identidade → estatísticas (Oswald) → card de faixa (único corte diagonal da tela) →
 // modalidades → medalhas → configurações como lista de ItemMenu. "Excluir conta" não fica aqui:
-// vive na subtela "Conta e privacidade".
+// vive na subtela "Conta e privacidade". RNF11: a participação na classificação é um Toggle logo
+// abaixo de "Notificações" — preferência de um toque só, não precisa de subtela.
 import { StyleSheet, View } from 'react-native';
 import { Cores, Espacamento } from '../../theme';
 import BandaIdentidade from '../../components/ui/BandaIdentidade';
@@ -14,6 +15,8 @@ import Medalha, { type TipoMedalha } from '../../components/ui/Medalha';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import ItemMenu from '../../components/ui/ItemMenu';
 import Texto from '../../components/ui/Texto';
+import Toggle from '../../components/ui/Toggle';
+import LinhaFina from '../../components/LinhaFina';
 import { IconeCadeado, IconeChama, IconeCorda, IconePerfil, IconeSair, IconeSino } from '../../components/icones';
 
 export interface MedalhaPerfil {
@@ -39,6 +42,9 @@ interface PerfilAlunoVisaoProps {
   onEditar: () => void;
   onVinculos: () => void;
   onNotificacoes: () => void;
+  participaClassificacao: boolean;
+  salvandoParticipacao?: boolean;
+  onAlternarParticipacao: (participa: boolean) => void;
   onContaPrivacidade: () => void;
   onSair: () => void;
 }
@@ -57,6 +63,9 @@ export default function PerfilAlunoVisao({
   onEditar,
   onVinculos,
   onNotificacoes,
+  participaClassificacao,
+  salvandoParticipacao,
+  onAlternarParticipacao,
   onContaPrivacidade,
   onSair,
 }: PerfilAlunoVisaoProps) {
@@ -111,6 +120,14 @@ export default function PerfilAlunoVisao({
         <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={onEditar} />
         <ItemMenu rotulo="Vincular-se" descricao="Academias e professores autônomos" icone={IconeCorda} onPress={onVinculos} separador />
         <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={onNotificacoes} separador />
+        <LinhaFina />
+        <Toggle
+          rotulo="Participar da classificação"
+          descricao="Desligado, você some do ranking dos outros alunos, mas continua vendo sua pontuação."
+          valor={participaClassificacao}
+          desabilitado={salvandoParticipacao}
+          onAlterar={onAlternarParticipacao}
+        />
         <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={onContaPrivacidade} separador />
         <ItemMenu rotulo="Sair" icone={IconeSair} semChevron onPress={onSair} separador />
       </View>

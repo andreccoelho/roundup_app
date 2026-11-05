@@ -27,6 +27,7 @@ export interface Usuario {
   dataNascimento?: Timestamp;       // RF30: só perfil 'aluno' — determina se responsavelLegal é obrigatório
   responsavelLegal?: ResponsavelLegal; // RF30: obrigatório quando dataNascimento indica menor de 18 anos
   preferenciasNotificacao?: PreferenciasNotificacao; // RF31
+  participaClassificacao?: boolean; // RNF11: só perfil 'aluno' — ausente conta como true (padrão é participar)
   criadoEm: Timestamp;
   atualizadoEm: Timestamp;
 }
@@ -171,15 +172,20 @@ export interface MissaoProgresso {
   atualizadoEm: Date;
 }
 
-// RF20, RN04, RN09 (Ciclo 2): pontuação acumulada do aluno, por escopo de vínculo — id
-// determinístico `${alunoId}_${responsavelId}`, um documento por par aluno/responsável (RN09:
-// escopo segue o vínculo). PROVISÓRIO: cumulativo desde sempre, RN04 (janela de tempo) ainda
-// não reseta pontos por período — ver docs/DECISOES_PENDENTES.md.
+// RF20, RN04, RN09, RNF11: pontuação do aluno por escopo de vínculo E por mês — id determinístico
+// `${alunoId}_${responsavelId}_${periodo}`, um documento por aluno/responsável/mês (RN04: o
+// ranking só considera o período vigente; o nível do aluno, RF17, soma todos os períodos).
+// `leitoresIds` é mantido só por Cloud Function (functions/src/classificacao.ts): responsável +
+// alunos com vínculo aceito com ele, ou só responsável + o próprio aluno quando ele não participa
+// da classificação (RNF11). Documentos anteriores a esta mudança (`${alunoId}_${responsavelId}`,
+// sem `periodo`) continuam somando no nível, mas não aparecem em nenhum ranking mensal.
 export interface Classificacao {
   id: string;
   alunoId: string;
   responsavelId: string;
+  periodo: string;          // "AAAA-MM", fuso local — ver periodoDe() em utils/datas.ts
   pontos: number;
+  leitoresIds?: string[];
   atualizadoEm: Date;
 }
 

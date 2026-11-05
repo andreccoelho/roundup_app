@@ -133,6 +133,8 @@ export function ComposicaoPerfil() {
       onEditar={nada}
       onVinculos={nada}
       onNotificacoes={nada}
+      participaClassificacao
+      onAlternarParticipacao={nada}
       onContaPrivacidade={nada}
       onSair={nada}
     />
