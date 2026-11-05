@@ -36,7 +36,7 @@ export default function PerfilScreen() {
       />
 
       <GrupoLista titulo="Graduação" semMargem>
-        <LinhaLista accessibilityLabel={`Graduação: ${usuario?.graduacao || 'não informada'}`}>
+        <LinhaLista>
           <SeloFaixa faixaOuGrau={usuario?.graduacao || 'Graduação não informada'} />
         </LinhaLista>
       </GrupoLista>

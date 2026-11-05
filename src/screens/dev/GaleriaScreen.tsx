@@ -182,7 +182,7 @@ export default function GaleriaScreen() {
         </CascaDemo>
         {/* Cabeçalho de desenvolvimento: some nas capturas do relatório (data-dev="galeria") */}
         <View style={styles.voltarComposicao} {...({ dataSet: { dev: 'galeria' } } as object)}>
-          <Botao variante="secundario" compacto titulo="Voltar à galeria" onPress={() => setComposicao(null)} />
+          <Botao compacto titulo="Voltar à galeria" onPress={() => setComposicao(null)} />
         </View>
       </View>
     );

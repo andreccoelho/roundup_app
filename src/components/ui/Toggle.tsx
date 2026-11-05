@@ -1,7 +1,8 @@
 // Toggle — linha de lista com Switch nativo (role "switch"), trilha ligada no tint e haptic de
 // seleção ao alternar. A linha inteira é tocável e o rótulo vira o nome acessível. Desenha o
-// próprio separador dentro de um GrupoLista.
-import { Pressable, Switch, View } from 'react-native';
+// próprio separador dentro de um GrupoLista. No web o Switch vira um <input> focável dentro da
+// linha (que já é o switch acessível): lá o interruptor é só desenho, com as mesmas cores.
+import { Platform, Pressable, Switch, View } from 'react-native';
 import { Alturas, criarEstilos, Espacamento, useTema } from '../../theme';
 import { hapticaSelecao } from '../../utils/haptica';
 import LinhaFina from '../LinhaFina';
@@ -42,6 +43,11 @@ function Toggle({ rotulo, descricao, valor, onAlterar, desabilitado, separadorAc
           <Texto variante="body">{rotulo}</Texto>
           {descricao ? <Texto variante="footnote">{descricao}</Texto> : null}
         </View>
+        {Platform.OS === 'web' ? (
+          <View style={[styles.trilha, { backgroundColor: valor ? cores.tintCheio : cores.preenchimentoOpaco }]} aria-hidden>
+            <View style={[styles.botao, valor && styles.botaoLigado]} />
+          </View>
+        ) : (
         <Switch
           value={valor}
           onValueChange={alternar}
@@ -56,6 +62,7 @@ function Toggle({ rotulo, descricao, valor, onAlterar, desabilitado, separadorAc
           importantForAccessibility="no-hide-descendants"
           aria-hidden
         />
+        )}
       </Pressable>
     </View>
   );
@@ -76,4 +83,7 @@ const useEstilos = criarEstilos(() => ({
   },
   textos: { flex: 1, gap: 2 },
   desabilitado: { opacity: 0.5 },
+  trilha: { width: 51, height: 31, borderRadius: 16, padding: 2, justifyContent: 'center' },
+  botao: { width: 27, height: 27, borderRadius: 14, backgroundColor: '#FFFFFF', boxShadow: '0px 2px 4px rgba(0,0,0,0.2)' },
+  botaoLigado: { alignSelf: 'flex-end' },
 }));
