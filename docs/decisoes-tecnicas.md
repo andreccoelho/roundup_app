@@ -183,6 +183,27 @@ precisaria de `leitoresIds`, mas a escrita do agregado pelo client exigiria vali
 delta dentro de um mapa, e a adesão opcional (RNF11) não caberia: num documento único, ou o leitor
 vê todos os alunos ou nenhum.
 
+## 2026-11-05 — RN01 com pontuação configurável: check-in e classificação se conferem
+
+Com a pontuação por check-in configurável (RF33), a trava antiga de `classificacoes` (delta
+sempre ±10) deixou de servir: o crédito pode ser outro valor, e o estorno precisa devolver o que
+o check-in recebeu na época, mesmo que a configuração tenha mudado depois.
+
+**Decisão:** cada escrita do client em `classificacoes` carrega `origemCheckinId`, e cada
+mudança de pontos em `checkins` carrega `classificacaoId`. As duas regras usam `get()` (estado
+antes) e `getAfter()` (estado depois da transação) uma sobre a outra:
+- `classificacoes`: o delta de pontos é igual a `getAfter(checkin).pontos - get(checkin).pontos`,
+  e o check-in é do mesmo aluno e responsável;
+- `checkins`: pontos só vão de 0 para `pontosPorCheckinDe(responsavelId)` (configuração ou 10) ou
+  de volta a 0, e a classificação apontada mudou pelo mesmo delta e aponta de volta para ele.
+
+As duas checagens são necessárias. Só a do lado da classificação deixaria o responsável zerar os
+pontos de um check-in sem estornar e validar de novo, creditando duas vezes. Só a do lado do
+check-in deixaria escrever na classificação sem check-in nenhum. São escritas de documento único
+dentro de uma transação, então `get()`/`getAfter()` são seguros aqui (a restrição da primeira
+entrada deste documento é só para regras de lista). Pontos de missão não passam por aqui: a Cloud
+Function `creditarPontosDaMissao` escreve com Admin SDK.
+
 ## 2026-09-08 — "Encerramento" de vínculo professor-academia não implementado
 
 `autonomo` do professor volta para `true` quando o vínculo aceito com uma academia é

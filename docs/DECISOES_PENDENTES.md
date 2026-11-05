@@ -39,7 +39,7 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 - **RF19** — marcos de medalha (`MARCOS_MEDALHAS`): 6 marcos (10/30/100 treinos, 7/30 dias de sequência, 1ª graduação), números escolhidos sem validação.
 - **RF20/RN04** — ✅ **RESOLVIDO**: a classificação é mensal de verdade. Cada mês tem o próprio documento (`classificacoes/{alunoId}_{responsavelId}_{AAAA-MM}`), creditado na mesma transação de `validarCheckIn`, no mês (fuso local) em que o treino aconteceu. O ranking mostra só o mês corrente; o nível (RF17) continua somando todos os meses. Ver item 4.
 
-**Decisão a validar:** esses números viram config real (painel de configuração, RF33) ou continuam fixos no código?
+**✅ Resolvido (RF33):** os números de pontos por check-in, pontos por missão e tabela de níveis viraram configuração real por responsável (item 8). Os valores acima continuam como **padrão** de quem não personalizou e continuam sem validação de balanceamento.
 
 ---
 
@@ -106,9 +106,23 @@ Medalhas são calculadas ao vivo (`src/utils/gamificacao.ts`, `calcularMedalhas(
 
 ---
 
-## 8. `configuracoesGamificacao` (RF33) continua bloqueada
+## 8. `configuracoesGamificacao` (RF33) — ✅ RESOLVIDO (pontuação e níveis), faixas pendente
 
-Não desbloqueei essa coleção nesta rodada — nenhum código lê ou escreve nela; `src/config/gamificacao.ts` usa valores fixos no lugar. RF33 "de verdade" é trocar o arquivo fixo por essa coleção (painel de configuração do responsável), que não foi construído.
+Tela "Pontuação e níveis" no Perfil do professor e da academia (`ConfiguracaoGamificacaoScreen`). Ela grava `configuracoesGamificacao/{uid}` com pontos por check-in (1 a 100), pontos sugeridos por missão (0 a 1000) e a tabela de níveis (1 a 30 valores crescentes). "Restaurar padrão" apaga o documento; sem documento valem os padrões de `src/config/gamificacao.ts`.
+
+**RN01 sem brecha:** a trava fixa de ±10 em `classificacoes` virou um vínculo de mão dupla com o check-in, na mesma transação:
+- o check-in só pode ir de 0 para os pontos por check-in **do responsável** (configuração ou 10) ou de volta a 0, e grava `classificacaoId`;
+- a classificação grava `origemCheckinId`, e a regra confere que o delta dela é exatamente o que os pontos daquele check-in mudaram;
+- o check-in confere que a classificação mudou junto pelo mesmo delta. Sem isso, zerar o check-in sem estornar e validar de novo creditaria duas vezes.
+
+O estorno devolve o que o check-in recebeu, mesmo que a configuração tenha mudado depois. Pontos de missão: a missão passou a aceitar só inteiros de 0 a 1000 (antes, qualquer número), e o crédito é da Cloud Function (item 2). A configuração é apagada na exclusão de conta do responsável (RF29).
+
+**Decisões tomadas (a validar):**
+- **Pontos por missão** é o valor que já vem preenchido ao criar uma missão. O responsável ainda pode mudar o valor de cada missão, dentro do limite de 1000.
+- **Nível do aluno com mais de um vínculo:** o XP exibido continua sendo o total de todos os escopos, e a tabela de níveis usada é a do responsável em que o aluno mais pontuou.
+- A ordem crescente da tabela de níveis é validada no app, não na regra (Rules não tem laço para percorrer listas). Um responsável que gravasse direto pela API uma tabela fora de ordem só bagunçaria o nível dos próprios alunos.
+
+**Fora desta rodada:** o RF33 também cita "a estrutura de faixas da modalidade". Hoje a faixa é texto livre (`faixaOuGrau`, interpretado pelo `SeloFaixa`, ver R-05). Personalizar a estrutura de faixas exige um campo estruturado de faixa por modalidade e mudança no cadastro, na graduação (RF25) e no modelo de dados — é decisão de produto, não foi feita.
 
 ---
 

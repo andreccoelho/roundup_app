@@ -14,6 +14,7 @@ import { listarProximasSessoesDoAluno } from '../../services/sessoes';
 import { realizarCheckIn, buscarCheckInDaSessao, listarHistoricoDoAluno } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
 import { listarClassificacoesDoAluno } from '../../services/classificacoes';
+import { buscarNiveisDoAluno } from '../../services/configuracoesGamificacao';
 import { paraData } from '../../utils/datas';
 import { estadoCheckIn, motivoJanelaFechada } from '../../utils/statusCheckIn';
 import { calcularMedalhas, calcularProgressoNivel, calcularSequencia, MedalhaComEstado, ProgressoNivel } from '../../utils/gamificacao';
@@ -81,12 +82,14 @@ export default function DashboardScreen() {
     if (!usuario) return;
     // Progresso é conteúdo secundário desta tela — falha aqui não deve bloquear o check-in, que é
     // a RNF01. Em erro, mostra nível 1 / sequência 0 em vez de estado de erro.
+    // RF33: a tabela de níveis é a do responsável em que o aluno mais pontuou (buscarNiveisDoAluno)
     Promise.all([listarClassificacoesDoAluno(usuario.id), listarHistoricoDoAluno(usuario.id)])
-      .then(([classificacoes, historico]) => {
+      .then(async ([classificacoes, historico]) => {
         const pontosTotais = classificacoes.reduce((soma, c) => soma + c.pontos, 0);
         const sequenciaAtual = calcularSequencia(historico);
         const validados = historico.filter((c) => c.status === 'validado').length;
-        setProgresso(calcularProgressoNivel(pontosTotais));
+        const niveis = await buscarNiveisDoAluno(classificacoes);
+        setProgresso(calcularProgressoNivel(pontosTotais, niveis));
         setSequencia(sequenciaAtual);
         // Medalhas de graduação ficam de fora: dependem de `graduacoes`, que esta tela não lê.
         setMedalhas(calcularMedalhas(validados, sequenciaAtual, 0));

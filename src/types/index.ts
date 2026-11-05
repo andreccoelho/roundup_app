@@ -136,9 +136,10 @@ export interface CheckIn {
   responsavelId: string;
   dataHora: Timestamp;
   status: StatusCheckIn;            // nasce 'pendente', validação é RF22 no Ciclo 3
-  pontos: number;                   // sempre 0 nesta fase, crédito é RF16 no Ciclo 2
+  pontos: number;                   // RF16: 0 até ser validado; validado vale pontosPorCheckin do responsável (RF33)
   validadoPor?: string;
   validadoEm?: Timestamp;
+  classificacaoId?: string;         // RN01: classificação que recebeu o crédito — a regra confere que ela mudou junto
 }
 
 // RF23 (Ciclo 3): criação e gerenciamento de missões de gamificação
@@ -188,6 +189,7 @@ export interface Classificacao {
   periodo: string;          // "AAAA-MM", fuso local — ver periodoDe() em utils/datas.ts
   pontos: number;
   leitoresIds?: string[];
+  origemCheckinId?: string; // RN01: check-in cuja validação (ou estorno) gerou a última escrita do client
   atualizadoEm: Date;
 }
 
@@ -203,13 +205,14 @@ export interface Graduacao {
   criadoEm: Date;
 }
 
-// RF33 (Ciclo 3): configurações de pontuação por academia ou professor autônomo
+// RF33: personalização da pontuação e dos níveis por academia ou professor autônomo. Um documento
+// por responsável, id == responsavelId. Sem documento, valem os padrões de src/config/gamificacao.ts.
 export interface ConfiguracaoGamificacao {
   id: string;
   responsavelId: string;
-  pontosPorCheckin: number;
-  pontosPorMissao: number;
-  pontosPorGraduacao: number;
+  pontosPorCheckin: number;   // RF16, RN01: pontos de cada check-in validado
+  pontosPorMissao: number;    // RF23: valor sugerido ao criar uma missão
+  niveisXp: number[];         // RF17: XP acumulado para completar cada nível, crescente
   atualizadoEm: Date;
 }
 

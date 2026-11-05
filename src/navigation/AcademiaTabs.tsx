@@ -13,6 +13,7 @@ import PerfilScreen from '../screens/academia/PerfilScreen';
 import VisaoConsolidadaScreen from '../screens/academia/VisaoConsolidadaScreen';
 import SolicitacoesScreen from '../screens/gestor/SolicitacoesScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
+import ConfiguracaoGamificacaoScreen from '../screens/gestor/ConfiguracaoGamificacaoScreen';
 import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import ContaPrivacidadeScreen from '../screens/compartilhado/ContaPrivacidadeScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
@@ -31,6 +32,7 @@ export type PerfilAcademiaStackParamList = {
   SolicitacoesAlunos: { perfilSolicitante: 'aluno' };
   VisaoConsolidada: undefined;
   PreferenciasNotificacao: undefined;
+  ConfiguracaoGamificacao: undefined; // RF33
   ContaPrivacidade: undefined;
 };
 
@@ -80,6 +82,11 @@ function PerfilNavigator() {
         name="PreferenciasNotificacao"
         component={PreferenciasNotificacaoScreen}
         options={{ title: 'Preferências de notificação' }}
+      />
+      <PerfilStack.Screen
+        name="ConfiguracaoGamificacao"
+        component={ConfiguracaoGamificacaoScreen}
+        options={{ title: 'Pontuação e níveis' }}
       />
       <PerfilStack.Screen name="ContaPrivacidade" component={ContaPrivacidadeScreen} options={{ title: 'Conta e privacidade' }} />
     </PerfilStack.Navigator>
