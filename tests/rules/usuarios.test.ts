@@ -209,3 +209,25 @@ describe('usuarios', () => {
     }));
   });
 });
+
+// RF31: o token de push fica em usuarios/{uid}/privado/notificacoes — o dono grava (registro do
+// aparelho no login), ninguém mais lê nem grava. Sem regra nova: é a regra já existente de privado.
+describe('usuarios/{uid}/privado/notificacoes (RF31)', () => {
+  test('o dono grava e lê o próprio token', async () => {
+    await semear(async (db) => {
+      await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+    });
+    const db = comoUsuario('aluno1');
+    await assertSucceeds(setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'notificacoes'), { tokens: ['ExponentPushToken[x]'] }));
+    await assertSucceeds(getDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'notificacoes')));
+  });
+
+  test('outro usuário não lê nem grava o token', async () => {
+    await semear(async (db) => {
+      await setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'notificacoes'), { tokens: ['ExponentPushToken[x]'] });
+    });
+    const db = comoUsuario('aluno2');
+    await assertFails(getDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'notificacoes')));
+    await assertFails(setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'notificacoes'), { tokens: ['ExponentPushToken[intruso]'] }));
+  });
+});

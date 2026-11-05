@@ -32,8 +32,9 @@ export interface Usuario {
   atualizadoEm: Timestamp;
 }
 
-// RF31 (Ciclo 4): preferências de notificação por tipo — só a preferência é persistida aqui; o
-// envio real de push (expo-notifications + gatilho de backend) não está implementado.
+// RF31: preferências de notificação por tipo (ausente ou true = quer receber). O envio é das Cloud
+// Functions em functions/src/notificacoes.ts; o token do aparelho fica em
+// usuarios/{uid}/privado/notificacoes.
 export interface PreferenciasNotificacao {
   lembreteSessao: boolean;
   novaMissao: boolean;

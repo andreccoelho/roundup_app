@@ -50,6 +50,8 @@ async function semearAluno(db: any, alunoId: string, responsavelId: string): Pro
   await setDoc(doc(db, 'consentimentosLGPD', `lgpd_${alunoId}`), {
     usuarioId: alunoId, versao: '1.0', aceito: true, dataHora: AGORA,
   });
+  await setDoc(doc(db, 'usuarios', alunoId, 'privado', 'notificacoes'), { tokens: [`ExponentPushToken[${alunoId}]`] });
+  await setDoc(doc(db, 'notificacoes', `n_${alunoId}`), { destinatarioId: alunoId, tipo: 'conquista', status: 'simulado' });
 }
 
 const DOCS_DO_ALUNO = (alunoId: string) => [
@@ -62,6 +64,8 @@ const DOCS_DO_ALUNO = (alunoId: string) => [
   `missoesProgresso/missao1_${alunoId}`,
   `graduacoes/grad_${alunoId}`,
   `consentimentosLGPD/lgpd_${alunoId}`,
+  `usuarios/${alunoId}/privado/notificacoes`,
+  `notificacoes/n_${alunoId}`,
 ];
 
 describe('excluirConta (RF29)', () => {

@@ -4,11 +4,8 @@
 // permite o próprio dono alterar qualquer campo (só confere que `perfil` não muda), sem
 // precisar de mudança em firestore.rules.
 //
-// PENDÊNCIA SINALIZADA, NÃO IMPLEMENTADA: isto só grava a preferência. O envio real de push
-// (lembrete de sessão, nova missão, conquista) exigiria `expo-notifications` (permissão do
-// dispositivo, token, registro em algum lugar) e um gatilho de backend que dispare no momento
-// certo (ex.: Cloud Function agendada para lembrete de sessão, ou disparada por
-// validarCheckIn()/criarMissao() para os outros dois) — nenhum dos dois existe no projeto hoje.
+// O envio é das Cloud Functions em functions/src/notificacoes.ts, que leem esta preferência a cada
+// envio; o registro do aparelho (token) é feito no login, em src/services/notificacoes.ts.
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Espacamento } from '../../theme';

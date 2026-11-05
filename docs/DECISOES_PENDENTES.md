@@ -30,6 +30,26 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 **A validar:** nesses documentos preservados fica o uid do responsável excluído (`responsavelId`, `professorId` de sessões passadas, `validadoPor`). Tratei como pseudonimizado, porque depois da exclusão de `usuarios/{uid}` e da conta no Auth o uid não identifica mais ninguém. Também apago `consentimentosLGPD`, como pedido; se a orientação jurídica for guardar o registro de consentimento como prova, basta tirar essa coleção da função.
 
+### RF31 — notificações: ✅ IMPLEMENTADO, envio real depende de configuração externa
+
+**O que está pronto:**
+- **App** (`src/services/notificacoes.ts`): no login, cria o canal Android, pede permissão, obtém o token Expo e grava em `usuarios/{uid}/privado/notificacoes.tokens`; no logout, remove o token. Na web não faz nada (o SDK 57 só tem push em Android e iOS). Plugin `expo-notifications` adicionado ao `app.json`.
+- **Cloud Functions** (`functions/src/notificacoes.ts`), sempre respeitando `preferenciasNotificacao` por tipo:
+  - **Nova missão:** quando uma missão é criada ativa ou reativada, avisa os alunos com vínculo aceito.
+  - **Conquista obtida:** missão concluída, graduação registrada e marcos de medalha de treinos (10/30/100) e de sequência (7/30 dias). Cada conquista é avisada uma vez só por aluno (`conquistasNotificadas`), mesmo com estorno e revalidação.
+  - **Lembrete de sessão:** função agendada todo dia às 7h (horário de Brasília). Manda **um lembrete por aluno por dia de treino**, com o horário da primeira sessão agendada ou aberta do dia; `ultimoLembrete` impede um segundo envio se o agendamento rodar de novo.
+- Cada envio fica registrado na coleção `notificacoes` (sem acesso de client), com status `enviado`, `erro`, `semDispositivo` ou `simulado`. No emulador nada sai para a internet: o status é `simulado`. Tokens que a Expo recusa (`DeviceNotRegistered`) são removidos.
+- A exclusão de conta (RF29) apaga o token e o histórico de notificações.
+
+**Passos que dependem do autor (não dá para fazer daqui):**
+1. **Plano Blaze** no projeto Firebase: necessário para fazer deploy de qualquer Cloud Function (isso já valia para as funções anteriores) e para o Cloud Scheduler do lembrete diário. Depois: `npx firebase deploy --only functions,firestore`.
+2. **`npx eas init`** na raiz do app: grava `extra.eas.projectId` no `app.json`. Sem isso, `getExpoPushTokenAsync` falha e o app só registra um aviso no console.
+3. **Credenciais de push no EAS:** para Android, criar o app no Firebase Console, baixar a chave da conta de serviço do FCM V1 e enviar com `npx eas credentials`; para iOS, a chave APNs (exige conta Apple Developer).
+4. **Development build** (`npx eas build --profile development`): push remoto não funciona no Expo Go no Android desde o SDK 53.
+5. Opcional: se ligar o "enhanced security for push" no projeto Expo, configurar a variável `EXPO_ACCESS_TOKEN` nas functions.
+
+**Divergência de código de requisito:** o pedido citava "RNF03 do relatório" para o limite de um lembrete por dia de treino. Na lista oficial (`docs/requisitos/requisitos-v1-2026-09.csv`), o RNF03 é "Armazenamento seguro de credenciais", e nenhum requisito fala desse limite. O código implementa o limite, mas o rastreia só como RF31. **A validar:** qual código o relatório deve usar para essa regra.
+
 ---
 
 ## 1. Valores de gamificação (`src/config/gamificacao.ts`)
@@ -85,7 +105,7 @@ O aluno continua sem permissão para escrever o próprio progresso (testado em `
 
 ## 5. RF19 — medalhas sem coleção persistida
 
-Medalhas são calculadas ao vivo (`src/utils/gamificacao.ts`, `calcularMedalhas()`) a partir de contagens que o aluno já pode ler (check-ins validados, sequência atual, total de graduações) — **não há registro de quando uma medalha foi conquistada, nem notificação de nova conquista** (RF31, notificações, é Ciclo 4 e nem está desenhado ainda).
+Medalhas são calculadas ao vivo (`src/utils/gamificacao.ts`, `calcularMedalhas()`) a partir de contagens que o aluno já pode ler (check-ins validados, sequência atual, total de graduações) — **não há registro de quando uma medalha foi conquistada**. A notificação de nova conquista agora existe (RF31, acima); a chave de cada conquista avisada fica em `usuarios/{uid}/privado/notificacoes.conquistasNotificadas`, mas isso não é um histórico com data.
 
 **Decisão a validar:** isso é suficiente para o Ciclo 2, ou medalha precisa de um registro persistido (data de conquista, e futuramente notificação)?
 

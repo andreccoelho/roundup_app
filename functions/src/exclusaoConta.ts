@@ -52,6 +52,8 @@ async function apagarDadosDoAluno(db: Firestore, uid: string): Promise<void> {
     db.collection('missoesProgresso').where('alunoId', '==', uid),
     db.collection('graduacoes').where('alunoId', '==', uid),
     db.collection('consentimentosLGPD').where('usuarioId', '==', uid),
+    // RF31: histórico de notificações recebidas (vale para qualquer perfil)
+    db.collection('notificacoes').where('destinatarioId', '==', uid),
   ];
   const todas = (await Promise.all(consultas.map(refs))).flat();
   await gravarEmLotes(db, todas.map((ref) => ({ tipo: 'apagar', ref })));
