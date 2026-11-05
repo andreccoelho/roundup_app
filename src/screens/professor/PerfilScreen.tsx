@@ -1,8 +1,7 @@
 // RF05: perfil do professor — leitura, edição (EditarPerfilScreen: nome, foto, graduação,
-// modalidades), vínculo com academia, solicitações, notificações, conta e privacidade, e sair.
-// Mesma linguagem do Perfil do Aluno: banda de identidade (gestor), card de faixa (único corte
-// diagonal da tela), modalidades e configurações como lista de ItemMenu. "Excluir conta" vive na
-// subtela "Conta e privacidade".
+// modalidades), vínculo com academia, solicitações, pontuação, notificações, conta e privacidade, e
+// sair. Mesma linguagem do Perfil do Aluno: cabeçalho centralizado, graduação e modalidades e as
+// configurações em listas agrupadas. "Excluir conta" vive na subtela "Conta e privacidade".
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Espacamento } from '../../theme';
@@ -10,12 +9,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { PerfilProfessorNavigationProp } from '../../navigation/ProfessorTabs';
 import { formatarMesAno } from '../../utils/datas';
 import Tela from '../../components/ui/Tela';
-import Texto from '../../components/ui/Texto';
-import BandaIdentidade from '../../components/ui/BandaIdentidade';
-import Cartao from '../../components/ui/Cartao';
+import CabecalhoPerfil from '../../components/ui/CabecalhoPerfil';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Etiqueta from '../../components/ui/Etiqueta';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
 import ItemMenu from '../../components/ui/ItemMenu';
 import { IconeCadeado, IconeCartaoPontuacao, IconeCorda, IconePerfil, IconePoste, IconeSair, IconeSino } from '../../components/icones';
 
@@ -24,60 +22,59 @@ export default function PerfilScreen() {
   const navigation = useNavigation<PerfilProfessorNavigationProp>();
 
   const modalidades = usuario?.modalidades ?? [];
-  const detalhes = [
-    usuario?.autonomo ? 'Atuação autônoma' : 'Vinculado a uma academia',
-    usuario?.email,
-    usuario?.criadoEm ? `Membro desde ${formatarMesAno(usuario.criadoEm)}` : undefined,
-  ].filter((d): d is string => Boolean(d));
 
   return (
-    <Tela largura="lista" preenchimento={false}>
-      <BandaIdentidade variante="gestor" sobHeader nome={usuario?.nome ?? ''} fotoUrl={usuario?.fotoUrl} detalhes={detalhes} />
+    <Tela largura="lista" agrupada tituloGrande="Perfil">
+      <CabecalhoPerfil
+        nome={usuario?.nome ?? ''}
+        fotoUrl={usuario?.fotoUrl}
+        detalhes={[
+          usuario?.email,
+          usuario?.autonomo ? 'Atuação autônoma' : 'Vinculado a uma academia',
+          usuario?.criadoEm ? `Membro desde ${formatarMesAno(usuario.criadoEm)}` : undefined,
+        ]}
+      />
 
-      <View style={styles.corpo}>
-        <Cartao corteDiagonal>
-          <Texto variante="caption" alinhamento="center">
-            Graduação
-          </Texto>
-          <View style={styles.faixa}>
-            <SeloFaixa faixaOuGrau={usuario?.graduacao || 'Graduação não informada'} tamanho="grande" />
+      <GrupoLista titulo="Graduação" semMargem>
+        <LinhaLista accessibilityLabel={`Graduação: ${usuario?.graduacao || 'não informada'}`}>
+          <SeloFaixa faixaOuGrau={usuario?.graduacao || 'Graduação não informada'} />
+        </LinhaLista>
+      </GrupoLista>
+
+      {modalidades.length > 0 ? (
+        <GrupoLista titulo="Modalidades">
+          <View style={styles.modalidades}>
+            {modalidades.map((m) => (
+              <Etiqueta key={m} texto={m} />
+            ))}
           </View>
-        </Cartao>
+        </GrupoLista>
+      ) : null}
 
-        {modalidades.length > 0 ? (
-          <>
-            <CabecalhoSecao titulo="Modalidades" />
-            <View style={styles.modalidades}>
-              {modalidades.map((m) => (
-                <Etiqueta key={m} texto={m} />
-              ))}
-            </View>
-          </>
-        ) : null}
-
-        <CabecalhoSecao titulo="Gestão" />
+      <GrupoLista titulo="Gestão">
         <ItemMenu rotulo="Solicitações pendentes" descricao="Pedidos de vínculo de alunos" icone={IconeCorda} onPress={() => navigation.navigate('Solicitacoes')} />
-        <ItemMenu rotulo="Vincular-se a uma academia" icone={IconePoste} onPress={() => navigation.navigate('VincularProfessor')} separador />
+        <ItemMenu rotulo="Vincular-se a uma academia" icone={IconePoste} onPress={() => navigation.navigate('VincularProfessor')} />
         <ItemMenu
           rotulo="Pontuação e níveis"
           descricao="Pontos por check-in, por missão e tabela de níveis"
           icone={IconeCartaoPontuacao}
           onPress={() => navigation.navigate('ConfiguracaoGamificacao')}
-          separador
         />
+      </GrupoLista>
 
-        <CabecalhoSecao titulo="Conta" />
+      <GrupoLista titulo="Conta">
         <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={() => navigation.navigate('EditarPerfil')} />
-        <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={() => navigation.navigate('PreferenciasNotificacao')} separador />
-        <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={() => navigation.navigate('ContaPrivacidade')} separador />
-        <ItemMenu rotulo="Sair" icone={IconeSair} semChevron onPress={logout} separador />
-      </View>
+        <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={() => navigation.navigate('PreferenciasNotificacao')} />
+        <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={() => navigation.navigate('ContaPrivacidade')} />
+      </GrupoLista>
+
+      <GrupoLista>
+        <ItemMenu rotulo="Sair" icone={IconeSair} destrutivo semChevron onPress={logout} />
+      </GrupoLista>
     </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.grande, paddingBottom: Espacamento.enorme },
-  faixa: { marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
-  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
+  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, padding: Espacamento.padrao },
 });

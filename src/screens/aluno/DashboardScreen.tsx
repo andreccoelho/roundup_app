@@ -127,7 +127,8 @@ export default function DashboardScreen() {
   return (
     <Tela
       largura="lista"
-      preenchimento={false}
+      agrupada
+      tituloGrande="Treinar"
       sobreposicao={
         <Aviso visivel={erroCheckIn !== null} tipo="erro" mensagem={erroCheckIn ?? ''} onFechar={() => setErroCheckIn(null)} acimaDaTabBar />
       }

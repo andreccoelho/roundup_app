@@ -6,7 +6,7 @@
 // Firebase Storage (services/storage.ts). PENDÊNCIA SINALIZADA: storage.rules foi escrito nesta
 // rodada mas só funciona depois de `firebase deploy --only storage` — até lá, o upload falha por
 // permissão e a tela mostra um aviso fixo em vez do erro cru (mesmo padrão de RF29/ContaPrivacidadeScreen).
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +19,7 @@ import Avatar from '../../components/ui/Avatar';
 import CampoTexto from '../../components/ui/CampoTexto';
 import ModalitySelector from '../../components/ui/ModalitySelector';
 import Botao from '../../components/ui/Botao';
+import BotaoCabecalho from '../../components/ui/BotaoCabecalho';
 import Aviso from '../../components/ui/Aviso';
 import Tela from '../../components/ui/Tela';
 import SeloFaixa from '../../components/ui/SeloFaixa';
@@ -116,12 +117,20 @@ export default function EditarPerfilScreen() {
     }
   }
 
+  // Sheet do iOS: "Cancelar" à esquerda (opcoesFolha) e a ação de confirmar à direita
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <BotaoCabecalho titulo="Salvar" forte carregando={salvando} onPress={handleSalvar} />,
+    });
+  });
+
   if (!usuario) return null;
 
   return (
     <Tela
       largura="formulario"
       teclado
+      agrupada
       sobreposicao={<Aviso mensagem={aviso ?? ''} visivel={aviso !== null} tipo="erro" onFechar={() => setAviso(null)} acimaDaTabBar />}
     >
       <View style={styles.fotoSecao}>
@@ -180,7 +189,6 @@ export default function EditarPerfilScreen() {
         onAlterarOutraTexto={setOutraModalidade}
       />
 
-      <Botao titulo="Salvar" onPress={handleSalvar} carregando={salvando} />
     </Tela>
   );
 }

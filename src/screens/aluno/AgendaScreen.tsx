@@ -16,9 +16,8 @@ import { paraData } from '../../utils/datas';
 import { rotuloDia } from '../../utils/apresentacao';
 import { mensagemErro } from '../../utils/mensagensErro';
 import { estadoCheckIn, motivoJanelaFechada, EstadoCheckIn } from '../../utils/statusCheckIn';
-import LinhaFina from '../../components/LinhaFina';
 import CartaoSessao from '../../components/ui/CartaoSessao';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
 import Tela from '../../components/ui/Tela';
 import Aviso from '../../components/ui/Aviso';
 import Esqueleto from '../../components/ui/Esqueleto';
@@ -101,6 +100,8 @@ export default function AgendaScreen() {
   return (
     <Tela
       largura="lista"
+      agrupada
+      tituloGrande="Agenda"
       sobreposicao={<Aviso visivel={erroCheckIn !== null} tipo="erro" mensagem={erroCheckIn ?? ''} onFechar={() => setErroCheckIn(null)} acimaDaTabBar />}
     >
       {carregando ? (
@@ -115,23 +116,24 @@ export default function AgendaScreen() {
         />
       ) : (
         grupos.map((grupo, g) => (
-          <View key={grupo.dia}>
-            <CabecalhoSecao titulo={grupo.dia} contador={grupo.itens.length === 1 ? '1 treino' : `${grupo.itens.length} treinos`} semMargem={g === 0} />
-            {grupo.itens.map(({ sessao, nomeTurma, nomeProfessor, estado }, i) => (
-              <View key={sessao.id}>
-                {i > 0 ? <LinhaFina /> : null}
-                <CartaoSessao
-                  nomeTurma={nomeTurma}
-                  detalhe={`com ${nomeProfessor}`}
-                  inicio={paraData(sessao.inicio)}
-                  estado={estado}
-                  carregando={processandoId === sessao.id}
-                  motivo={estado === 'foraDaJanela' ? motivoJanelaFechada(sessao) : undefined}
-                  onCheckIn={() => handleCheckIn(sessao.id)}
-                />
-              </View>
+          <GrupoLista
+            key={grupo.dia}
+            titulo={`${grupo.dia}: ${grupo.itens.length === 1 ? '1 treino' : `${grupo.itens.length} treinos`}`}
+            semMargem={g === 0}
+          >
+            {grupo.itens.map(({ sessao, nomeTurma, nomeProfessor, estado }) => (
+              <CartaoSessao
+                key={sessao.id}
+                nomeTurma={nomeTurma}
+                detalhe={`com ${nomeProfessor}`}
+                inicio={paraData(sessao.inicio)}
+                estado={estado}
+                carregando={processandoId === sessao.id}
+                motivo={estado === 'foraDaJanela' ? motivoJanelaFechada(sessao) : undefined}
+                onCheckIn={() => handleCheckIn(sessao.id)}
+              />
             ))}
-          </View>
+          </GrupoLista>
         ))
       )}
     </Tela>

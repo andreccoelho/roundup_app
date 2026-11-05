@@ -7,7 +7,7 @@
 // O envio é das Cloud Functions em functions/src/notificacoes.ts, que leem esta preferência a cada
 // envio; o registro do aparelho (token) é feito no login, em src/services/notificacoes.ts.
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { atualizarUsuario } from '../../services/usuarios';
@@ -15,7 +15,7 @@ import { PreferenciasNotificacao } from '../../types';
 import Toggle from '../../components/ui/Toggle';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
-import LinhaFina from '../../components/LinhaFina';
+import GrupoLista from '../../components/ui/GrupoLista';
 import { mensagemErro } from '../../utils/mensagensErro';
 
 const PADRAO: PreferenciasNotificacao = { lembreteSessao: true, novaMissao: true, conquista: true };
@@ -54,7 +54,7 @@ export default function PreferenciasNotificacaoScreen() {
   }
 
   return (
-    <Tela largura="lista">
+    <Tela largura="lista" agrupada>
       <Texto variante="subheadline" style={styles.intro}>
         Escolha quais avisos o RoundUp pode mandar para você.
       </Texto>
@@ -64,23 +64,23 @@ export default function PreferenciasNotificacaoScreen() {
         </Texto>
       ) : null}
 
-      {TIPOS.map(({ chave, titulo, descricao }, i) => (
-        <View key={chave}>
-          {i > 0 ? <LinhaFina /> : null}
+      <GrupoLista semMargem rodape="As mudanças valem na hora, para este e para os outros aparelhos em que você entrar.">
+        {TIPOS.map(({ chave, titulo, descricao }) => (
           <Toggle
+            key={chave}
             rotulo={titulo}
             descricao={descricao}
             valor={preferencias[chave]}
             desabilitado={salvandoChave === chave}
             onAlterar={() => handleAlternar(chave)}
           />
-        </View>
-      ))}
+        ))}
+      </GrupoLista>
     </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  intro: { marginBottom: Espacamento.padrao },
+  intro: { marginBottom: Espacamento.padrao, marginHorizontal: Espacamento.padrao },
   erro: { marginBottom: Espacamento.padrao },
 });

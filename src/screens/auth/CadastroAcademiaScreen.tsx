@@ -102,7 +102,7 @@ export default function CadastroAcademiaScreen() {
   }
 
   return (
-    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado agrupada>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
       <Texto variante="caption" style={styles.etapa}>
@@ -115,7 +115,7 @@ export default function CadastroAcademiaScreen() {
 
       <MensagemErro mensagem={erroConta} />
 
-      <CabecalhoSecao titulo="Responsável" semMargem />
+      <CabecalhoSecao titulo="Responsável" formulario semMargem />
       <CampoTexto rotulo="Nome do responsável" placeholder="Quem está cadastrando" autoComplete="name" valor={nome} onAlterar={setNome} erro={erros.nome} />
       <CampoTexto
         rotulo="E-mail"
@@ -146,7 +146,7 @@ export default function CadastroAcademiaScreen() {
         erro={erros.confirmarSenha}
       />
 
-      <CabecalhoSecao titulo="Academia" />
+      <CabecalhoSecao titulo="Academia" formulario />
       <CampoTexto
         rotulo="Nome da academia"
         placeholder="Ex.: Academia Coração de Leão"
@@ -172,7 +172,7 @@ export default function CadastroAcademiaScreen() {
       />
 
       <View style={styles.espaco} />
-      <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
+      <Botao titulo="Criar conta" onPress={handleCadastrar} carregando={carregando} />
 
       <View style={styles.rodape}>
         <Texto variante="subheadline">Já tem conta?</Texto>

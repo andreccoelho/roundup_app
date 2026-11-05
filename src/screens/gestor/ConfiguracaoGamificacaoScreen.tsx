@@ -3,7 +3,8 @@
 // valem os padrões de src/config/gamificacao.ts e a tela diz isso. A estrutura de faixas da
 // modalidade, também citada no RF33, não entra aqui: a faixa ainda é texto livre (ver
 // docs/DECISOES_PENDENTES.md, R-05 e item 8).
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
 import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -16,6 +17,7 @@ import { mensagemErro } from '../../utils/mensagensErro';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import Botao from '../../components/ui/Botao';
+import BotaoCabecalho from '../../components/ui/BotaoCabecalho';
 import Aviso from '../../components/ui/Aviso';
 import CampoTexto from '../../components/ui/CampoTexto';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
@@ -41,6 +43,7 @@ export default function ConfiguracaoGamificacaoScreen() {
   const [salvando, setSalvando] = useState(false);
   const [restaurando, setRestaurando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const navigation = useNavigation();
 
   const carregar = useCallback(async () => {
     if (!usuario) return;
@@ -108,9 +111,16 @@ export default function ConfiguracaoGamificacaoScreen() {
     }
   }
 
+  // Sheet do iOS: "Cancelar" à esquerda (opcoesFolha) e "Salvar" à direita
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <BotaoCabecalho titulo="Salvar" forte carregando={salvando} desabilitado={carregando || restaurando} onPress={handleSalvar} />,
+    });
+  });
+
   if (carregando) {
     return (
-      <Tela largura="formulario">
+      <Tela largura="formulario" agrupada>
         <Esqueleto forma="linha" repeticoes={4} />
       </Tela>
     );
@@ -125,6 +135,7 @@ export default function ConfiguracaoGamificacaoScreen() {
   return (
     <Tela
       largura="formulario"
+      agrupada
       sobreposicao={<Aviso mensagem={aviso ?? ''} tipo="sucesso" visivel={aviso !== null} onFechar={() => setAviso(null)} acimaDaTabBar />}
     >
       <Texto variante="subheadline" style={styles.intro}>
@@ -134,7 +145,7 @@ export default function ConfiguracaoGamificacaoScreen() {
       </Texto>
       <MensagemErro mensagem={erroForm} />
 
-      <CabecalhoSecao titulo="Pontuação" semMargem />
+      <CabecalhoSecao titulo="Pontuação" formulario semMargem />
       <CampoTexto
         rotulo="Pontos por check-in validado"
         valor={campos.pontosPorCheckin}
@@ -150,7 +161,7 @@ export default function ConfiguracaoGamificacaoScreen() {
         ajuda={`De ${limMissao.minimo} a ${limMissao.maximo}. Valor que já vem preenchido ao criar uma missão.`}
       />
 
-      <CabecalhoSecao titulo="Níveis" />
+      <CabecalhoSecao titulo="Níveis" formulario />
       <CampoTexto
         rotulo="Pontos acumulados para completar cada nível"
         valor={campos.niveis}
@@ -161,7 +172,6 @@ export default function ConfiguracaoGamificacaoScreen() {
       />
 
       <View style={styles.acoes}>
-        <Botao titulo="Salvar" onPress={handleSalvar} carregando={salvando} desabilitado={restaurando} />
         {personalizada ? (
           <Botao titulo="Restaurar padrão" variante="texto" onPress={handleRestaurar} carregando={restaurando} desabilitado={salvando} />
         ) : null}

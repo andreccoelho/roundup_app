@@ -1,10 +1,10 @@
 // RF10: lista as turmas do responsável e permite criar uma nova — com grade recorrente (dias da
 // semana + horário) e professor vinculado, quando o responsável é uma academia.
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento } from '../../theme';
+import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { criarTurma, listarTurmasPorResponsavel } from '../../services/turmas';
 import { criarSessao } from '../../services/sessoes';
@@ -22,8 +22,7 @@ import Texto from '../../components/ui/Texto';
 import Folha from '../../components/ui/Folha';
 import Aviso from '../../components/ui/Aviso';
 import MensagemErro from '../../components/ui/MensagemErro';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
-import LinhaFina from '../../components/LinhaFina';
+import GrupoLista from '../../components/ui/GrupoLista';
 import { IconeChevron, IconeMais, IconeTatame } from '../../components/icones';
 import { rotuloNivel } from '../../utils/apresentacao';
 import { mensagemErro } from '../../utils/mensagensErro';
@@ -40,6 +39,8 @@ interface ProfessorVinculado {
 }
 
 export default function TurmasScreen() {
+  const styles = useEstilos();
+  const { cores } = useTema();
   const { usuario } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<GestorStackParamList, 'Turmas'>>();
 
@@ -170,9 +171,11 @@ export default function TurmasScreen() {
   return (
     <Tela
       largura="lista"
+      agrupada
+      tituloGrande="Turmas"
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} acimaDaTabBar />}
     >
-      <Botao titulo="Nova turma" icone={IconeMais} onPress={() => setFolhaAberta(true)} />
+      <Botao titulo="Nova turma" icone={IconeMais} variante="secundario" onPress={() => setFolhaAberta(true)} />
 
       {carregando ? (
         <View style={styles.topo}>
@@ -184,10 +187,9 @@ export default function TurmasScreen() {
         <EstadoVazio icone={IconeTatame} titulo="Nenhuma turma criada ainda" descricao="Toque em Nova turma para criar a primeira." />
       ) : (
         <>
-          <CabecalhoSecao titulo="Minhas turmas" contador={`${ativas} de ${turmas.length} ativas`} />
-          {turmas.map((turma, i) => (
+          <GrupoLista titulo={`Minhas turmas: ${ativas} de ${turmas.length} ativas`}>
+          {turmas.map((turma) => (
             <View key={turma.id}>
-              {i > 0 ? <LinhaFina /> : null}
               <Pressable
                 onPress={() => navigation.navigate('TurmaDetalhe', { turmaId: turma.id })}
                 accessibilityRole="button"
@@ -195,18 +197,18 @@ export default function TurmasScreen() {
                 style={({ pressed }) => [styles.linha, pressed && styles.pressionada]}
               >
                 <View style={styles.textos}>
-                  <Texto variante="headline">{turma.nome}</Texto>
+                  <Texto variante="body">{turma.nome}</Texto>
                   <View style={styles.meta}>
                     <Etiqueta texto={turma.modalidade} />
                     <Etiqueta texto={rotuloNivel(turma.nivel)} />
                     {!turma.ativa ? (
-                      <Texto variante="caption" cor="texto3">
+                      <Texto variante="footnote">
                         Inativa
                       </Texto>
                     ) : null}
                   </View>
                   {turma.diasSemana && turma.diasSemana.length > 0 ? (
-                    <Texto variante="subheadline">
+                    <Texto variante="footnote">
                       {DIAS_SEMANA.filter((d) => turma.diasSemana!.includes(d.valor))
                         .map((d) => d.rotulo)
                         .join(', ')}
@@ -214,14 +216,20 @@ export default function TurmasScreen() {
                     </Texto>
                   ) : null}
                 </View>
-                <IconeChevron tamanho={20} cor={Cores.texto3} />
+                <IconeChevron tamanho={18} cor={cores.texto3} />
               </Pressable>
             </View>
           ))}
+          </GrupoLista>
         </>
       )}
 
-      <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova turma">
+      <Folha
+        visivel={folhaAberta}
+        onFechar={() => setFolhaAberta(false)}
+        titulo="Nova turma"
+        acao={{ titulo: 'Criar', onPress: handleCriar, carregando: criando, desabilitado: !nome.trim() || !modalidade.trim() }}
+      >
         <MensagemErro mensagem={erroForm} />
         <CampoTexto rotulo="Nome da turma" placeholder="Ex.: Muay Thai — Turma A" valor={nome} onAlterar={setNome} />
         <CampoTexto rotulo="Modalidade" placeholder="Ex.: Muay Thai" valor={modalidade} onAlterar={setModalidade} />
@@ -281,9 +289,8 @@ export default function TurmasScreen() {
           </Texto>
         ) : null}
 
-        <Botao titulo="Criar turma" onPress={handleCriar} carregando={criando} desabilitado={!nome.trim() || !modalidade.trim()} />
         {!nome.trim() || !modalidade.trim() ? (
-          <Texto variante="subheadline" cor="texto3" alinhamento="center" style={styles.ajudaBotao}>
+          <Texto variante="footnote" alinhamento="center" style={styles.ajudaBotao}>
             Preencha nome e modalidade para criar.
           </Texto>
         ) : null}
@@ -292,10 +299,10 @@ export default function TurmasScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   topo: { marginTop: Espacamento.grande },
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 72, paddingVertical: Espacamento.medio },
-  pressionada: { backgroundColor: Cores.superficie1 },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 64, paddingVertical: Espacamento.medio - 2, paddingHorizontal: Espacamento.padrao },
+  pressionada: { backgroundColor: c.preenchimento },
   textos: { flex: 1, gap: Espacamento.minimo + 2 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Espacamento.minimo + 2 },
   rotuloCampo: { marginBottom: Espacamento.pequeno },
@@ -304,4 +311,4 @@ const styles = StyleSheet.create({
   campoHorario: { flex: 1 },
   ajuda: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
   ajudaBotao: { marginTop: Espacamento.pequeno },
-});
+}));
