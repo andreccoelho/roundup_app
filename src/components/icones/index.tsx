@@ -17,9 +17,12 @@ export interface IconeProps {
 const COR_PADRAO = '#8E8E93';
 const TRACO = 1.75;
 
+// flexShrink 0: no web um <svg> numa linha flex encolhe até sumir quando o texto ao lado não cabe
+const SEM_ENCOLHER = { flexShrink: 0 };
+
 function Base({ tamanho = 24, children }: { tamanho?: number; children: ReactNode }) {
   return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" style={SEM_ENCOLHER}>
       {children}
     </Svg>
   );

@@ -1,24 +1,22 @@
-// HeroCheckIn — o "próximo treino" como peça central da Home do Aluno (RF13, RF14, RN08, RNF01).
-// Horário em placar grande e um único botão de 56px, largura total, cujo lugar é ocupado pelos 3
-// estados — sempre na mesma área, legíveis sem ler texto (forma, ícone e cor diferentes):
-//   - disponível: CTA em acento "Fazer check-in" (o acento da tela);
-//   - fora da janela: placa contornada com cadeado + contagem regressiva até abrir (ou
-//     "Check-in encerrado");
-//   - feito: placa verde com ✓ "Treino registrado".
-// Na transição para "feito": punch (escala) + flash verde + haptic. Com reduce motion, só o
+// HeroCheckIn — o "próximo treino" como cartão de destaque da Home do Aluno (RF13, RF14, RN08,
+// RNF01). Horário em número grande, nome da turma e, na mesma área, um dos 3 estados — legíveis sem
+// ler texto (forma, ícone e cor diferentes):
+//   - disponível: botão cheio no tint, em cápsula, "Fazer check-in" (a ação principal da tela);
+//   - fora da janela: cápsula cinza com cadeado + contagem regressiva até abrir (ou "encerrado");
+//   - feito: ✓ verde preenchido "Treino registrado", que entra com uma mola curta.
+// Na transição para "feito": haptic de sucesso e o ✓ crescendo com mola. Com reduce motion, só o
 // haptic e a troca de estado.
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
-import { Alturas, Cores, DuracaoAnimacao, Espacamento, Raios, TamanhoFonte } from '../../theme';
+import { Animated, View } from 'react-native';
+import { criarEstilos, Espacamento, Mola, Raios, useTema } from '../../theme';
 import { DRIVER_NATIVO } from '../../utils/animacao';
 import type { EstadoCheckIn } from '../../utils/statusCheckIn';
 import { formatarDuracao, formatarHora, rotuloDia } from '../../utils/apresentacao';
 import { hapticaImpacto, hapticaSucesso } from '../../utils/haptica';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
-import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
-import { IconeCadeado, IconeCheck, IconeLuva } from '../icones';
+import { IconeCadeado, IconeCheckCirculo, IconeLuva } from '../icones';
+import Botao from './Botao';
 import Cartao from './Cartao';
-import TexturaLona from './TexturaLona';
 import Texto from './Texto';
 
 interface HeroCheckInProps {
@@ -31,12 +29,6 @@ interface HeroCheckInProps {
   carregando?: boolean;
   onCheckIn: () => void;
 }
-
-const FILETE: Record<EstadoCheckIn, string> = {
-  disponivel: Cores.acento,
-  foraDaJanela: Cores.linhaForte,
-  realizado: Cores.sucesso,
-};
 
 function useAgora(ativo: boolean): Date {
   const [agora, setAgora] = useState(() => new Date());
@@ -51,137 +43,94 @@ function useAgora(ativo: boolean): Date {
 export default function HeroCheckIn({ nomeTurma, inicio, janelaInicio, janelaFim, estado, professor, carregando, onCheckIn }: HeroCheckInProps) {
   const reduzido = useMovimentoReduzido();
   const agora = useAgora(estado === 'foraDaJanela');
-  const foco = useFocoVisivel();
+  const { cores } = useTema();
+  const styles = useEstilos();
   const estadoAnterior = useRef(estado);
-  const escala = useRef(new Animated.Value(1)).current;
-  const flash = useRef(new Animated.Value(0)).current;
+  const escalaCheck = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (estadoAnterior.current !== 'realizado' && estado === 'realizado') {
       hapticaSucesso();
       if (!reduzido) {
-        escala.setValue(1);
-        flash.setValue(0);
-        Animated.parallel([
-          Animated.sequence([
-            Animated.timing(escala, { toValue: 1.06, duration: DuracaoAnimacao.rapida, useNativeDriver: DRIVER_NATIVO }),
-            Animated.spring(escala, { toValue: 1, friction: 4, tension: 120, useNativeDriver: DRIVER_NATIVO }),
-          ]),
-          Animated.sequence([
-            Animated.timing(flash, { toValue: 1, duration: 80, useNativeDriver: DRIVER_NATIVO }),
-            Animated.timing(flash, { toValue: 0, duration: DuracaoAnimacao.lenta, useNativeDriver: DRIVER_NATIVO }),
-          ]),
-        ]).start();
+        escalaCheck.setValue(0.4);
+        Animated.spring(escalaCheck, { toValue: 1, ...Mola, useNativeDriver: DRIVER_NATIVO }).start();
       }
     }
     estadoAnterior.current = estado;
-  }, [estado, reduzido, escala, flash]);
+  }, [estado, reduzido, escalaCheck]);
 
   const antesDeAbrir = agora < janelaInicio;
-  const descricaoEstado =
-    estado === 'realizado'
-      ? 'Check-in feito'
-      : estado === 'disponivel'
-        ? `Check-in aberto até ${formatarHora(janelaFim)}`
-        : antesDeAbrir
-          ? `Check-in abre em ${formatarDuracao(janelaInicio.getTime() - agora.getTime())}`
-          : 'Check-in encerrado';
+  const textoFechado = antesDeAbrir ? `Abre em ${formatarDuracao(janelaInicio.getTime() - agora.getTime())}` : 'Check-in encerrado';
 
   return (
-    <Animated.View style={{ transform: [{ scale: escala }] }}>
-      <Cartao corteDiagonal corFilete={FILETE[estado]} semPadding>
-        <TexturaLona opacidade={0.05} />
-        <View style={styles.conteudo}>
-          <View style={styles.topo} accessible accessibilityLabel={`Próximo treino: ${nomeTurma}, ${rotuloDia(inicio)} às ${formatarHora(inicio)}${professor ? `, com ${professor}` : ''}`}>
-            <View style={styles.horario}>
-              <Texto variante="caption">{rotuloDia(inicio)}</Texto>
-              <Texto variante="numeroGrande">{formatarHora(inicio)}</Texto>
-            </View>
-            <View style={styles.textos}>
-              <Texto variante="caption" cor="texto3">
-                Próximo treino
-              </Texto>
-              <Texto variante="headline" numberOfLines={2}>
-                {nomeTurma}
-              </Texto>
-              {professor ? <Texto variante="subheadline">{`com ${professor}`}</Texto> : null}
-            </View>
-          </View>
-
-          <View style={styles.area} accessibilityLiveRegion="polite">
-            {estado === 'disponivel' ? (
-              <Pressable
-                onPress={() => {
-                  hapticaImpacto();
-                  onCheckIn();
-                }}
-                disabled={carregando}
-                accessibilityRole="button"
-                accessibilityLabel={carregando ? 'Enviando check-in' : `Fazer check-in em ${nomeTurma}`}
-                accessibilityState={{ disabled: Boolean(carregando), busy: Boolean(carregando) }}
-                style={({ pressed }) => [styles.placa, styles.placaCta, pressed && styles.pressionado, estiloSemOutline, foco.focado && estiloAnelFoco]}
-                {...foco.propsFoco}
-              >
-                {carregando ? (
-                  <ActivityIndicator color={Cores.sobreCor} />
-                ) : (
-                  <>
-                    <IconeLuva tamanho={24} cor={Cores.sobreCor} espessura={2} />
-                    <Texto variante="footnote" cor="sobreTint" style={styles.rotuloCta} cabecalho={false}>
-                      Fazer check-in
-                    </Texto>
-                  </>
-                )}
-              </Pressable>
-            ) : estado === 'foraDaJanela' ? (
-              <View style={[styles.placa, styles.placaFechada]} accessible accessibilityLabel={descricaoEstado}>
-                <IconeCadeado tamanho={20} cor={Cores.texto2} />
-                <Texto variante="footnote" cor="texto2" cabecalho={false}>
-                  {antesDeAbrir ? `Abre em ${formatarDuracao(janelaInicio.getTime() - agora.getTime())}` : 'Check-in encerrado'}
-                </Texto>
-              </View>
-            ) : (
-              <View style={[styles.placa, styles.placaFeita]} accessible accessibilityLabel="Check-in feito. Treino registrado.">
-                <Animated.View style={[styles.flash, { opacity: flash }]} />
-                <IconeCheck tamanho={24} cor={Cores.sobreCor} espessura={2.5} />
-                <Texto variante="footnote" cor="sobreTint" cabecalho={false}>
-                  Treino registrado
-                </Texto>
-              </View>
-            )}
-            {estado === 'disponivel' ? (
-              <Texto variante="subheadline" cor="texto3" style={styles.nota}>
-                {descricaoEstado}
-              </Texto>
-            ) : null}
-          </View>
+    <Cartao destaque>
+      <View
+        accessible
+        accessibilityLabel={`Próximo treino: ${nomeTurma}, ${rotuloDia(inicio)} às ${formatarHora(inicio)}${professor ? `, com ${professor}` : ''}`}
+      >
+        <Texto variante="footnote">Próximo treino</Texto>
+        <View style={styles.horario}>
+          <Texto variante="numeroGrande">{formatarHora(inicio)}</Texto>
+          <Texto variante="headline" cor="texto2">
+            {rotuloDia(inicio)}
+          </Texto>
         </View>
-      </Cartao>
-    </Animated.View>
+        <Texto variante="title3" numberOfLines={2} cabecalho={false}>
+          {nomeTurma}
+        </Texto>
+        {professor ? <Texto variante="subheadline">{`com ${professor}`}</Texto> : null}
+      </View>
+
+      <View style={styles.area} accessibilityLiveRegion="polite">
+        {estado === 'disponivel' ? (
+          <>
+            <Botao
+              titulo="Fazer check-in"
+              icone={IconeLuva}
+              carregando={carregando}
+              accessibilityLabel={carregando ? 'Enviando check-in' : `Fazer check-in em ${nomeTurma}`}
+              onPress={() => {
+                hapticaImpacto();
+                onCheckIn();
+              }}
+            />
+            <Texto variante="footnote" alinhamento="center" style={styles.nota}>
+              {`Check-in aberto até ${formatarHora(janelaFim)}`}
+            </Texto>
+          </>
+        ) : estado === 'foraDaJanela' ? (
+          <View style={[styles.placa, styles.placaFechada]} accessible accessibilityLabel={textoFechado}>
+            <IconeCadeado tamanho={18} cor={cores.texto2} />
+            <Texto variante="headline" cor="texto2">
+              {textoFechado}
+            </Texto>
+          </View>
+        ) : (
+          <View style={styles.placa} accessible accessibilityLabel="Check-in feito. Treino registrado.">
+            <Animated.View style={{ transform: [{ scale: escalaCheck }] }}>
+              <IconeCheckCirculo tamanho={30} cor={cores.sucesso} preenchido />
+            </Animated.View>
+            <Texto variante="headline">Treino registrado</Texto>
+          </View>
+        )}
+      </View>
+    </Cartao>
   );
 }
 
-const styles = StyleSheet.create({
-  conteudo: { padding: Espacamento.padrao, paddingTop: Espacamento.padrao + 2, paddingBottom: Espacamento.grande },
-  topo: { flexDirection: 'row', gap: Espacamento.padrao, alignItems: 'flex-end' },
-  horario: { minWidth: 104 },
-  textos: { flex: 1, paddingBottom: Espacamento.minimo, gap: 2 },
+const useEstilos = criarEstilos((c) => ({
+  horario: { flexDirection: 'row', alignItems: 'baseline', gap: Espacamento.pequeno, marginTop: 2, marginBottom: Espacamento.minimo },
   area: { marginTop: Espacamento.padrao },
   placa: {
-    minHeight: Alturas.botaoHero,
-    borderRadius: Raios.vivo,
+    minHeight: 50,
+    borderRadius: Raios.capsula,
+    borderCurve: 'continuous',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Espacamento.pequeno,
     paddingHorizontal: Espacamento.padrao,
-    overflow: 'hidden',
   },
-  placaCta: { backgroundColor: Cores.acento },
-  rotuloCta: { fontSize: TamanhoFonte.lg, lineHeight: 24 },
-  placaFechada: { borderWidth: 1.5, borderColor: Cores.linhaForte, borderStyle: 'dashed' },
-  placaFeita: { backgroundColor: Cores.sucesso },
-  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Cores.texto },
-  pressionado: { opacity: 0.85 },
-  nota: { marginTop: Espacamento.pequeno, textAlign: 'center' },
-});
+  placaFechada: { backgroundColor: c.preenchimento },
+  nota: { marginTop: Espacamento.pequeno },
+}));

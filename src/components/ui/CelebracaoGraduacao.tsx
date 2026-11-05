@@ -1,9 +1,9 @@
-// CelebracaoGraduacao — confirmação com peso para quem registra a graduação (RF25,
-// RegistrarGraduacaoScreen). Faixa em tamanho grande, título display com sombra dura em acento
-// (permitida só em hero/conquista), entrada "dramática" e haptic. Reduce motion: aparece direto.
+// CelebracaoGraduacao — confirmação para quem registra a graduação (RF25, RegistrarGraduacaoScreen),
+// no mesmo cartão central do MomentoConquista: faixa grande, título, aluno e modalidade e "Fechar".
+// Entra com mola curta e haptic de sucesso. Reduce motion: aparece direto.
 import { useEffect, useRef } from 'react';
-import { Animated, Modal, StyleSheet, View } from 'react-native';
-import { Cores, DuracaoAnimacao, Espacamento, Raios, Sombras } from '../../theme';
+import { Animated, Modal, View } from 'react-native';
+import { criarEstilos, Espacamento, Mola } from '../../theme';
 import { DRIVER_NATIVO } from '../../utils/animacao';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import { hapticaSucesso } from '../../utils/haptica';
@@ -21,43 +21,36 @@ interface CelebracaoGraduacaoProps {
 
 export default function CelebracaoGraduacao({ visivel, grau, modalidade, nomeAluno, onFechar }: CelebracaoGraduacaoProps) {
   const reduzido = useMovimentoReduzido();
-  const escala = useRef(new Animated.Value(1)).current;
-  const opacidade = useRef(new Animated.Value(1)).current;
+  const styles = useEstilos();
+  const entrada = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!visivel) return;
     hapticaSucesso();
     if (reduzido) {
-      escala.setValue(1);
-      opacidade.setValue(1);
+      entrada.setValue(1);
       return;
     }
-    escala.setValue(0.8);
-    opacidade.setValue(0);
-    Animated.parallel([
-      Animated.timing(opacidade, { toValue: 1, duration: DuracaoAnimacao.dramatica, useNativeDriver: DRIVER_NATIVO }),
-      Animated.spring(escala, { toValue: 1, friction: 5, tension: 50, useNativeDriver: DRIVER_NATIVO }),
-    ]).start();
-  }, [visivel, reduzido, escala, opacidade]);
+    entrada.setValue(0);
+    Animated.spring(entrada, { toValue: 1, ...Mola, useNativeDriver: DRIVER_NATIVO }).start();
+  }, [visivel, reduzido, entrada]);
+
+  const escala = entrada.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] });
 
   return (
     <Modal visible={visivel} transparent animationType={reduzido ? 'none' : 'fade'} onRequestClose={onFechar} statusBarTranslucent>
       <View style={styles.fundo}>
-        <Animated.View
-          style={[styles.caixa, { opacity: opacidade, transform: [{ scale: escala }] }]}
-          accessibilityViewIsModal
-          accessibilityRole="alert"
-        >
-          <Texto variante="caption" alinhamento="center">
+        <Animated.View style={[styles.cartao, { opacity: entrada, transform: [{ scale: escala }] }]} accessibilityViewIsModal accessibilityRole="alert" aria-modal>
+          <Texto variante="footnote" alinhamento="center">
             Graduação registrada
-          </Texto>
-          <Texto variante="largeTitle" alinhamento="center" style={[styles.titulo, Sombras.duraAcento]}>
-            Novo grau
           </Texto>
           <View style={styles.faixa}>
             <SeloFaixa faixaOuGrau={grau} tamanho="grande" />
           </View>
-          <Texto variante="body" cor="texto2" alinhamento="center">
+          <Texto variante="title2" alinhamento="center">
+            Novo grau
+          </Texto>
+          <Texto variante="subheadline" alinhamento="center" style={styles.detalhe}>
             {`${nomeAluno}, ${modalidade}`}
           </Texto>
           <View style={styles.acao}>
@@ -69,18 +62,18 @@ export default function CelebracaoGraduacao({ visivel, grau, modalidade, nomeAlu
   );
 }
 
-const styles = StyleSheet.create({
-  fundo: { flex: 1, backgroundColor: Cores.overlay, alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
-  caixa: {
-    backgroundColor: Cores.superficie2,
-    borderRadius: Raios.pequeno,
-    borderTopWidth: 2,
-    borderTopColor: Cores.acento,
-    padding: Espacamento.grande,
+const useEstilos = criarEstilos((c, escuro) => ({
+  fundo: { flex: 1, backgroundColor: c.overlay, alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
+  cartao: {
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 340,
+    backgroundColor: c.superficieElevada,
+    borderRadius: 24,
+    borderCurve: 'continuous',
+    padding: Espacamento.grande,
+    ...(escuro ? {} : { boxShadow: '0px 12px 40px rgba(0,0,0,0.18)' }),
   },
-  titulo: { marginTop: Espacamento.pequeno },
   faixa: { marginVertical: Espacamento.grande },
+  detalhe: { marginTop: Espacamento.minimo },
   acao: { marginTop: Espacamento.grande },
-});
+}));

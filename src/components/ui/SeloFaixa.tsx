@@ -5,7 +5,7 @@
 // continua sempre visível ao lado — nada se perde.
 import { StyleSheet, View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
-import { Cores, CoresFaixa, Espacamento } from '../../theme';
+import { CoresFaixa, Espacamento, useTema } from '../../theme';
 import Texto from './Texto';
 
 type CorFaixa = keyof typeof CoresFaixa;
@@ -51,6 +51,7 @@ interface SeloFaixaProps {
 
 export default function SeloFaixa({ faixaOuGrau, tamanho = 'normal', semTexto }: SeloFaixaProps) {
   const { cor, reconhecida, graus } = interpretarFaixa(faixaOuGrau);
+  const { cores } = useTema();
   const grande = tamanho === 'grande';
   const w = grande ? 168 : 56;
   const h = grande ? 26 : 12;
@@ -64,7 +65,7 @@ export default function SeloFaixa({ faixaOuGrau, tamanho = 'normal', semTexto }:
   return (
     <View style={[styles.container, grande && styles.containerGrande]} accessible accessibilityLabel={`Faixa: ${faixaOuGrau}`}>
       <Svg width={w} height={h} aria-hidden>
-        <Rect x={0.5} y={0.5} width={w - 1} height={h - 1} rx={1.5} fill={CoresFaixa[cor]} stroke={Cores.linhaForte} strokeWidth={1} />
+        <Rect x={0.5} y={0.5} width={w - 1} height={h - 1} rx={h / 2.6} fill={CoresFaixa[cor]} stroke={cores.texto3} strokeWidth={1} />
         {reconhecida ? <Rect x={pontaX} y={0.5} width={pontaW} height={h - 1} fill={corPonteira} /> : null}
         {reconhecida
           ? Array.from({ length: graus }).map((_, i) => (
