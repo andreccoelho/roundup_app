@@ -12,9 +12,9 @@ export const XP_POR_CHECKIN_VALIDADO = 10;
 // +500, +550)
 export const NIVEIS_XP = [100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250] as const;
 
-// RF20, RN04: janela de tempo considerada na classificação — hoje só rótulo de UI. O reset
-// periódico de pontos ainda NÃO está implementado (ver docs/DECISOES_PENDENTES.md); a
-// classificação hoje é cumulativa desde sempre.
+// RF20, RN04: janela de tempo considerada na classificação — cada mês tem o próprio documento
+// em `classificacoes` (ver periodoDe() em utils/datas.ts), então o ranking recomeça sozinho na
+// virada do mês. O nível (RF17) continua somando todos os meses.
 export const JANELA_RANKING = 'mensal' as const;
 
 // RF19: marcos provisórios para concessão de medalhas. Calculados ao vivo a partir do

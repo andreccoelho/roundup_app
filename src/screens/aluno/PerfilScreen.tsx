@@ -1,5 +1,5 @@
 // RF06: perfil do aluno — leitura, edição (EditarPerfilScreen: nome, foto, faixa, modalidades),
-// vínculos, notificações, conta e privacidade, e sair.
+// vínculos, notificações, participação na classificação (RNF11), conta e privacidade, e sair.
 // RF17, RF19, RF21: nível/XP, sequência e medalhas calculados ao vivo a partir de check-ins,
 // graduações e classificações do aluno — sem coleção persistida, valores PROVISÓRIOS (ver
 // docs/DECISOES_PENDENTES.md). Mesma fonte de dados que aluno/DashboardScreen.tsx já usa.
@@ -20,12 +20,27 @@ import PerfilAlunoVisao from './PerfilAlunoVisao';
 const ID_MEDALHA_MAXIMA = 'treinos-100';
 
 export default function PerfilScreen() {
-  const { usuario, logout } = useAuth();
+  const { usuario, logout, atualizarPerfil } = useAuth();
   const navigation = useNavigation<PerfilAlunoNavigationProp>();
   const [medalhas, setMedalhas] = useState<MedalhaComEstado[]>([]);
   const [progresso, setProgresso] = useState<ProgressoNivel | null>(null);
   const [sequencia, setSequencia] = useState(0);
   const [treinosValidados, setTreinosValidados] = useState(0);
+  const [salvandoParticipacao, setSalvandoParticipacao] = useState(false);
+
+  // RNF11: grava em usuarios.participaClassificacao; a Cloud Function atualizarLeitoresNaParticipacao
+  // reescreve os leitoresIds das classificações do aluno. Falha aqui só mantém o valor anterior —
+  // o Toggle volta sozinho, porque o valor exibido vem do usuário do contexto.
+  async function alternarParticipacao(participa: boolean) {
+    setSalvandoParticipacao(true);
+    try {
+      await atualizarPerfil({ participaClassificacao: participa });
+    } catch (e) {
+      console.warn('Não foi possível salvar a participação na classificação:', e);
+    } finally {
+      setSalvandoParticipacao(false);
+    }
+  }
 
   const carregarDetalhes = useCallback(async () => {
     if (!usuario) return;
@@ -72,6 +87,9 @@ export default function PerfilScreen() {
         onEditar={() => navigation.navigate('EditarPerfil')}
         onVinculos={() => navigation.navigate('VincularAluno')}
         onNotificacoes={() => navigation.navigate('PreferenciasNotificacao')}
+        participaClassificacao={usuario?.participaClassificacao !== false}
+        salvandoParticipacao={salvandoParticipacao}
+        onAlternarParticipacao={alternarParticipacao}
         onContaPrivacidade={() => navigation.navigate('ContaPrivacidade')}
         onSair={logout}
       />

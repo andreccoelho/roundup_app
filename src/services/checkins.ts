@@ -5,7 +5,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { CheckIn, Sessao, Matricula, Classificacao } from '../types';
-import { agoraTimestamp } from '../utils/datas';
+import { agoraTimestamp, periodoDe } from '../utils/datas';
 import { getDocSeguro } from './firestoreSeguro';
 import { XP_POR_CHECKIN_VALIDADO } from '../config/gamificacao';
 
@@ -111,9 +111,10 @@ export async function buscarCheckInDaSessao(sessaoId: string, alunoId: string): 
 // `souAluno() && alunoId == meuId()`). Por isso a "chamada" só alterna presença de quem já fez
 // o próprio check-in; quem ainda não fez aparece como pendente, sem toggle.
 //
-// RF16, RN01 (PROVISÓRIO, ver docs/DECISOES_PENDENTES.md): validar credita
-// XP_POR_CHECKIN_VALIDADO em checkins.pontos e em classificacoes/{alunoId}_{responsavelId};
-// desfazer a validação estorna o mesmo valor. `checkin.pontos > 0` guarda contra creditar duas
+// RF16, RN01, RN04 (valores PROVISÓRIOS, ver docs/DECISOES_PENDENTES.md): validar credita
+// XP_POR_CHECKIN_VALIDADO em checkins.pontos e em
+// classificacoes/{alunoId}_{responsavelId}_{AAAA-MM}, no mês (fuso local) em que o treino
+// aconteceu — o estorno cai no mesmo documento, mesmo que seja feito no mês seguinte. `checkin.pontos > 0` guarda contra creditar duas
 // vezes se o professor alternar o toggle repetidamente.
 //
 // Escreve o valor de `pontos` já somado (literal), não `increment()`: a regra de
@@ -139,7 +140,8 @@ export async function validarCheckIn(
     const vaiCreditar = novoStatus === 'validado' && checkin.pontos === 0;
     const vaiEstornar = novoStatus === 'pendente' && checkin.pontos > 0;
 
-    const classificacaoId = `${checkin.alunoId}_${checkin.responsavelId}`;
+    const periodo = periodoDe(checkin.dataHora.toDate());
+    const classificacaoId = `${checkin.alunoId}_${checkin.responsavelId}_${periodo}`;
     const classificacaoRef = doc(db, COLECAO_CLASSIFICACOES, classificacaoId);
 
     let pontosAtuais = 0;
@@ -163,6 +165,7 @@ export async function validarCheckIn(
           id: classificacaoId,
           alunoId: checkin.alunoId,
           responsavelId: checkin.responsavelId,
+          periodo,
           pontos: pontosAtuais + delta,
           atualizadoEm: agoraTimestamp(),
         },

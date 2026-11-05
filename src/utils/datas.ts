@@ -30,6 +30,12 @@ export function formatarMesAno(timestamp: Timestamp): string {
   return timestamp.toDate().toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
 }
 
+// RN04: período da classificação, "AAAA-MM" no fuso LOCAL — um treino às 22h do dia 31 conta
+// para o mês em que aconteceu para o aluno, não para o mês seguinte em UTC.
+export function periodoDe(data: Date): string {
+  return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+}
+
 // Campos de texto simples "DD/MM/AAAA" (padrão brasileiro) + "HH:MM" — sem biblioteca de date
 // picker nesta rodada. new Date(ano, mes-1, dia, hora, minuto) interpreta no fuso LOCAL do
 // dispositivo (correto para RN08); nunca new Date(string ISO), que o JS interpreta como UTC

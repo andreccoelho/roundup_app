@@ -359,31 +359,35 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ---------- classificacoes (RF20, RN04, RN09) ----------
+    // ---------- classificacoes (RF20, RN04, RN09, RNF11) ----------
     // RN01: pontos só podem mudar em exatamente ±XP_POR_CHECKIN_VALIDADO por escrita — crédito
     // (create ou update) ou estorno (update) de UM check-in por vez, nunca um valor arbitrário.
     // O NÚMERO 10 abaixo é PROVISÓRIO (== src/config/gamificacao.ts, XP_POR_CHECKIN_VALIDADO;
     // Firestore Rules não importa TS, mantenha os dois em sincronia manual se mudar); a TRAVA em
     // si — só um delta fixo por escrita, nunca um valor livre — não é provisória, é RN01.
-    // Demais pontos PROVISÓRIOS, ver docs/DECISOES_PENDENTES.md:
-    // - leitura aberta a qualquer autenticado (mesmo padrão de turmas/missoes ativas) — RN09
-    //   (escopo por vínculo) é garantido só pelo filtro que o client aplica na consulta
-    //   (where('responsavelId','==', escopo)), não pela regra;
-    // - RN04 (janela de tempo) não é aplicada aqui — não há campo de período, a pontuação é
-    //   cumulativa desde sempre.
+    // RN04: um documento por aluno/responsável/mês, id `${alunoId}_${responsavelId}_${periodo}`.
+    // RN09, RNF11: leitura pelo próprio aluno, pelo responsável do escopo ou por quem estiver em
+    // `leitoresIds` — mesmo padrão de `sessoes`, puramente resource.data, provável para a consulta
+    // de ranking (que filtra `leitoresIds array-contains meuId()`). `leitoresIds` é escrito só pela
+    // Cloud Function (functions/src/classificacao.ts): o client não cria nem altera esse campo.
     match /classificacoes/{classificacaoId} {
-      allow read: if autenticado();
-      // Só existe um caminho de create: o primeiro crédito de XP deste aluno neste escopo.
+      allow read: if autenticado()
+                  && (resource.data.get('alunoId', '') == meuId()
+                      || resource.data.get('responsavelId', '') == meuId()
+                      || meuId() in resource.data.get('leitoresIds', []));
+      // Só existe um caminho de create: o primeiro crédito de XP deste aluno neste escopo e mês.
       allow create: if autenticado()
                     && souGestor()
                     && request.resource.data.responsavelId == meuId()
                     && souResponsavelDoAluno(request.resource.data.alunoId)
+                    && request.resource.data.periodo is string
+                    && request.resource.data.periodo.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
                     && classificacaoId == request.resource.data.alunoId + '_' + request.resource.data.responsavelId
+                                          + '_' + request.resource.data.periodo
+                    && !('leitoresIds' in request.resource.data)
                     && request.resource.data.pontos == 10;
       allow update: if autenticado()
                     && resource.data.responsavelId == meuId()
-                    && request.resource.data.alunoId == resource.data.alunoId
-                    && request.resource.data.responsavelId == resource.data.responsavelId
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pontos', 'atualizadoEm'])
                     && request.resource.data.pontos >= 0
                     && (request.resource.data.pontos == resource.data.pontos + 10

@@ -1,9 +1,9 @@
 // Visão (só apresentação) da Classificação do Aluno — RF20. Pódio para o top 3, faixa "sua
 // posição" quando o aluno está fora do pódio, e a lista da 4ª posição em diante.
 //
-// O texto não diz "ranking mensal": a janela de tempo (RN04) não está implementada e a pontuação
-// é cumulativa (docs/DECISOES_PENDENTES.md, item 1) — o rótulo antigo prometia algo que o app não
-// faz (RELATORIO_UI_UX.md, UX-07).
+// RN04: o ranking é mensal de verdade (um documento de classificação por mês), então o texto
+// volta a dizer "ranking mensal" (desfaz o R-04 de docs/DECISOES_PENDENTES.md). RNF11: quem não
+// participa vê um aviso de que só ele enxerga a própria pontuação.
 import { StyleSheet, View } from 'react-native';
 import { Espacamento } from '../../theme';
 import Podio from '../../components/ui/Podio';
@@ -23,9 +23,11 @@ export interface LinhaRanking {
 interface ClassificacaoVisaoProps {
   linhas: LinhaRanking[];
   usuarioId?: string;
+  mes?: string;               // "novembro de 2026"
+  participa?: boolean;
 }
 
-export default function ClassificacaoVisao({ linhas, usuarioId }: ClassificacaoVisaoProps) {
+export default function ClassificacaoVisao({ linhas, usuarioId, mes, participa = true }: ClassificacaoVisaoProps) {
   const top3 = linhas.slice(0, 3);
   const resto = linhas.slice(3);
   const minhaPosicao = linhas.findIndex((l) => l.alunoId === usuarioId);
@@ -35,8 +37,13 @@ export default function ClassificacaoVisao({ linhas, usuarioId }: ClassificacaoV
   return (
     <View>
       <Texto variante="legenda" style={styles.legenda}>
-        Pontos acumulados nos treinos validados da sua academia ou professor.
+        {`Ranking mensal${mes ? ` de ${mes}` : ''}: pontos dos treinos validados neste mês na sua academia ou professor.`}
       </Texto>
+      {!participa ? (
+        <Texto variante="legenda" cor="texto2" style={styles.legenda}>
+          Você não participa da classificação: só você vê a sua pontuação. Dá para mudar isso no Perfil.
+        </Texto>
+      ) : null}
 
       {minhaPosicao >= 3 ? (
         <Cartao style={styles.minha}>
