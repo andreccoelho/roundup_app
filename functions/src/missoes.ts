@@ -2,8 +2,8 @@
 //
 // 1. atualizarMissoesNoCheckIn — quando um check-in entra ou sai de 'validado', recalcula do zero
 //    o progresso do aluno em todas as missões AUTOMÁTICAS ativas do responsável (presença,
-//    pontuação e sequência), contando só check-ins validados a partir da criação da missão. Por
-//    recalcular do zero, um estorno de validação também desfaz a conclusão.
+//    pontuação e sequência por sessão agendada, RF21), contando só o que aconteceu a partir da
+//    criação da missão. Por recalcular do zero, um estorno de validação também desfaz a conclusão.
 // 2. creditarPontosDaMissao — quando um documento de missoesProgresso muda (pela função acima ou
 //    pelo responsável marcando uma missão personalizada), credita os pontos da missão ao concluir
 //    e estorna ao desconcluir. `pontosCreditados` guarda o que já foi creditado, então o gatilho
@@ -15,14 +15,24 @@ import { onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/fire
 import {
   getFirestore, FieldValue, Timestamp, type Firestore, type DocumentData,
 } from 'firebase-admin/firestore';
-import { maiorSequencia, periodoDe } from './datas';
+import { periodoDe } from './datas';
+import { maiorSequenciaDeSessoes, type SessaoDaSequencia } from './sequencia';
 
 const TIPOS_AUTOMATICOS = ['presenca', 'pontuacao', 'sequencia'];
 
-function valorDaMissao(tipo: string, checkins: DocumentData[]): number {
-  if (tipo === 'presenca') return checkins.length;
-  if (tipo === 'pontuacao') return checkins.reduce((soma, c) => soma + (c.pontos ?? 0), 0);
-  return maiorSequencia(checkins.map((c) => (c.dataHora as Timestamp).toDate()));
+interface DadosDoAluno {
+  validados: DocumentData[];               // check-ins validados no escopo
+  statusPorSessao: Map<string, string>;    // status do check-in de cada sessão (qualquer status)
+  sessoes: (SessaoDaSequencia & { inicioMs: number })[];
+}
+
+// Tudo conta só a partir da criação da missão (`desde`)
+function valorDaMissao(tipo: string, dados: DadosDoAluno, desde: number, agoraMs: number): number {
+  const validados = dados.validados.filter((c) => (c.dataHora as Timestamp).toMillis() >= desde);
+  if (tipo === 'presenca') return validados.length;
+  if (tipo === 'pontuacao') return validados.reduce((soma, c) => soma + (c.pontos ?? 0), 0);
+  // RF21: sequência por sessão agendada do aluno neste escopo (functions/src/sequencia.ts)
+  return maiorSequenciaDeSessoes(dados.sessoes.filter((s) => s.inicioMs >= desde), dados.statusPorSessao, agoraMs);
 }
 
 async function recalcularMissoesDoAluno(db: Firestore, alunoId: string, responsavelId: string): Promise<void> {
@@ -31,7 +41,6 @@ async function recalcularMissoesDoAluno(db: Firestore, alunoId: string, responsa
     db.collection('checkins')
       .where('alunoId', '==', alunoId)
       .where('responsavelId', '==', responsavelId)
-      .where('status', '==', 'validado')
       .get(),
   ]);
   const missoes = missoesSnap.docs.filter((m) => TIPOS_AUTOMATICOS.includes(m.data().tipo));
@@ -39,10 +48,32 @@ async function recalcularMissoesDoAluno(db: Firestore, alunoId: string, responsa
   const checkins = checkinsSnap.docs.map((c) => c.data());
   const agora = Timestamp.now();
 
+  // Sessões só são lidas se houver missão de sequência
+  let sessoes: DadosDoAluno['sessoes'] = [];
+  if (missoes.some((m) => m.data().tipo === 'sequencia')) {
+    const sessoesSnap = await db.collection('sessoes')
+      .where('leitoresIds', 'array-contains', alunoId)
+      .where('responsavelId', '==', responsavelId)
+      .get();
+    sessoes = sessoesSnap.docs
+      .map((s) => ({
+        id: s.id,
+        status: s.data().status as string,
+        janelaFimMs: (s.data().janelaCheckInFim as Timestamp).toMillis(),
+        inicioMs: (s.data().inicio as Timestamp).toMillis(),
+      }))
+      .filter((s) => s.inicioMs <= agora.toMillis());
+  }
+  const dados: DadosDoAluno = {
+    validados: checkins.filter((c) => c.status === 'validado'),
+    statusPorSessao: new Map(checkins.map((c) => [c.sessaoId as string, c.status as string])),
+    sessoes,
+  };
+
   await Promise.all(missoes.map(async (missaoDoc) => {
     const missao = missaoDoc.data();
     const desde = (missao.criadoEm as Timestamp | undefined)?.toMillis() ?? 0;
-    const valor = valorDaMissao(missao.tipo, checkins.filter((c) => (c.dataHora as Timestamp).toMillis() >= desde));
+    const valor = valorDaMissao(missao.tipo, dados, desde, agora.toMillis());
     const progressoAtual = Math.min(valor, missao.meta);
     const concluida = valor >= missao.meta;
 

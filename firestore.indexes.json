@@ -12,9 +12,25 @@
       "collectionGroup": "sessoes",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "leitoresIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "inicio", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sessoes",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "turmaId", "order": "ASCENDING" },
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "inicio", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "sessoes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "leitoresIds", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "responsavelId", "order": "ASCENDING" }
       ]
     },
     {

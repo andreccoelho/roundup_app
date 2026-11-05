@@ -3,6 +3,7 @@
 // de configuração em src/config/gamificacao.ts são PROVISÓRIOS — ver docs/DECISOES_PENDENTES.md.
 import { CheckIn } from '../types';
 import { LIMITES_CONFIGURACAO, MARCOS_MEDALHAS, MarcoMedalha, NIVEIS_XP } from '../config/gamificacao';
+import type { Sessao } from '../types';
 
 export interface ProgressoNivel {
   nivel: number;
@@ -29,23 +30,32 @@ export function calcularProgressoNivel(pontosTotais: number, niveis: readonly nu
   return { nivel, xpAtual: 1, xpProximoNivel: 1, xpTotal: pontosTotais };
 }
 
-// RF21: dias consecutivos (não sessões) com ao menos um check-in validado, contados a partir do
-// dia mais recente. Se hoje ainda não tem check-in, conta a partir de ontem — não zera a
-// sequência no meio do dia antes do aluno ter chance de treinar.
-export function calcularSequencia(checkins: CheckIn[]): number {
-  const diasComPresenca = new Set(
-    checkins.filter((c) => c.status === 'validado').map((c) => c.dataHora.toDate().toDateString()),
-  );
-  if (diasComPresenca.size === 0) return 0;
+// RF21: treinos consecutivos contados por SESSÃO agendada do aluno, da mais recente para trás. A
+// sequência só quebra numa sessão dele (estava em leitoresIds) cuja janela de check-in já fechou
+// sem presença validada — dia sem aula não quebra nada. Não contam nem quebram: sessão cancelada,
+// sessão com a janela ainda aberta (o aluno ainda pode chegar) e check-in pendente de validação
+// (o professor ainda vai fazer a chamada). Duas sessões no mesmo dia contam 2.
+// Mesmo critério de maiorSequenciaDeSessoes() em functions/src/sequencia.ts — mantenha os dois iguais.
+export function calcularSequencia(
+  sessoes: Pick<Sessao, 'id' | 'status' | 'janelaCheckInFim'>[],
+  checkins: CheckIn[],
+  agora: Date = new Date(),
+): number {
+  const statusPorSessao = new Map(checkins.map((c) => [c.sessaoId, c.status]));
+  const maisRecentesPrimeiro = sessoes
+    .filter((s) => s.status !== 'cancelada')
+    .sort((a, b) => b.janelaCheckInFim.toMillis() - a.janelaCheckInFim.toMillis());
 
   let sequencia = 0;
-  const cursor = new Date();
-  if (!diasComPresenca.has(cursor.toDateString())) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  while (diasComPresenca.has(cursor.toDateString())) {
-    sequencia += 1;
-    cursor.setDate(cursor.getDate() - 1);
+  for (const sessao of maisRecentesPrimeiro) {
+    const status = statusPorSessao.get(sessao.id);
+    if (status === 'validado') {
+      sequencia += 1;
+    } else if (sessao.janelaCheckInFim.toDate() > agora || status === 'pendente') {
+      continue;
+    } else {
+      break;
+    }
   }
   return sequencia;
 }

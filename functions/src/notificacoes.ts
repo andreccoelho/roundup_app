@@ -15,7 +15,8 @@ import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from 'firebas
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getFirestore, FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore';
-import { FUSO, diaLocal, limitesDoDia, maiorSequencia } from './datas';
+import { FUSO, diaLocal, limitesDoDia } from './datas';
+import { maiorSequenciaDeSessoes } from './sequencia';
 import { marcosAlcancados, selecionarLembretes, textoLembrete } from './notificacoesRegras';
 
 type TipoNotificacao = 'lembreteSessao' | 'novaMissao' | 'conquista';
@@ -189,12 +190,21 @@ export const notificarMarcoDeTreino = onDocumentUpdated(
     const depois = event.data?.after.data();
     if (!depois || depois.status !== 'validado' || antes?.status === 'validado') return;
     const db = getFirestore();
-    const validados = await db.collection('checkins')
-      .where('alunoId', '==', depois.alunoId)
-      .where('status', '==', 'validado')
-      .get();
-    const datas = validados.docs.map((c) => (c.data().dataHora as Timestamp).toDate());
-    for (const marco of marcosAlcancados(validados.size, maiorSequencia(datas))) {
+    const [checkins, sessoes] = await Promise.all([
+      db.collection('checkins').where('alunoId', '==', depois.alunoId).get(),
+      db.collection('sessoes').where('leitoresIds', 'array-contains', depois.alunoId).get(),
+    ]);
+    const validados = checkins.docs.filter((c) => c.data().status === 'validado').length;
+    const agora = Date.now();
+    // RF21: sequência por sessão agendada (functions/src/sequencia.ts), em todos os escopos
+    const sequencia = maiorSequenciaDeSessoes(
+      sessoes.docs
+        .map((s) => ({ id: s.id, status: s.data().status, janelaFimMs: (s.data().janelaCheckInFim as Timestamp).toMillis(), inicioMs: (s.data().inicio as Timestamp).toMillis() }))
+        .filter((s) => s.inicioMs <= agora),
+      new Map(checkins.docs.map((c) => [c.data().sessaoId as string, c.data().status as string])),
+      agora,
+    );
+    for (const marco of marcosAlcancados(validados, sequencia)) {
       // eslint-disable-next-line no-await-in-loop
       await notificarConquista(db, depois.alunoId, `medalha:${marco.id}`, {
         titulo: 'Medalha conquistada',

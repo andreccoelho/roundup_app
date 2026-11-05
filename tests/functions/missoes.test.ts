@@ -4,7 +4,7 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { Timestamp } from 'firebase/firestore';
 import {
   iniciarAmbiente, encerrarAmbiente, limparDados, semear,
-  usuarioBase, missaoBase, checkinBase, AGORA,
+  usuarioBase, missaoBase, checkinBase, sessaoBase, AGORA,
 } from '../rules/helpers';
 import { aguardar } from './emuladores';
 
@@ -90,14 +90,30 @@ describe('progresso automático e pontos de missão (RF18)', () => {
     await aguardar(async () => (await ler('missoesProgresso/presenca1_aluno1'))?.concluida === true);
   });
 
-  test('sequência: três dias seguidos com check-in validado', async () => {
+  test('sequência: conta sessões agendadas seguidas; dia sem aula não quebra, falta quebra', async () => {
     await semearMissao('sequencia1', { tipo: 'sequencia', meta: 3, pontos: 50 });
+    // Sessões do aluno a cada 3 dias (sem aula nos dias do meio); a mais antiga, s3, ele faltou
+    await semear(async (db) => {
+      for (let i = 0; i < 4; i += 1) {
+        const inicio = Date.now() - (i * 3 + 1) * UM_DIA;
+        await setDoc(doc(db, 'sessoes', `s${i}`), sessaoBase('turma1', 'academia1', 'academia1', {
+          status: 'encerrada',
+          inicio: Timestamp.fromMillis(inicio),
+          janelaCheckInInicio: Timestamp.fromMillis(inicio - 30 * 60_000),
+          janelaCheckInFim: Timestamp.fromMillis(inicio + 60 * 60_000),
+          leitoresIds: ['academia1', 'aluno1'],
+        }));
+      }
+    });
     for (let i = 0; i < 3; i += 1) {
-      await semearCheckin(`d${i}`, Timestamp.fromMillis(Date.now() - i * UM_DIA));
+      await semearCheckin(`s${i}`, Timestamp.fromMillis(Date.now() - (i * 3 + 1) * UM_DIA));
     }
-    for (let i = 0; i < 3; i += 1) {
-      await validar(`d${i}`);
-    }
+    await validar('s2');
+    await validar('s1');
+    await aguardar(async () => (await ler('missoesProgresso/sequencia1_aluno1'))?.progressoAtual === 2);
+    expect((await ler('missoesProgresso/sequencia1_aluno1'))?.concluida).toBe(false);
+
+    await validar('s0');
     await aguardar(async () => (await ler('missoesProgresso/sequencia1_aluno1'))?.concluida === true);
     expect((await ler('missoesProgresso/sequencia1_aluno1'))?.progressoAtual).toBe(3);
     await aguardar(async () => (await ler(`classificacoes/${CLASSIFICACAO()}`))?.pontos === 50);

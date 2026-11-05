@@ -116,7 +116,7 @@ export default function HomeAlunoVisao({
             <CabecalhoSecao titulo="Progresso" />
             <BarraProgresso nivel={progresso.nivel} xpAtual={progresso.xpAtual} xpProximoNivel={progresso.xpProximoNivel} />
             <View style={styles.sequencia}>
-              <IndicadorSequencia dias={sequencia} />
+              <IndicadorSequencia treinos={sequencia} />
             </View>
           </>
         ) : null}
