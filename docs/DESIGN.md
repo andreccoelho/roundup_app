@@ -82,7 +82,7 @@ Regras:
 
 ## Movimento e haptics
 - `Animated` do RN com molas curtas (`Mola`: damping 18, stiffness 220), sem overshoot exagerado. Sem `react-native-reanimated`.
-- Check-in confirmado: o ✓ cresce com mola + haptic de sucesso. Aviso entra com mola. Conquista: o cartão sobe de 92% para 100% e o fundo escurece.
+- Check-in confirmado: o ✓ cresce com mola + haptic de sucesso. Aviso entra com mola. Conquista: flash de tint na tela inteira, o cartão sobe de 92% para 100% com a mola, o emblema "estoura" de 60% para 100% com overshoot (`Easing.back`), dois halos de tint se expandem atrás dele e o haptic é duplo (impacto ao abrir, sucesso quando o emblema assenta). Efeitos herdados da direção anterior, no traço novo.
 - Haptics (`expo-haptics`): seleção em toggles, abas, chips e checkbox; impacto leve ao fazer check-in e ao marcar presença; sucesso no check-in confirmado e na conquista; aviso em erro.
 - **Reduce motion**: sem mola nem fade, estado final direto. **Reduce transparency**: tab bar sólida (o blur do cabeçalho nativo do iOS respeita a configuração sozinho).
 
