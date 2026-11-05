@@ -243,7 +243,7 @@ export default function MissoesGestorScreen() {
         <CampoTexto rotulo="Título" valor={titulo} onAlterar={setTitulo} placeholder="Ex.: Treinar 3x na semana" />
         <CampoTexto rotulo="Descrição" valor={descricao} onAlterar={setDescricao} placeholder="Critério de conclusão" />
 
-        <Texto variante="legenda" style={styles.rotuloCampo}>
+        <Texto variante="subheadline" style={styles.rotuloCampo}>
           Tipo
         </Texto>
         <View style={styles.linhaTipos} accessibilityRole="radiogroup" accessibilityLabel="Tipo da missão">
@@ -269,14 +269,14 @@ export default function MissoesGestorScreen() {
         onFechar={() => setMissaoConclusoes(null)}
         titulo={missaoConclusoes ? `Conclusões: ${missaoConclusoes.titulo}` : 'Conclusões'}
       >
-        <Texto variante="legenda" style={styles.rotuloCampo}>
+        <Texto variante="subheadline" style={styles.rotuloCampo}>
           {`Marque quem cumpriu a missão. Cada conclusão vale ${missaoConclusoes?.pontos ?? 0} pts na classificação do mês.`}
         </Texto>
         <MensagemErro mensagem={erroConclusoes} />
         {carregandoConclusoes ? (
           <Esqueleto forma="linha" repeticoes={3} />
         ) : alunosConclusao.length === 0 && !erroConclusoes ? (
-          <Texto variante="corpo" cor="texto2">
+          <Texto variante="body" cor="texto2">
             Nenhum aluno vinculado ainda.
           </Texto>
         ) : (

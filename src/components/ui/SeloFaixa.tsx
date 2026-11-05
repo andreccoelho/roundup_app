@@ -73,7 +73,7 @@ export default function SeloFaixa({ faixaOuGrau, tamanho = 'normal', semTexto }:
           : null}
       </Svg>
       {semTexto ? null : (
-        <Texto variante={grande ? 'corpoForte' : 'legenda'} cor={grande ? 'texto' : 'texto2'} numberOfLines={1} style={styles.texto}>
+        <Texto variante={grande ? 'headline' : 'subheadline'} cor={grande ? 'texto' : 'texto2'} numberOfLines={1} style={styles.texto}>
           {faixaOuGrau}
         </Texto>
       )}

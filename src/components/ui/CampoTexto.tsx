@@ -72,7 +72,7 @@ export default function CampoTexto({
 
   return (
     <View style={styles.container}>
-      <Texto variante="legenda" cor={focado ? 'texto' : 'texto2'} style={styles.rotulo} cabecalho={false}>
+      <Texto variante="subheadline" cor={focado ? 'texto' : 'texto2'} style={styles.rotulo} cabecalho={false}>
         {rotulo}
       </Texto>
       <View style={[styles.caixa, { borderBottomColor: corBorda }, (focado || erro) && styles.caixaRealce]}>
@@ -109,11 +109,11 @@ export default function CampoTexto({
         ) : null}
       </View>
       {erro ? (
-        <Texto variante="legenda" cor="perigo" style={styles.mensagem} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Texto variante="subheadline" cor="perigo" style={styles.mensagem} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {erro}
         </Texto>
       ) : ajuda ? (
-        <Texto variante="legenda" cor="texto3" style={styles.mensagem}>
+        <Texto variante="subheadline" cor="texto3" style={styles.mensagem}>
           {ajuda}
         </Texto>
       ) : null}

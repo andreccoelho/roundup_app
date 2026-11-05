@@ -195,18 +195,18 @@ export default function TurmasScreen() {
                 style={({ pressed }) => [styles.linha, pressed && styles.pressionada]}
               >
                 <View style={styles.textos}>
-                  <Texto variante="corpoForte">{turma.nome}</Texto>
+                  <Texto variante="headline">{turma.nome}</Texto>
                   <View style={styles.meta}>
                     <Etiqueta texto={turma.modalidade} />
                     <Etiqueta texto={rotuloNivel(turma.nivel)} />
                     {!turma.ativa ? (
-                      <Texto variante="rotuloPlacar" cor="texto3">
+                      <Texto variante="caption" cor="texto3">
                         Inativa
                       </Texto>
                     ) : null}
                   </View>
                   {turma.diasSemana && turma.diasSemana.length > 0 ? (
-                    <Texto variante="legenda">
+                    <Texto variante="subheadline">
                       {DIAS_SEMANA.filter((d) => turma.diasSemana!.includes(d.valor))
                         .map((d) => d.rotulo)
                         .join(', ')}
@@ -226,7 +226,7 @@ export default function TurmasScreen() {
         <CampoTexto rotulo="Nome da turma" placeholder="Ex.: Muay Thai — Turma A" valor={nome} onAlterar={setNome} />
         <CampoTexto rotulo="Modalidade" placeholder="Ex.: Muay Thai" valor={modalidade} onAlterar={setModalidade} />
 
-        <Texto variante="legenda" style={styles.rotuloCampo}>
+        <Texto variante="subheadline" style={styles.rotuloCampo}>
           Nível
         </Texto>
         <View style={styles.linhaChips} accessibilityRole="radiogroup" accessibilityLabel="Nível">
@@ -237,11 +237,11 @@ export default function TurmasScreen() {
 
         {usuario?.perfil === 'academia' ? (
           <>
-            <Texto variante="legenda" style={styles.rotuloCampo}>
+            <Texto variante="subheadline" style={styles.rotuloCampo}>
               Professor
             </Texto>
             {professores.length === 0 ? (
-              <Texto variante="legenda" cor="texto3" style={styles.ajuda}>
+              <Texto variante="subheadline" cor="texto3" style={styles.ajuda}>
                 Nenhum professor vinculado ainda. A turma pode ser criada sem professor por enquanto.
               </Texto>
             ) : (
@@ -259,7 +259,7 @@ export default function TurmasScreen() {
           </>
         ) : null}
 
-        <Texto variante="legenda" style={styles.rotuloCampo}>
+        <Texto variante="subheadline" style={styles.rotuloCampo}>
           Grade recorrente (opcional)
         </Texto>
         <View style={styles.linhaChips}>
@@ -276,14 +276,14 @@ export default function TurmasScreen() {
           </View>
         </View>
         {diasSemana.length > 0 ? (
-          <Texto variante="legenda" cor="texto3" style={styles.ajuda}>
+          <Texto variante="subheadline" cor="texto3" style={styles.ajuda}>
             {`Cria sessões nesses dias pelas próximas ${SEMANAS_GRADE_INICIAL} semanas. Dá pra gerar mais depois, na tela da turma.`}
           </Texto>
         ) : null}
 
         <Botao titulo="Criar turma" onPress={handleCriar} carregando={criando} desabilitado={!nome.trim() || !modalidade.trim()} />
         {!nome.trim() || !modalidade.trim() ? (
-          <Texto variante="legenda" cor="texto3" alinhamento="center" style={styles.ajudaBotao}>
+          <Texto variante="subheadline" cor="texto3" alinhamento="center" style={styles.ajudaBotao}>
             Preencha nome e modalidade para criar.
           </Texto>
         ) : null}

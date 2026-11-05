@@ -20,21 +20,21 @@ export default function LinhaClassificacao({ posicao, nome, pontos, fotoUrl, des
       accessible
       accessibilityLabel={`${posicao}º lugar: ${nome}, ${pontos} pontos${destaque ? ', você' : ''}`}
     >
-      <Texto variante="placar" cor={destaque ? 'texto' : 'texto3'} style={styles.posicao}>
+      <Texto variante="numero" cor={destaque ? 'texto' : 'texto3'} style={styles.posicao}>
         {posicao}
       </Texto>
       <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={36} />
       <View style={styles.nome}>
-        <Texto variante="corpoForte" numberOfLines={1}>
+        <Texto variante="headline" numberOfLines={1}>
           {nome}
         </Texto>
         {destaque ? (
-          <Texto variante="rotuloPlacar" cor="texto2">
+          <Texto variante="caption" cor="texto2">
             Você
           </Texto>
         ) : null}
       </View>
-      <Texto variante="placar">{pontos}</Texto>
+      <Texto variante="numero">{pontos}</Texto>
     </View>
   );
 }

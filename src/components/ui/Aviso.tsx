@@ -53,7 +53,7 @@ export default function Aviso({ mensagem, tipo = 'info', visivel, onFechar, dura
         accessibilityLiveRegion="polite"
       >
         <Icone tamanho={20} cor={COR[tipo]} />
-        <Texto variante="corpo" style={styles.texto}>
+        <Texto variante="body" style={styles.texto}>
           {mensagem}
         </Texto>
       </Animated.View>

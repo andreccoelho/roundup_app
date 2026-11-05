@@ -11,7 +11,7 @@ export default function MensagemErro({ mensagem }: { mensagem: string | null | u
   return (
     <View style={styles.caixa} accessibilityRole="alert" accessibilityLiveRegion="assertive">
       <IconeAlerta tamanho={20} cor={Cores.perigo} />
-      <Texto variante="legenda" cor="texto" style={styles.texto}>
+      <Texto variante="subheadline" cor="texto" style={styles.texto}>
         {mensagem}
       </Texto>
     </View>

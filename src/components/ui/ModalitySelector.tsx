@@ -36,7 +36,7 @@ export default function ModalitySelector({
 
   return (
     <View style={styles.container} role="group" aria-label={rotulo}>
-      <Texto variante="legenda" style={styles.rotulo} cabecalho={false}>
+      <Texto variante="subheadline" style={styles.rotulo} cabecalho={false}>
         {rotulo}
       </Texto>
       <View style={styles.grade}>
@@ -56,7 +56,7 @@ export default function ModalitySelector({
         </View>
       ) : null}
       {erro ? (
-        <Texto variante="legenda" cor="perigo" accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Texto variante="subheadline" cor="perigo" accessibilityRole="alert" accessibilityLiveRegion="polite">
           {erro}
         </Texto>
       ) : null}

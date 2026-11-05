@@ -2,7 +2,7 @@
 // autônomo/vinculado no cadastro). Idioma de "fight card": rótulos Oswald em caixa alta sobre uma
 // linha; a aba ativa ganha sublinhado de 2px em `texto` (sem acento, que fica para o CTA da tela).
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Alturas, Cores, Espacamento, FamiliaFonte, TamanhoFonte } from '../../theme';
+import { Alturas, Cores, Espacamento, TamanhoFonte } from '../../theme';
 import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
 
 interface OpcaoAba<T extends string> {
@@ -49,7 +49,6 @@ const styles = StyleSheet.create({
   container: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Cores.linha },
   aba: { flex: 1, minHeight: Alturas.alvoMinimo + 4, alignItems: 'center', justifyContent: 'flex-end', paddingTop: Espacamento.pequeno },
   texto: {
-    fontFamily: FamiliaFonte.placarSemiBold,
     fontSize: TamanhoFonte.sm,
     letterSpacing: 1.5,
     textTransform: 'uppercase',

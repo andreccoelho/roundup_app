@@ -37,9 +37,9 @@ export default function Dialogo({
     <Modal visible={visivel} transparent animationType={reduzido ? 'none' : 'fade'} onRequestClose={onCancelar} statusBarTranslucent>
       <View style={styles.fundo}>
         <View style={[styles.caixa, destrutivo && styles.caixaDestrutiva]} accessibilityViewIsModal aria-modal role="dialog">
-          <Texto variante="titulo">{titulo}</Texto>
+          <Texto variante="title3">{titulo}</Texto>
           {mensagem ? (
-            <Texto variante="corpo" cor="texto2" style={styles.mensagem}>
+            <Texto variante="body" cor="texto2" style={styles.mensagem}>
               {mensagem}
             </Texto>
           ) : null}

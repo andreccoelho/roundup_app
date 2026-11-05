@@ -86,7 +86,7 @@ export default function PerfilAlunoVisao({
 
       <View style={styles.corpo}>
         <Cartao corteDiagonal>
-          <Texto variante="rotuloPlacar" alinhamento="center">
+          <Texto variante="caption" alinhamento="center">
             Graduação
           </Texto>
           <View style={styles.faixa}>

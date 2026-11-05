@@ -3,7 +3,7 @@
 // de domínio, para validar o visual sem backend (docs/DESIGN.md).
 import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento, Raios, type NomeCor } from '../../theme';
+import { Cores, Espacamento, Raios, useTema, type Esquema, type NomeCor } from '../../theme';
 
 import {
   IconeLuva,
@@ -77,16 +77,24 @@ function Linha({ children }: { children: ReactNode }) {
   return <View style={styles.linha}>{children}</View>;
 }
 
-const VARIANTES: VarianteTexto[] = ['display', 'titulo', 'secao', 'corpo', 'corpoForte', 'legenda', 'rotuloPlacar', 'placar', 'placarGrande', 'placarXL'];
+const VARIANTES: VarianteTexto[] = [
+  'largeTitle', 'title1', 'title2', 'title3', 'headline', 'body', 'callout', 'subheadline', 'footnote', 'caption',
+  'numero', 'numeroGrande', 'numeroXL', 'marca',
+];
 const AMOSTRA: Partial<Record<VarianteTexto, string>> = {
-  display: 'Noite de luta',
-  secao: 'Próximos treinos',
-  rotuloPlacar: 'Nível',
-  placar: '1.240',
-  placarGrande: '19:30',
-  placarXL: '07',
+  largeTitle: 'Treinar',
+  footnote: 'PRÓXIMOS TREINOS',
+  caption: 'Nível',
+  numero: '1.240',
+  numeroGrande: '19:30',
+  numeroXL: '07',
+  marca: 'ROUNDUP',
 };
-const CORES_PALETA: NomeCor[] = ['fundo', 'superficie1', 'superficie2', 'linha', 'linhaForte', 'texto', 'texto2', 'texto3', 'acento', 'sucesso', 'perigo', 'ouro'];
+const CORES_PALETA: NomeCor[] = [
+  'fundo', 'fundoAgrupado', 'superficie', 'superficieElevada', 'texto', 'texto2', 'texto3', 'separador', 'preenchimento',
+  'tint', 'tintCheio', 'tintSuave', 'sucesso', 'perigo', 'ouro',
+];
+type OpcaoTema = 'sistema' | Esquema;
 const ICONES = {
   Luva: IconeLuva,
   Ficha: IconeFichaTecnica,
@@ -125,6 +133,13 @@ export default function GaleriaScreen() {
   const [senha, setSenha] = useState('segredo1');
   const [composicao, setComposicao] = useState<Composicao | null>(null);
   const [conquistaDemo, setConquistaDemo] = useState<Conquista | null>(null);
+  const { cores, forcarEsquema } = useTema();
+  const [opcaoTema, setOpcaoTema] = useState<OpcaoTema>('sistema');
+
+  function escolherTema(opcao: OpcaoTema) {
+    setOpcaoTema(opcao);
+    forcarEsquema(opcao === 'sistema' ? null : opcao);
+  }
 
   if (!__DEV__) return null;
 
@@ -151,9 +166,22 @@ export default function GaleriaScreen() {
         />
       }
     >
-      <Texto variante="display" style={styles.tituloGaleria}>
+      <Texto variante="largeTitle" style={styles.tituloGaleria}>
         Galeria
       </Texto>
+
+      <Secao titulo="Tema">
+        <Abas
+          accessibilityLabel="Tema da galeria"
+          opcoes={[
+            { valor: 'sistema', rotulo: 'Sistema' },
+            { valor: 'claro', rotulo: 'Claro' },
+            { valor: 'escuro', rotulo: 'Escuro' },
+          ]}
+          selecionada={opcaoTema}
+          onSelecionar={escolherTema}
+        />
+      </Secao>
 
       <Secao titulo="Composições (telas com dados fictícios)">
         {COMPOSICOES.map((c, i) => (
@@ -173,7 +201,7 @@ export default function GaleriaScreen() {
       <Secao titulo="Tipografia">
         {VARIANTES.map((v) => (
           <View key={v} style={styles.amostraTipo}>
-            <Texto variante="legenda" cor="texto3" cabecalho={false}>
+            <Texto variante="subheadline" cor="texto3" cabecalho={false}>
               {v}
             </Texto>
             <Texto variante={v} cabecalho={false}>
@@ -181,7 +209,7 @@ export default function GaleriaScreen() {
             </Texto>
           </View>
         ))}
-        <Texto variante="display" style={styles.amostraTipo}>
+        <Texto variante="largeTitle" style={styles.amostraTipo}>
           Coração, ação, vínculo
         </Texto>
       </Secao>
@@ -190,10 +218,10 @@ export default function GaleriaScreen() {
         <View style={styles.paleta}>
           {CORES_PALETA.map((nome) => (
             <View key={nome} style={styles.swatch}>
-              <View style={[styles.swatchCor, { backgroundColor: Cores[nome] }]} />
-              <Texto variante="legenda">{nome}</Texto>
-              <Texto variante="legenda" cor="texto3">
-                {Cores[nome]}
+              <View style={[styles.swatchCor, { backgroundColor: cores[nome] }]} />
+              <Texto variante="subheadline">{nome}</Texto>
+              <Texto variante="caption" cor="texto3">
+                {cores[nome]}
               </Texto>
             </View>
           ))}
@@ -204,8 +232,8 @@ export default function GaleriaScreen() {
         <View style={styles.paleta}>
           {Object.entries(ICONES).map(([nome, Icone]) => (
             <View key={nome} style={styles.itemIcone}>
-              <Icone tamanho={28} cor={Cores.texto} />
-              <Texto variante="legenda" cor="texto3">
+              <Icone tamanho={28} cor={cores.texto} />
+              <Texto variante="subheadline" cor="texto3">
                 {nome}
               </Texto>
             </View>
@@ -326,16 +354,16 @@ export default function GaleriaScreen() {
 
       <Secao titulo="Cartao e TexturaLona">
         <Cartao>
-          <Texto variante="corpo">Cartão padrão: superficie1, canto vivo, sem borda.</Texto>
+          <Texto variante="body">Cartão padrão: superficie1, canto vivo, sem borda.</Texto>
         </Cartao>
         <View style={styles.espaco} />
         <Cartao corteDiagonal corFilete={Cores.acento}>
-          <Texto variante="corpo">Corte diagonal com filete: uma vez por tela.</Texto>
+          <Texto variante="body">Corte diagonal com filete: uma vez por tela.</Texto>
         </Cartao>
         <View style={styles.espaco} />
         <View style={styles.amostraTextura}>
           <TexturaLona opacidade={0.1} />
-          <Texto variante="legenda">TexturaLona (opacidade 0,10 só nesta amostra).</Texto>
+          <Texto variante="subheadline">TexturaLona (opacidade 0,10 só nesta amostra).</Texto>
         </View>
         <View style={styles.espaco} />
         <Linha>
@@ -464,7 +492,7 @@ export default function GaleriaScreen() {
         ))}
         <View style={styles.espaco} />
         <Cartao corteDiagonal>
-          <Texto variante="rotuloPlacar" alinhamento="center">
+          <Texto variante="caption" alinhamento="center">
             Graduação
           </Texto>
           <View style={styles.espaco} />

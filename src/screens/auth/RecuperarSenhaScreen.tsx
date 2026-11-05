@@ -54,17 +54,17 @@ export default function RecuperarSenhaScreen() {
     <Tela largura="formulario" bordas={['topo', 'base']} teclado>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-      <Texto variante="display" style={styles.titulo}>
+      <Texto variante="largeTitle" style={styles.titulo}>
         Recuperar senha
       </Texto>
-      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+      <Texto variante="body" cor="texto2" style={styles.subtitulo}>
         Informe o e-mail da sua conta. Se ele existir, enviaremos um link para redefinir a senha.
       </Texto>
 
       {enviado ? (
         <View style={styles.confirmacao} accessibilityRole="alert" accessibilityLiveRegion="polite">
           <IconeCheck tamanho={24} cor={Cores.sucesso} />
-          <Texto variante="corpo" style={styles.confirmacaoTexto}>
+          <Texto variante="body" style={styles.confirmacaoTexto}>
             {`Se ${email.trim()} estiver cadastrado, o link de recuperação já foi enviado.`}
           </Texto>
         </View>

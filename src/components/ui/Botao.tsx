@@ -3,7 +3,7 @@
 // Pressionado = escala 0.97 (desligada com reduce motion). Foco de teclado = anel em acento.
 import { useRef, type ComponentType } from 'react';
 import { ActivityIndicator, Animated, Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
-import { Alturas, Cores, DuracaoAnimacao, Espacamento, FamiliaFonte, Raios, TamanhoFonte } from '../../theme';
+import { Alturas, Cores, DuracaoAnimacao, Espacamento, Raios, TamanhoFonte } from '../../theme';
 import { DRIVER_NATIVO } from '../../utils/animacao';
 import { useFocoVisivel, estiloAnelFoco, estiloSemOutline } from '../../hooks/useFocoVisivel';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
@@ -132,7 +132,6 @@ export default function Botao({
 }
 
 const texto: TextStyle = {
-  fontFamily: FamiliaFonte.placarSemiBold,
   fontSize: TamanhoFonte.md,
   letterSpacing: 1,
   textTransform: 'uppercase',

@@ -71,13 +71,13 @@ export default function RegistrarGraduacaoScreen() {
 
   return (
     <Tela largura="formulario" teclado>
-      <Texto variante="rotuloPlacar">Aluno</Texto>
-      <Texto variante="titulo" style={styles.nome}>
+      <Texto variante="caption">Aluno</Texto>
+      <Texto variante="title3" style={styles.nome}>
         {nomeAluno}
       </Texto>
 
       {erro ? (
-        <Texto variante="legenda" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Texto variante="subheadline" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {erro}
         </Texto>
       ) : null}

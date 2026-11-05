@@ -64,7 +64,7 @@ export default function LoginScreen() {
           accessibilityRole="image"
           accessibilityLabel="RoundUp"
         />
-        <Texto variante="display" alinhamento="center" style={[styles.tagline, Sombras.duraAcento]}>
+        <Texto variante="largeTitle" alinhamento="center" style={[styles.tagline, Sombras.duraAcento]}>
           {'Treine. Evolua.\nSuba de nível.'}
         </Texto>
       </View>
@@ -105,7 +105,7 @@ export default function LoginScreen() {
       <Botao titulo="Entrar" grande onPress={handleLogin} carregando={carregando} />
 
       <View style={styles.rodape}>
-        <Texto variante="legenda">Não tem conta?</Texto>
+        <Texto variante="subheadline">Não tem conta?</Texto>
         <Botao titulo="Cadastre-se" variante="texto" onPress={() => navigation.navigate('SelecaoPerfil')} />
       </View>
 

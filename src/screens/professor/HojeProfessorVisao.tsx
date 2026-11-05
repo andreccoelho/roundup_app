@@ -75,7 +75,7 @@ function BotaoPresenca({ item, processando, onPress }: { item: ItemChamadaVisao;
       {...propsFoco}
     >
       {presente ? <IconeCheck tamanho={16} cor={Cores.sobreCor} espessura={2.5} /> : null}
-      <Texto variante="rotuloPlacar" cor={presente ? 'sobreCor' : 'texto'}>
+      <Texto variante="caption" cor={presente ? 'sobreTint' : 'texto'}>
         {presente ? 'Presente' : 'Confirmar'}
       </Texto>
     </Pressable>
@@ -152,28 +152,28 @@ export default function HojeProfessorVisao({
 
           <View style={styles.corpo}>
             <Cartao>
-              <Texto variante="rotuloPlacar" cor="texto3">
+              <Texto variante="caption" cor="texto3">
                 {turma?.nome ?? 'Turma'}
               </Texto>
               {sessaoHoje ? (
                 <View style={styles.sessao}>
                   <View>
-                    <Texto variante="rotuloPlacar" cor={sessaoHoje.status === 'aberta' ? 'sucesso' : 'texto2'}>
+                    <Texto variante="caption" cor={sessaoHoje.status === 'aberta' ? 'sucesso' : 'texto2'}>
                       {ROTULO_STATUS_SESSAO[sessaoHoje.status]}
                     </Texto>
-                    <Texto variante="placarGrande">{formatarHora(sessaoHoje.inicio)}</Texto>
+                    <Texto variante="numeroGrande">{formatarHora(sessaoHoje.inicio)}</Texto>
                   </View>
                   <Estatistica valor={`${presentes}/${chamada.length}`} rotulo="Presentes" tamanho="grande" alinhamento="centro" />
                 </View>
               ) : (
-                <Texto variante="corpo" cor="texto2" style={styles.semSessao}>
+                <Texto variante="body" cor="texto2" style={styles.semSessao}>
                   Nenhuma sessão hoje nesta turma.
                 </Texto>
               )}
             </Cartao>
 
             {erro ? (
-              <Texto variante="legenda" cor="perigo" style={styles.erro} accessibilityRole="alert">
+              <Texto variante="subheadline" cor="perigo" style={styles.erro} accessibilityRole="alert">
                 {erro}
               </Texto>
             ) : null}
@@ -182,24 +182,24 @@ export default function HojeProfessorVisao({
             {carregandoPainel ? (
               <Esqueleto forma="linha" repeticoes={3} />
             ) : !sessaoHoje ? (
-              <Texto variante="legenda">Sem sessão hoje: nada para chamar.</Texto>
+              <Texto variante="subheadline">Sem sessão hoje: nada para chamar.</Texto>
             ) : chamada.length === 0 ? (
-              <Texto variante="legenda">Nenhum aluno matriculado nesta turma.</Texto>
+              <Texto variante="subheadline">Nenhum aluno matriculado nesta turma.</Texto>
             ) : (
               chamada.map((item, i) => (
                 <View key={item.alunoId}>
                   {i > 0 ? <LinhaFina /> : null}
                   <View style={styles.linhaChamada}>
                     <Avatar nome={item.nome} fotoUrl={item.fotoUrl} tamanho={36} />
-                    <Texto variante="corpoForte" style={styles.nomeAluno} numberOfLines={1}>
+                    <Texto variante="headline" style={styles.nomeAluno} numberOfLines={1}>
                       {item.nome}
                     </Texto>
                     {item.status === 'aguardando' ? (
-                      <Texto variante="legenda" cor="texto3">
+                      <Texto variante="subheadline" cor="texto3">
                         Sem check-in
                       </Texto>
                     ) : item.status === 'rejeitado' ? (
-                      <Texto variante="legenda" cor="perigo">
+                      <Texto variante="subheadline" cor="perigo">
                         Rejeitado
                       </Texto>
                     ) : (

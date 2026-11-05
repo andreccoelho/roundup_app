@@ -6,7 +6,7 @@ import { DarkTheme, type Theme } from '@react-navigation/native';
 import type { NativeStackNavigationOptions } from '@react-navigation/native-stack';
 import type { BottomTabNavigationOptions } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Alturas, Cores, FamiliaFonte, TamanhoFonte } from '../theme';
+import { Alturas, Cores, TamanhoFonte } from '../theme';
 import { useMovimentoReduzido } from '../hooks/useMovimentoReduzido';
 
 // Tema do NavigationContainer: background = fundo evita o "flash" branco entre telas e atrás de
@@ -30,7 +30,6 @@ export const opcoesHeader: NativeStackNavigationOptions = {
   headerShadowVisible: false,
   headerTintColor: Cores.texto,
   headerTitleStyle: {
-    fontFamily: FamiliaFonte.placarSemiBold,
     fontSize: TamanhoFonte.lg,
     color: Cores.texto,
   },
@@ -59,7 +58,6 @@ export function useOpcoesTabBar(): BottomTabNavigationOptions {
       paddingBottom: insets.bottom + 4,
     },
     tabBarLabelStyle: {
-      fontFamily: FamiliaFonte.placarSemiBold,
       fontSize: TamanhoFonte.xs,
       letterSpacing: 0.5,
     },

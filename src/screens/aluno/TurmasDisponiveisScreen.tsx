@@ -107,7 +107,7 @@ export default function TurmasDisponiveisScreen() {
             {i > 0 ? <LinhaFina /> : null}
             <View style={styles.linha}>
               <View style={styles.textos}>
-                <Texto variante="corpoForte">{turma.nome}</Texto>
+                <Texto variante="headline">{turma.nome}</Texto>
                 <View style={styles.meta}>
                   <Etiqueta texto={turma.modalidade} />
                   <Etiqueta texto={rotuloNivel(turma.nivel)} />
@@ -116,7 +116,7 @@ export default function TurmasDisponiveisScreen() {
               {jaMatriculado ? (
                 <View style={styles.matriculado} accessible accessibilityLabel="Matriculado">
                   <IconeCheck tamanho={18} cor={Cores.sucesso} />
-                  <Texto variante="rotuloPlacar" cor="sucesso">
+                  <Texto variante="caption" cor="sucesso">
                     Matriculado
                   </Texto>
                 </View>

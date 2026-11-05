@@ -29,25 +29,25 @@ export default function CartaoMissao({ titulo, descricao, progressoAtual, meta, 
     >
       <View style={styles.cabecalho}>
         <View style={styles.textos}>
-          <Texto variante="corpoForte">{titulo}</Texto>
-          <Texto variante="legenda">{descricao}</Texto>
+          <Texto variante="headline">{titulo}</Texto>
+          <Texto variante="subheadline">{descricao}</Texto>
         </View>
         <View style={styles.placar}>
           {concluida ? (
             <View style={styles.concluida}>
               <IconeCheck tamanho={16} cor={Cores.sucesso} />
-              <Texto variante="rotuloPlacar" cor="sucesso">
+              <Texto variante="caption" cor="sucesso">
                 Concluída
               </Texto>
             </View>
           ) : (
             <View style={styles.contagem}>
-              <Texto variante="placar">{atual}</Texto>
-              <Texto variante="rotuloPlacar" cor="texto3">{`/ ${meta}`}</Texto>
+              <Texto variante="numero">{atual}</Texto>
+              <Texto variante="caption" cor="texto3">{`/ ${meta}`}</Texto>
             </View>
           )}
           {pontos ? (
-            <Texto variante="rotuloPlacar" cor="texto3">{`+${pontos} XP`}</Texto>
+            <Texto variante="caption" cor="texto3">{`+${pontos} XP`}</Texto>
           ) : null}
         </View>
       </View>

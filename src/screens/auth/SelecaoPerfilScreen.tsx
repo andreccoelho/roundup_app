@@ -52,10 +52,10 @@ function Opcao({ titulo, descricao, Icone, onPress }: { titulo: string; descrica
         <Icone tamanho={32} cor={Cores.texto} />
       </View>
       <View style={styles.textos}>
-        <Texto variante="titulo" cabecalho={false}>
+        <Texto variante="title3" cabecalho={false}>
           {titulo}
         </Texto>
-        <Texto variante="legenda">{descricao}</Texto>
+        <Texto variante="subheadline">{descricao}</Texto>
       </View>
       <IconeChevron tamanho={20} cor={Cores.texto3} />
     </Pressable>
@@ -69,10 +69,10 @@ export default function SelecaoPerfilScreen() {
     <Tela largura="formulario" bordas={['topo', 'base']}>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-      <Texto variante="display" style={styles.titulo}>
+      <Texto variante="largeTitle" style={styles.titulo}>
         Quem entra no ringue?
       </Texto>
-      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+      <Texto variante="body" cor="texto2" style={styles.subtitulo}>
         Escolha como você vai usar o RoundUp. Isso define suas telas e permissões.
       </Texto>
 

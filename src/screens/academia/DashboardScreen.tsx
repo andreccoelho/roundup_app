@@ -114,7 +114,7 @@ export default function DashboardScreen() {
 
             <CabecalhoSecao titulo="Professores vinculados" contador={professores.length} />
             {professores.length === 0 ? (
-              <Texto variante="legenda" style={styles.vazio}>
+              <Texto variante="subheadline" style={styles.vazio}>
                 Nenhum professor vinculado ainda. Os pedidos chegam em Perfil, Gestão de professores.
               </Texto>
             ) : (
@@ -123,11 +123,11 @@ export default function DashboardScreen() {
                   {i > 0 ? <LinhaFina /> : null}
                   <View style={styles.linha} accessible accessibilityLabel={`${professor.nome}, ${professor.quantidadeTurmas} turmas`}>
                     <Avatar nome={professor.nome} tamanho={36} />
-                    <Texto variante="corpoForte" style={styles.nome} numberOfLines={1}>
+                    <Texto variante="headline" style={styles.nome} numberOfLines={1}>
                       {professor.nome}
                     </Texto>
-                    <Texto variante="placar">{professor.quantidadeTurmas}</Texto>
-                    <Texto variante="rotuloPlacar" cor="texto3">
+                    <Texto variante="numero">{professor.quantidadeTurmas}</Texto>
+                    <Texto variante="caption" cor="texto3">
                       {professor.quantidadeTurmas === 1 ? 'turma' : 'turmas'}
                     </Texto>
                   </View>

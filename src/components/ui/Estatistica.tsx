@@ -23,11 +23,11 @@ export default function Estatistica({ valor, rotulo, tamanho = 'normal', alinham
     >
       <View style={styles.valorLinha}>
         {Icone ? <Icone tamanho={tamanho === 'grande' ? 28 : 18} cor={Cores.texto2} /> : null}
-        <Texto variante={tamanho === 'grande' ? 'placarGrande' : 'placar'} cor={cor}>
+        <Texto variante={tamanho === 'grande' ? 'numeroGrande' : 'numero'} cor={cor}>
           {String(valor)}
         </Texto>
       </View>
-      <Texto variante="rotuloPlacar">{rotulo}</Texto>
+      <Texto variante="caption">{rotulo}</Texto>
     </View>
   );
 }

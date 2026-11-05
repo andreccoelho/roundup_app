@@ -19,7 +19,7 @@ export default function EstadoErro({ mensagem, onTentarNovamente, compacto }: Es
       <View aria-hidden importantForAccessibility="no-hide-descendants">
         <IconeAlerta tamanho={compacto ? 32 : 64} cor={Cores.perigo} espessura={compacto ? 1.6 : 1.2} />
       </View>
-      <Texto variante={compacto ? 'corpo' : 'titulo'} alinhamento="center" style={styles.mensagem} cabecalho={false}>
+      <Texto variante={compacto ? 'body' : 'title3'} alinhamento="center" style={styles.mensagem} cabecalho={false}>
         {mensagem}
       </Texto>
       <View style={styles.acao}>
