@@ -108,6 +108,21 @@ export async function listarProximasSessoesDoAluno(alunoId: string, dbInstancia:
   return snap.docs.map(d => d.data() as Sessao);
 }
 
+// RF21: sessões do aluno que já começaram, da mais recente para trás — base da sequência de
+// treinos (calcularSequencia). Mesma prova de leitura de listarProximasSessoesDoAluno
+// (array-contains em leitoresIds). O limite corta sequências mais longas que ele: com 120, a maior
+// medalha de sequência (30) cabe com folga.
+export async function listarSessoesPassadasDoAluno(alunoId: string, limite = 120): Promise<Sessao[]> {
+  const snap = await getDocs(query(
+    collection(db, COLECAO),
+    where('leitoresIds', 'array-contains', alunoId),
+    where('inicio', '<=', paraTimestamp(new Date())),
+    orderBy('inicio', 'desc'),
+    limit(limite),
+  ));
+  return snap.docs.map(d => d.data() as Sessao);
+}
+
 export async function atualizarSessao(id: string, dados: Partial<Sessao>): Promise<void> {
   await updateDoc(doc(db, COLECAO, id), { ...dados, atualizadoEm: agoraTimestamp() });
 }

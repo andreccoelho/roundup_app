@@ -63,8 +63,8 @@ const MEDALHAS: MedalhaPerfil[] = [
   { id: 'treinos-10', rotulo: '10 treinos', tipo: 'treinos', quantidade: 10, conquistada: true },
   { id: 'treinos-30', rotulo: '30 treinos', tipo: 'treinos', quantidade: 30, conquistada: true },
   { id: 'treinos-100', rotulo: '100 treinos', tipo: 'treinos', quantidade: 100, conquistada: true, maxima: true },
-  { id: 'sequencia-7', rotulo: '7 dias seguidos', tipo: 'sequencia', quantidade: 7, conquistada: true },
-  { id: 'sequencia-30', rotulo: '30 dias seguidos', tipo: 'sequencia', quantidade: 30, conquistada: false },
+  { id: 'sequencia-7', rotulo: '7 treinos seguidos', tipo: 'sequencia', quantidade: 7, conquistada: true },
+  { id: 'sequencia-30', rotulo: '30 treinos seguidos', tipo: 'sequencia', quantidade: 30, conquistada: false },
   { id: 'graduacoes-1', rotulo: 'Primeira graduação', tipo: 'graduacoes', quantidade: 1, conquistada: false },
 ];
 

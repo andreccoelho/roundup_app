@@ -9,6 +9,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { PerfilAlunoNavigationProp } from '../../navigation/AlunoTabs';
 import { listarHistoricoDoAluno } from '../../services/checkins';
+import { listarSessoesPassadasDoAluno } from '../../services/sessoes';
 import { listarGraduacoesPorAluno } from '../../services/graduacoes';
 import { listarClassificacoesDoAluno } from '../../services/classificacoes';
 import { buscarNiveisDoAluno } from '../../services/configuracoesGamificacao';
@@ -46,13 +47,14 @@ export default function PerfilScreen() {
   const carregarDetalhes = useCallback(async () => {
     if (!usuario) return;
     try {
-      const [historico, graduacoes, classificacoes] = await Promise.all([
+      const [historico, graduacoes, classificacoes, sessoesPassadas] = await Promise.all([
         listarHistoricoDoAluno(usuario.id),
         listarGraduacoesPorAluno(usuario.id),
         listarClassificacoesDoAluno(usuario.id),
+        listarSessoesPassadasDoAluno(usuario.id),
       ]);
       const validados = historico.filter((c) => c.status === 'validado').length;
-      const sequenciaAtual = calcularSequencia(historico);
+      const sequenciaAtual = calcularSequencia(sessoesPassadas, historico);
       const pontosTotais = classificacoes.reduce((soma, c) => soma + c.pontos, 0);
       // RF33: tabela de níveis do responsável em que o aluno mais pontuou
       const niveis = await buscarNiveisDoAluno(classificacoes);

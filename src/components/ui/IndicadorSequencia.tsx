@@ -1,4 +1,4 @@
-// IndicadorSequencia — dias seguidos com check-in validado (RF21): chama + número de placar +
+// IndicadorSequencia — treinos seguidos com check-in validado, contados por sessão agendada (RF21): chama + número de placar +
 // rótulo em caixa alta. O número sobe animado (reduce motion: valor direto).
 import { StyleSheet, View } from 'react-native';
 import { Cores, Espacamento } from '../../theme';
@@ -7,15 +7,15 @@ import { IconeChama } from '../icones';
 import Texto from './Texto';
 
 interface IndicadorSequenciaProps {
-  dias: number;
+  treinos: number;
 }
 
-export default function IndicadorSequencia({ dias }: IndicadorSequenciaProps) {
-  const exibido = useNumeroAnimado(dias);
-  const rotulo = dias === 1 ? 'dia seguido' : 'dias seguidos';
+export default function IndicadorSequencia({ treinos }: IndicadorSequenciaProps) {
+  const exibido = useNumeroAnimado(treinos);
+  const rotulo = treinos === 1 ? 'treino seguido' : 'treinos seguidos';
   return (
-    <View style={styles.container} accessible accessibilityLabel={`Sequência: ${dias} ${rotulo}`}>
-      <IconeChama tamanho={28} cor={dias > 0 ? Cores.texto : Cores.texto3} />
+    <View style={styles.container} accessible accessibilityLabel={`Sequência: ${treinos} ${rotulo}`}>
+      <IconeChama tamanho={28} cor={treinos > 0 ? Cores.texto : Cores.texto3} />
       <Texto variante="placarGrande">{exibido}</Texto>
       <Texto variante="rotuloPlacar" style={styles.rotulo}>
         {rotulo}

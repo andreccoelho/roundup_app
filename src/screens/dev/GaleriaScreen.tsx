@@ -436,7 +436,7 @@ export default function GaleriaScreen() {
         <View style={styles.espaco} />
         <BarraProgresso nivel={11} xpAtual={1} xpProximoNivel={1} />
         <View style={styles.espaco} />
-        <IndicadorSequencia dias={7} />
+        <IndicadorSequencia treinos={7} />
       </Secao>
 
       <Secao titulo="Missões">
@@ -450,7 +450,7 @@ export default function GaleriaScreen() {
       <Secao titulo="Medalhas">
         <Linha>
           <Medalha rotulo="10 treinos" tipo="treinos" numero={10} />
-          <Medalha rotulo="7 dias seguidos" tipo="sequencia" numero={7} />
+          <Medalha rotulo="7 treinos seguidos" tipo="sequencia" numero={7} />
           <Medalha rotulo="100 treinos" tipo="treinos" numero={100} maxima />
           <Medalha rotulo="Primeira graduação" tipo="graduacoes" numero={1} conquistada={false} />
         </Linha>

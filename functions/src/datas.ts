@@ -34,20 +34,3 @@ export function limitesDoDia(data: Date): { inicio: Date; fim: Date } {
 export function horaLocal(data: Date): string {
   return new Intl.DateTimeFormat('pt-BR', { timeZone: FUSO, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(data);
 }
-
-// RF21: maior sequência de dias consecutivos com check-in validado (mesmo critério de dia civil
-// de calcularSequencia() no app). A maior, não a atual: uma missão de sequência concluída não
-// volta a "em curso" só porque a sequência quebrou depois.
-export function maiorSequencia(datas: Date[]): number {
-  const dias = [...new Set(datas.map(diaLocal))].sort();
-  let maior = 0;
-  let atual = 0;
-  let anterior: number | null = null;
-  for (const dia of dias) {
-    const instante = Date.parse(`${dia}T00:00:00Z`);
-    atual = anterior !== null && instante - anterior === UM_DIA ? atual + 1 : 1;
-    maior = Math.max(maior, atual);
-    anterior = instante;
-  }
-  return maior;
-}

@@ -10,7 +10,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../contexts/AuthContext';
 import { DashboardAlunoNavigationProp } from '../../navigation/AlunoTabs';
-import { listarProximasSessoesDoAluno } from '../../services/sessoes';
+import { listarProximasSessoesDoAluno, listarSessoesPassadasDoAluno } from '../../services/sessoes';
 import { realizarCheckIn, buscarCheckInDaSessao, listarHistoricoDoAluno } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
 import { listarClassificacoesDoAluno } from '../../services/classificacoes';
@@ -83,10 +83,10 @@ export default function DashboardScreen() {
     // Progresso é conteúdo secundário desta tela — falha aqui não deve bloquear o check-in, que é
     // a RNF01. Em erro, mostra nível 1 / sequência 0 em vez de estado de erro.
     // RF33: a tabela de níveis é a do responsável em que o aluno mais pontuou (buscarNiveisDoAluno)
-    Promise.all([listarClassificacoesDoAluno(usuario.id), listarHistoricoDoAluno(usuario.id)])
-      .then(async ([classificacoes, historico]) => {
+    Promise.all([listarClassificacoesDoAluno(usuario.id), listarHistoricoDoAluno(usuario.id), listarSessoesPassadasDoAluno(usuario.id)])
+      .then(async ([classificacoes, historico, sessoesPassadas]) => {
         const pontosTotais = classificacoes.reduce((soma, c) => soma + c.pontos, 0);
-        const sequenciaAtual = calcularSequencia(historico);
+        const sequenciaAtual = calcularSequencia(sessoesPassadas, historico);
         const validados = historico.filter((c) => c.status === 'validado').length;
         const niveis = await buscarNiveisDoAluno(classificacoes);
         setProgresso(calcularProgressoNivel(pontosTotais, niveis));

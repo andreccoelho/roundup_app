@@ -1,6 +1,7 @@
 // RF31: regras puras das notificações e datas no fuso do app (functions/src/notificacoesRegras.ts
 // e functions/src/datas.ts) — sem emulador.
-import { diaLocal, limitesDoDia, maiorSequencia, periodoDe } from '../../functions/src/datas';
+import { diaLocal, limitesDoDia, periodoDe } from '../../functions/src/datas';
+import { maiorSequenciaDeSessoes } from '../../functions/src/sequencia';
 import { marcosAlcancados, selecionarLembretes, textoLembrete } from '../../functions/src/notificacoesRegras';
 
 // 2026-11-05 22:30 em São Paulo (UTC-3) == 2026-11-06 01:30 UTC
@@ -17,11 +18,26 @@ describe('datas no fuso do app', () => {
     expect(inicio.toISOString()).toBe('2026-11-05T03:00:00.000Z');
     expect(fim.toISOString()).toBe('2026-11-06T03:00:00.000Z');
   });
+});
 
-  test('maiorSequencia conta dias seguidos e ignora vários treinos no mesmo dia', () => {
-    const dia = (d: number, h = 12) => new Date(Date.UTC(2026, 10, d, h));
-    expect(maiorSequencia([dia(1), dia(2), dia(2, 20), dia(3), dia(5)])).toBe(3);
-    expect(maiorSequencia([])).toBe(0);
+describe('maiorSequenciaDeSessoes (RF21)', () => {
+  const AGORA = 1_000_000;
+  const sessao = (id: string, janelaFimMs: number, status = 'encerrada') => ({ id, status, janelaFimMs });
+
+  test('conta sessões validadas seguidas e zera numa falta', () => {
+    const sessoes = [sessao('a', 1), sessao('b', 2), sessao('c', 3), sessao('d', 4), sessao('e', 5)];
+    const status = new Map([['a', 'validado'], ['b', 'validado'], ['c', 'rejeitado'], ['d', 'validado'], ['e', 'validado']]);
+    expect(maiorSequenciaDeSessoes(sessoes, status, AGORA)).toBe(2);
+  });
+
+  test('cancelada, janela aberta e check-in pendente não contam nem quebram', () => {
+    const sessoes = [sessao('a', 1), sessao('b', 2, 'cancelada'), sessao('c', 3), sessao('d', 4), sessao('e', AGORA + 1)];
+    const status = new Map([['a', 'validado'], ['c', 'pendente'], ['d', 'validado']]);
+    expect(maiorSequenciaDeSessoes(sessoes, status, AGORA)).toBe(2);
+  });
+
+  test('sem sessões, zero', () => {
+    expect(maiorSequenciaDeSessoes([], new Map(), AGORA)).toBe(0);
   });
 });
 
