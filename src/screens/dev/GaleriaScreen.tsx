@@ -2,8 +2,8 @@
 // __DEV__ é true; o guard abaixo é defesa em profundidade). Vitrine de tokens, componentes base e
 // de domínio, para validar o visual sem backend (docs/DESIGN.md).
 import { useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento, Raios, useTema, type Esquema, type NomeCor } from '../../theme';
+import { View } from 'react-native';
+import { criarEstilos, Espacamento, Raios, useTema, type Esquema, type NomeCor } from '../../theme';
 
 import {
   IconeLuva,
@@ -31,7 +31,6 @@ import Botao from '../../components/ui/Botao';
 import CampoTexto from '../../components/ui/CampoTexto';
 import ModalitySelector from '../../components/ui/ModalitySelector';
 import Cartao from '../../components/ui/Cartao';
-import TexturaLona from '../../components/ui/TexturaLona';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Avatar from '../../components/ui/Avatar';
 import LinhaFina from '../../components/LinhaFina';
@@ -43,6 +42,8 @@ import Toggle from '../../components/ui/Toggle';
 import Checkbox from '../../components/ui/Checkbox';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import ItemMenu from '../../components/ui/ItemMenu';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
 import Estatistica from '../../components/ui/Estatistica';
 import BandaIdentidade from '../../components/ui/BandaIdentidade';
 import EstadoVazio from '../../components/ui/EstadoVazio';
@@ -65,6 +66,7 @@ import MomentoConquista, { type Conquista } from '../../components/ui/MomentoCon
 import { COMPOSICOES, ComposicaoPorNome, type Composicao } from './composicoes';
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
+  const styles = useEstilos();
   return (
     <View style={styles.secao}>
       <CabecalhoSecao titulo={titulo} semMargem />
@@ -74,6 +76,7 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 }
 
 function Linha({ children }: { children: ReactNode }) {
+  const styles = useEstilos();
   return <View style={styles.linha}>{children}</View>;
 }
 
@@ -134,6 +137,7 @@ export default function GaleriaScreen() {
   const [composicao, setComposicao] = useState<Composicao | null>(null);
   const [conquistaDemo, setConquistaDemo] = useState<Conquista | null>(null);
   const { cores, forcarEsquema } = useTema();
+  const styles = useEstilos();
   const [opcaoTema, setOpcaoTema] = useState<OpcaoTema>('sistema');
 
   function escolherTema(opcao: OpcaoTema) {
@@ -145,8 +149,8 @@ export default function GaleriaScreen() {
 
   if (composicao) {
     return (
-      <Tela largura="lista" preenchimento={false}>
-        <View style={styles.voltarComposicao}>
+      <Tela largura="lista" preenchimento={false} agrupada>
+        <View style={styles.voltarComposicao} {...({ dataSet: { dev: 'galeria' } } as object)}>
           <Botao variante="voltar" titulo="Voltar à galeria" onPress={() => setComposicao(null)} />
         </View>
         <ComposicaoPorNome nome={composicao} />
@@ -157,6 +161,7 @@ export default function GaleriaScreen() {
   return (
     <Tela
       largura="lista"
+      agrupada
       sobreposicao={
         <Aviso
           visivel={aviso !== null}
@@ -183,11 +188,12 @@ export default function GaleriaScreen() {
         />
       </Secao>
 
-      <Secao titulo="Composições (telas com dados fictícios)">
-        {COMPOSICOES.map((c, i) => (
-          <ItemMenu key={c.valor} rotulo={c.rotulo} separador={i > 0} onPress={() => setComposicao(c.valor)} />
+      <GrupoLista titulo="Composições (telas com dados fictícios)" semMargem>
+        {COMPOSICOES.map((c) => (
+          <ItemMenu key={c.valor} rotulo={c.rotulo} onPress={() => setComposicao(c.valor)} />
         ))}
-      </Secao>
+      </GrupoLista>
+      <View style={styles.espaco} />
 
       <Secao titulo="MomentoConquista">
         <View style={styles.pilha}>
@@ -310,24 +316,35 @@ export default function GaleriaScreen() {
           selecionada={aba}
           onSelecionar={setAba}
         />
-        <Toggle rotulo="Lembrete de sessão" descricao="Avisa antes do horário dos seus treinos." valor={toggle} onAlterar={setToggle} />
-        <LinhaFina />
-        <Toggle rotulo="Desabilitado" valor={false} onAlterar={() => {}} desabilitado />
+        <GrupoLista titulo="Notificações" rodape="Toggles em lista agrupada, com o tint na trilha ligada.">
+          <Toggle rotulo="Lembrete de sessão" descricao="Avisa antes do horário dos seus treinos." valor={toggle} onAlterar={setToggle} />
+          <Toggle rotulo="Desabilitado" valor={false} onAlterar={() => {}} desabilitado />
+        </GrupoLista>
+        <View style={styles.espaco} />
         <Checkbox rotulo="Li e aceito a política de privacidade." marcado={check} onAlterar={setCheck} />
       </Secao>
 
-      <Secao titulo="CabecalhoSecao, ItemMenu, Estatistica">
+      <Secao titulo="Listas agrupadas e Estatistica">
         <CabecalhoSecao titulo="Próximos treinos" acaoTitulo="Ver agenda" onAcao={() => {}} semMargem />
         <CabecalhoSecao titulo="Medalhas" contador="3 de 6" semMargem />
-        <ItemMenu rotulo="Turmas disponíveis" icone={IconeTatame} onPress={() => {}} />
-        <ItemMenu rotulo="Histórico" descricao="Seus check-ins validados e pendentes" icone={IconeFichaTecnica} onPress={() => {}} separador />
-        <ItemMenu rotulo="Solicitações pendentes" icone={IconeCorda} valor="3" onPress={() => {}} separador />
-        <ItemMenu rotulo="Sair" icone={IconeSair} destrutivo semChevron onPress={() => {}} separador />
-        <View style={[styles.linha, styles.estatisticas]}>
-          <Estatistica valor={7} rotulo="Nível" alinhamento="centro" />
-          <Estatistica valor={12} rotulo="Sequência" icone={IconeChama} alinhamento="centro" />
-          <Estatistica valor={86} rotulo="Treinos" alinhamento="centro" />
-        </View>
+        <GrupoLista titulo="Treinar">
+          <ItemMenu rotulo="Turmas disponíveis" icone={IconeTatame} onPress={() => {}} />
+          <ItemMenu rotulo="Histórico" descricao="Seus check-ins validados e pendentes" icone={IconeFichaTecnica} onPress={() => {}} />
+          <ItemMenu rotulo="Solicitações pendentes" icone={IconeCorda} valor="3" onPress={() => {}} />
+        </GrupoLista>
+        <GrupoLista titulo="Conta" rodape="Linhas de 44pt, separador recuado até o texto e chevron à direita.">
+          <LinhaLista rotulo="E-mail" valor="ana@exemplo.com" />
+          <ItemMenu rotulo="Sair" icone={IconeSair} destrutivo semChevron onPress={() => {}} />
+        </GrupoLista>
+        <View style={styles.espaco} />
+        <Cartao destaque>
+          <View style={styles.linha}>
+            <Estatistica valor={7} rotulo="Nível" alinhamento="centro" />
+            <Estatistica valor={12} rotulo="Sequência" icone={IconeChama} alinhamento="centro" />
+            <Estatistica valor={86} rotulo="Treinos" alinhamento="centro" />
+          </View>
+        </Cartao>
+        <View style={styles.espaco} />
         <Estatistica valor="18/24" rotulo="Presentes" tamanho="grande" />
       </Secao>
 
@@ -352,26 +369,20 @@ export default function GaleriaScreen() {
         </View>
       </Secao>
 
-      <Secao titulo="Cartao e TexturaLona">
+      <Secao titulo="Cartao e Avatar">
         <Cartao>
-          <Texto variante="body">Cartão padrão: superficie1, canto vivo, sem borda.</Texto>
+          <Texto variante="body">Cartão comum: superfície, raio 12 contínuo, sem borda.</Texto>
         </Cartao>
         <View style={styles.espaco} />
-        <Cartao corteDiagonal corFilete={Cores.acento}>
-          <Texto variante="body">Corte diagonal com filete: uma vez por tela.</Texto>
+        <Cartao destaque>
+          <Texto variante="body">Cartão de destaque: raio 16 e sombra muito sutil no tema claro.</Texto>
         </Cartao>
-        <View style={styles.espaco} />
-        <View style={styles.amostraTextura}>
-          <TexturaLona opacidade={0.1} />
-          <Texto variante="subheadline">TexturaLona (opacidade 0,10 só nesta amostra).</Texto>
-        </View>
         <View style={styles.espaco} />
         <Linha>
           <Avatar nome="Maria Silva" tamanho={32} />
           <Avatar nome="João" tamanho={44} />
           <Avatar nome="Ana Beatriz Souza" tamanho={64} />
         </Linha>
-        <LinhaFina corda />
       </Secao>
 
       <Secao titulo="Folha, Diálogo, Aviso">
@@ -384,10 +395,14 @@ export default function GaleriaScreen() {
             <Botao titulo="Aviso info" variante="fantasma" compacto onPress={() => setAviso('info')} />
           </Linha>
         </View>
-        <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova missão">
+        <Folha
+          visivel={folhaAberta}
+          onFechar={() => setFolhaAberta(false)}
+          titulo="Nova missão"
+          acao={{ titulo: 'Criar', onPress: () => setFolhaAberta(false) }}
+        >
           <CampoTexto rotulo="Título" placeholder="Ex.: Treinar 3x na semana" valor="" onAlterar={() => {}} />
           <CampoTexto rotulo="Descrição" placeholder="Critério de conclusão" valor="" onAlterar={() => {}} />
-          <Botao titulo="Criar missão" onPress={() => setFolhaAberta(false)} />
         </Folha>
         <Dialogo
           visivel={dialogoAberto}
@@ -531,7 +546,7 @@ export default function GaleriaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   tituloGaleria: { marginBottom: Espacamento.padrao },
   secao: { marginBottom: Espacamento.extraGrande },
   linha: { flexDirection: 'row', gap: Espacamento.pequeno, marginBottom: Espacamento.pequeno, flexWrap: 'wrap', alignItems: 'flex-start' },
@@ -541,11 +556,10 @@ const styles = StyleSheet.create({
   amostraTipo: { marginBottom: Espacamento.medio },
   paleta: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.padrao },
   swatch: { width: 96 },
-  swatchCor: { height: 40, borderRadius: Raios.pequeno, borderWidth: 1, borderColor: Cores.linha, marginBottom: Espacamento.minimo },
+  swatchCor: { height: 40, borderRadius: Raios.campo, borderWidth: 1, borderColor: c.separador, marginBottom: Espacamento.minimo },
   itemIcone: { width: 64, alignItems: 'center', gap: Espacamento.minimo },
   estatisticas: { marginTop: Espacamento.padrao, marginBottom: Espacamento.padrao },
   sangria: { marginHorizontal: -Espacamento.padrao },
   amostraFaixa: { marginBottom: Espacamento.pequeno },
   voltarComposicao: { paddingHorizontal: Espacamento.padrao },
-  amostraTextura: { position: 'relative', backgroundColor: Cores.superficie1, borderRadius: Raios.pequeno, padding: Espacamento.padrao, overflow: 'hidden' },
-});
+}));

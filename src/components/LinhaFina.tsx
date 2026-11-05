@@ -1,21 +1,19 @@
+// Separador fino (hairline) translúcido, no padrão das listas do iOS. `recuo` afasta o início da
+// linha da borda esquerda — em listas agrupadas o separador começa onde o texto começa.
 import { StyleSheet, View } from 'react-native';
-import { Cores } from '../theme';
+import { criarEstilos } from '../theme';
 
-// Separador de lista (docs/DESIGN.md: listas sem card — linhas sobre o fundo, separadas por
-// `linha`). `corda` = duas linhas próximas, para divisor de seção (corda do ringue).
-export default function LinhaFina({ corda }: { corda?: boolean }) {
-  if (corda) {
-    return (
-      <View style={styles.corda} aria-hidden>
-        <View style={styles.linha} />
-        <View style={styles.linha} />
-      </View>
-    );
-  }
-  return <View style={styles.linha} aria-hidden />;
+interface LinhaFinaProps {
+  recuo?: number;
+  // Mantido por compatibilidade com a direção anterior: hoje é a mesma linha simples.
+  corda?: boolean;
 }
 
-const styles = StyleSheet.create({
-  corda: { gap: 3 },
-  linha: { height: 1, backgroundColor: Cores.linha },
-});
+export default function LinhaFina({ recuo = 0 }: LinhaFinaProps) {
+  const styles = useEstilos();
+  return <View style={[styles.linha, recuo ? { marginLeft: recuo } : null]} aria-hidden />;
+}
+
+const useEstilos = criarEstilos((c) => ({
+  linha: { height: StyleSheet.hairlineWidth, backgroundColor: c.separador },
+}));

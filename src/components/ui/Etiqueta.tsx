@@ -1,12 +1,13 @@
-// Etiqueta — o único chip do app (docs/DESIGN.md: pílula só em chips). Três usos:
-//  - estática (sem onPress): rótulo informativo, ex.: modalidades na banda;
+// Etiqueta — chip em cápsula (docs/DESIGN.md). Três usos:
+//  - estática (sem onPress): rótulo informativo, ex.: modalidades no perfil;
 //  - seleção única (`modo="unico"`, padrão): nível da turma, turma ativa — role radio;
 //  - seleção múltipla (`modo="multiplo"`): modalidades, dias da semana — role checkbox.
-// Selecionada = preenchida em `texto` com rótulo `sobreCor` (17:1); sem acento, para não gastar o
-// destaque da tela em filtros.
-import { Pressable, StyleSheet, Text } from 'react-native';
-import { Cores, Espacamento, Raios, TamanhoFonte } from '../../theme';
+// Não selecionada = `preenchimento` com rótulo em `texto`; selecionada = tintCheio com rótulo
+// branco (5,4:1), como os filtros do app Fitness. Alvo de toque de 44 por hitSlop.
+import { Pressable, Text } from 'react-native';
+import { criarEstilos, Espacamento, Raios, Tipografia } from '../../theme';
 import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
+import { hapticaSelecao } from '../../utils/haptica';
 
 interface EtiquetaProps {
   texto: string;
@@ -19,6 +20,7 @@ interface EtiquetaProps {
 
 export default function Etiqueta({ texto, selecionada, onPress, desabilitada, modo = 'unico', accessibilityLabel }: EtiquetaProps) {
   const { focado, propsFoco } = useFocoVisivel();
+  const styles = useEstilos();
 
   if (!onPress) {
     return <Text style={[styles.etiqueta, styles.estatica, styles.texto, styles.textoEstatico]}>{texto}</Text>;
@@ -26,7 +28,10 @@ export default function Etiqueta({ texto, selecionada, onPress, desabilitada, mo
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        hapticaSelecao();
+        onPress();
+      }}
       disabled={desabilitada}
       hitSlop={{ top: 6, bottom: 6, left: 2, right: 2 }}
       accessibilityRole={modo === 'multiplo' ? 'checkbox' : 'radio'}
@@ -37,7 +42,7 @@ export default function Etiqueta({ texto, selecionada, onPress, desabilitada, mo
         styles.etiqueta,
         styles.interativa,
         selecionada && styles.selecionada,
-        pressed && !selecionada && styles.pressionada,
+        pressed && styles.pressionada,
         desabilitada && styles.desabilitada,
         estiloSemOutline,
         focado && estiloAnelFoco,
@@ -49,23 +54,20 @@ export default function Etiqueta({ texto, selecionada, onPress, desabilitada, mo
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   etiqueta: {
-    borderRadius: Raios.pilula,
+    borderRadius: Raios.capsula,
+    borderCurve: 'continuous',
     paddingHorizontal: Espacamento.medio + 2,
     overflow: 'hidden',
+    backgroundColor: c.preenchimento,
   },
-  interativa: {
-    minHeight: 36,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: Cores.linhaForte,
-  },
-  estatica: { paddingVertical: Espacamento.minimo + 1, backgroundColor: Cores.superficie2, alignSelf: 'flex-start' },
-  selecionada: { backgroundColor: Cores.texto, borderColor: Cores.texto },
-  pressionada: { backgroundColor: Cores.superficie2 },
+  interativa: { minHeight: 32, justifyContent: 'center' },
+  estatica: { paddingVertical: Espacamento.minimo + 1, alignSelf: 'flex-start' },
+  selecionada: { backgroundColor: c.tintCheio },
+  pressionada: { opacity: 0.7 },
   desabilitada: { opacity: 0.4 },
-  texto: { fontSize: TamanhoFonte.sm, color: Cores.texto },
-  textoEstatico: { color: Cores.texto2 },
-  textoSelecionado: { color: Cores.sobreCor, fontWeight: '600' },
-});
+  texto: { ...Tipografia.subheadline, color: c.texto },
+  textoEstatico: { ...Tipografia.footnote, color: c.texto2 },
+  textoSelecionado: { color: c.sobreTint, fontWeight: '600' },
+}));

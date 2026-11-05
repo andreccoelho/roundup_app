@@ -1,6 +1,7 @@
-// Avatar circular — foto quando existir (Usuario.fotoUrl), iniciais do nome como fallback.
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { Cores } from '../../theme';
+// Avatar circular — foto quando existir (Usuario.fotoUrl), iniciais do nome como fallback, sobre
+// `preenchimento`, como os contatos do iOS.
+import { Image, Text, View } from 'react-native';
+import { criarEstilos } from '../../theme';
 
 interface AvatarProps {
   nome: string;
@@ -17,13 +18,14 @@ function iniciais(nome: string): string {
 }
 
 export default function Avatar({ nome, fotoUrl, tamanho = 40 }: AvatarProps) {
+  const styles = useEstilos();
   const estiloTamanho = { width: tamanho, height: tamanho, borderRadius: tamanho / 2 };
 
   if (fotoUrl) {
     return (
       <Image
         source={{ uri: fotoUrl }}
-        style={[styles.imagem, estiloTamanho]}
+        style={[styles.fundo, estiloTamanho]}
         accessibilityRole="image"
         accessibilityLabel={`Foto de ${nome}`}
       />
@@ -31,20 +33,16 @@ export default function Avatar({ nome, fotoUrl, tamanho = 40 }: AvatarProps) {
   }
 
   return (
-    <View style={[styles.iniciais, estiloTamanho]} accessibilityRole="image" accessibilityLabel={`Iniciais de ${nome}`}>
-      <Text style={[styles.textoIniciais, { fontSize: tamanho * 0.4 }]}>{iniciais(nome)}</Text>
+    <View style={[styles.fundo, styles.iniciais, estiloTamanho]} accessibilityRole="image" accessibilityLabel={`Iniciais de ${nome}`}>
+      <Text style={[styles.textoIniciais, { fontSize: tamanho * 0.4 }]} maxFontSizeMultiplier={1}>
+        {iniciais(nome)}
+      </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  imagem: { backgroundColor: Cores.superficie2, borderWidth: 1, borderColor: Cores.linhaForte },
-  iniciais: {
-    backgroundColor: Cores.superficie2,
-    borderWidth: 1,
-    borderColor: Cores.linhaForte,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  textoIniciais: { color: Cores.texto, letterSpacing: 0.5 },
-});
+const useEstilos = criarEstilos((c) => ({
+  fundo: { backgroundColor: c.preenchimento },
+  iniciais: { alignItems: 'center', justifyContent: 'center' },
+  textoIniciais: { color: c.texto2, fontWeight: '600' },
+}));
