@@ -37,7 +37,7 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 - **RF16** — `XP_POR_CHECKIN_VALIDADO = 10`: quantidade arbitrária, sem nenhuma pesquisa de balanceamento por trás.
 - **RF17** — tabela de níveis `NIVEIS_XP`: progressão provisória em +50 por degrau (100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250), 10 níveis. Sem base em literatura de gamificação nem teste com usuário.
 - **RF19** — marcos de medalha (`MARCOS_MEDALHAS`): 6 marcos (10/30/100 treinos, 7/30 dias de sequência, 1ª graduação), números escolhidos sem validação.
-- **RF20/RN04** — `JANELA_RANKING = 'mensal'`: hoje é só rótulo de texto na UI. **A classificação não reseta pontos por período** — é cumulativa desde o primeiro check-in validado. RN04 ("classificação considera apenas os pontos obtidos no período vigente") **não está implementada**.
+- **RF20/RN04** — ✅ **RESOLVIDO**: a classificação é mensal de verdade. Cada mês tem o próprio documento (`classificacoes/{alunoId}_{responsavelId}_{AAAA-MM}`), creditado na mesma transação de `validarCheckIn`, no mês (fuso local) em que o treino aconteceu. O ranking mostra só o mês corrente; o nível (RF17) continua somando todos os meses. Ver item 4.
 
 **Decisão a validar:** esses números viram config real (painel de configuração, RF33) ou continuam fixos no código?
 
@@ -61,20 +61,21 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 ---
 
-## 4. `classificacoes` — modelo de dados e leitura (RF20, RN04, RN09)
+## 4. `classificacoes` — modelo de dados e leitura (RF20, RN04, RN09, RNF11) — ✅ RESOLVIDO
 
-**Modelo escolhido:** coleção nova `classificacoes/{alunoId}_{responsavelId}` (um documento por par aluno/responsável), em vez de campo direto em `usuarios` — decisão pela opção que exige menos mudança na regra já existente e delicada de `usuarios`, e porque um aluno pode ter mais de um vínculo aceito (mais de um documento, um por escopo), o que um único campo em `usuarios` não representaria bem.
+**Modelo:** um documento por aluno, responsável e mês, `classificacoes/{alunoId}_{responsavelId}_{AAAA-MM}`, com o campo `periodo`. A trava de RN01 continua igual (create só com 10 pontos, update só ±10), e a regra agora também exige `periodo` no formato `AAAA-MM` e batendo com o id.
 
-**RN09 (escopo segue o vínculo) — como está garantida:** só pelo filtro que o client aplica na consulta (`where('responsavelId','==', escopo)`), **não pela regra de leitura**, que é aberta a qualquer autenticado (`allow read: if autenticado()`), mesmo padrão já aceito neste projeto para turmas ativas e para missões ativas — a checagem cruzada "este usuário tem vínculo com este `responsavelId`" é comprovadamente impossível dentro de uma regra usada por `getDocs(query(...))` (ver `docs/decisoes-tecnicas.md`). Consequência: **qualquer usuário autenticado pode, tecnicamente, consultar a classificação de qualquer escopo** (de qualquer academia/professor) diretamente pela API do Firestore, ainda que a UI nunca ofereça esse caminho. É a mesma exposição que turmas ativas já tem hoje.
+**RN04:** o ranking consulta só o `periodo` do mês corrente, então recomeça sozinho na virada do mês. O estorno de uma validação cai no documento do mês do treino, mesmo que seja feito no mês seguinte.
 
-**RNF11 (adesão opcional à classificação) — não está implementada.** Não existe campo de opt-in/opt-out em `Usuario` nem em `Classificacao`; todo aluno aparece na classificação do seu escopo sempre que tem pontos.
+**RN09 (escopo segue o vínculo):** a leitura deixou de ser aberta a qualquer autenticado. Mesmo padrão de `leitoresIds` das sessões: a regra libera o próprio aluno, o responsável do escopo e quem estiver em `leitoresIds`. Esse campo é mantido só por Cloud Function (`functions/src/classificacao.ts`): o client não pode criá-lo nem alterá-lo. Ele é recalculado quando o documento nasce, quando um vínculo de aluno entra ou sai de `aceito` e quando o aluno muda a preferência de participação. A consulta do ranking filtra `leitoresIds array-contains meuId()`, o que a torna provável pela regra.
 
-**RN04 (janela de tempo) — não está implementada**, ver item 1.
+**RNF11 (adesão opcional):** novo campo `usuarios.participaClassificacao` (ausente = participa). Toggle "Participar da classificação" no Perfil do aluno, logo abaixo de "Notificações". Quem não participa tem `leitoresIds` = responsável + ele mesmo: some do ranking dos outros alunos, mas continua vendo a própria pontuação (a tela avisa isso). O responsável continua vendo todos os alunos do escopo.
 
-**Decisão a validar:**
-1. A exposição de leitura ampla descrita acima é aceitável para a entrega do TCC, ou precisa de um índice desnormalizado por escopo (tipo `leitoresIds` de sessões, mantido por Cloud Function) antes?
-2. RNF11 (opt-in) entra nesta rodada ou fica para depois — e, se entrar, o aluno some da lista dos outros ou só deixa de ver a própria posição?
-3. RN04 (janela mensal de verdade, com reset) entra nesta rodada ou fica documentado como pendência?
+**Sem migração:** documentos antigos (`{alunoId}_{responsavelId}`, sem `periodo`) ficam no banco. Eles continuam somando no nível do aluno, mas não aparecem em nenhum ranking mensal e não recebem `leitoresIds`.
+
+**A validar:**
+- O "mês" é o do fuso do aparelho de quem valida o check-in (o professor). Para alunos e academia no mesmo fuso, é o mesmo mês do treino.
+- Aluno cujo vínculo foi encerrado some do ranking dos colegas, mesmo com pontos no mês.
 
 ---
 
@@ -94,13 +95,10 @@ Medalhas são calculadas ao vivo (`src/utils/gamificacao.ts`, `calcularMedalhas(
 
 ---
 
-## 7. Aluno com mais de um vínculo ativo — qual escopo aparece
+## 7. Aluno com mais de um vínculo ativo — qual escopo aparece — ✅ RESOLVIDO
 
-RN05 permite (e a modelagem de `matriculas`/`vinculos` não impede) um aluno ter vínculo ativo com mais de um responsável. As telas novas (Classificação, nível no Dashboard) tratam isso de dois jeitos diferentes, sem UI para escolher escopo:
-- **Nível/XP no Dashboard:** soma os pontos de **todos** os escopos do aluno (`listarClassificacoesDoAluno`) — um único número de XP pessoal, faz sentido não ser por escopo.
-- **Tela de Classificação:** usa só o **primeiro** responsável retornado por `listarResponsaveisAtivosDoAluno` — sem seletor de escopo. Um aluno vinculado a duas academias só vê o ranking da primeira.
-
-**Decisão a validar:** a tela de Classificação precisa de um seletor de escopo (abas/dropdown) antes da entrega, ou "primeiro vínculo" é aceitável para o Ciclo 2?
+- **Nível/XP no Dashboard:** continua somando os pontos de **todos** os escopos e meses do aluno (`listarClassificacoesDoAluno`), um único número de XP pessoal.
+- **Tela de Classificação:** com mais de um vínculo ativo, aparece um seletor de escopo (`Abas`) com o nome de cada academia ou professor. Com um vínculo só, a tela continua igual.
 
 ---
 
@@ -127,8 +125,8 @@ Pela doc do SDK 57 (`config/app`), `userInterfaceStyle` no Android e o `backgrou
 ### R-03 — Qual é a "medalha de nível máximo" (única em ouro)
 `docs/DESIGN.md` reserva o ouro para o 1º do ranking e a "medalha de nível máximo", mas os marcos de `src/config/gamificacao.ts` não têm uma medalha de nível. **Decisão:** a medalha mais alta da progressão principal (`treinos-100`, "100 treinos") é a única marcada como `maxima`. **A validar:** se deve ser outra (ex.: uma medalha nova de "nível 11"), o que exigiria mudar a config de marcos.
 
-### R-04 — Texto da Classificação deixa de dizer "Ranking mensal"
-RN04 (janela de tempo com reset) não está implementada e a pontuação é cumulativa (item 1 acima). Exibir "Ranking mensal" prometia algo que o app não faz (RELATORIO_UI_UX.md, UX-07). **Decisão:** a tela mostra "Pontos acumulados nos treinos validados da sua academia ou professor". `JANELA_RANKING` continua em `src/config/gamificacao.ts`, sem uso na UI. **A validar:** voltar ao rótulo mensal quando RN04 for implementada.
+### R-04 — Texto da Classificação deixa de dizer "Ranking mensal" — ✅ DESFEITO
+Com RN04 implementada (item 4), a tela voltou a dizer "Ranking mensal de {mês}: pontos dos treinos validados neste mês na sua academia ou professor".
 
 ### R-05 — Faixa interpretada a partir do texto livre
 O `SeloFaixa` deduz cor e graus de `faixaOuGrau`/`graduacao` (texto livre) sem mudar o modelo. Termos fora da lista (ex.: "Kruang 5", "prajied rosa") caem no visual neutro com o texto original. **A validar:** se o produto quer um campo estruturado de faixa no futuro (mudança de modelo e de Firestore, fora deste redesign).

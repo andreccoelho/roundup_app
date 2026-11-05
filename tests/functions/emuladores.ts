@@ -74,3 +74,13 @@ export async function chamarFuncao<T = unknown>(
   const corpo = await resposta.json();
   return resposta.ok ? { ok: true, resultado: corpo.result } : { ok: false, erro: corpo.error };
 }
+
+// As Cloud Functions rodam de forma assíncrona em reação ao gatilho — não há como "esperar"
+// de outro jeito a não ser sondar o resultado esperado com um tempo limite.
+export async function aguardar(condicao: () => Promise<boolean>, tentativas = 20, intervaloMs = 500): Promise<void> {
+  for (let i = 0; i < tentativas; i += 1) {
+    if (await condicao()) return;
+    await new Promise((resolve) => setTimeout(resolve, intervaloMs));
+  }
+  throw new Error('Condição não satisfeita a tempo — a Cloud Function não reagiu (ou não está rodando).');
+}

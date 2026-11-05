@@ -156,6 +156,33 @@ Function, mas exige manter esse índice atualizado toda vez que uma sessão muda
 Function resolve com menos superfície nova (nenhum campo adicional, nenhuma regra nova) e sem
 o risco de o índice da turma ficar dessincronizado da coleção `sessoes` de verdade.
 
+## 2026-11-05 — `leitoresIds` em classificações (RN09, RNF11)
+
+Mesmo problema e mesma solução de `leitoresIds` em sessões. A regra de leitura de
+`classificacoes` era aberta a qualquer autenticado, e o escopo (RN09) era garantido só pelo filtro
+do client. Checar "o leitor tem vínculo com o `responsavelId` deste documento" numa regra de lista
+é impossível (primeira entrada deste documento).
+
+**Decisão:** cada documento de classificação carrega `leitoresIds`, e a regra virou
+`alunoId == meuId() || responsavelId == meuId() || meuId() in leitoresIds`, puramente
+`resource.data`. Cada consulta prova um dos ramos pelo próprio filtro: o aluno lendo os próprios
+pontos filtra por `alunoId`, o responsável por `responsavelId` e o ranking por
+`leitoresIds array-contains meuId()`.
+
+**Quem escreve `leitoresIds`:** só Cloud Functions (`functions/src/classificacao.ts`, Admin SDK).
+O client cria o documento sem o campo (a regra recusa `leitoresIds` no create e não deixa o update
+alterá-lo), e a função `definirLeitoresDaClassificacao` preenche logo depois. A lista é recalculada
+para o escopo inteiro quando um vínculo de aluno entra ou sai de `aceito`
+(`atualizarLeitoresNoVinculo`) e quando o aluno muda `participaClassificacao`
+(`atualizarLeitoresNaParticipacao`). Entre a criação e o gatilho (fração de segundo), o documento
+fica legível só pelo aluno e pelo responsável, o que é seguro.
+
+**Alternativa descartada:** um documento agregado por escopo e mês (`rankings/{responsavelId}_{mes}`
+com o mapa de pontos), lido por `get()` de documento único com checagem de vínculo na regra. Não
+precisaria de `leitoresIds`, mas a escrita do agregado pelo client exigiria validar na regra o
+delta dentro de um mapa, e a adesão opcional (RNF11) não caberia: num documento único, ou o leitor
+vê todos os alunos ou nenhum.
+
 ## 2026-09-08 — "Encerramento" de vínculo professor-academia não implementado
 
 `autonomo` do professor volta para `true` quando o vínculo aceito com uma academia é

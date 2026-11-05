@@ -2,7 +2,7 @@
 // não depender do fuso da máquina onde a suíte roda.
 process.env.TZ = 'America/Sao_Paulo';
 
-import { parseDataHora, parseDataBr, combinarDataHora, gerarDatasRecorrentes, semanaContendo, paraTimestamp, paraData } from './datas';
+import { parseDataHora, parseDataBr, combinarDataHora, gerarDatasRecorrentes, semanaContendo, paraTimestamp, paraData, periodoDe } from './datas';
 
 describe('parseDataHora', () => {
   test('interpreta a data (DD/MM/AAAA) e a hora no fuso local, não em UTC', () => {
@@ -128,5 +128,18 @@ describe('combinarDataHora', () => {
   test('rejeita horário fora do formato HH:MM', () => {
     const data = parseDataBr('08/09/2026')!;
     expect(combinarDataHora(data, '7pm')).toBeNull();
+  });
+});
+
+describe('periodoDe (RN04)', () => {
+  test('formata AAAA-MM com o mês em dois dígitos', () => {
+    expect(periodoDe(new Date(2026, 0, 15))).toBe('2026-01');
+    expect(periodoDe(new Date(2026, 10, 5))).toBe('2026-11');
+  });
+
+  test('usa o fuso local: 22:00 do último dia do mês (já o mês seguinte em UTC) fica no mês local', () => {
+    const data = new Date(2026, 9, 31, 22, 0);
+    expect(data.getUTCMonth()).toBe(10);
+    expect(periodoDe(data)).toBe('2026-10');
   });
 });
