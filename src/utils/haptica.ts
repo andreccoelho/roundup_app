@@ -3,7 +3,12 @@
 import * as Haptics from 'expo-haptics';
 
 export function hapticaImpacto(): void {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+}
+
+// Erro de formulário/ação (Aviso de erro, MensagemErro)
+export function hapticaAviso(): void {
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
 }
 
 export function hapticaSucesso(): void {
