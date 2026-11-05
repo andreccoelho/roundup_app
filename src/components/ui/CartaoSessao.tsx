@@ -1,9 +1,8 @@
 // CartaoSessao — linha de sessão (turma, horário, estado de check-in) para Agenda e "próximos
-// treinos". Linha sobre o fundo (sem card). O horário vira bloco de placar à esquerda quando
-// `inicio` é passado; o estado aparece uma vez só, no BotaoCheckIn à direita (antes o ícone de
-// estado era desenhado duas vezes — RELATORIO_UI_UX.md, UI-16).
-import { StyleSheet, View } from 'react-native';
-import { Alturas, Espacamento } from '../../theme';
+// treinos", dentro de um GrupoLista. Horário em número tabular à esquerda quando `inicio` é
+// passado; o estado aparece uma vez só, no BotaoCheckIn à direita (RELATORIO_UI_UX.md, UI-16).
+import { View } from 'react-native';
+import { Alturas, criarEstilos, Espacamento } from '../../theme';
 import type { EstadoCheckIn } from '../../utils/statusCheckIn';
 import { formatarHora, rotuloDia } from '../../utils/apresentacao';
 import BotaoCheckIn from './BotaoCheckIn';
@@ -20,29 +19,40 @@ interface CartaoSessaoProps {
 }
 
 export default function CartaoSessao({ nomeTurma, detalhe, inicio, estado, motivo, carregando, onCheckIn }: CartaoSessaoProps) {
+  const styles = useEstilos();
   return (
     <View style={styles.linha}>
       {inicio ? (
         <View style={styles.horario} accessible accessibilityLabel={`${rotuloDia(inicio)} às ${formatarHora(inicio)}`}>
-          <Texto variante="numero">{formatarHora(inicio)}</Texto>
-          <Texto variante="caption" cor="texto3" numberOfLines={1}>
+          <Texto variante="headline" style={styles.tabular}>
+            {formatarHora(inicio)}
+          </Texto>
+          <Texto variante="footnote" numberOfLines={1}>
             {rotuloDia(inicio)}
           </Texto>
         </View>
       ) : null}
       <View style={styles.textos}>
-        <Texto variante="headline" numberOfLines={2}>
+        <Texto variante="body" numberOfLines={2}>
           {nomeTurma}
         </Texto>
-        {detalhe ? <Texto variante="subheadline">{detalhe}</Texto> : null}
+        {detalhe ? <Texto variante="footnote">{detalhe}</Texto> : null}
       </View>
       <BotaoCheckIn estado={estado} motivo={motivo} carregando={carregando} onPress={onCheckIn} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  linha: { flexDirection: 'row', alignItems: 'center', minHeight: Alturas.botaoHero + 8, paddingVertical: Espacamento.medio, gap: Espacamento.medio },
-  horario: { width: 76 },
+const useEstilos = criarEstilos(() => ({
+  linha: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: Alturas.linha + 16,
+    paddingVertical: Espacamento.pequeno + 2,
+    paddingHorizontal: Espacamento.padrao,
+    gap: Espacamento.medio,
+  },
+  horario: { width: 64 },
+  tabular: { fontVariant: ['tabular-nums'] },
   textos: { flex: 1, gap: 2 },
-});
+}));

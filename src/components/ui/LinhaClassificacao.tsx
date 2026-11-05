@@ -1,7 +1,9 @@
-// LinhaClassificacao — linha de ranking (RF20) da 4ª posição em diante, sobre o fundo, separada por
-// LinhaFina. A linha do próprio aluno ganha fundo superficie1 e barra lateral de 3px em acento.
-import { StyleSheet, View } from 'react-native';
-import { Alturas, Cores, Espacamento } from '../../theme';
+// LinhaClassificacao — linha de ranking (RF20) dentro de um GrupoLista: posição, avatar circular,
+// nome e pontos (algarismos tabulares). A linha do próprio aluno ganha fundo de tint muito suave
+// (tintSuave), posição no tint e o rótulo "Você". Desenha o próprio separador recuado.
+import { View } from 'react-native';
+import { Alturas, criarEstilos, Espacamento } from '../../theme';
+import LinhaFina from '../LinhaFina';
 import Avatar from './Avatar';
 import Texto from './Texto';
 
@@ -11,46 +13,58 @@ interface LinhaClassificacaoProps {
   pontos: number;
   fotoUrl?: string;
   destaque?: boolean; // linha do próprio aluno
+  separadorAcima?: boolean;
 }
 
-export default function LinhaClassificacao({ posicao, nome, pontos, fotoUrl, destaque }: LinhaClassificacaoProps) {
+const RECUO = Espacamento.padrao + 28 + Espacamento.medio + 36 + Espacamento.medio;
+
+function LinhaClassificacao({ posicao, nome, pontos, fotoUrl, destaque, separadorAcima }: LinhaClassificacaoProps) {
+  const styles = useEstilos();
   return (
-    <View
-      style={[styles.linha, destaque && styles.linhaDestaque]}
-      accessible
-      accessibilityLabel={`${posicao}º lugar: ${nome}, ${pontos} pontos${destaque ? ', você' : ''}`}
-    >
-      <Texto variante="numero" cor={destaque ? 'texto' : 'texto3'} style={styles.posicao}>
-        {posicao}
-      </Texto>
-      <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={36} />
-      <View style={styles.nome}>
-        <Texto variante="headline" numberOfLines={1}>
-          {nome}
+    <View>
+      {separadorAcima ? <LinhaFina recuo={RECUO} /> : null}
+      <View
+        style={[styles.linha, destaque && styles.linhaDestaque]}
+        accessible
+        accessibilityLabel={`${posicao}º lugar: ${nome}, ${pontos} pontos${destaque ? ', você' : ''}`}
+      >
+        <Texto variante="headline" cor={destaque ? 'tint' : 'texto2'} style={styles.posicao}>
+          {posicao}
         </Texto>
-        {destaque ? (
-          <Texto variante="caption" cor="texto2">
-            Você
+        <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={36} />
+        <View style={styles.nome}>
+          <Texto variante="body" numberOfLines={1}>
+            {nome}
           </Texto>
-        ) : null}
+          {destaque ? (
+            <Texto variante="caption" cor="tint">
+              Você
+            </Texto>
+          ) : null}
+        </View>
+        <Texto variante="headline" style={styles.pontos}>
+          {pontos}
+        </Texto>
       </View>
-      <Texto variante="numero">{pontos}</Texto>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+LinhaClassificacao.desenhaSeparador = true;
+
+export default LinhaClassificacao;
+
+const useEstilos = criarEstilos((c) => ({
   linha: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Espacamento.medio,
-    minHeight: Alturas.botaoHero,
+    minHeight: Alturas.linha + 12,
     paddingVertical: Espacamento.pequeno,
-    paddingHorizontal: Espacamento.pequeno,
-    borderLeftWidth: 3,
-    borderLeftColor: 'transparent',
+    paddingHorizontal: Espacamento.padrao,
   },
-  linhaDestaque: { backgroundColor: Cores.superficie1, borderLeftColor: Cores.acento },
-  posicao: { width: 32, textAlign: 'center' },
+  linhaDestaque: { backgroundColor: c.tintSuave },
+  posicao: { width: 28, textAlign: 'center', fontVariant: ['tabular-nums'] },
   nome: { flex: 1 },
-});
+  pontos: { fontVariant: ['tabular-nums'] },
+}));

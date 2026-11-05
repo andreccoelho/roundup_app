@@ -1,18 +1,19 @@
-// BotaoCheckIn — versão compacta dos 3 estados de check-in (RN08) para linhas de lista
-// (CartaoSessao na Agenda e em "próximos treinos"). O CTA cheio em acento fica com o HeroCheckIn;
-// aqui o "disponível" é contornado, para várias linhas não gastarem o acento da tela.
-//  - disponível: botão contornado com luva;
+// BotaoCheckIn — versão compacta dos 3 estados de check-in (RN08) para linhas de lista (CartaoSessao
+// na Agenda e em "próximos treinos"). O botão cheio no tint fica com o HeroCheckIn; aqui o
+// "disponível" é o botão cinza compacto, para várias linhas não competirem com a ação da tela.
+//  - disponível: botão cinza em cápsula "Check-in" (rótulo no tint);
 //  - fora da janela: cadeado + motivo curto em texto2 (estado, não erro — sem vermelho);
-//  - feito: ✓ verde "Feito", com punch + flash + haptic na transição (reduce motion respeitado).
+//  - feito: ✓ verde preenchido "Feito", que entra com mola + haptic de sucesso (reduce motion
+//    respeitado).
 import { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Pressable, StyleSheet, View } from 'react-native';
-import { Alturas, Cores, DuracaoAnimacao, Espacamento, Raios } from '../../theme';
+import { Animated, View } from 'react-native';
+import { Alturas, criarEstilos, Espacamento, Mola, useTema } from '../../theme';
 import { DRIVER_NATIVO } from '../../utils/animacao';
 import type { EstadoCheckIn } from '../../utils/statusCheckIn';
 import { hapticaImpacto, hapticaSucesso } from '../../utils/haptica';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
-import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
-import { IconeCadeado, IconeCheck, IconeLuva } from '../icones';
+import { IconeCadeado, IconeCheckCirculo } from '../icones';
+import Botao from './Botao';
 import Texto from './Texto';
 
 interface BotaoCheckInProps {
@@ -24,49 +25,40 @@ interface BotaoCheckInProps {
 
 export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: BotaoCheckInProps) {
   const reduzido = useMovimentoReduzido();
-  const foco = useFocoVisivel();
+  const { cores } = useTema();
+  const styles = useEstilos();
   const estadoAnterior = useRef(estado);
   const escala = useRef(new Animated.Value(1)).current;
-  const flash = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (estadoAnterior.current !== 'realizado' && estado === 'realizado') {
       hapticaSucesso();
       if (!reduzido) {
-        escala.setValue(1);
-        flash.setValue(0);
-        Animated.parallel([
-          Animated.sequence([
-            Animated.timing(escala, { toValue: 1.2, duration: DuracaoAnimacao.rapida, useNativeDriver: DRIVER_NATIVO }),
-            Animated.spring(escala, { toValue: 1, friction: 4, useNativeDriver: DRIVER_NATIVO }),
-          ]),
-          Animated.sequence([
-            Animated.timing(flash, { toValue: 0.35, duration: 80, useNativeDriver: DRIVER_NATIVO }),
-            Animated.timing(flash, { toValue: 0, duration: DuracaoAnimacao.base, useNativeDriver: DRIVER_NATIVO }),
-          ]),
-        ]).start();
+        escala.setValue(0.4);
+        Animated.spring(escala, { toValue: 1, ...Mola, useNativeDriver: DRIVER_NATIVO }).start();
       }
     }
     estadoAnterior.current = estado;
-  }, [estado, escala, flash, reduzido]);
+  }, [estado, escala, reduzido]);
 
   if (estado === 'realizado') {
     return (
-      <Animated.View style={[styles.selo, { transform: [{ scale: escala }] }]} accessible accessibilityLabel="Check-in feito">
-        <Animated.View style={[styles.flash, { opacity: flash }]} />
-        <IconeCheck cor={Cores.sucesso} tamanho={18} />
-        <Texto variante="caption" cor="sucesso">
+      <View style={styles.selo} accessible accessibilityLabel="Check-in feito">
+        <Animated.View style={{ transform: [{ scale: escala }] }}>
+          <IconeCheckCirculo cor={cores.sucesso} tamanho={22} preenchido />
+        </Animated.View>
+        <Texto variante="subheadline" cor="sucesso">
           Feito
         </Texto>
-      </Animated.View>
+      </View>
     );
   }
 
   if (estado === 'foraDaJanela') {
     return (
       <View style={styles.selo} accessible accessibilityLabel={motivo ?? 'Check-in indisponível'}>
-        <IconeCadeado cor={Cores.texto3} tamanho={16} />
-        <Texto variante="subheadline" cor="texto2" style={styles.motivo} numberOfLines={2}>
+        <IconeCadeado cor={cores.texto3} tamanho={15} />
+        <Texto variante="footnote" style={styles.motivo} numberOfLines={2}>
           {motivo ?? 'Fechado'}
         </Texto>
       </View>
@@ -74,55 +66,21 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
   }
 
   return (
-    <Pressable
-      style={({ pressed }) => [styles.botao, pressed && styles.pressionado, estiloSemOutline, foco.focado && estiloAnelFoco]}
+    <Botao
+      titulo="Check-in"
+      variante="secundario"
+      compacto
+      carregando={carregando}
+      accessibilityLabel={carregando ? 'Enviando check-in' : 'Fazer check-in'}
       onPress={() => {
         hapticaImpacto();
         onPress?.();
       }}
-      disabled={carregando}
-      accessibilityRole="button"
-      accessibilityLabel={carregando ? 'Enviando check-in' : 'Fazer check-in'}
-      accessibilityState={{ disabled: Boolean(carregando), busy: Boolean(carregando) }}
-      {...foco.propsFoco}
-    >
-      {carregando ? (
-        <ActivityIndicator color={Cores.texto} size="small" />
-      ) : (
-        <>
-          <IconeLuva cor={Cores.texto} tamanho={18} />
-          <Texto variante="caption" cor="texto">
-            Check-in
-          </Texto>
-        </>
-      )}
-    </Pressable>
+    />
   );
 }
 
-const styles = StyleSheet.create({
-  botao: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Espacamento.minimo + 2,
-    borderWidth: 1.5,
-    borderColor: Cores.texto,
-    borderRadius: Raios.vivo,
-    paddingHorizontal: Espacamento.medio,
-    minHeight: Alturas.alvoMinimo,
-    minWidth: 112,
-  },
-  pressionado: { backgroundColor: Cores.superficie2 },
-  selo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Espacamento.minimo + 2,
-    minHeight: Alturas.alvoMinimo,
-    paddingHorizontal: Espacamento.pequeno,
-    borderRadius: Raios.vivo,
-    overflow: 'hidden',
-  },
+const useEstilos = criarEstilos(() => ({
+  selo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.minimo + 2, minHeight: Alturas.alvoMinimo },
   motivo: { maxWidth: 140, textAlign: 'right' },
-  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Cores.sucesso },
-});
+}));
