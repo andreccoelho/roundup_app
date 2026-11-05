@@ -1,7 +1,7 @@
 // RF11: turmas dos responsáveis com quem o aluno tem vínculo ativo, com opção de matrícula
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento } from '../../theme';
+import { View } from 'react-native';
+import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarTurmasDisponiveisParaAluno, listarTurmasDoAluno } from '../../services/turmas';
 import { matricularAluno } from '../../services/matriculas';
@@ -11,9 +11,8 @@ import Texto from '../../components/ui/Texto';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Aviso from '../../components/ui/Aviso';
 import MensagemErro from '../../components/ui/MensagemErro';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
-import LinhaFina from '../../components/LinhaFina';
-import { IconeCheck, IconeTatame } from '../../components/icones';
+import GrupoLista from '../../components/ui/GrupoLista';
+import { IconeCheckCirculo, IconeTatame } from '../../components/icones';
 import { rotuloNivel } from '../../utils/apresentacao';
 import { mensagemErro } from '../../utils/mensagensErro';
 import Botao from '../../components/ui/Botao';
@@ -22,6 +21,8 @@ import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 
 export default function TurmasDisponiveisScreen() {
+  const styles = useEstilos();
+  const { cores } = useTema();
   const { usuario } = useAuth();
 
   const [carregando, setCarregando] = useState(true);
@@ -71,7 +72,7 @@ export default function TurmasDisponiveisScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada>
         <Esqueleto forma="linha" repeticoes={4} />
       </Tela>
     );
@@ -83,7 +84,7 @@ export default function TurmasDisponiveisScreen() {
 
   if (turmas.length === 0) {
     return (
-      <Tela largura="lista" centralizarVertical>
+      <Tela largura="lista" agrupada centralizarVertical>
         <EstadoVazio
           icone={IconeTatame}
           titulo="Nenhuma turma disponível"
@@ -96,18 +97,18 @@ export default function TurmasDisponiveisScreen() {
   return (
     <Tela
       largura="lista"
+      agrupada
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} />}
     >
       <MensagemErro mensagem={erroMatricula} />
-      <CabecalhoSecao titulo="Turmas" contador={`${matriculadasIds.size} matrícula${matriculadasIds.size === 1 ? '' : 's'}`} semMargem />
-      {turmas.map((turma, i) => {
+      <GrupoLista titulo={`Turmas: ${matriculadasIds.size} matrícula${matriculadasIds.size === 1 ? '' : 's'}`} semMargem>
+      {turmas.map((turma) => {
         const jaMatriculado = matriculadasIds.has(turma.id);
         return (
           <View key={turma.id}>
-            {i > 0 ? <LinhaFina /> : null}
             <View style={styles.linha}>
               <View style={styles.textos}>
-                <Texto variante="headline">{turma.nome}</Texto>
+                <Texto variante="body">{turma.nome}</Texto>
                 <View style={styles.meta}>
                   <Etiqueta texto={turma.modalidade} />
                   <Etiqueta texto={rotuloNivel(turma.nivel)} />
@@ -115,8 +116,8 @@ export default function TurmasDisponiveisScreen() {
               </View>
               {jaMatriculado ? (
                 <View style={styles.matriculado} accessible accessibilityLabel="Matriculado">
-                  <IconeCheck tamanho={18} cor={Cores.sucesso} />
-                  <Texto variante="caption" cor="sucesso">
+                  <IconeCheckCirculo tamanho={22} cor={cores.sucesso} preenchido />
+                  <Texto variante="subheadline" cor="sucesso">
                     Matriculado
                   </Texto>
                 </View>
@@ -133,13 +134,14 @@ export default function TurmasDisponiveisScreen() {
           </View>
         );
       })}
+      </GrupoLista>
     </Tela>
   );
 }
 
-const styles = StyleSheet.create({
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, paddingVertical: Espacamento.padrao },
+const useEstilos = criarEstilos((c) => ({
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, paddingVertical: Espacamento.medio, paddingHorizontal: Espacamento.padrao },
   textos: { flex: 1, gap: Espacamento.pequeno },
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.minimo + 2 },
   matriculado: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.minimo, minHeight: 44 },
-});
+}));

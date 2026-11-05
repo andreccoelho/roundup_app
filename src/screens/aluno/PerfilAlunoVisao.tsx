@@ -1,22 +1,22 @@
 // Visão (só apresentação) do Perfil do Aluno — RF06, RF17, RF19, RF21. Dados prontos vêm de
 // aluno/PerfilScreen.tsx; a Galeria monta a mesma visão com dados fictícios.
-// Banda de identidade → estatísticas (Oswald) → card de faixa (único corte diagonal da tela) →
-// modalidades → medalhas → configurações como lista de ItemMenu. "Excluir conta" não fica aqui:
-// vive na subtela "Conta e privacidade". RNF11: a participação na classificação é um Toggle logo
-// abaixo de "Notificações" — preferência de um toque só, não precisa de subtela.
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento } from '../../theme';
-import BandaIdentidade from '../../components/ui/BandaIdentidade';
+// Cabeçalho centralizado (avatar, nome, e-mail, "membro desde") → números (nível, sequência,
+// treinos) → graduação e modalidades → grade de medalhas → configurações em listas agrupadas.
+// "Excluir conta" não fica aqui: vive na subtela "Conta e privacidade". RNF11: a participação na
+// classificação é um Toggle no grupo de preferências, com rodapé explicando o efeito.
+import { View } from 'react-native';
+import { criarEstilos, Espacamento } from '../../theme';
+import CabecalhoPerfil from '../../components/ui/CabecalhoPerfil';
 import Estatistica from '../../components/ui/Estatistica';
 import Cartao from '../../components/ui/Cartao';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Medalha, { type TipoMedalha } from '../../components/ui/Medalha';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
 import ItemMenu from '../../components/ui/ItemMenu';
-import Texto from '../../components/ui/Texto';
+import LinhaLista from '../../components/ui/LinhaLista';
 import Toggle from '../../components/ui/Toggle';
-import LinhaFina from '../../components/LinhaFina';
 import { IconeCadeado, IconeChama, IconeCorda, IconePerfil, IconeSair, IconeSino } from '../../components/icones';
 
 export interface MedalhaPerfil {
@@ -69,83 +69,81 @@ export default function PerfilAlunoVisao({
   onContaPrivacidade,
   onSair,
 }: PerfilAlunoVisaoProps) {
+  const styles = useEstilos();
   const conquistadas = medalhas.filter((m) => m.conquistada).length;
-  const detalhes = [email, membroDesde ? `Membro desde ${membroDesde}` : undefined].filter((d): d is string => Boolean(d));
 
   return (
     <View>
-      <BandaIdentidade sobHeader nome={nome} fotoUrl={fotoUrl} detalhes={detalhes} />
+      <CabecalhoPerfil nome={nome} fotoUrl={fotoUrl} detalhes={[email, membroDesde ? `Membro desde ${membroDesde}` : undefined]} />
 
-      <View style={styles.stats}>
-        <Estatistica valor={nivel} rotulo="Nível" alinhamento="centro" />
-        <View style={styles.divisor} />
-        <Estatistica valor={sequencia} rotulo="Sequência" icone={IconeChama} alinhamento="centro" />
-        <View style={styles.divisor} />
-        <Estatistica valor={treinos} rotulo="Treinos" alinhamento="centro" />
-      </View>
+      <Cartao destaque>
+        <View style={styles.stats}>
+          <Estatistica valor={nivel} rotulo="Nível" alinhamento="centro" />
+          <View style={styles.divisor} />
+          <Estatistica valor={sequencia} rotulo="Sequência" icone={IconeChama} alinhamento="centro" />
+          <View style={styles.divisor} />
+          <Estatistica valor={treinos} rotulo="Treinos" alinhamento="centro" />
+        </View>
+      </Cartao>
 
-      <View style={styles.corpo}>
-        <Cartao corteDiagonal>
-          <Texto variante="caption" alinhamento="center">
-            Graduação
-          </Texto>
-          <View style={styles.faixa}>
-            <SeloFaixa faixaOuGrau={faixa ?? 'Faixa não informada'} tamanho="grande" />
+      <GrupoLista titulo="Graduação">
+        <LinhaLista accessibilityLabel={`Faixa: ${faixa ?? 'não informada'}`}>
+          <SeloFaixa faixaOuGrau={faixa ?? 'Faixa não informada'} />
+        </LinhaLista>
+      </GrupoLista>
+
+      {modalidades.length > 0 ? (
+        <GrupoLista titulo="Modalidades">
+          <View style={styles.modalidades}>
+            {modalidades.map((m) => (
+              <Etiqueta key={m} texto={m} />
+            ))}
           </View>
-        </Cartao>
+        </GrupoLista>
+      ) : null}
 
-        {modalidades.length > 0 ? (
-          <>
-            <CabecalhoSecao titulo="Modalidades" />
-            <View style={styles.modalidades}>
-              {modalidades.map((m) => (
-                <Etiqueta key={m} texto={m} />
-              ))}
-            </View>
-          </>
-        ) : null}
-
-        {medalhas.length > 0 ? (
-          <>
-            <CabecalhoSecao titulo="Medalhas" contador={`${conquistadas} de ${medalhas.length}`} />
+      {medalhas.length > 0 ? (
+        <>
+          <CabecalhoSecao titulo="Medalhas" contador={`${conquistadas} de ${medalhas.length}`} />
+          <Cartao>
             <View style={styles.medalhas}>
               {medalhas.map((m) => (
                 <Medalha key={m.id} rotulo={m.rotulo} tipo={m.tipo} numero={m.quantidade} conquistada={m.conquistada} maxima={m.maxima} />
               ))}
             </View>
-          </>
-        ) : null}
+          </Cartao>
+        </>
+      ) : null}
 
-        <CabecalhoSecao titulo="Conta" />
+      <GrupoLista titulo="Conta">
         <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={onEditar} />
-        <ItemMenu rotulo="Vincular-se" descricao="Academias e professores autônomos" icone={IconeCorda} onPress={onVinculos} separador />
-        <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={onNotificacoes} separador />
-        <LinhaFina />
+        <ItemMenu rotulo="Vincular-se" descricao="Academias e professores autônomos" icone={IconeCorda} onPress={onVinculos} />
+        <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={onContaPrivacidade} />
+      </GrupoLista>
+
+      <GrupoLista
+        titulo="Preferências"
+        rodape="Desligada, você some do ranking dos outros alunos, mas continua vendo a sua pontuação."
+      >
+        <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={onNotificacoes} />
         <Toggle
           rotulo="Participar da classificação"
-          descricao="Desligado, você some do ranking dos outros alunos, mas continua vendo sua pontuação."
           valor={participaClassificacao}
           desabilitado={salvandoParticipacao}
           onAlterar={onAlternarParticipacao}
         />
-        <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={onContaPrivacidade} separador />
-        <ItemMenu rotulo="Sair" icone={IconeSair} semChevron onPress={onSair} separador />
-      </View>
+      </GrupoLista>
+
+      <GrupoLista>
+        <ItemMenu rotulo="Sair" icone={IconeSair} destrutivo semChevron onPress={onSair} />
+      </GrupoLista>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  stats: {
-    flexDirection: 'row',
-    paddingVertical: Espacamento.padrao,
-    paddingHorizontal: Espacamento.padrao,
-    borderBottomWidth: 1,
-    borderBottomColor: Cores.linha,
-  },
-  divisor: { width: 1, backgroundColor: Cores.linha },
-  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.grande, paddingBottom: Espacamento.enorme },
-  faixa: { marginTop: Espacamento.padrao, marginBottom: Espacamento.pequeno },
-  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
-  medalhas: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.padrao, justifyContent: 'flex-start' },
-});
+const useEstilos = criarEstilos((c) => ({
+  stats: { flexDirection: 'row', alignItems: 'center' },
+  divisor: { width: 0.5, alignSelf: 'stretch', backgroundColor: c.separador },
+  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, padding: Espacamento.padrao },
+  medalhas: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: Espacamento.padrao },
+}));

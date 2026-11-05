@@ -4,8 +4,8 @@
 // somente leitura, com o enum diferente StatusCheckIn 'pendente'/'validado'/'rejeitado' — forçar
 // o componente errado esconderia esse status atrás de um rótulo que não é o dele.
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento, useTema, type NomeCor } from '../../theme';
+import { View } from 'react-native';
+import { criarEstilos, Espacamento, type NomeCor, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarHistoricoDoAluno } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
@@ -16,8 +16,8 @@ import { mensagemErro } from '../../utils/mensagensErro';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import Estatistica from '../../components/ui/Estatistica';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
-import LinhaFina from '../../components/LinhaFina';
+import GrupoLista from '../../components/ui/GrupoLista';
+import Cartao from '../../components/ui/Cartao';
 import { IconeCheck, IconeFichaTecnica, IconeRelogio, IconeAlerta } from '../../components/icones';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
@@ -38,6 +38,7 @@ const COR_STATUS: Record<StatusCheckIn, NomeCor> = {
 const ICONE_STATUS = { pendente: IconeRelogio, validado: IconeCheck, rejeitado: IconeAlerta };
 
 export default function HistoricoScreen() {
+  const styles = useEstilos();
   const { usuario } = useAuth();
   const { cores } = useTema();
 
@@ -71,7 +72,7 @@ export default function HistoricoScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada>
         <Esqueleto forma="linha" repeticoes={6} />
       </Tela>
     );
@@ -83,7 +84,7 @@ export default function HistoricoScreen() {
 
   if (itens.length === 0) {
     return (
-      <Tela largura="lista" centralizarVertical>
+      <Tela largura="lista" agrupada centralizarVertical>
         <EstadoVazio icone={IconeFichaTecnica} titulo="Nenhum check-in registrado ainda" descricao="Seus check-ins validados e pendentes aparecem aqui." />
       </Tela>
     );
@@ -92,29 +93,30 @@ export default function HistoricoScreen() {
   const validados = itens.filter((i) => i.checkIn.status === 'validado').length;
 
   return (
-    <Tela largura="lista">
-      <View style={styles.resumo}>
-        <Estatistica valor={itens.length} rotulo="Check-ins" />
-        <Estatistica valor={validados} rotulo="Validados" />
-      </View>
-      <CabecalhoSecao titulo="Registros" />
-      {itens.map(({ checkIn, nomeTurma }, i) => {
+    <Tela largura="lista" agrupada>
+      <Cartao destaque>
+        <View style={styles.resumo}>
+          <Estatistica valor={itens.length} rotulo="Check-ins" />
+          <Estatistica valor={validados} rotulo="Validados" />
+        </View>
+      </Cartao>
+      <GrupoLista titulo="Registros">
+      {itens.map(({ checkIn, nomeTurma }) => {
         const Icone = ICONE_STATUS[checkIn.status];
         return (
           <View key={checkIn.id}>
-            {i > 0 ? <LinhaFina /> : null}
             <View
               style={styles.linha}
               accessible
               accessibilityLabel={`${nomeTurma}, ${formatarDiaHora(paraData(checkIn.dataHora))}, ${ROTULO_STATUS_CHECKIN[checkIn.status]}`}
             >
               <View style={styles.textos}>
-                <Texto variante="headline">{nomeTurma}</Texto>
-                <Texto variante="subheadline">{formatarDiaHora(paraData(checkIn.dataHora))}</Texto>
+                <Texto variante="body">{nomeTurma}</Texto>
+                <Texto variante="footnote">{formatarDiaHora(paraData(checkIn.dataHora))}</Texto>
               </View>
               <View style={styles.status}>
                 <Icone tamanho={16} cor={cores[COR_STATUS[checkIn.status]]} />
-                <Texto variante="caption" cor={COR_STATUS[checkIn.status]}>
+                <Texto variante="footnote" cor={COR_STATUS[checkIn.status]}>
                   {ROTULO_STATUS_CHECKIN[checkIn.status]}
                 </Texto>
               </View>
@@ -122,13 +124,14 @@ export default function HistoricoScreen() {
           </View>
         );
       })}
+      </GrupoLista>
     </Tela>
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   resumo: { flexDirection: 'row', gap: Espacamento.grande },
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 64, paddingVertical: Espacamento.medio },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 56, paddingVertical: Espacamento.pequeno + 2, paddingHorizontal: Espacamento.padrao },
   textos: { flex: 1, gap: 2 },
   status: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.minimo, maxWidth: 160 },
-});
+}));

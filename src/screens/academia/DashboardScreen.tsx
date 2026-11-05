@@ -1,9 +1,12 @@
 // Painel da Academia — RF09. Dado real: turmas ativas (`turmas`), professores e alunos com
 // vínculo aceito (`vinculos`, RF07/RF08), e a contagem de turmas de cada professor (cruzando as
 // duas coleções já reais). Frequência geral NÃO entra nesta tela ainda — RF26, Ciclo 3, exige
-// uma agregação de check-ins por período que ainda não existe.
+// uma agregação de check-ins por período que ainda não existe. Visual: nome da academia, contadores
+// num cartão de destaque e professores em lista agrupada.
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import GrupoLista from '../../components/ui/GrupoLista';
+import Cartao from '../../components/ui/Cartao';
 import { useNavigation } from '@react-navigation/native';
 import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
@@ -11,14 +14,12 @@ import { DashboardAcademiaNavigationProp } from '../../navigation/AcademiaTabs';
 import { listarTurmasPorResponsavel } from '../../services/turmas';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
 import { buscarUsuario } from '../../services/usuarios';
-import LinhaFina from '../../components/LinhaFina';
+import LinhaLista from '../../components/ui/LinhaLista';
 import Avatar from '../../components/ui/Avatar';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
-import BandaIdentidade from '../../components/ui/BandaIdentidade';
 import Estatistica from '../../components/ui/Estatistica';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import ItemMenu from '../../components/ui/ItemMenu';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoErro from '../../components/ui/EstadoErro';
@@ -77,79 +78,83 @@ export default function DashboardScreen() {
   const modalidades = usuario?.modalidades ?? [];
 
   return (
-    <Tela largura="lista" preenchimento={false}>
-      <BandaIdentidade
-        variante="gestor"
-        compacta
-        sobretitulo="Hoje"
-        nome={usuario?.nomeAcademia ?? 'Painel da Academia'}
-        fotoUrl={usuario?.fotoUrl}
-        detalhes={usuario?.endereco ? [usuario.endereco] : []}
-      >
-        {modalidades.length > 0 ? (
-          <View style={styles.chips}>
-            {modalidades.map((m) => (
-              <Etiqueta key={m} texto={m} />
-            ))}
-          </View>
-        ) : null}
-      </BandaIdentidade>
+    <Tela largura="lista" agrupada tituloGrande="Hoje">
+      <View style={styles.saudacao}>
+        <Avatar nome={usuario?.nomeAcademia ?? 'Academia'} fotoUrl={usuario?.fotoUrl} tamanho={44} />
+        <View style={styles.saudacaoTextos}>
+          <Texto variante="title3" cabecalho={false} numberOfLines={1}>
+            {usuario?.nomeAcademia ?? 'Painel da Academia'}
+          </Texto>
+          {usuario?.endereco ? <Texto variante="footnote">{usuario.endereco}</Texto> : null}
+        </View>
+      </View>
+      {modalidades.length > 0 ? (
+        <View style={styles.chips}>
+          {modalidades.map((m) => (
+            <Etiqueta key={m} texto={m} />
+          ))}
+        </View>
+      ) : null}
 
-      <View style={styles.corpo}>
-        {carregando ? (
-          <>
-            <Esqueleto altura={72} />
-            <View style={styles.espaco} />
-            <Esqueleto forma="linha" repeticoes={3} />
-          </>
-        ) : erro ? (
+      {carregando ? (
+        <>
+          <Esqueleto altura={96} raio={16} />
+          <View style={styles.espaco} />
+          <Esqueleto forma="linha" repeticoes={3} />
+        </>
+      ) : erro ? (
+        <Cartao>
           <EstadoErro compacto mensagem={erro} onTentarNovamente={carregar} />
-        ) : (
-          <>
+        </Cartao>
+      ) : (
+        <>
+          <Cartao destaque>
             <View style={styles.contadores}>
               <Estatistica valor={turmasAtivas} rotulo="Turmas ativas" tamanho="grande" />
               <Estatistica valor={professores.length} rotulo="Professores" tamanho="grande" />
               <Estatistica valor={alunosVinculados} rotulo="Alunos" tamanho="grande" />
             </View>
+          </Cartao>
 
-            <CabecalhoSecao titulo="Professores vinculados" contador={professores.length} />
+          <GrupoLista
+            titulo={`Professores vinculados: ${professores.length}`}
+            rodape={professores.length === 0 ? 'Os pedidos de vínculo chegam em Perfil, Gestão de professores.' : undefined}
+          >
             {professores.length === 0 ? (
-              <Texto variante="subheadline" style={styles.vazio}>
-                Nenhum professor vinculado ainda. Os pedidos chegam em Perfil, Gestão de professores.
-              </Texto>
+              <LinhaLista rotulo="Nenhum professor vinculado ainda" />
             ) : (
-              professores.map((professor, i) => (
-                <View key={professor.id}>
-                  {i > 0 ? <LinhaFina /> : null}
-                  <View style={styles.linha} accessible accessibilityLabel={`${professor.nome}, ${professor.quantidadeTurmas} turmas`}>
-                    <Avatar nome={professor.nome} tamanho={36} />
-                    <Texto variante="headline" style={styles.nome} numberOfLines={1}>
+              professores.map((professor) => (
+                <LinhaLista
+                  key={professor.id}
+                  valor={`${professor.quantidadeTurmas} ${professor.quantidadeTurmas === 1 ? 'turma' : 'turmas'}`}
+                  accessibilityLabel={`${professor.nome}, ${professor.quantidadeTurmas} turmas`}
+                >
+                  <View style={styles.professor}>
+                    <Avatar nome={professor.nome} tamanho={32} />
+                    <Texto variante="body" style={styles.nome} numberOfLines={1}>
                       {professor.nome}
                     </Texto>
-                    <Texto variante="numero">{professor.quantidadeTurmas}</Texto>
-                    <Texto variante="caption" cor="texto3">
-                      {professor.quantidadeTurmas === 1 ? 'turma' : 'turmas'}
-                    </Texto>
                   </View>
-                </View>
+                </LinhaLista>
               ))
             )}
+          </GrupoLista>
 
-            <CabecalhoSecao titulo="Atalhos" />
+          <GrupoLista titulo="Atalhos">
             <ItemMenu rotulo="Gerenciar turmas" descricao="Turmas, sessões e relatório de frequência" icone={IconeTatame} onPress={() => navigation.navigate('Turmas')} />
-          </>
-        )}
-      </View>
+          </GrupoLista>
+        </>
+      )}
     </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
-  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.grande, paddingBottom: Espacamento.enorme },
+  saudacao: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, marginBottom: Espacamento.medio },
+  saudacaoTextos: { flex: 1, gap: 2 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   espaco: { height: Espacamento.padrao },
   contadores: { flexDirection: 'row', gap: Espacamento.padrao },
-  vazio: { paddingVertical: Espacamento.medio },
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 56, paddingVertical: Espacamento.pequeno },
+  professor: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
   nome: { flex: 1 },
 });

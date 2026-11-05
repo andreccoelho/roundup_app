@@ -2,8 +2,6 @@
 // Classificação, Hoje do Professor) montadas com dados fictícios, para validar o visual sem
 // logar nem tocar no Firebase. Só __DEV__ (importado apenas pela GaleriaScreen).
 import { useState } from 'react';
-import { View } from 'react-native';
-import { Espacamento } from '../../theme';
 import HomeAlunoVisao, { type SessaoHome } from '../aluno/HomeAlunoVisao';
 import PerfilAlunoVisao, { type MedalhaPerfil } from '../aluno/PerfilAlunoVisao';
 import ClassificacaoVisao, { type LinhaRanking } from '../aluno/ClassificacaoVisao';
@@ -143,9 +141,7 @@ export function ComposicaoPerfil() {
 
 export function ComposicaoClassificacao() {
   return (
-    <View style={{ padding: Espacamento.padrao }}>
-      <ClassificacaoVisao linhas={RANKING} usuarioId="eu" />
-    </View>
+    <ClassificacaoVisao linhas={RANKING} usuarioId="eu" mes="novembro de 2026" />
   );
 }
 

@@ -95,7 +95,7 @@ export default function ClassificacaoScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada tituloGrande="Classificação">
         {seletor}
         <Esqueleto altura={220} />
         <Esqueleto forma="linha" repeticoes={4} />
@@ -109,7 +109,7 @@ export default function ClassificacaoScreen() {
 
   if (linhas.length === 0) {
     return (
-      <Tela largura="lista" centralizarVertical={!seletor}>
+      <Tela largura="lista" agrupada tituloGrande="Classificação" centralizarVertical={!seletor}>
         {seletor}
         <EstadoVazio
           icone={IconeCartaoPontuacao}
@@ -123,7 +123,7 @@ export default function ClassificacaoScreen() {
   }
 
   return (
-    <Tela largura="lista">
+    <Tela largura="lista" agrupada tituloGrande="Classificação">
       {seletor}
       <ClassificacaoVisao
         linhas={linhas}

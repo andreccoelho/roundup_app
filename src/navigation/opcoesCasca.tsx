@@ -71,13 +71,16 @@ export const opcoesRaiz: NativeStackNavigationOptions = IOS ? { headerShown: tru
 // (presentation "modal" = pageSheet, com header próprio e gesto de fechar). "Cancelar" à esquerda;
 // a ação de confirmar ("Salvar") a tela põe à direita com navigation.setOptions. No web e no
 // Android a apresentação é a de uma tela empilhada, com o mesmo "Cancelar".
-export function opcoesFolha(titulo: string) {
+// `concluir`: telas que salvam a cada toque (preferências) não têm o que cancelar — só "OK" à direita.
+export function opcoesFolha(titulo: string, modo: 'cancelar' | 'concluir' = 'cancelar') {
   return ({ navigation }: { navigation: { goBack: () => void } }): NativeStackNavigationOptions => ({
     title: titulo,
     presentation: 'modal',
     headerLargeTitle: false,
     headerBackVisible: false,
-    headerLeft: () => <BotaoCabecalho titulo="Cancelar" onPress={navigation.goBack} />,
+    ...(modo === 'concluir'
+      ? { headerRight: () => <BotaoCabecalho titulo="OK" forte onPress={navigation.goBack} /> }
+      : { headerLeft: () => <BotaoCabecalho titulo="Cancelar" onPress={navigation.goBack} /> }),
   });
 }
 

@@ -9,10 +9,10 @@
 // (consentimentoAceito, versaoConsentimento); a gravação real acontece dentro de cada tela de
 // Cadastro, logo depois que cadastrar() resolve e já existe um uid autenticado.
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento, Raios } from '../../theme';
+import { criarEstilos, Espacamento, Raios } from '../../theme';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import Botao from '../../components/ui/Botao';
 import Checkbox from '../../components/ui/Checkbox';
@@ -25,6 +25,7 @@ type Rota = RouteProp<AuthStackParamList, 'ConsentimentoLGPD'>;
 type Navegacao = NativeStackNavigationProp<AuthStackParamList, 'ConsentimentoLGPD'>;
 
 export default function ConsentimentoLGPDScreen() {
+  const styles = useEstilos();
   const navigation = useNavigation<Navegacao>();
   const { destino } = useRoute<Rota>().params;
   const [aceito, setAceito] = useState(false);
@@ -34,7 +35,7 @@ export default function ConsentimentoLGPDScreen() {
   }
 
   return (
-    <Tela largura="formulario" bordas={['topo', 'base']}>
+    <Tela largura="formulario" bordas={['topo', 'base']} agrupada>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
       <Texto variante="largeTitle" style={styles.titulo}>
@@ -59,7 +60,7 @@ export default function ConsentimentoLGPDScreen() {
         <Checkbox rotulo="Li e aceito a política de privacidade." marcado={aceito} onAlterar={setAceito} />
       </View>
 
-      <Botao titulo="Continuar" grande onPress={handleContinuar} desabilitado={!aceito} />
+      <Botao titulo="Continuar" onPress={handleContinuar} desabilitado={!aceito} />
       {!aceito ? (
         <Texto variante="subheadline" cor="texto3" alinhamento="center" style={styles.ajuda}>
           Marque o aceite para continuar.
@@ -69,17 +70,16 @@ export default function ConsentimentoLGPDScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   titulo: { marginTop: Espacamento.grande },
   subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
   politica: {
-    backgroundColor: Cores.superficie1,
-    borderRadius: Raios.pequeno,
-    borderLeftWidth: 2,
-    borderLeftColor: Cores.linhaForte,
+    backgroundColor: c.superficie,
+    borderRadius: Raios.lista,
+    borderCurve: 'continuous',
     padding: Espacamento.padrao,
     maxHeight: 280,
   },
   aceite: { marginTop: Espacamento.grande, marginBottom: Espacamento.padrao },
   ajuda: { marginTop: Espacamento.pequeno },
-});
+}));

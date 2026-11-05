@@ -1,7 +1,7 @@
 // RF08: aluno solicita vínculo com academia ou professor autônomo
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento } from '../../theme';
+import { View } from 'react-native';
+import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarAcademiasDisponiveis, listarProfessoresAutonomos, solicitarVinculo } from '../../services/vinculos';
 import { PerfilDestinatario, Usuario } from '../../types';
@@ -11,8 +11,7 @@ import Avatar from '../../components/ui/Avatar';
 import Aviso from '../../components/ui/Aviso';
 import CampoTexto from '../../components/ui/CampoTexto';
 import MensagemErro from '../../components/ui/MensagemErro';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
-import LinhaFina from '../../components/LinhaFina';
+import GrupoLista from '../../components/ui/GrupoLista';
 import { IconeCheck, IconeCorda } from '../../components/icones';
 import { mensagemErro } from '../../utils/mensagensErro';
 import Botao from '../../components/ui/Botao';
@@ -26,6 +25,8 @@ interface OpcaoVinculo {
 }
 
 export default function VincularAlunoScreen() {
+  const styles = useEstilos();
+  const { cores } = useTema();
   const { usuario } = useAuth();
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -73,21 +74,20 @@ export default function VincularAlunoScreen() {
     }
   }
 
-  function renderItem({ usuario: destinatario, perfilDestinatario }: OpcaoVinculo, indice: number) {
+  function renderItem({ usuario: destinatario, perfilDestinatario }: OpcaoVinculo) {
     const jaSolicitado = solicitados.has(destinatario.id);
     return (
       <View key={destinatario.id}>
-        {indice > 0 ? <LinhaFina /> : null}
         <View style={styles.linha}>
           <Avatar nome={destinatario.nomeAcademia ?? destinatario.nome} fotoUrl={destinatario.fotoUrl} tamanho={40} />
           <View style={styles.textos}>
-            <Texto variante="headline">{destinatario.nomeAcademia ?? destinatario.nome}</Texto>
-            <Texto variante="subheadline">{perfilDestinatario === 'academia' ? 'Academia' : 'Professor autônomo'}</Texto>
+            <Texto variante="body">{destinatario.nomeAcademia ?? destinatario.nome}</Texto>
+            <Texto variante="footnote">{perfilDestinatario === 'academia' ? 'Academia' : 'Professor autônomo'}</Texto>
           </View>
           {jaSolicitado ? (
             <View style={styles.solicitado} accessible accessibilityLabel="Solicitação enviada">
-              <IconeCheck tamanho={16} cor={Cores.texto2} />
-              <Texto variante="caption" cor="texto2">
+              <IconeCheck tamanho={16} cor={cores.texto2} />
+              <Texto variante="subheadline">
                 Enviado
               </Texto>
             </View>
@@ -108,7 +108,7 @@ export default function VincularAlunoScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada>
         <Esqueleto forma="linha" repeticoes={5} />
       </Tela>
     );
@@ -120,7 +120,7 @@ export default function VincularAlunoScreen() {
 
   if (academias.length === 0 && professores.length === 0) {
     return (
-      <Tela largura="lista" centralizarVertical>
+      <Tela largura="lista" agrupada centralizarVertical>
         <EstadoVazio icone={IconeCorda} titulo="Nenhuma opção disponível" descricao="Ainda não há academias nem professores autônomos cadastrados." />
       </Tela>
     );
@@ -134,6 +134,7 @@ export default function VincularAlunoScreen() {
   return (
     <Tela
       largura="lista"
+      agrupada
       teclado
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} />}
     >
@@ -143,31 +144,33 @@ export default function VincularAlunoScreen() {
       <CampoTexto rotulo="Buscar" placeholder="Nome da academia ou do professor" valor={busca} onAlterar={setBusca} autoCorrect={false} />
       <MensagemErro mensagem={erroSolicitacao} />
 
-      <CabecalhoSecao titulo="Academias" contador={academiasFiltradas.length} semMargem />
-      {academiasFiltradas.length === 0 ? (
-        <Texto variante="subheadline" style={styles.vazio}>
-          {termo ? 'Nenhuma academia com esse nome.' : 'Nenhuma academia disponível.'}
-        </Texto>
-      ) : (
-        academiasFiltradas.map((academia, i) => renderItem({ usuario: academia, perfilDestinatario: 'academia' }, i))
-      )}
+      <GrupoLista titulo={`Academias: ${academiasFiltradas.length}`} semMargem>
+        {academiasFiltradas.length === 0 ? (
+          <Texto variante="subheadline" style={styles.vazio}>
+            {termo ? 'Nenhuma academia com esse nome.' : 'Nenhuma academia disponível.'}
+          </Texto>
+        ) : (
+          academiasFiltradas.map((academia) => renderItem({ usuario: academia, perfilDestinatario: 'academia' }))
+        )}
+      </GrupoLista>
 
-      <CabecalhoSecao titulo="Professores autônomos" contador={professoresFiltrados.length} />
-      {professoresFiltrados.length === 0 ? (
-        <Texto variante="subheadline" style={styles.vazio}>
-          {termo ? 'Nenhum professor com esse nome.' : 'Nenhum professor autônomo disponível.'}
-        </Texto>
-      ) : (
-        professoresFiltrados.map((professor, i) => renderItem({ usuario: professor, perfilDestinatario: 'professor' }, i))
-      )}
+      <GrupoLista titulo={`Professores autônomos: ${professoresFiltrados.length}`}>
+        {professoresFiltrados.length === 0 ? (
+          <Texto variante="subheadline" style={styles.vazio}>
+            {termo ? 'Nenhum professor com esse nome.' : 'Nenhum professor autônomo disponível.'}
+          </Texto>
+        ) : (
+          professoresFiltrados.map((professor) => renderItem({ usuario: professor, perfilDestinatario: 'professor' }))
+        )}
+      </GrupoLista>
     </Tela>
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   intro: { marginBottom: Espacamento.padrao },
-  vazio: { paddingVertical: Espacamento.medio },
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 64, paddingVertical: Espacamento.medio },
+  vazio: { padding: Espacamento.padrao },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 60, paddingVertical: Espacamento.pequeno + 2, paddingHorizontal: Espacamento.padrao },
   textos: { flex: 1, gap: 2 },
   solicitado: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.minimo, minHeight: 44 },
-});
+}));

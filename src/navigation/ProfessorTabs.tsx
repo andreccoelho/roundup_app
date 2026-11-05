@@ -70,7 +70,7 @@ function PerfilNavigator() {
       <PerfilStack.Screen
         name="PreferenciasNotificacao"
         component={PreferenciasNotificacaoScreen}
-        options={opcoesFolha('Notificações')}
+        options={opcoesFolha('Notificações', 'concluir')}
       />
       <PerfilStack.Screen
         name="ConfiguracaoGamificacao"

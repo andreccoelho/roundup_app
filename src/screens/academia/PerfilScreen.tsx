@@ -1,6 +1,6 @@
 // RF04: perfil da academia — leitura, edição (EditarPerfilScreen: nome, foto, nome da academia,
-// endereço, modalidades), gestão de professores, gestão de alunos, visão consolidada,
-// notificações, conta e privacidade, e sair. A identidade da banda é a academia (nomeAcademia),
+// endereço, modalidades), gestão de professores, gestão de alunos, visão consolidada, pontuação,
+// notificações, conta e privacidade, e sair. A identidade do cabeçalho é a academia (nomeAcademia),
 // não a pessoa de contato. "Excluir conta" vive na subtela "Conta e privacidade".
 import { StyleSheet, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -9,9 +9,9 @@ import { useAuth } from '../../contexts/AuthContext';
 import { PerfilAcademiaNavigationProp } from '../../navigation/AcademiaTabs';
 import { formatarMesAno } from '../../utils/datas';
 import Tela from '../../components/ui/Tela';
-import BandaIdentidade from '../../components/ui/BandaIdentidade';
+import CabecalhoPerfil from '../../components/ui/CabecalhoPerfil';
 import Etiqueta from '../../components/ui/Etiqueta';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
 import ItemMenu from '../../components/ui/ItemMenu';
 import {
   IconeCadeado,
@@ -28,35 +28,30 @@ export default function PerfilScreen() {
   const navigation = useNavigation<PerfilAcademiaNavigationProp>();
 
   const modalidades = usuario?.modalidades ?? [];
-  const detalhes = [
-    usuario?.endereco,
-    usuario?.nome ? `Responsável: ${usuario.nome}` : undefined,
-    usuario?.criadoEm ? `Membro desde ${formatarMesAno(usuario.criadoEm)}` : undefined,
-  ].filter((d): d is string => Boolean(d));
 
   return (
-    <Tela largura="lista" preenchimento={false}>
-      <BandaIdentidade
-        variante="gestor"
-        sobHeader
+    <Tela largura="lista" agrupada tituloGrande="Perfil">
+      <CabecalhoPerfil
         nome={usuario?.nomeAcademia ?? usuario?.nome ?? ''}
         fotoUrl={usuario?.fotoUrl}
-        detalhes={detalhes}
+        detalhes={[
+          usuario?.endereco,
+          usuario?.nome ? `Responsável: ${usuario.nome}` : undefined,
+          usuario?.criadoEm ? `Membro desde ${formatarMesAno(usuario.criadoEm)}` : undefined,
+        ]}
       />
 
-      <View style={styles.corpo}>
-        {modalidades.length > 0 ? (
-          <>
-            <CabecalhoSecao titulo="Modalidades" semMargem />
-            <View style={styles.modalidades}>
-              {modalidades.map((m) => (
-                <Etiqueta key={m} texto={m} />
-              ))}
-            </View>
-          </>
-        ) : null}
+      {modalidades.length > 0 ? (
+        <GrupoLista titulo="Modalidades" semMargem>
+          <View style={styles.modalidades}>
+            {modalidades.map((m) => (
+              <Etiqueta key={m} texto={m} />
+            ))}
+          </View>
+        </GrupoLista>
+      ) : null}
 
-        <CabecalhoSecao titulo="Gestão" />
+      <GrupoLista titulo="Gestão" semMargem={modalidades.length === 0}>
         <ItemMenu
           rotulo="Gestão de professores"
           descricao="Pedidos e professores vinculados"
@@ -68,34 +63,34 @@ export default function PerfilScreen() {
           descricao="Pedidos e alunos vinculados"
           icone={IconeFaixa}
           onPress={() => navigation.navigate('SolicitacoesAlunos', { perfilSolicitante: 'aluno' })}
-          separador
         />
         <ItemMenu
           rotulo="Visão consolidada"
           descricao="Turmas, equipe e frequência da unidade"
           icone={IconeCartaoPontuacao}
           onPress={() => navigation.navigate('VisaoConsolidada')}
-          separador
         />
         <ItemMenu
           rotulo="Pontuação e níveis"
           descricao="Pontos por check-in, por missão e tabela de níveis"
           icone={IconeCartaoPontuacao}
           onPress={() => navigation.navigate('ConfiguracaoGamificacao')}
-          separador
         />
+      </GrupoLista>
 
-        <CabecalhoSecao titulo="Conta" />
+      <GrupoLista titulo="Conta">
         <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={() => navigation.navigate('EditarPerfil')} />
-        <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={() => navigation.navigate('PreferenciasNotificacao')} separador />
-        <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={() => navigation.navigate('ContaPrivacidade')} separador />
-        <ItemMenu rotulo="Sair" icone={IconeSair} semChevron onPress={logout} separador />
-      </View>
+        <ItemMenu rotulo="Notificações" icone={IconeSino} onPress={() => navigation.navigate('PreferenciasNotificacao')} />
+        <ItemMenu rotulo="Conta e privacidade" icone={IconeCadeado} onPress={() => navigation.navigate('ContaPrivacidade')} />
+      </GrupoLista>
+
+      <GrupoLista>
+        <ItemMenu rotulo="Sair" icone={IconeSair} destrutivo semChevron onPress={logout} />
+      </GrupoLista>
     </Tela>
   );
 }
 
 const styles = StyleSheet.create({
-  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.grande, paddingBottom: Espacamento.enorme },
-  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
+  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, padding: Espacamento.padrao },
 });

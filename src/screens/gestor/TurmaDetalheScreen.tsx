@@ -1,9 +1,9 @@
 // RF10, RF11, RF12: detalhe da turma — alunos matriculados, sessões e criação de sessão
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento } from '../../theme';
+import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { buscarTurma } from '../../services/turmas';
 import { listarMatriculasPorTurma } from '../../services/matriculas';
@@ -25,8 +25,8 @@ import Aviso from '../../components/ui/Aviso';
 import Avatar from '../../components/ui/Avatar';
 import ItemMenu from '../../components/ui/ItemMenu';
 import MensagemErro from '../../components/ui/MensagemErro';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
-import LinhaFina from '../../components/LinhaFina';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
 import { IconeChevron, IconeFichaTecnica, IconeMais, IconeTatame } from '../../components/icones';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
@@ -40,6 +40,8 @@ interface MatriculaComNome {
 }
 
 export default function TurmaDetalheScreen() {
+  const styles = useEstilos();
+  const { cores } = useTema();
   const { usuario } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<GestorStackParamList, 'TurmaDetalhe'>>();
   const route = useRoute<TurmaDetalheRoute>();
@@ -163,7 +165,7 @@ export default function TurmaDetalheScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada>
         <Esqueleto altura={96} />
         <Esqueleto forma="linha" repeticoes={3} />
       </Tela>
@@ -176,7 +178,7 @@ export default function TurmaDetalheScreen() {
 
   if (!turma) {
     return (
-      <Tela largura="lista" centralizarVertical>
+      <Tela largura="lista" agrupada centralizarVertical>
         <EstadoVazio icone={IconeTatame} titulo="Turma não encontrada" descricao="Ela pode ter sido removida ou você não tem mais acesso a ela." />
       </Tela>
     );
@@ -192,79 +194,91 @@ export default function TurmaDetalheScreen() {
   return (
     <Tela
       largura="lista"
+      agrupada
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} acimaDaTabBar />}
     >
-      <Texto variante="largeTitle">{turma.nome}</Texto>
+      <Texto variante="title1">{turma.nome}</Texto>
       <View style={styles.meta}>
         <Etiqueta texto={turma.modalidade} />
         <Etiqueta texto={rotuloNivel(turma.nivel)} />
-        <Texto variante="caption" cor={turma.ativa ? 'sucesso' : 'texto3'}>
+        <Texto variante="subheadline" cor={turma.ativa ? 'sucesso' : 'texto2'}>
           {turma.ativa ? 'Ativa' : 'Inativa'}
         </Texto>
       </View>
-      {nomeProfessor ? <Texto variante="subheadline">{`Professor: ${nomeProfessor}`}</Texto> : null}
-      {grade ? <Texto variante="subheadline">{`Grade: ${grade}`}</Texto> : null}
+
+      {nomeProfessor || grade ? (
+        <GrupoLista titulo="Detalhes" semMargem>
+          {nomeProfessor ? <LinhaLista rotulo="Professor" valor={nomeProfessor} /> : null}
+          {grade ? <LinhaLista rotulo="Grade" descricao={grade} /> : null}
+        </GrupoLista>
+      ) : null}
 
       <View style={styles.acoes}>
-        <Botao titulo="Nova sessão" icone={IconeMais} onPress={() => setFolhaAberta(true)} />
+        <Botao titulo="Nova sessão" icone={IconeMais} variante="secundario" onPress={() => setFolhaAberta(true)} />
       </View>
-      <ItemMenu
-        rotulo="Relatório de frequência"
-        descricao="Presenças por aluno num período"
-        icone={IconeFichaTecnica}
-        onPress={() => navigation.navigate('RelatorioFrequencia', { turmaId })}
-      />
+      <GrupoLista semMargem>
+        <ItemMenu
+          rotulo="Relatório de frequência"
+          descricao="Presenças por aluno num período"
+          icone={IconeFichaTecnica}
+          onPress={() => navigation.navigate('RelatorioFrequencia', { turmaId })}
+        />
+      </GrupoLista>
 
-      <CabecalhoSecao titulo="Sessões" contador={sessoes.length} />
-      {sessoes.length === 0 ? (
-        <Texto variante="subheadline">Nenhuma sessão criada ainda.</Texto>
-      ) : (
-        sessoes.map((sessao, i) => {
-          const inicio = paraData(sessao.inicio);
-          return (
-            <View key={sessao.id}>
-              {i > 0 ? <LinhaFina /> : null}
+      <GrupoLista titulo={`Sessões: ${sessoes.length}`}>
+        {sessoes.length === 0 ? (
+          <LinhaLista rotulo="Nenhuma sessão criada ainda" />
+        ) : (
+          sessoes.map((sessao) => {
+            const inicio = paraData(sessao.inicio);
+            return (
               <Pressable
+                key={sessao.id}
                 onPress={() => navigation.navigate('SessaoDetalhe', { sessaoId: sessao.id })}
                 accessibilityRole="button"
                 accessibilityLabel={`Sessão de ${formatarDiaHora(inicio)}, ${ROTULO_STATUS_SESSAO[sessao.status]}`}
                 style={({ pressed }) => [styles.linha, pressed && styles.pressionada]}
               >
                 <View style={styles.horario}>
-                  <Texto variante="numero">{formatarHora(inicio)}</Texto>
-                  <Texto variante="caption" cor="texto3" numberOfLines={1}>
+                  <Texto variante="headline" style={styles.tabular}>
+                    {formatarHora(inicio)}
+                  </Texto>
+                  <Texto variante="footnote" numberOfLines={1}>
                     {rotuloDia(inicio)}
                   </Texto>
                 </View>
                 <View style={styles.textos}>
-                  <Texto variante="caption" cor={sessao.status === 'aberta' ? 'sucesso' : sessao.status === 'cancelada' ? 'texto3' : 'texto2'}>
+                  <Texto variante="subheadline" cor={sessao.status === 'aberta' ? 'sucesso' : 'texto2'}>
                     {ROTULO_STATUS_SESSAO[sessao.status]}
                   </Texto>
-                  {sessao.descricao ? <Texto variante="subheadline">{sessao.descricao}</Texto> : null}
+                  {sessao.descricao ? <Texto variante="footnote">{sessao.descricao}</Texto> : null}
                 </View>
-                <IconeChevron tamanho={20} cor={Cores.texto3} />
+                <IconeChevron tamanho={18} cor={cores.texto3} />
               </Pressable>
-            </View>
-          );
-        })
-      )}
+            );
+          })
+        )}
+      </GrupoLista>
 
-      <CabecalhoSecao titulo="Alunos matriculados" contador={matriculas.length} />
-      {matriculas.length === 0 ? (
-        <Texto variante="subheadline">Nenhum aluno matriculado ainda.</Texto>
-      ) : (
-        matriculas.map(({ matricula, nomeAluno }, i) => (
-          <View key={matricula.id}>
-            {i > 0 ? <LinhaFina /> : null}
-            <View style={styles.linhaAluno}>
+      <GrupoLista titulo={`Alunos matriculados: ${matriculas.length}`}>
+        {matriculas.length === 0 ? (
+          <LinhaLista rotulo="Nenhum aluno matriculado ainda" />
+        ) : (
+          matriculas.map(({ matricula, nomeAluno }) => (
+            <View key={matricula.id} style={styles.linhaAluno}>
               <Avatar nome={nomeAluno} tamanho={32} />
               <Texto variante="body">{nomeAluno}</Texto>
             </View>
-          </View>
-        ))
-      )}
+          ))
+        )}
+      </GrupoLista>
 
-      <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova sessão">
+      <Folha
+        visivel={folhaAberta}
+        onFechar={() => setFolhaAberta(false)}
+        titulo="Nova sessão"
+        acao={{ titulo: diasSemana.length > 1 ? `Criar ${diasSemana.length}` : 'Criar', onPress: handleCriarSessao, carregando: criando }}
+      >
         <MensagemErro mensagem={erroForm} />
         <CampoTexto
           rotulo="Semana de referência"
@@ -290,22 +304,22 @@ export default function TurmaDetalheScreen() {
           </View>
         </View>
         <CampoTexto rotulo="Descrição (opcional)" placeholder="Ex.: Foco em defesa pessoal" valor={descricao} onAlterar={setDescricao} />
-        <Botao titulo={diasSemana.length > 1 ? `Criar ${diasSemana.length} sessões` : 'Criar sessão'} onPress={handleCriarSessao} carregando={criando} />
       </Folha>
     </Tela>
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Espacamento.minimo + 2, marginTop: Espacamento.pequeno, marginBottom: Espacamento.pequeno },
-  acoes: { marginTop: Espacamento.grande, marginBottom: Espacamento.pequeno },
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 64, paddingVertical: Espacamento.medio },
-  pressionada: { backgroundColor: Cores.superficie1 },
-  horario: { width: 76 },
+  acoes: { marginTop: Espacamento.grande, marginBottom: Espacamento.medio },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 60, paddingVertical: Espacamento.pequeno + 2, paddingHorizontal: Espacamento.padrao },
+  pressionada: { backgroundColor: c.preenchimento },
+  horario: { width: 64 },
+  tabular: { fontVariant: ['tabular-nums'] },
   textos: { flex: 1, gap: 2 },
-  linhaAluno: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 52 },
+  linhaAluno: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 52, paddingHorizontal: Espacamento.padrao },
   rotuloCampo: { marginBottom: Espacamento.pequeno },
   linhaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   linhaHorarios: { flexDirection: 'row', gap: Espacamento.padrao },
   campoHorario: { flex: 1 },
-});
+}));

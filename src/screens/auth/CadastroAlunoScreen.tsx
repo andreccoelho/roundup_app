@@ -3,10 +3,10 @@
 // Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento } from '../../theme';
+import { criarEstilos, Espacamento, Raios } from '../../theme';
 import { MODALIDADE_OUTRA } from '../../constants/modalidades';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
@@ -51,6 +51,7 @@ interface Erros {
 }
 
 export default function CadastroAlunoScreen() {
+  const styles = useEstilos();
   const { cadastrar } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'CadastroAluno'>>();
   const { consentimentoAceito, versaoConsentimento } = useRoute<Rota>().params;
@@ -136,7 +137,7 @@ export default function CadastroAlunoScreen() {
   }
 
   return (
-    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado agrupada>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
       <Texto variante="caption" style={styles.etapa}>
@@ -149,7 +150,7 @@ export default function CadastroAlunoScreen() {
 
       <MensagemErro mensagem={erroConta} />
 
-      <CabecalhoSecao titulo="Conta" semMargem />
+      <CabecalhoSecao titulo="Conta" formulario semMargem />
       <CampoTexto rotulo="Nome" placeholder="Seu nome completo" autoComplete="name" valor={nome} onAlterar={setNome} erro={erros.nome} />
       <CampoTexto
         rotulo="E-mail"
@@ -180,7 +181,7 @@ export default function CadastroAlunoScreen() {
         erro={erros.confirmarSenha}
       />
 
-      <CabecalhoSecao titulo="Ficha de atleta" />
+      <CabecalhoSecao titulo="Ficha de atleta" formulario />
       <ModalitySelector
         rotulo="Modalidade(s) praticada(s)"
         selecionadas={modalidades}
@@ -205,7 +206,7 @@ export default function CadastroAlunoScreen() {
 
       {ehMenorDeIdade ? (
         <View style={styles.blocoResponsavel}>
-          <CabecalhoSecao titulo="Responsável legal" semMargem />
+          <CabecalhoSecao titulo="Responsável legal" formulario semMargem />
           <Texto variante="subheadline" style={styles.ajudaBloco}>
             Como você é menor de 18 anos, precisamos dos dados de um responsável.
           </Texto>
@@ -227,7 +228,7 @@ export default function CadastroAlunoScreen() {
       ) : null}
 
       <View style={styles.espaco} />
-      <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
+      <Botao titulo="Criar conta" onPress={handleCadastrar} carregando={carregando} />
 
       <View style={styles.rodape}>
         <Texto variante="subheadline">Já tem conta?</Texto>
@@ -237,18 +238,20 @@ export default function CadastroAlunoScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   etapa: { marginTop: Espacamento.grande, marginBottom: Espacamento.minimo },
   subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
   previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
   blocoResponsavel: {
     marginTop: Espacamento.pequeno,
     marginBottom: Espacamento.padrao,
-    paddingLeft: Espacamento.medio,
-    borderLeftWidth: 2,
-    borderLeftColor: Cores.linhaForte,
+    padding: Espacamento.padrao,
+    paddingBottom: Espacamento.pequeno,
+    borderRadius: Raios.lista,
+    borderCurve: 'continuous',
+    backgroundColor: c.superficie,
   },
   ajudaBloco: { marginBottom: Espacamento.medio },
   espaco: { height: Espacamento.pequeno },
   rodape: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-});
+}));

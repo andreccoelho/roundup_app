@@ -18,7 +18,8 @@ import { Missao, TipoMissao } from '../../types';
 import Botao from '../../components/ui/Botao';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Folha from '../../components/ui/Folha';
-import LinhaFina from '../../components/LinhaFina';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
@@ -26,9 +27,8 @@ import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import Toggle from '../../components/ui/Toggle';
 import CampoTexto from '../../components/ui/CampoTexto';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import MensagemErro from '../../components/ui/MensagemErro';
-import { IconeBandeira, IconeMais } from '../../components/icones';
+import { IconeBandeira, IconeCheckCirculo, IconeMais } from '../../components/icones';
 import { mensagemErro } from '../../utils/mensagensErro';
 
 interface AlunoConclusao {
@@ -192,10 +192,11 @@ export default function MissoesGestorScreen() {
   const ativas = missoes.filter((m) => m.ativa).length;
 
   return (
-    <Tela largura="lista">
+    <Tela largura="lista" agrupada tituloGrande="Missões">
       <Botao
         titulo="Nova missão"
         icone={IconeMais}
+        variante="secundario"
         onPress={() => {
           if (!pontos) setPontos(pontosSugeridos);
           setFolhaAberta(true);
@@ -216,28 +217,41 @@ export default function MissoesGestorScreen() {
         />
       ) : (
         <>
-          <CabecalhoSecao titulo="Missões" contador={`${ativas} de ${missoes.length} ativas`} />
-          {missoes.map((missao, i) => (
-            <View key={missao.id}>
-              {i > 0 ? <LinhaFina /> : null}
+          <GrupoLista
+            titulo={`Missões: ${ativas} de ${missoes.length} ativas`}
+            rodape="Desligue uma missão para tirá-la da lista dos alunos. Missões personalizadas são concluídas à mão."
+          >
+            {missoes.flatMap((missao) => [
               <Toggle
+                key={missao.id}
                 rotulo={missao.titulo}
                 descricao={`${TIPOS.find((t) => t.valor === missao.tipo)?.rotulo ?? missao.tipo}: meta ${missao.meta}, vale ${missao.pontos} pts`}
                 valor={missao.ativa}
                 desabilitado={processandoId === missao.id}
                 onAlterar={() => handleAlternarAtiva(missao)}
-              />
-              {missao.tipo === 'personalizada' ? (
-                <View style={styles.acaoMissao}>
-                  <Botao compacto variante="secundario" titulo="Marcar conclusões" onPress={() => abrirConclusoes(missao)} />
-                </View>
-              ) : null}
-            </View>
-          ))}
+              />,
+              ...(missao.tipo === 'personalizada'
+                ? [
+                    <LinhaLista
+                      key={`${missao.id}-conclusoes`}
+                      rotulo="Marcar conclusões"
+                      icone={IconeCheckCirculo}
+                      accessibilityLabel={`Marcar conclusões de ${missao.titulo}`}
+                      onPress={() => abrirConclusoes(missao)}
+                    />,
+                  ]
+                : []),
+            ])}
+          </GrupoLista>
         </>
       )}
 
-      <Folha visivel={folhaAberta} onFechar={() => setFolhaAberta(false)} titulo="Nova missão">
+      <Folha
+        visivel={folhaAberta}
+        onFechar={() => setFolhaAberta(false)}
+        titulo="Nova missão"
+        acao={{ titulo: 'Criar', onPress: handleCriar, carregando: criando }}
+      >
         <MensagemErro mensagem={erroForm} />
 
         <CampoTexto rotulo="Título" valor={titulo} onAlterar={setTitulo} placeholder="Ex.: Treinar 3x na semana" />
@@ -260,14 +274,13 @@ export default function MissoesGestorScreen() {
             <CampoTexto rotulo="Pontos" valor={pontos} onAlterar={setPontos} placeholder="Ex.: 30" keyboardType="number-pad" />
           </View>
         </View>
-
-        <Botao titulo="Criar missão" onPress={handleCriar} carregando={criando} />
       </Folha>
 
       <Folha
         visivel={missaoConclusoes !== null}
         onFechar={() => setMissaoConclusoes(null)}
-        titulo={missaoConclusoes ? `Conclusões: ${missaoConclusoes.titulo}` : 'Conclusões'}
+        titulo={missaoConclusoes ? missaoConclusoes.titulo : 'Conclusões'}
+        tituloCancelar="Fechar"
       >
         <Texto variante="subheadline" style={styles.rotuloCampo}>
           {`Marque quem cumpriu a missão. Cada conclusão vale ${missaoConclusoes?.pontos ?? 0} pts na classificação do mês.`}
@@ -280,18 +293,18 @@ export default function MissoesGestorScreen() {
             Nenhum aluno vinculado ainda.
           </Texto>
         ) : (
-          alunosConclusao.map((aluno, i) => (
-            <View key={aluno.alunoId}>
-              {i > 0 ? <LinhaFina /> : null}
+          <GrupoLista semMargem>
+            {alunosConclusao.map((aluno) => (
               <Toggle
+                key={aluno.alunoId}
                 rotulo={aluno.nome}
                 descricao={aluno.concluida ? 'Concluída' : 'Em curso'}
                 valor={aluno.concluida}
                 desabilitado={salvandoAlunoId === aluno.alunoId}
                 onAlterar={() => handleAlternarConclusao(aluno)}
               />
-            </View>
-          ))
+            ))}
+          </GrupoLista>
         )}
       </Folha>
     </Tela>
@@ -304,5 +317,4 @@ const styles = StyleSheet.create({
   linhaTipos: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   linhaNumeros: { flexDirection: 'row', gap: Espacamento.padrao },
   campoNumero: { flex: 1 },
-  acaoMissao: { alignItems: 'flex-start', marginBottom: Espacamento.pequeno },
 });

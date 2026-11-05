@@ -2,11 +2,11 @@
 // Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento } from '../../theme';
+import { criarEstilos, Espacamento, Raios, useTema } from '../../theme';
 import { auth } from '../../services/firebase';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { emailValido } from '../../utils/validacaoCadastro';
@@ -16,9 +16,11 @@ import Botao from '../../components/ui/Botao';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import MensagemErro from '../../components/ui/MensagemErro';
-import { IconeCheck } from '../../components/icones';
+import { IconeCheckCirculo } from '../../components/icones';
 
 export default function RecuperarSenhaScreen() {
+  const styles = useEstilos();
+  const { cores } = useTema();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'RecuperarSenha'>>();
 
   const [email, setEmail] = useState('');
@@ -51,7 +53,7 @@ export default function RecuperarSenhaScreen() {
   }
 
   return (
-    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado agrupada>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
       <Texto variante="largeTitle" style={styles.titulo}>
@@ -63,7 +65,7 @@ export default function RecuperarSenhaScreen() {
 
       {enviado ? (
         <View style={styles.confirmacao} accessibilityRole="alert" accessibilityLiveRegion="polite">
-          <IconeCheck tamanho={24} cor={Cores.sucesso} />
+          <IconeCheckCirculo tamanho={24} cor={cores.sucesso} preenchido />
           <Texto variante="body" style={styles.confirmacaoTexto}>
             {`Se ${email.trim()} estiver cadastrado, o link de recuperação já foi enviado.`}
           </Texto>
@@ -84,24 +86,24 @@ export default function RecuperarSenhaScreen() {
             onAlterar={setEmail}
             erro={erroEmail}
           />
-          <Botao titulo="Enviar link" grande onPress={handleEnviar} carregando={carregando} />
+          <Botao titulo="Enviar link" onPress={handleEnviar} carregando={carregando} />
         </>
       )}
     </Tela>
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   titulo: { marginTop: Espacamento.grande },
   subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
   confirmacao: {
     flexDirection: 'row',
     gap: Espacamento.medio,
     alignItems: 'flex-start',
-    backgroundColor: Cores.superficie1,
-    borderLeftWidth: 3,
-    borderLeftColor: Cores.sucesso,
+    backgroundColor: c.superficie,
+    borderRadius: Raios.lista,
+    borderCurve: 'continuous',
     padding: Espacamento.padrao,
   },
   confirmacaoTexto: { flex: 1 },
-});
+}));
