@@ -12,6 +12,7 @@ import Etiqueta from '../../components/ui/Etiqueta';
 import Estatistica from '../../components/ui/Estatistica';
 import GrupoLista from '../../components/ui/GrupoLista';
 import ItemMenu from '../../components/ui/ItemMenu';
+import FundoIdentidade from '../../components/ui/FundoIdentidade';
 import Avatar from '../../components/ui/Avatar';
 import Cartao from '../../components/ui/Cartao';
 import Texto from '../../components/ui/Texto';
@@ -81,13 +82,15 @@ export default function HojeProfessorVisao({
 
   return (
     <View>
-      <View style={styles.saudacao}>
-        <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={44} />
-        <View style={styles.saudacaoTextos}>
-          <Texto variante="title3" cabecalho={false}>{`Olá, ${primeiroNome(nome)}`}</Texto>
-          {graduacao ? <SeloFaixa faixaOuGrau={graduacao} /> : null}
+      <FundoIdentidade compacto variante="gestor" style={styles.saudacaoFundo}>
+        <View style={styles.saudacao}>
+          <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={44} />
+          <View style={styles.saudacaoTextos}>
+            <Texto variante="title3" cabecalho={false}>{`Olá, ${primeiroNome(nome)}`}</Texto>
+            {graduacao ? <SeloFaixa faixaOuGrau={graduacao} /> : null}
+          </View>
         </View>
-      </View>
+      </FundoIdentidade>
 
       {carregandoTurmas ? (
         <Esqueleto altura={150} raio={16} />
@@ -186,7 +189,8 @@ export default function HojeProfessorVisao({
 }
 
 const useEstilos = criarEstilos(() => ({
-  saudacao: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, marginBottom: Espacamento.padrao },
+  saudacaoFundo: { marginBottom: Espacamento.padrao },
+  saudacao: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
   saudacaoTextos: { flex: 1, gap: 2 },
   seletorArea: { marginHorizontal: -Espacamento.padrao, marginBottom: Espacamento.medio },
   seletor: { paddingHorizontal: Espacamento.padrao, gap: Espacamento.pequeno },

@@ -16,6 +16,7 @@ import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import Botao from './Botao';
 import Medalha, { type TipoMedalha } from './Medalha';
 import SeloFaixa from './SeloFaixa';
+import TexturaLona from './TexturaLona';
 import Texto from './Texto';
 
 export type TipoConquista = 'nivel' | 'faixa' | 'medalha';
@@ -110,8 +111,10 @@ export default function MomentoConquista({ conquista, onFechar, posicaoFila }: M
           accessibilityViewIsModal
           accessibilityRole="alert"
           accessibilityLiveRegion="assertive"
-          aria-modal
         >
+          <View style={styles.lona}>
+            <TexturaLona />
+          </View>
           {posicaoFila ? (
             <Texto variante="caption" alinhamento="center">
               {posicaoFila}
@@ -124,7 +127,7 @@ export default function MomentoConquista({ conquista, onFechar, posicaoFila }: M
             </View>
             <Animated.View style={{ opacity: emblema, transform: [{ scale: escalaEmblema }] }}>
               {conquista.tipo === 'nivel' ? (
-                <View style={[styles.discoNivel, { backgroundColor: cores.tintCheio }]} accessible accessibilityLabel={`Nível ${conquista.valor}`}>
+                <View style={[styles.discoNivel, { backgroundColor: cores.tintCheio }]} accessible accessibilityRole="image" accessibilityLabel={`Nível ${conquista.valor}`}>
                   <Texto variante="caption" style={styles.textoDisco}>
                     Nível
                   </Texto>
@@ -160,6 +163,8 @@ export default function MomentoConquista({ conquista, onFechar, posicaoFila }: M
 const useEstilos = criarEstilos((c, escuro) => ({
   fundo: { flex: 1, backgroundColor: c.overlay, alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
   flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  // A lona fica recortada no cartão; os halos continuam livres para passar da borda
+  lona: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, borderRadius: 24, borderCurve: 'continuous', overflow: 'hidden' },
   cartao: {
     width: '100%',
     maxWidth: 340,

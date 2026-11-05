@@ -15,6 +15,7 @@ import { listarTurmasPorResponsavel } from '../../services/turmas';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
 import { buscarUsuario } from '../../services/usuarios';
 import LinhaLista from '../../components/ui/LinhaLista';
+import FundoIdentidade from '../../components/ui/FundoIdentidade';
 import Avatar from '../../components/ui/Avatar';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Tela from '../../components/ui/Tela';
@@ -79,15 +80,17 @@ export default function DashboardScreen() {
 
   return (
     <Tela largura="lista" agrupada tituloGrande="Hoje">
-      <View style={styles.saudacao}>
-        <Avatar nome={usuario?.nomeAcademia ?? 'Academia'} fotoUrl={usuario?.fotoUrl} tamanho={44} />
-        <View style={styles.saudacaoTextos}>
-          <Texto variante="title3" cabecalho={false} numberOfLines={1}>
-            {usuario?.nomeAcademia ?? 'Painel da Academia'}
-          </Texto>
-          {usuario?.endereco ? <Texto variante="footnote">{usuario.endereco}</Texto> : null}
+      <FundoIdentidade compacto variante="gestor" style={styles.saudacaoFundo}>
+        <View style={styles.saudacao}>
+          <Avatar nome={usuario?.nomeAcademia ?? 'Academia'} fotoUrl={usuario?.fotoUrl} tamanho={44} />
+          <View style={styles.saudacaoTextos}>
+            <Texto variante="title3" cabecalho={false} numberOfLines={1}>
+              {usuario?.nomeAcademia ?? 'Painel da Academia'}
+            </Texto>
+            {usuario?.endereco ? <Texto variante="footnote">{usuario.endereco}</Texto> : null}
+          </View>
         </View>
-      </View>
+      </FundoIdentidade>
       {modalidades.length > 0 ? (
         <View style={styles.chips}>
           {modalidades.map((m) => (
@@ -150,7 +153,8 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  saudacao: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, marginBottom: Espacamento.medio },
+  saudacaoFundo: { marginBottom: Espacamento.medio },
+  saudacao: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio },
   saudacaoTextos: { flex: 1, gap: 2 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   espaco: { height: Espacamento.padrao },

@@ -70,6 +70,13 @@ As telas autenticadas aparecem pelas **Composições** da Galeria: são as visõ
 
 ---
 
+## Ajustes depois da fase 6 (pedidos do autor)
+
+- **MomentoConquista** com os efeitos da direção anterior: flash de tint, emblema que estoura com overshoot, halos e haptic duplo (`docs/redesign-apple/conquista/`).
+- **Perfil do Professor** na Galeria: visão de apresentação separada (`PerfilProfessorVisao`), usada pela tela real e pela composição.
+- **Fundo de identidade de volta**: lona de ringue e marca d'água do logo, agora em cartão de destaque (`FundoIdentidade`) e com cor por tema, no topo dos perfis, na saudação de Home/Hoje/painel da academia, no cartão de check-in e na conquista (`docs/redesign-apple/fundo/`).
+- Acessibilidade revisada no cenário da conquista: indicadores de carregamento com nome, `aria-modal` inválido removido dos cartões de conquista e graduação, medalhas e pontos de frequência com papel de imagem. O único aviso restante do axe é de contraste nos botões da Galeria escurecidos atrás do fundo da conquista, que ficam inertes enquanto ela está aberta.
+
 ## O que ficou de fora e por quê
 
 - **`expo-symbols`**: não usado, por decisão aprovada (ícones SVG próprios).

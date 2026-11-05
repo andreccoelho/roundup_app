@@ -1,21 +1,23 @@
-// Composições da Galeria — as visões reais das telas autenticadas (Home do Aluno, Perfil,
-// Classificação, Hoje do Professor) montadas com dados fictícios, para validar o visual sem
+// Composições da Galeria — as visões reais das telas autenticadas (Home do Aluno, Perfil do Aluno,
+// Classificação, Hoje e Perfil do Professor) montadas com dados fictícios, para validar o visual sem
 // logar nem tocar no Firebase. Só __DEV__ (importado apenas pela GaleriaScreen).
 import { useState } from 'react';
 import HomeAlunoVisao, { type SessaoHome } from '../aluno/HomeAlunoVisao';
 import PerfilAlunoVisao, { type MedalhaPerfil } from '../aluno/PerfilAlunoVisao';
 import ClassificacaoVisao, { type LinhaRanking } from '../aluno/ClassificacaoVisao';
 import HojeProfessorVisao, { type ItemChamadaVisao } from '../professor/HojeProfessorVisao';
+import PerfilProfessorVisao from '../professor/PerfilProfessorVisao';
 import { calcularProgressoNivel } from '../../utils/gamificacao';
 import type { EstadoCheckIn } from '../../utils/statusCheckIn';
 
-export type Composicao = 'home' | 'perfil' | 'classificacao' | 'hoje';
+export type Composicao = 'home' | 'perfil' | 'classificacao' | 'hoje' | 'perfilProfessor';
 
 export const COMPOSICOES: { valor: Composicao; rotulo: string }[] = [
   { valor: 'home', rotulo: 'Home do Aluno' },
   { valor: 'perfil', rotulo: 'Perfil do Aluno' },
   { valor: 'classificacao', rotulo: 'Classificação' },
   { valor: 'hoje', rotulo: 'Hoje do Professor' },
+  { valor: 'perfilProfessor', rotulo: 'Perfil do Professor' },
 ];
 
 function emMinutos(min: number): Date {
@@ -178,9 +180,30 @@ export function ComposicaoHoje() {
   );
 }
 
+export function ComposicaoPerfilProfessor() {
+  return (
+    <PerfilProfessorVisao
+      nome="Kleber Andrade"
+      email="kleber@exemplo.com"
+      autonomo
+      membroDesde="março de 2026"
+      graduacao="Faixa preta, 3º grau"
+      modalidades={['Muay Thai', 'Kickboxing']}
+      onSolicitacoes={nada}
+      onVincularAcademia={nada}
+      onPontuacao={nada}
+      onEditar={nada}
+      onNotificacoes={nada}
+      onContaPrivacidade={nada}
+      onSair={nada}
+    />
+  );
+}
+
 export function ComposicaoPorNome({ nome }: { nome: Composicao }) {
   if (nome === 'home') return <ComposicaoHome />;
   if (nome === 'perfil') return <ComposicaoPerfil />;
   if (nome === 'classificacao') return <ComposicaoClassificacao />;
+  if (nome === 'perfilProfessor') return <ComposicaoPerfilProfessor />;
   return <ComposicaoHoje />;
 }

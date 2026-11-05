@@ -69,7 +69,7 @@ export default function Folha({ visivel, onFechar, titulo, acao, tituloCancelar 
       <View style={[styles.ladoBarra, styles.ladoDireito]}>
         {acao ? (
           acao.carregando ? (
-            <ActivityIndicator color={cores.tint} />
+            <ActivityIndicator color={cores.tint} accessibilityLabel="Carregando" />
           ) : (
             <BotaoBarra titulo={acao.titulo} onPress={acao.onPress} forte desabilitado={acao.desabilitado} />
           )

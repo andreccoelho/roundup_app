@@ -75,6 +75,7 @@ const CASCA: Record<Composicao, { perfil: PerfilCasca; aba: string; titulo: stri
   perfil: { perfil: 'aluno', aba: 'Perfil', titulo: 'Perfil' },
   classificacao: { perfil: 'aluno', aba: 'Classificacao', titulo: 'Classificação' },
   hoje: { perfil: 'gestor', aba: 'Hoje', titulo: 'Hoje' },
+  perfilProfessor: { perfil: 'gestor', aba: 'Perfil', titulo: 'Perfil' },
 };
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {

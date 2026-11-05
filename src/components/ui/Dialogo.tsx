@@ -104,7 +104,7 @@ export default function Dialogo({
             ) : null}
             {carregando ? (
               <View style={styles.botao}>
-                <ActivityIndicator color={destrutivo ? cores.perigo : cores.tint} />
+                <ActivityIndicator color={destrutivo ? cores.perigo : cores.tint} accessibilityLabel="Carregando" />
               </View>
             ) : (
               <BotaoAlerta titulo={tituloConfirmar} onPress={onConfirmar} destrutivo={destrutivo} forte={!tituloCancelar} />

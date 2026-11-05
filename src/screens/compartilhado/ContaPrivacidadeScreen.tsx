@@ -62,7 +62,7 @@ export default function ContaPrivacidadeScreen() {
           icone={IconeAlerta}
           destrutivo
           semChevron
-          acessorio={excluindo ? <ActivityIndicator color={cores.perigo} /> : undefined}
+          acessorio={excluindo ? <ActivityIndicator color={cores.perigo} accessibilityLabel="Carregando" /> : undefined}
           onPress={() => setConfirmando(true)}
         />
       </GrupoLista>

@@ -11,7 +11,7 @@ export default function IndicadorFrequencia({ presencas }: IndicadorFrequenciaPr
   const styles = useEstilos();
   const rotulo = `${presencas.filter(Boolean).length} de ${presencas.length} presenças recentes`;
   return (
-    <View style={styles.container} accessible accessibilityLabel={rotulo}>
+    <View style={styles.container} accessible accessibilityRole="image" accessibilityLabel={rotulo}>
       {presencas.map((presente, i) => (
         <View key={i} style={[styles.ponto, presente ? styles.presente : styles.ausente]} />
       ))}
