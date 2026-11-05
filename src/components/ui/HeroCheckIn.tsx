@@ -17,6 +17,7 @@ import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 import { IconeCadeado, IconeCheckCirculo, IconeLuva } from '../icones';
 import Botao from './Botao';
 import Cartao from './Cartao';
+import TexturaLona from './TexturaLona';
 import Texto from './Texto';
 
 interface HeroCheckInProps {
@@ -63,7 +64,8 @@ export default function HeroCheckIn({ nomeTurma, inicio, janelaInicio, janelaFim
   const textoFechado = antesDeAbrir ? `Abre em ${formatarDuracao(janelaInicio.getTime() - agora.getTime())}` : 'Check-in encerrado';
 
   return (
-    <Cartao destaque>
+    <Cartao destaque style={{ overflow: 'hidden' }}>
+      <TexturaLona />
       <View
         accessible
         accessibilityLabel={`Próximo treino: ${nomeTurma}, ${rotuloDia(inicio)} às ${formatarHora(inicio)}${professor ? `, com ${professor}` : ''}`}

@@ -108,7 +108,7 @@ export default function Botao({
       {...propsFoco}
     >
       {carregando ? (
-        <ActivityIndicator color={corTexto} />
+        <ActivityIndicator color={corTexto} accessibilityLabel="Carregando" />
       ) : (
         <View style={styles.conteudo}>
           {Icone ? <Icone tamanho={compacto ? 16 : 20} cor={corTexto} /> : null}

@@ -11,7 +11,7 @@ export default function LoadingScreen() {
     <View style={styles.container} accessibilityLabel="Carregando" accessibilityRole="progressbar">
       {/* Mesma proporção do splash (imageWidth 200): a troca splash → loading não "pula". */}
       <Logo tamanho={200} style={styles.logo} />
-      <ActivityIndicator size="small" color={cores.texto2} />
+      <ActivityIndicator size="small" color={cores.texto2} accessibilityLabel="Carregando" />
     </View>
   );
 }

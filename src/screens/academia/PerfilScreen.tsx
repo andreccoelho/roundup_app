@@ -32,6 +32,7 @@ export default function PerfilScreen() {
   return (
     <Tela largura="lista" agrupada tituloGrande="Perfil">
       <CabecalhoPerfil
+        variante="gestor"
         nome={usuario?.nomeAcademia ?? usuario?.nome ?? ''}
         fotoUrl={usuario?.fotoUrl}
         detalhes={[
