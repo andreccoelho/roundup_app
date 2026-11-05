@@ -24,7 +24,6 @@ import { listarAlunoIdsMatriculados } from '../../services/matriculas';
 import { buscarUsuario } from '../../services/usuarios';
 import { PerfilSolicitante, Vinculo } from '../../types';
 import Botao from '../../components/ui/Botao';
-import LinhaFina from '../../components/LinhaFina';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Esqueleto from '../../components/ui/Esqueleto';
@@ -33,7 +32,9 @@ import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import Avatar from '../../components/ui/Avatar';
 import MensagemErro from '../../components/ui/MensagemErro';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
+import Cartao from '../../components/ui/Cartao';
 import { IconeCorda } from '../../components/icones';
 import { mensagemErro } from '../../utils/mensagensErro';
 
@@ -151,7 +152,7 @@ export default function SolicitacoesScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada>
         <Esqueleto forma="linha" repeticoes={4} />
       </Tela>
     );
@@ -165,85 +166,80 @@ export default function SolicitacoesScreen() {
   const tituloSecaoVinculados = perfilFiltro === 'aluno' ? 'Alunos vinculados' : 'Professores vinculados';
 
   return (
-    <Tela largura="lista">
+    <Tela largura="lista" agrupada>
       <MensagemErro mensagem={erro} />
 
-      <CabecalhoSecao titulo="Pendentes" contador={solicitacoes.length} semMargem />
       {solicitacoes.length === 0 ? (
-        <EstadoVazio
-          icone={IconeCorda}
-          titulo={mostrarVinculados ? `Nenhum ${rotuloPerfil} pendente` : 'Nenhuma solicitação pendente'}
-          descricao={`Quando um ${rotuloPerfil} pedir vínculo, a solicitação aparece aqui.`}
-        />
+        <Cartao>
+          <EstadoVazio
+            icone={IconeCorda}
+            titulo={mostrarVinculados ? `Nenhum ${rotuloPerfil} pendente` : 'Nenhuma solicitação pendente'}
+            descricao={`Quando um ${rotuloPerfil} pedir vínculo, a solicitação aparece aqui.`}
+          />
+        </Cartao>
       ) : (
-        solicitacoes.map(({ vinculo, nomeSolicitante }, i) => (
-          <View key={vinculo.id}>
-            {i > 0 ? <LinhaFina /> : null}
-            <View style={styles.linha}>
-              <Avatar nome={nomeSolicitante} tamanho={40} />
-              <View style={styles.textos}>
-                <Texto variante="headline">{nomeSolicitante}</Texto>
-                <Texto variante="subheadline">{vinculo.perfilSolicitante === 'aluno' ? 'Quer treinar com você' : 'Quer dar aula na academia'}</Texto>
+        <GrupoLista titulo={`Pendentes: ${solicitacoes.length}`} semMargem>
+          {solicitacoes.map(({ vinculo, nomeSolicitante }) => (
+            <View key={vinculo.id}>
+              <View style={styles.linha}>
+                <Avatar nome={nomeSolicitante} tamanho={40} />
+                <View style={styles.textos}>
+                  <Texto variante="body">{nomeSolicitante}</Texto>
+                  <Texto variante="footnote">{vinculo.perfilSolicitante === 'aluno' ? 'Quer treinar com você' : 'Quer dar aula na academia'}</Texto>
+                </View>
               </View>
-            </View>
-            <View style={styles.acoes}>
-              <View style={styles.acao}>
-                <Botao
-                  titulo="Recusar"
-                  variante="fantasma"
-                  compacto
-                  onPress={() => handleResponder(vinculo.id, 'recusado')}
-                  desabilitado={respondendoId === vinculo.id}
-                  accessibilityLabel={`Recusar ${nomeSolicitante}`}
-                />
-              </View>
-              <View style={styles.acao}>
-                <Botao
-                  titulo="Aceitar"
-                  variante="secundario"
-                  compacto
-                  onPress={() => handleResponder(vinculo.id, 'aceito')}
-                  carregando={respondendoId === vinculo.id}
-                  accessibilityLabel={`Aceitar ${nomeSolicitante}`}
-                />
-              </View>
-            </View>
-          </View>
-        ))
-      )}
-
-      {mostrarVinculados ? (
-        <>
-          <CabecalhoSecao titulo={tituloSecaoVinculados} contador={vinculados.length} />
-          {vinculados.length === 0 ? (
-            <Texto variante="subheadline">{`Nenhum ${rotuloPerfil} vinculado ainda.`}</Texto>
-          ) : (
-            vinculados.map((vinculado, i) => (
-              <View key={vinculado.vinculoId}>
-                {i > 0 ? <LinhaFina /> : null}
-                <View style={styles.linha}>
-                  <Avatar nome={vinculado.nome} tamanho={40} />
-                  <View style={styles.textos}>
-                    <Texto variante="headline">{vinculado.nome}</Texto>
-                    {vinculado.matriculado !== undefined ? (
-                      <Texto variante="subheadline" cor={vinculado.matriculado ? 'texto2' : 'texto3'}>
-                        {vinculado.matriculado ? 'Matriculado em uma turma' : 'Vinculado, sem matrícula ainda'}
-                      </Texto>
-                    ) : null}
-                  </View>
+              <View style={styles.acoes}>
+                <View style={styles.acao}>
                   <Botao
-                    titulo="Encerrar"
-                    variante="fantasma"
+                    titulo="Recusar"
+                    variante="secundario"
                     compacto
-                    onPress={() => setVinculoParaEncerrar(vinculado)}
-                    carregando={encerrandoId === vinculado.vinculoId}
-                    accessibilityLabel={`Encerrar vínculo com ${vinculado.nome}`}
+                    onPress={() => handleResponder(vinculo.id, 'recusado')}
+                    desabilitado={respondendoId === vinculo.id}
+                    accessibilityLabel={`Recusar ${nomeSolicitante}`}
+                  />
+                </View>
+                <View style={styles.acao}>
+                  <Botao
+                    titulo="Aceitar"
+                    compacto
+                    onPress={() => handleResponder(vinculo.id, 'aceito')}
+                    carregando={respondendoId === vinculo.id}
+                    accessibilityLabel={`Aceitar ${nomeSolicitante}`}
                   />
                 </View>
               </View>
+            </View>
+          ))}
+        </GrupoLista>
+      )}
+
+      {mostrarVinculados ? (
+        <GrupoLista titulo={`${tituloSecaoVinculados}: ${vinculados.length}`}>
+          {vinculados.length === 0 ? (
+            <LinhaLista rotulo={`Nenhum ${rotuloPerfil} vinculado ainda`} />
+          ) : (
+            vinculados.map((vinculado) => (
+              <View key={vinculado.vinculoId} style={styles.linha}>
+                <Avatar nome={vinculado.nome} tamanho={40} />
+                <View style={styles.textos}>
+                  <Texto variante="body">{vinculado.nome}</Texto>
+                  {vinculado.matriculado !== undefined ? (
+                    <Texto variante="footnote">{vinculado.matriculado ? 'Matriculado em uma turma' : 'Vinculado, sem matrícula ainda'}</Texto>
+                  ) : null}
+                </View>
+                <Botao
+                  titulo="Encerrar"
+                  variante="fantasma"
+                  compacto
+                  onPress={() => setVinculoParaEncerrar(vinculado)}
+                  carregando={encerrandoId === vinculado.vinculoId}
+                  accessibilityLabel={`Encerrar vínculo com ${vinculado.nome}`}
+                />
+              </View>
             ))
           )}
-        </>
+        </GrupoLista>
       ) : null}
 
       <Dialogo
@@ -265,8 +261,8 @@ export default function SolicitacoesScreen() {
 }
 
 const styles = StyleSheet.create({
-  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 60, paddingVertical: Espacamento.pequeno },
+  linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 60, paddingVertical: Espacamento.pequeno, paddingHorizontal: Espacamento.padrao },
   textos: { flex: 1, gap: 2 },
-  acoes: { flexDirection: 'row', gap: Espacamento.pequeno, paddingBottom: Espacamento.medio, paddingLeft: 52 },
+  acoes: { flexDirection: 'row', gap: Espacamento.pequeno, paddingBottom: Espacamento.medio, paddingLeft: 68, paddingRight: Espacamento.padrao },
   acao: { flex: 1 },
 });

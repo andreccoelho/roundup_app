@@ -3,13 +3,14 @@
 // Sem os 4 estados de carregando/vazio/erro/conteúdo: é um formulário sem busca de dados no
 // mount, só ação de envio (já representada pelo `carregando` do próprio Botao "Entrar").
 //
-// Visual (docs/DESIGN.md): tela cheia escura, logo invertido, tagline display, CTA em acento.
-// Enter no e-mail vai para a senha; Enter na senha envia.
+// Visual (docs/DESIGN.md): tela limpa no fundo agrupado, logo do tema, título em Large Title,
+// campos arredondados preenchidos e o botão principal fixo no rodapé — o KeyboardAvoidingView da
+// Tela sobe o rodapé junto com o teclado. Enter no e-mail vai para a senha; Enter na senha envia.
 import { useRef, useState } from 'react';
-import { Image, StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Espacamento, Sombras } from '../../theme';
+import { criarEstilos, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { emailValido } from '../../utils/validacaoCadastro';
@@ -19,11 +20,13 @@ import Texto from '../../components/ui/Texto';
 import CampoTexto from '../../components/ui/CampoTexto';
 import Botao from '../../components/ui/Botao';
 import MensagemErro from '../../components/ui/MensagemErro';
+import Logo from '../../components/Logo';
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Login'>>();
   const refSenha = useRef<TextInput>(null);
+  const styles = useEstilos();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -55,17 +58,14 @@ export default function LoginScreen() {
   }
 
   return (
-    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado agrupada>
       <View style={styles.marca}>
-        <Image
-          source={require('../../../assets/roundup_logo_invertida.png')}
-          style={styles.logo}
-          resizeMode="contain"
-          accessibilityRole="image"
-          accessibilityLabel="RoundUp"
-        />
-        <Texto variante="largeTitle" alinhamento="center" style={[styles.tagline, Sombras.duraAcento]}>
-          {'Treine. Evolua.\nSuba de nível.'}
+        <Logo tamanho={112} rotulo="RoundUp" style={styles.logo} />
+        <Texto variante="largeTitle" alinhamento="center">
+          Entrar
+        </Texto>
+        <Texto variante="body" cor="texto2" alinhamento="center" style={styles.tagline}>
+          Treine. Evolua. Suba de nível.
         </Texto>
       </View>
 
@@ -97,33 +97,33 @@ export default function LoginScreen() {
         onAlterar={setSenha}
         erro={erros.senha}
       />
+      <Botao titulo="Esqueci minha senha" variante="texto" alinhar="fim" onPress={() => navigation.navigate('RecuperarSenha')} />
 
-      <View style={styles.esqueci}>
-        <Botao titulo="Esqueci minha senha" variante="texto" alinhar="fim" onPress={() => navigation.navigate('RecuperarSenha')} />
-      </View>
-
-      <Botao titulo="Entrar" grande onPress={handleLogin} carregando={carregando} />
+      {/* Empurra o rodapé para a base da tela (e para cima do teclado) */}
+      <View style={styles.espaco} />
 
       <View style={styles.rodape}>
-        <Texto variante="subheadline">Não tem conta?</Texto>
-        <Botao titulo="Cadastre-se" variante="texto" onPress={() => navigation.navigate('SelecaoPerfil')} />
-      </View>
-
-      {__DEV__ ? (
-        <View style={styles.dev}>
-          <Botao titulo="Galeria de componentes (dev)" variante="texto" onPress={() => navigation.navigate('Galeria')} />
+        <Botao titulo="Entrar" onPress={handleLogin} carregando={carregando} />
+        <View style={styles.cadastro}>
+          <Texto variante="subheadline">Não tem conta?</Texto>
+          <Botao titulo="Cadastre-se" variante="texto" onPress={() => navigation.navigate('SelecaoPerfil')} />
         </View>
-      ) : null}
+        {__DEV__ ? (
+          <View {...({ dataSet: { dev: 'galeria' } } as object)}>
+            <Botao titulo="Galeria de componentes (dev)" variante="texto" onPress={() => navigation.navigate('Galeria')} />
+          </View>
+        ) : null}
+      </View>
     </Tela>
   );
 }
 
-const styles = StyleSheet.create({
-  marca: { alignItems: 'center', paddingTop: Espacamento.extraGrande, paddingBottom: Espacamento.extraGrande },
+const useEstilos = criarEstilos(() => ({
+  marca: { alignItems: 'center', paddingTop: Espacamento.grande, paddingBottom: Espacamento.grande },
   // O PNG tem ~20% de área transparente acima e abaixo da marca (1200×1200, marca em y 235-966).
-  logo: { width: 240, height: 240, marginVertical: -46 },
-  tagline: { marginTop: Espacamento.grande },
-  esqueci: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
-  rodape: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Espacamento.pequeno, marginTop: Espacamento.padrao },
-  dev: { marginTop: Espacamento.grande },
-});
+  logo: { marginVertical: -18, marginBottom: Espacamento.minimo },
+  tagline: { marginTop: Espacamento.minimo },
+  espaco: { flexGrow: 1, minHeight: Espacamento.grande },
+  rodape: { gap: Espacamento.minimo },
+  cadastro: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: Espacamento.minimo },
+}));

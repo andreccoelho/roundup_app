@@ -2,14 +2,17 @@
 // Dialogo de confirmação existe por isso: a tela nunca submete sozinha a partir de um cálculo
 // de pontos, e a confirmação é o ponto onde a decisão humana fica explícita na interface.
 // Histórico é imutável depois de criado (ver firestore.rules) — sem tela de edição.
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { criarGraduacao } from '../../services/graduacoes';
 import { AlunosStackParamList } from '../../navigation/GestorTabsCompartilhado';
-import Botao from '../../components/ui/Botao';
+import BotaoCabecalho from '../../components/ui/BotaoCabecalho';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
+import MensagemErro from '../../components/ui/MensagemErro';
 import Dialogo from '../../components/ui/Dialogo';
 import CelebracaoGraduacao from '../../components/ui/CelebracaoGraduacao';
 import CampoTexto from '../../components/ui/CampoTexto';
@@ -69,18 +72,21 @@ export default function RegistrarGraduacaoScreen() {
     }
   }
 
-  return (
-    <Tela largura="formulario" teclado>
-      <Texto variante="caption">Aluno</Texto>
-      <Texto variante="title3" style={styles.nome}>
-        {nomeAluno}
-      </Texto>
+  // Sheet do iOS: "Cancelar" à esquerda (opcoesFolha) e "Registrar" à direita
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => <BotaoCabecalho titulo="Registrar" forte onPress={handlePedirConfirmacao} />,
+    });
+  });
 
-      {erro ? (
-        <Texto variante="subheadline" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
-          {erro}
-        </Texto>
-      ) : null}
+  return (
+    <Tela largura="formulario" agrupada teclado>
+      <GrupoLista titulo="Aluno" semMargem>
+        <LinhaLista rotulo={nomeAluno} />
+      </GrupoLista>
+      <View style={styles.espaco} />
+
+      <MensagemErro mensagem={erro} />
 
       <CampoTexto rotulo="Modalidade" valor={modalidade} onAlterar={setModalidade} placeholder="Ex.: Muay Thai" />
       <CampoTexto rotulo="Grau" valor={grau} onAlterar={setGrau} placeholder="Ex.: Faixa azul, 2º grau" />
@@ -97,7 +103,6 @@ export default function RegistrarGraduacaoScreen() {
         multiline
       />
 
-      <Botao titulo="Registrar graduação" onPress={handlePedirConfirmacao} />
 
       <Dialogo
         visivel={confirmando}
@@ -127,7 +132,6 @@ export default function RegistrarGraduacaoScreen() {
 }
 
 const styles = StyleSheet.create({
-  nome: { marginBottom: Espacamento.grande },
-  erro: { marginBottom: Espacamento.medio },
+  espaco: { height: Espacamento.grande },
   previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
 });

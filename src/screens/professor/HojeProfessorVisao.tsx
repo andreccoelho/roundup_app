@@ -1,17 +1,16 @@
 // Visão (só apresentação) do "Hoje" do Professor — RF10, RF12, RF13/RN02/RN08 (chamada). Dados
 // prontos vêm de professor/DashboardScreen.tsx; a Galeria monta a mesma visão com dados fictícios.
-// Tom operacional: banda de gestor compacta, seletor de turma, placar da sessão e chamada como
-// lista de linhas (sem cards).
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
-import { Alturas, Cores, Espacamento, Raios } from '../../theme';
+// Tom operacional: saudação curta, seletor de turma em chips, cartão de destaque com a sessão do
+// dia (horário e presentes) e a chamada em lista agrupada, com um círculo de check por aluno
+// (LinhaChamada). O título grande "Hoje" vem do cabeçalho (iOS) ou da Tela (Android/web).
+import { ScrollView, View } from 'react-native';
+import { criarEstilos, Espacamento } from '../../theme';
 import type { StatusSessao } from '../../types';
 import { ROTULO_STATUS_SESSAO, formatarHora } from '../../utils/apresentacao';
-import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
-import BandaIdentidade from '../../components/ui/BandaIdentidade';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Estatistica from '../../components/ui/Estatistica';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
 import ItemMenu from '../../components/ui/ItemMenu';
 import Avatar from '../../components/ui/Avatar';
 import Cartao from '../../components/ui/Cartao';
@@ -19,10 +18,10 @@ import Texto from '../../components/ui/Texto';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoErro from '../../components/ui/EstadoErro';
 import EstadoVazio from '../../components/ui/EstadoVazio';
-import LinhaFina from '../../components/LinhaFina';
-import { IconeCheck, IconeTatame } from '../../components/icones';
+import LinhaChamada, { type StatusChamada } from '../../components/ui/LinhaChamada';
+import { IconeTatame } from '../../components/icones';
 
-export type StatusChamada = 'aguardando' | 'pendente' | 'validado' | 'rejeitado';
+export type { StatusChamada };
 
 export interface ItemChamadaVisao {
   alunoId: string;
@@ -45,6 +44,7 @@ interface HojeProfessorVisaoProps {
   presentes: number;
   processandoAlunoId: string | null;
   erro: string | null;
+  // Mantido por compatibilidade com a direção anterior (banda sob o header) — sem efeito
   sobHeader?: boolean;
   onSelecionarTurma: (id: string) => void;
   onTogglePresenca: (alunoId: string) => void;
@@ -53,40 +53,14 @@ interface HojeProfessorVisaoProps {
   onGerenciarTurmas: () => void;
 }
 
-function BotaoPresenca({ item, processando, onPress }: { item: ItemChamadaVisao; processando: boolean; onPress: () => void }) {
-  const { focado, propsFoco } = useFocoVisivel();
-  const presente = item.status === 'validado';
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={processando}
-      accessibilityRole="switch"
-      accessibilityLabel={`Presença de ${item.nome}`}
-      accessibilityState={{ checked: presente, disabled: processando, busy: processando }}
-      aria-checked={presente}
-      style={({ pressed }) => [
-        styles.presenca,
-        presente ? styles.presencaAtiva : styles.presencaInativa,
-        pressed && styles.pressionado,
-        processando && styles.processando,
-        estiloSemOutline,
-        focado && estiloAnelFoco,
-      ]}
-      {...propsFoco}
-    >
-      {presente ? <IconeCheck tamanho={16} cor={Cores.sobreCor} espessura={2.5} /> : null}
-      <Texto variante="caption" cor={presente ? 'sobreTint' : 'texto'}>
-        {presente ? 'Presente' : 'Confirmar'}
-      </Texto>
-    </Pressable>
-  );
+function primeiroNome(nome: string): string {
+  return nome.trim().split(/\s+/)[0] ?? '';
 }
 
 export default function HojeProfessorVisao({
   nome,
   fotoUrl,
   graduacao,
-  modalidades,
   turmas,
   turmaSelecionadaId,
   carregandoTurmas,
@@ -96,152 +70,129 @@ export default function HojeProfessorVisao({
   presentes,
   processandoAlunoId,
   erro,
-  sobHeader,
   onSelecionarTurma,
   onTogglePresenca,
   onTentarNovamente,
   onCriarTurma,
   onGerenciarTurmas,
 }: HojeProfessorVisaoProps) {
+  const styles = useEstilos();
   const turma = turmas.find((t) => t.id === turmaSelecionadaId);
 
   return (
     <View>
-      <BandaIdentidade
-        variante="gestor"
-        compacta
-        sobHeader={sobHeader}
-        sobretitulo="Hoje"
-        nome={nome}
-        fotoUrl={fotoUrl}
-        selo={graduacao ? <SeloFaixa faixaOuGrau={graduacao} /> : undefined}
-      >
-        {modalidades.length > 0 ? (
-          <View style={styles.linhaChips}>
-            {modalidades.map((m) => (
-              <Etiqueta key={m} texto={m} />
-            ))}
-          </View>
-        ) : null}
-      </BandaIdentidade>
+      <View style={styles.saudacao}>
+        <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={44} />
+        <View style={styles.saudacaoTextos}>
+          <Texto variante="title3" cabecalho={false}>{`Olá, ${primeiroNome(nome)}`}</Texto>
+          {graduacao ? <SeloFaixa faixaOuGrau={graduacao} /> : null}
+        </View>
+      </View>
 
       {carregandoTurmas ? (
-        <View style={styles.corpo}>
-          <Esqueleto altura={160} />
-        </View>
+        <Esqueleto altura={150} raio={16} />
       ) : erro && turmas.length === 0 ? (
-        <EstadoErro compacto mensagem={erro} onTentarNovamente={onTentarNovamente} />
+        <Cartao>
+          <EstadoErro compacto mensagem={erro} onTentarNovamente={onTentarNovamente} />
+        </Cartao>
       ) : turmas.length === 0 ? (
-        <EstadoVazio
-          icone={IconeTatame}
-          titulo="Você ainda não tem turmas"
-          descricao="Crie sua primeira turma para abrir sessões e fazer a chamada."
-          acaoTitulo="Criar turma"
-          acaoPrimaria
-          onAcao={onCriarTurma}
-        />
+        <Cartao>
+          <EstadoVazio
+            icone={IconeTatame}
+            titulo="Você ainda não tem turmas"
+            descricao="Crie sua primeira turma para abrir sessões e fazer a chamada."
+            acaoTitulo="Criar turma"
+            acaoPrimaria
+            onAcao={onCriarTurma}
+          />
+        </Cartao>
       ) : (
         <>
           {turmas.length > 1 ? (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seletor} accessibilityRole="radiogroup" accessibilityLabel="Turma">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.seletorArea}
+              contentContainerStyle={styles.seletor}
+              accessibilityRole="radiogroup"
+              accessibilityLabel="Turma"
+            >
               {turmas.map((t) => (
                 <Etiqueta key={t.id} texto={t.nome} selecionada={turmaSelecionadaId === t.id} onPress={() => onSelecionarTurma(t.id)} />
               ))}
             </ScrollView>
           ) : null}
 
-          <View style={styles.corpo}>
-            <Cartao>
-              <Texto variante="caption" cor="texto3">
-                {turma?.nome ?? 'Turma'}
-              </Texto>
-              {sessaoHoje ? (
-                <View style={styles.sessao}>
-                  <View>
-                    <Texto variante="caption" cor={sessaoHoje.status === 'aberta' ? 'sucesso' : 'texto2'}>
-                      {ROTULO_STATUS_SESSAO[sessaoHoje.status]}
-                    </Texto>
-                    <Texto variante="numeroGrande">{formatarHora(sessaoHoje.inicio)}</Texto>
-                  </View>
-                  <Estatistica valor={`${presentes}/${chamada.length}`} rotulo="Presentes" tamanho="grande" alinhamento="centro" />
+          <Cartao destaque>
+            <Texto variante="footnote">{turma?.nome ?? 'Turma'}</Texto>
+            {sessaoHoje ? (
+              <View style={styles.sessao}>
+                <View>
+                  <Texto variante="subheadline" cor={sessaoHoje.status === 'aberta' ? 'sucesso' : 'texto2'}>
+                    {ROTULO_STATUS_SESSAO[sessaoHoje.status]}
+                  </Texto>
+                  <Texto variante="numeroGrande">{formatarHora(sessaoHoje.inicio)}</Texto>
                 </View>
-              ) : (
-                <Texto variante="body" cor="texto2" style={styles.semSessao}>
-                  Nenhuma sessão hoje nesta turma.
-                </Texto>
-              )}
-            </Cartao>
-
-            {erro ? (
-              <Texto variante="subheadline" cor="perigo" style={styles.erro} accessibilityRole="alert">
-                {erro}
-              </Texto>
-            ) : null}
-
-            <CabecalhoSecao titulo="Chamada" contador={sessaoHoje ? `${chamada.length} matriculados` : undefined} />
-            {carregandoPainel ? (
-              <Esqueleto forma="linha" repeticoes={3} />
-            ) : !sessaoHoje ? (
-              <Texto variante="subheadline">Sem sessão hoje: nada para chamar.</Texto>
-            ) : chamada.length === 0 ? (
-              <Texto variante="subheadline">Nenhum aluno matriculado nesta turma.</Texto>
+                <Estatistica valor={`${presentes}/${chamada.length}`} rotulo="Presentes" tamanho="grande" alinhamento="centro" />
+              </View>
             ) : (
-              chamada.map((item, i) => (
-                <View key={item.alunoId}>
-                  {i > 0 ? <LinhaFina /> : null}
-                  <View style={styles.linhaChamada}>
-                    <Avatar nome={item.nome} fotoUrl={item.fotoUrl} tamanho={36} />
-                    <Texto variante="headline" style={styles.nomeAluno} numberOfLines={1}>
-                      {item.nome}
-                    </Texto>
-                    {item.status === 'aguardando' ? (
-                      <Texto variante="subheadline" cor="texto3">
-                        Sem check-in
-                      </Texto>
-                    ) : item.status === 'rejeitado' ? (
-                      <Texto variante="subheadline" cor="perigo">
-                        Rejeitado
-                      </Texto>
-                    ) : (
-                      <BotaoPresenca item={item} processando={processandoAlunoId === item.alunoId} onPress={() => onTogglePresenca(item.alunoId)} />
-                    )}
-                  </View>
-                </View>
-              ))
+              <Texto variante="body" cor="texto2" style={styles.semSessao}>
+                Nenhuma sessão hoje nesta turma.
+              </Texto>
             )}
+          </Cartao>
 
-            <CabecalhoSecao titulo="Atalhos" />
+          {erro ? (
+            <Texto variante="footnote" cor="perigo" style={styles.erro} accessibilityRole="alert">
+              {erro}
+            </Texto>
+          ) : null}
+
+          {carregandoPainel ? (
+            <View style={styles.esqueleto}>
+              <Esqueleto forma="linha" repeticoes={3} />
+            </View>
+          ) : !sessaoHoje ? null : chamada.length === 0 ? (
+            <GrupoLista titulo="Chamada">
+              <View style={styles.vazio}>
+                <Texto variante="subheadline">Nenhum aluno matriculado nesta turma.</Texto>
+              </View>
+            </GrupoLista>
+          ) : (
+            <GrupoLista
+              titulo={`Chamada: ${chamada.length} ${chamada.length === 1 ? 'matriculado' : 'matriculados'}`}
+              rodape="Toque no círculo para confirmar a presença de quem fez check-in."
+            >
+              {chamada.map((item) => (
+                <LinhaChamada
+                  key={item.alunoId}
+                  nome={item.nome}
+                  fotoUrl={item.fotoUrl}
+                  status={item.status}
+                  processando={processandoAlunoId === item.alunoId}
+                  onAlternar={() => onTogglePresenca(item.alunoId)}
+                />
+              ))}
+            </GrupoLista>
+          )}
+
+          <GrupoLista titulo="Atalhos">
             <ItemMenu rotulo="Gerenciar turmas" descricao="Turmas, sessões e relatório de frequência" icone={IconeTatame} onPress={onGerenciarTurmas} />
-          </View>
+          </GrupoLista>
         </>
       )}
-      <View style={styles.respiro} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  linhaChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
-  seletor: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.padrao, gap: Espacamento.pequeno },
-  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.padrao },
+const useEstilos = criarEstilos(() => ({
+  saudacao: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, marginBottom: Espacamento.padrao },
+  saudacaoTextos: { flex: 1, gap: 2 },
+  seletorArea: { marginHorizontal: -Espacamento.padrao, marginBottom: Espacamento.medio },
+  seletor: { paddingHorizontal: Espacamento.padrao, gap: Espacamento.pequeno },
   sessao: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: Espacamento.pequeno },
   semSessao: { marginTop: Espacamento.pequeno },
-  erro: { marginTop: Espacamento.medio },
-  linhaChamada: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: Alturas.botaoHero + 8 },
-  nomeAluno: { flex: 1 },
-  presenca: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Espacamento.minimo,
-    minHeight: Alturas.alvoMinimo,
-    minWidth: 112,
-    justifyContent: 'center',
-    paddingHorizontal: Espacamento.medio,
-    borderRadius: Raios.vivo,
-  },
-  presencaAtiva: { backgroundColor: Cores.sucesso },
-  presencaInativa: { borderWidth: 1.5, borderColor: Cores.texto },
-  pressionado: { opacity: 0.8 },
-  processando: { opacity: 0.5 },
-  respiro: { height: Espacamento.enorme },
-});
+  erro: { marginTop: Espacamento.medio, marginHorizontal: Espacamento.padrao },
+  esqueleto: { marginTop: Espacamento.grande },
+  vazio: { padding: Espacamento.padrao },
+}));

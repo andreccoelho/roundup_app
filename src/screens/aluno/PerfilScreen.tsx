@@ -77,7 +77,7 @@ export default function PerfilScreen() {
   }, [carregarDetalhes]);
 
   return (
-    <Tela largura="lista" preenchimento={false}>
+    <Tela largura="lista" agrupada tituloGrande="Perfil">
       <PerfilAlunoVisao
         nome={usuario?.nome ?? ''}
         fotoUrl={usuario?.fotoUrl}

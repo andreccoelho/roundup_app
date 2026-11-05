@@ -15,7 +15,7 @@ import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Tela from '../../components/ui/Tela';
 import Abas from '../../components/ui/Abas';
-import LinhaFina from '../../components/LinhaFina';
+import GrupoLista from '../../components/ui/GrupoLista';
 import { IconeBandeira } from '../../components/icones';
 import { mensagemErro } from '../../utils/mensagensErro';
 
@@ -65,7 +65,7 @@ export default function MissoesScreen() {
   const visiveis = aba === 'curso' ? emCurso : concluidas;
 
   return (
-    <Tela largura="lista">
+    <Tela largura="lista" agrupada tituloGrande="Missões">
       <Abas
         accessibilityLabel="Filtrar missões"
         opcoes={[
@@ -95,10 +95,10 @@ export default function MissoesScreen() {
           descricao={aba === 'curso' ? 'Você fechou todas as missões ativas. Novas aparecem aqui.' : 'Complete uma missão em curso para ela aparecer aqui.'}
         />
       ) : (
-        visiveis.map(({ missao, progresso }, i) => (
-          <View key={missao.id}>
-            {i > 0 ? <LinhaFina /> : null}
+        <GrupoLista>
+          {visiveis.map(({ missao, progresso }) => (
             <CartaoMissao
+              key={missao.id}
               titulo={missao.titulo}
               descricao={missao.descricao}
               progressoAtual={progresso?.progressoAtual ?? 0}
@@ -106,8 +106,8 @@ export default function MissoesScreen() {
               pontos={missao.pontos}
               concluida={progresso?.concluida ?? false}
             />
-          </View>
-        ))
+          ))}
+        </GrupoLista>
       )}
     </Tela>
   );

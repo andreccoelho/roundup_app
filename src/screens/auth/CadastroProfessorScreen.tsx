@@ -103,7 +103,7 @@ export default function CadastroProfessorScreen() {
   }
 
   return (
-    <Tela largura="formulario" bordas={['topo', 'base']} teclado>
+    <Tela largura="formulario" bordas={['topo', 'base']} teclado agrupada>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
       <Texto variante="caption" style={styles.etapa}>
@@ -116,7 +116,7 @@ export default function CadastroProfessorScreen() {
 
       <MensagemErro mensagem={erroConta} />
 
-      <CabecalhoSecao titulo="Conta" semMargem />
+      <CabecalhoSecao titulo="Conta" formulario semMargem />
       <CampoTexto rotulo="Nome" placeholder="Seu nome completo" autoComplete="name" valor={nome} onAlterar={setNome} erro={erros.nome} />
       <CampoTexto
         rotulo="E-mail"
@@ -147,7 +147,7 @@ export default function CadastroProfessorScreen() {
         erro={erros.confirmarSenha}
       />
 
-      <CabecalhoSecao titulo="Ficha técnica" />
+      <CabecalhoSecao titulo="Ficha técnica" formulario />
       <ModalitySelector
         rotulo="Modalidade(s) lecionada(s)"
         selecionadas={modalidades}
@@ -189,7 +189,7 @@ export default function CadastroProfessorScreen() {
         </Texto>
       </View>
 
-      <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
+      <Botao titulo="Criar conta" onPress={handleCadastrar} carregando={carregando} />
 
       <View style={styles.rodape}>
         <Texto variante="subheadline">Já tem conta?</Texto>

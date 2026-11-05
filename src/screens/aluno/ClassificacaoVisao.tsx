@@ -1,17 +1,17 @@
-// Visão (só apresentação) da Classificação do Aluno — RF20. Pódio para o top 3, faixa "sua
-// posição" quando o aluno está fora do pódio, e a lista da 4ª posição em diante.
+// Visão (só apresentação) da Classificação do Aluno — RF20. Cartão de destaque com "sua posição"
+// (quando o aluno está fora dos três primeiros), destaque leve dos três primeiros (Podio) e a lista
+// agrupada da 4ª posição em diante, com a linha do próprio aluno em tint suave.
 //
-// RN04: o ranking é mensal de verdade (um documento de classificação por mês), então o texto
-// volta a dizer "ranking mensal" (desfaz o R-04 de docs/DECISOES_PENDENTES.md). RNF11: quem não
-// participa vê um aviso de que só ele enxerga a própria pontuação.
-import { StyleSheet, View } from 'react-native';
-import { Espacamento } from '../../theme';
+// RN04: o ranking é mensal de verdade (um documento de classificação por mês), então o texto diz
+// "ranking mensal" (desfaz o R-04 de docs/DECISOES_PENDENTES.md). RNF11: quem não participa vê um
+// aviso de que só ele enxerga a própria pontuação.
+import { View } from 'react-native';
+import { criarEstilos, Espacamento } from '../../theme';
 import Podio from '../../components/ui/Podio';
 import LinhaClassificacao from '../../components/ui/LinhaClassificacao';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
 import Cartao from '../../components/ui/Cartao';
 import Texto from '../../components/ui/Texto';
-import LinhaFina from '../../components/LinhaFina';
 
 export interface LinhaRanking {
   alunoId: string;
@@ -28,6 +28,7 @@ interface ClassificacaoVisaoProps {
 }
 
 export default function ClassificacaoVisao({ linhas, usuarioId, mes, participa = true }: ClassificacaoVisaoProps) {
+  const styles = useEstilos();
   const top3 = linhas.slice(0, 3);
   const resto = linhas.slice(3);
   const minhaPosicao = linhas.findIndex((l) => l.alunoId === usuarioId);
@@ -40,46 +41,55 @@ export default function ClassificacaoVisao({ linhas, usuarioId, mes, participa =
         {`Ranking mensal${mes ? ` de ${mes}` : ''}: pontos dos treinos validados neste mês na sua academia ou professor.`}
       </Texto>
       {!participa ? (
-        <Texto variante="subheadline" cor="texto2" style={styles.legenda}>
+        <Texto variante="subheadline" style={styles.legenda}>
           Você não participa da classificação: só você vê a sua pontuação. Dá para mudar isso no Perfil.
         </Texto>
       ) : null}
 
       {minhaPosicao >= 3 ? (
-        <Cartao style={styles.minha}>
+        <Cartao destaque style={styles.minha}>
           <View style={styles.minhaLinha} accessible accessibilityLabel={`Sua posição: ${minhaPosicao + 1}º, ${linhas[minhaPosicao].pontos} pontos`}>
             <View>
-              <Texto variante="caption">Sua posição</Texto>
+              <Texto variante="footnote">Sua posição</Texto>
               <Texto variante="numeroGrande">{`${minhaPosicao + 1}º`}</Texto>
             </View>
             <View style={styles.minhaPontos}>
-              <Texto variante="caption">Pontos</Texto>
-              <Texto variante="numero">{linhas[minhaPosicao].pontos}</Texto>
+              <Texto variante="footnote">Pontos</Texto>
+              <Texto variante="numeroGrande" cor="tint">
+                {linhas[minhaPosicao].pontos}
+              </Texto>
             </View>
           </View>
         </Cartao>
       ) : null}
 
-      {top3[0] ? <Podio primeiro={item(0)!} segundo={item(1)} terceiro={item(2)} /> : null}
+      {top3[0] ? (
+        <Cartao>
+          <Podio primeiro={item(0)!} segundo={item(1)} terceiro={item(2)} />
+        </Cartao>
+      ) : null}
 
       {resto.length > 0 ? (
-        <>
-          <CabecalhoSecao titulo="Classificação" contador={`${linhas.length} atletas`} />
+        <GrupoLista titulo={`${linhas.length} atletas`}>
           {resto.map((linha, i) => (
-            <View key={linha.alunoId}>
-              {i > 0 ? <LinhaFina /> : null}
-              <LinhaClassificacao posicao={i + 4} nome={linha.nome} pontos={linha.pontos} fotoUrl={linha.fotoUrl} destaque={linha.alunoId === usuarioId} />
-            </View>
+            <LinhaClassificacao
+              key={linha.alunoId}
+              posicao={i + 4}
+              nome={linha.nome}
+              pontos={linha.pontos}
+              fotoUrl={linha.fotoUrl}
+              destaque={linha.alunoId === usuarioId}
+            />
           ))}
-        </>
+        </GrupoLista>
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos(() => ({
   legenda: { marginBottom: Espacamento.padrao },
-  minha: { marginBottom: Espacamento.padrao },
+  minha: { marginBottom: Espacamento.medio },
   minhaLinha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   minhaPontos: { alignItems: 'flex-end' },
-});
+}));

@@ -107,7 +107,7 @@ function PerfilNavigator() {
       <PerfilStack.Screen
         name="PreferenciasNotificacao"
         component={PreferenciasNotificacaoScreen}
-        options={opcoesFolha('Notificações')}
+        options={opcoesFolha('Notificações', 'concluir')}
       />
       <PerfilStack.Screen name="ContaPrivacidade" component={ContaPrivacidadeScreen} options={{ title: 'Conta e privacidade' }} />
     </PerfilStack.Navigator>

@@ -138,7 +138,7 @@ export default function DashboardScreen() {
   }));
 
   return (
-    <Tela largura="lista" preenchimento={false}>
+    <Tela largura="lista" agrupada tituloGrande="Hoje">
       <HojeProfessorVisao
         nome={usuario?.nome ?? ''}
         fotoUrl={usuario?.fotoUrl}

@@ -2,25 +2,28 @@
 // busca no Firestore é aluno/DashboardScreen.tsx. A Galeria monta esta mesma visão com dados
 // fictícios ("Composições") para validar o visual sem backend.
 //
-// Ordem (docs/DESIGN.md): banda de identidade compacta → HeroCheckIn (próximo treino) →
-// progresso (XP + sequência) → próximos treinos → atalhos.
-import { StyleSheet, View } from 'react-native';
-import { Espacamento } from '../../theme';
+// Ordem (docs/DESIGN.md), no espírito do Resumo do app Fitness: saudação curta (avatar, nome e
+// faixa) → cartão de destaque do próximo treino (HeroCheckIn) → progresso (anel de nível) e
+// sequência → próximos treinos em lista agrupada → atalhos. O título grande "Treinar" vem do
+// cabeçalho (iOS) ou da Tela (Android/web).
+import { View } from 'react-native';
+import { criarEstilos, Espacamento } from '../../theme';
 import type { EstadoCheckIn } from '../../utils/statusCheckIn';
 import type { ProgressoNivel } from '../../utils/gamificacao';
-import BandaIdentidade from '../../components/ui/BandaIdentidade';
 import HeroCheckIn from '../../components/ui/HeroCheckIn';
-import BarraProgresso from '../../components/ui/BarraProgresso';
+import AnelProgresso from '../../components/ui/AnelProgresso';
 import IndicadorSequencia from '../../components/ui/IndicadorSequencia';
 import CartaoSessao from '../../components/ui/CartaoSessao';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
 import ItemMenu from '../../components/ui/ItemMenu';
-import Etiqueta from '../../components/ui/Etiqueta';
+import Cartao from '../../components/ui/Cartao';
+import Avatar from '../../components/ui/Avatar';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoErro from '../../components/ui/EstadoErro';
 import EstadoVazio from '../../components/ui/EstadoVazio';
-import LinhaFina from '../../components/LinhaFina';
+import Texto from '../../components/ui/Texto';
 import { IconeFichaTecnica, IconeTatame } from '../../components/icones';
 
 export interface SessaoHome {
@@ -45,6 +48,7 @@ interface HomeAlunoVisaoProps {
   enviandoId: string | null;
   progresso: ProgressoNivel | null;
   sequencia: number;
+  // Mantido por compatibilidade com a direção anterior (banda sob o header) — sem efeito
   sobHeader?: boolean;
   onCheckIn: (sessaoId: string) => void;
   onTentarNovamente: () => void;
@@ -53,44 +57,47 @@ interface HomeAlunoVisaoProps {
   onHistorico: () => void;
 }
 
+function primeiroNome(nome: string): string {
+  return nome.trim().split(/\s+/)[0] ?? '';
+}
+
 export default function HomeAlunoVisao({
   nome,
   fotoUrl,
   faixa,
-  modalidades,
   sessoes,
   carregando,
   erro,
   enviandoId,
   progresso,
   sequencia,
-  sobHeader,
   onCheckIn,
   onTentarNovamente,
   onVerAgenda,
   onTurmasDisponiveis,
   onHistorico,
 }: HomeAlunoVisaoProps) {
+  const styles = useEstilos();
   const [proxima, ...demais] = sessoes;
 
   return (
     <View>
-      <BandaIdentidade compacta sobHeader={sobHeader} sobretitulo="Treinar" nome={nome} fotoUrl={fotoUrl} selo={<SeloFaixa faixaOuGrau={faixa ?? 'Faixa não informada'} />}>
-        {modalidades.length > 0 ? (
-          <View style={styles.modalidades}>
-            {modalidades.map((m) => (
-              <Etiqueta key={m} texto={m} />
-            ))}
-          </View>
-        ) : null}
-      </BandaIdentidade>
+      <View style={styles.saudacao}>
+        <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={44} />
+        <View style={styles.saudacaoTextos}>
+          <Texto variante="title3" cabecalho={false}>{`Olá, ${primeiroNome(nome)}`}</Texto>
+          <SeloFaixa faixaOuGrau={faixa ?? 'Faixa não informada'} />
+        </View>
+      </View>
 
-      <View style={styles.corpo}>
-        {carregando ? (
-          <Esqueleto altura={196} />
-        ) : erro ? (
+      {carregando ? (
+        <Esqueleto altura={212} raio={16} />
+      ) : erro ? (
+        <Cartao>
           <EstadoErro compacto mensagem={erro} onTentarNovamente={onTentarNovamente} />
-        ) : !proxima ? (
+        </Cartao>
+      ) : !proxima ? (
+        <Cartao>
           <EstadoVazio
             icone={IconeFichaTecnica}
             titulo="Nenhum treino agendado"
@@ -98,59 +105,61 @@ export default function HomeAlunoVisao({
             acaoTitulo="Ver turmas disponíveis"
             onAcao={onTurmasDisponiveis}
           />
-        ) : (
-          <HeroCheckIn
-            nomeTurma={proxima.nomeTurma}
-            professor={proxima.professor}
-            inicio={proxima.inicio}
-            janelaInicio={proxima.janelaInicio}
-            janelaFim={proxima.janelaFim}
-            estado={proxima.estado}
-            carregando={enviandoId === proxima.id}
-            onCheckIn={() => onCheckIn(proxima.id)}
-          />
-        )}
+        </Cartao>
+      ) : (
+        <HeroCheckIn
+          nomeTurma={proxima.nomeTurma}
+          professor={proxima.professor}
+          inicio={proxima.inicio}
+          janelaInicio={proxima.janelaInicio}
+          janelaFim={proxima.janelaFim}
+          estado={proxima.estado}
+          carregando={enviandoId === proxima.id}
+          onCheckIn={() => onCheckIn(proxima.id)}
+        />
+      )}
 
-        {progresso ? (
-          <>
-            <CabecalhoSecao titulo="Progresso" />
-            <BarraProgresso nivel={progresso.nivel} xpAtual={progresso.xpAtual} xpProximoNivel={progresso.xpProximoNivel} />
-            <View style={styles.sequencia}>
-              <IndicadorSequencia treinos={sequencia} />
-            </View>
-          </>
-        ) : null}
+      {progresso ? (
+        <>
+          <CabecalhoSecao titulo="Progresso" />
+          <Cartao destaque>
+            <AnelProgresso nivel={progresso.nivel} xpAtual={progresso.xpAtual} xpProximoNivel={progresso.xpProximoNivel} tamanho={96} />
+          </Cartao>
+          <View style={styles.espaco} />
+          <IndicadorSequencia treinos={sequencia} />
+        </>
+      ) : null}
 
-        {!carregando && !erro && demais.length > 0 ? (
-          <>
-            <CabecalhoSecao titulo="Próximos treinos" acaoTitulo="Ver agenda" onAcao={onVerAgenda} />
-            {demais.map((s, i) => (
-              <View key={s.id}>
-                {i > 0 ? <LinhaFina /> : null}
-                <CartaoSessao
-                  nomeTurma={s.nomeTurma}
-                  detalhe={s.professor ? `com ${s.professor}` : undefined}
-                  inicio={s.inicio}
-                  estado={s.estado}
-                  motivo={s.motivo}
-                  carregando={enviandoId === s.id}
-                  onCheckIn={() => onCheckIn(s.id)}
-                />
-              </View>
+      {!carregando && !erro && demais.length > 0 ? (
+        <>
+          <CabecalhoSecao titulo="Próximos treinos" acaoTitulo="Ver agenda" onAcao={onVerAgenda} />
+          <GrupoLista semMargem>
+            {demais.map((s) => (
+              <CartaoSessao
+                key={s.id}
+                nomeTurma={s.nomeTurma}
+                detalhe={s.professor ? `com ${s.professor}` : undefined}
+                inicio={s.inicio}
+                estado={s.estado}
+                motivo={s.motivo}
+                carregando={enviandoId === s.id}
+                onCheckIn={() => onCheckIn(s.id)}
+              />
             ))}
-          </>
-        ) : null}
+          </GrupoLista>
+        </>
+      ) : null}
 
-        <CabecalhoSecao titulo="Atalhos" />
+      <GrupoLista titulo="Atalhos">
         <ItemMenu rotulo="Turmas disponíveis" descricao="Matricule-se em novas turmas" icone={IconeTatame} onPress={onTurmasDisponiveis} />
-        <ItemMenu rotulo="Histórico" descricao="Seus check-ins validados e pendentes" icone={IconeFichaTecnica} onPress={onHistorico} separador />
-      </View>
+        <ItemMenu rotulo="Histórico" descricao="Seus check-ins validados e pendentes" icone={IconeFichaTecnica} onPress={onHistorico} />
+      </GrupoLista>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno },
-  corpo: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.grande, paddingBottom: Espacamento.enorme },
-  sequencia: { marginTop: Espacamento.padrao },
-});
+const useEstilos = criarEstilos(() => ({
+  saudacao: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, marginBottom: Espacamento.padrao },
+  saudacaoTextos: { flex: 1, gap: 2 },
+  espaco: { height: Espacamento.medio },
+}));

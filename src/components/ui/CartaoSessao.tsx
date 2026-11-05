@@ -52,7 +52,7 @@ const useEstilos = criarEstilos(() => ({
     paddingHorizontal: Espacamento.padrao,
     gap: Espacamento.medio,
   },
-  horario: { width: 64 },
+  horario: { width: 76 },
   tabular: { fontVariant: ['tabular-nums'] },
   textos: { flex: 1, gap: 2 },
 }));

@@ -2,8 +2,8 @@
 // academia/DashboardScreen.tsx) + indicador agregado de frequência (RF26/RF24 compostos em
 // src/services/frequencia.ts). Sem coleção nem regra nova, ver docs/PLANO_REGRAS_CICLO2_3.md.
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento } from '../../theme';
+import { View } from 'react-native';
+import { criarEstilos, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarTurmasPorResponsavel } from '../../services/turmas';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
@@ -24,6 +24,7 @@ function frequenciaMedia(alunos: { frequenciaRecente: boolean[] }[]): number | n
 }
 
 export default function VisaoConsolidadaScreen() {
+  const styles = useEstilos();
   const { usuario } = useAuth();
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export default function VisaoConsolidadaScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada>
         <Esqueleto altura={72} repeticoes={2} />
       </Tela>
     );
@@ -71,13 +72,15 @@ export default function VisaoConsolidadaScreen() {
   }
 
   return (
-    <Tela largura="lista">
+    <Tela largura="lista" agrupada>
       <CabecalhoSecao titulo="Unidade" semMargem />
-      <View style={styles.contadores}>
-        <Estatistica valor={turmasAtivas} rotulo="Turmas ativas" tamanho="grande" />
-        <Estatistica valor={professores} rotulo="Professores" tamanho="grande" />
-        <Estatistica valor={alunosVinculados} rotulo="Alunos" tamanho="grande" />
-      </View>
+      <Cartao destaque>
+        <View style={styles.contadores}>
+          <Estatistica valor={turmasAtivas} rotulo="Turmas ativas" tamanho="grande" />
+          <Estatistica valor={professores} rotulo="Professores" tamanho="grande" />
+          <Estatistica valor={alunosVinculados} rotulo="Alunos" tamanho="grande" />
+        </View>
+      </Cartao>
 
       <CabecalhoSecao titulo="Frequência recente" />
       {frequencia === null ? (
@@ -91,7 +94,6 @@ export default function VisaoConsolidadaScreen() {
             </Texto>
           </View>
           <View style={styles.trilha} aria-hidden>
-            <View style={styles.trilhaVazia} />
             <View style={[styles.trilhaCheia, { width: `${frequencia}%` }]} />
           </View>
         </Cartao>
@@ -100,11 +102,10 @@ export default function VisaoConsolidadaScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   contadores: { flexDirection: 'row', gap: Espacamento.padrao },
   frequencia: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.padrao },
   frequenciaTexto: { flex: 1 },
-  trilha: { height: 8, justifyContent: 'center', marginTop: Espacamento.padrao },
-  trilhaVazia: { height: 2, backgroundColor: Cores.linhaForte },
-  trilhaCheia: { position: 'absolute', left: 0, top: 0, height: 8, backgroundColor: Cores.texto },
-});
+  trilha: { height: 8, borderRadius: 4, backgroundColor: c.preenchimento, overflow: 'hidden', marginTop: Espacamento.padrao },
+  trilhaCheia: { height: 8, borderRadius: 4, backgroundColor: c.tint },
+}));

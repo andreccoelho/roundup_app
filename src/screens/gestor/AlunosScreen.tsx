@@ -2,25 +2,25 @@
 // registrar graduação (RF25). RF32: sinaliza queda de frequência (critério provisório em
 // src/config/gamificacao.ts) reaproveitando CartaoAluno — sem tela nem componente novos.
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Cores, Espacamento } from '../../theme';
+import { criarEstilos, Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarAlunosComFrequencia, AlunoComFrequencia } from '../../services/frequencia';
 import { AlunosStackParamList } from '../../navigation/GestorTabsCompartilhado';
 import CartaoAluno from '../../components/ui/CartaoAluno';
-import LinhaFina from '../../components/LinhaFina';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
 import { IconeFaixa } from '../../components/icones';
 import { mensagemErro } from '../../utils/mensagensErro';
 
 export default function AlunosScreen() {
+  const styles = useEstilos();
   const { usuario } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AlunosStackParamList, 'Alunos'>>();
   const [carregando, setCarregando] = useState(true);
@@ -46,7 +46,7 @@ export default function AlunosScreen() {
 
   if (carregando) {
     return (
-      <Tela largura="lista">
+      <Tela largura="lista" agrupada tituloGrande="Alunos">
         <Esqueleto forma="linha" repeticoes={6} />
       </Tela>
     );
@@ -58,7 +58,7 @@ export default function AlunosScreen() {
 
   if (alunos.length === 0) {
     return (
-      <Tela largura="lista" centralizarVertical>
+      <Tela largura="lista" agrupada tituloGrande="Alunos" centralizarVertical>
         <EstadoVazio icone={IconeFaixa} titulo="Nenhum aluno matriculado" descricao="Alunos aparecem aqui assim que se matricularem em uma turma sua." />
       </Tela>
     );
@@ -67,14 +67,13 @@ export default function AlunosScreen() {
   const emQueda = alunos.filter((a) => a.quedaFrequencia).length;
 
   return (
-    <Tela largura="lista">
+    <Tela largura="lista" agrupada tituloGrande="Alunos">
       <Texto variante="subheadline" style={styles.intro}>
         Toque num aluno para registrar graduação. As marcas mostram as últimas presenças.
       </Texto>
-      <CabecalhoSecao titulo="Alunos" contador={emQueda > 0 ? `${alunos.length}, ${emQueda} em queda` : alunos.length} semMargem />
-      {alunos.map((aluno, i) => (
+      <GrupoLista titulo={emQueda > 0 ? `${alunos.length} alunos, ${emQueda} em queda` : `${alunos.length} alunos`} semMargem>
+      {alunos.map((aluno) => (
         <View key={aluno.alunoId}>
-          {i > 0 ? <LinhaFina /> : null}
           <Pressable
             onPress={() => navigation.navigate('RegistrarGraduacao', { alunoId: aluno.alunoId, nomeAluno: aluno.nome })}
             accessibilityRole="button"
@@ -90,11 +89,12 @@ export default function AlunosScreen() {
           </Pressable>
         </View>
       ))}
+      </GrupoLista>
     </Tela>
   );
 }
 
-const styles = StyleSheet.create({
-  intro: { marginBottom: Espacamento.padrao },
-  pressionada: { backgroundColor: Cores.superficie1 },
-});
+const useEstilos = criarEstilos((c) => ({
+  intro: { marginBottom: Espacamento.padrao, marginHorizontal: Espacamento.padrao },
+  pressionada: { backgroundColor: c.preenchimento },
+}));

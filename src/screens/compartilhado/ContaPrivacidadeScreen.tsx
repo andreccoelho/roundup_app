@@ -6,20 +6,20 @@
 // nunca aparece como o texto técnico do Firebase: a mensagem mostrada é sempre a mesma frase fixa
 // em português; o erro real vai só pro console, para depuração.
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento } from '../../theme';
+import { ActivityIndicator } from 'react-native';
+import { useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import Tela from '../../components/ui/Tela';
-import Texto from '../../components/ui/Texto';
-import Botao from '../../components/ui/Botao';
 import Dialogo from '../../components/ui/Dialogo';
 import Aviso from '../../components/ui/Aviso';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
 import { IconeAlerta } from '../../components/icones';
 
 const MENSAGEM_FALHA_EXCLUSAO = 'Não foi possível excluir sua conta agora.';
 
 export default function ContaPrivacidadeScreen() {
+  const { cores } = useTema();
   const { usuario, excluirConta } = useAuth();
   const [confirmando, setConfirmando] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
@@ -43,34 +43,29 @@ export default function ContaPrivacidadeScreen() {
   return (
     <Tela
       largura="formulario"
+      agrupada
       sobreposicao={
         <Aviso mensagem={MENSAGEM_FALHA_EXCLUSAO} tipo="erro" visivel={avisoVisivel} onFechar={() => setAvisoVisivel(false)} acimaDaTabBar />
       }
     >
-      <CabecalhoSecao titulo="Conta" semMargem />
-      <Texto variante="subheadline">E-mail de acesso</Texto>
-      <Texto variante="headline" style={styles.email}>
-        {usuario?.email ?? ''}
-      </Texto>
+      <GrupoLista titulo="Conta" semMargem>
+        <LinhaLista rotulo="E-mail" valor={usuario?.email ?? ''} />
+      </GrupoLista>
 
-      <CabecalhoSecao titulo="Privacidade" />
-      <Texto variante="body" cor="texto2">
-        Seus dados são tratados conforme a política de privacidade aceita no cadastro (LGPD, Lei 13.709/2018).
-      </Texto>
+      <GrupoLista titulo="Privacidade" rodape="Seus dados são tratados conforme a política de privacidade aceita no cadastro (LGPD, Lei 13.709/2018).">
+        <LinhaLista rotulo="Política de privacidade" valor="Aceita no cadastro" />
+      </GrupoLista>
 
-      <CabecalhoSecao titulo="Zona de risco" />
-      <View style={styles.risco}>
-        <View style={styles.riscoTitulo}>
-          <IconeAlerta tamanho={20} cor={Cores.perigo} />
-          <Texto variante="headline">Excluir conta</Texto>
-        </View>
-        <Texto variante="subheadline" style={styles.riscoTexto}>
-          Remove sua conta e os dados pessoais associados. Esta ação não pode ser desfeita.
-        </Texto>
-        <View style={styles.riscoAcao}>
-          <Botao compacto titulo="Excluir minha conta" variante="destrutivo" onPress={() => setConfirmando(true)} />
-        </View>
-      </View>
+      <GrupoLista rodape="Remove sua conta e os dados pessoais associados. Esta ação não pode ser desfeita.">
+        <LinhaLista
+          rotulo="Excluir minha conta"
+          icone={IconeAlerta}
+          destrutivo
+          semChevron
+          acessorio={excluindo ? <ActivityIndicator color={cores.perigo} /> : undefined}
+          onPress={() => setConfirmando(true)}
+        />
+      </GrupoLista>
 
       <Dialogo
         visivel={confirmando}
@@ -86,11 +81,3 @@ export default function ContaPrivacidadeScreen() {
     </Tela>
   );
 }
-
-const styles = StyleSheet.create({
-  email: { marginTop: 2 },
-  risco: { borderLeftWidth: 2, borderLeftColor: Cores.perigo, paddingLeft: Espacamento.medio, paddingVertical: Espacamento.pequeno },
-  riscoTitulo: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.pequeno },
-  riscoTexto: { marginTop: Espacamento.minimo },
-  riscoAcao: { alignItems: 'flex-start', marginTop: Espacamento.medio },
-});

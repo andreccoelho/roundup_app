@@ -9,11 +9,11 @@ import { relatorioFrequenciaPorTurma, LinhaRelatorioFrequencia } from '../../ser
 import { parseDataBr } from '../../utils/datas';
 import { GestorStackParamList } from '../../navigation/types';
 import Botao from '../../components/ui/Botao';
-import LinhaFina from '../../components/LinhaFina';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import CampoTexto from '../../components/ui/CampoTexto';
-import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
+import GrupoLista from '../../components/ui/GrupoLista';
+import MensagemErro from '../../components/ui/MensagemErro';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import { IconeFichaTecnica } from '../../components/icones';
@@ -60,7 +60,7 @@ export default function RelatorioFrequenciaScreen() {
   }
 
   return (
-    <Tela largura="lista" teclado>
+    <Tela largura="lista" agrupada teclado>
       <View style={styles.periodo}>
         <View style={styles.campo}>
           <CampoTexto rotulo="Data inicial" valor={dataInicio} onAlterar={setDataInicio} mascara="data" />
@@ -70,11 +70,7 @@ export default function RelatorioFrequenciaScreen() {
         </View>
       </View>
 
-      {erro ? (
-        <Texto variante="subheadline" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
-          {erro}
-        </Texto>
-      ) : null}
+      <MensagemErro mensagem={erro} />
 
       <Botao titulo="Gerar relatório" onPress={handleGerar} carregando={carregando} />
 
@@ -86,25 +82,27 @@ export default function RelatorioFrequenciaScreen() {
         <EstadoVazio icone={IconeFichaTecnica} titulo="Nenhum aluno matriculado" descricao="Não há alunos ativos nesta turma para o período." />
       ) : (
         <>
-          <CabecalhoSecao titulo="Presenças no período" contador={linhas.length} />
-          {linhas.map((linha, i) => (
+          <GrupoLista titulo={`Presenças no período: ${linhas.length} alunos`}>
+          {linhas.map((linha) => (
             <View key={linha.alunoId}>
-              {i > 0 ? <LinhaFina /> : null}
               <View
                 style={styles.linha}
                 accessible
                 accessibilityLabel={`${linha.nome}: ${linha.presencas} de ${linha.totalSessoes} sessões`}
               >
-                <Texto variante="headline" style={styles.nome}>
+                <Texto variante="body" style={styles.nome}>
                   {linha.nome}
                 </Texto>
-                <Texto variante="numero">{linha.presencas}</Texto>
-                <Texto variante="subheadline" cor="texto3">
-                  {`/ ${linha.totalSessoes}`}
+                <Texto variante="headline" style={styles.tabular}>
+                  {linha.presencas}
+                </Texto>
+                <Texto variante="subheadline" style={styles.tabular}>
+                  {`de ${linha.totalSessoes}`}
                 </Texto>
               </View>
             </View>
           ))}
+          </GrupoLista>
         </>
       )}
     </Tela>
@@ -114,8 +112,8 @@ export default function RelatorioFrequenciaScreen() {
 const styles = StyleSheet.create({
   periodo: { flexDirection: 'row', gap: Espacamento.padrao },
   campo: { flex: 1 },
-  erro: { marginBottom: Espacamento.medio },
   resultado: { marginTop: Espacamento.grande },
-  linha: { flexDirection: 'row', alignItems: 'baseline', gap: Espacamento.minimo, paddingVertical: Espacamento.medio },
+  linha: { flexDirection: 'row', alignItems: 'baseline', gap: Espacamento.minimo + 2, paddingVertical: Espacamento.medio, paddingHorizontal: Espacamento.padrao },
+  tabular: { fontVariant: ['tabular-nums'] },
   nome: { flex: 1 },
 });

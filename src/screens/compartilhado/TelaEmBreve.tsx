@@ -12,7 +12,7 @@ interface TelaEmBreveProps {
 
 export default function TelaEmBreve({ titulo, descricao }: TelaEmBreveProps) {
   return (
-    <Tela largura="lista" centralizarVertical>
+    <Tela largura="lista" agrupada centralizarVertical>
       <EstadoVazio icone={IconeRelogio} titulo={titulo} descricao={descricao} />
     </Tela>
   );
