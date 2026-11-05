@@ -1,327 +1,333 @@
-// Ícones do universo de luta (line-art), viewBox 24, traço 1.4-2.0 — ver docs/DESIGN.md.
-// Decorativos por padrão: quem precisa de rótulo acessível coloca no elemento pai.
-import Svg, { Path, Circle, Line } from 'react-native-svg';
-import { Cores } from '../../theme';
+// Ícones do RoundUp no estilo dos SF Symbols (docs/DESIGN.md): viewBox 24, traço uniforme de 1,75,
+// pontas e junções arredondadas, cantos arredondados nas formas. Os ícones das abas têm versão
+// preenchida (`preenchido`), usada na aba ativa, como na tab bar do iOS; os recortes da versão
+// cheia são feitos com fillRule "evenodd", sem máscara, para funcionar igual no nativo e no web.
+// Desenho próprio em SVG nas três plataformas (sem expo-symbols): o visual é o mesmo no iOS, no
+// Android e no web. Decorativos por padrão: quem precisa de rótulo acessível coloca no elemento pai.
+import type { ReactNode } from 'react';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-interface IconeProps {
+export interface IconeProps {
   tamanho?: number;
   cor?: string;
   espessura?: number;
+  preenchido?: boolean;
 }
 
-export function IconeLuva({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+const COR_PADRAO = '#8E8E93';
+const TRACO = 1.75;
+
+function Base({ tamanho = 24, children }: { tamanho?: number; children: ReactNode }) {
   return (
     <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+      {children}
+    </Svg>
+  );
+}
+
+function traco(cor: string, espessura: number) {
+  return { stroke: cor, strokeWidth: espessura, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+}
+
+// ---- Ícones de aba (contorno e preenchido) ----
+
+// Treinar — luva de boxe
+export function IconeLuva({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  if (preenchido) {
+    return (
+      <Base tamanho={tamanho}>
+        <Path d="M11 3.5h3a5 5 0 0 1 5 5V11a4.5 4.5 0 0 1-4.5 4.5H10a4 4 0 0 1-4-4v-3a6 6 0 0 1 5-5Z" fill={cor} />
+        <Path d="M3.6 10.6a2.1 2.1 0 0 1 3.4-1.7l.6.5v4.1l-1.6.4a2.4 2.4 0 0 1-2.4-3.3Z" fill={cor} />
+        <Rect x="7.5" y="16.75" width="9.5" height="3.75" rx="1.4" fill={cor} />
+      </Base>
+    );
+  }
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M11 3.5h3a5 5 0 0 1 5 5V11a4.5 4.5 0 0 1-4.5 4.5H10a4 4 0 0 1-4-4v-3a6 6 0 0 1 5-5Z" {...traco(cor, espessura)} />
+      <Path d="M6 9.4 5.4 9a1.9 1.9 0 0 0-2 3.2l2.6 1" {...traco(cor, espessura)} />
+      <Rect x="7.5" y="17.25" width="9.5" height="3.25" rx="1.2" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// Agenda — calendário
+export function IconeFichaTecnica({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  if (preenchido) {
+    return (
+      <Base tamanho={tamanho}>
+        <Path
+          fillRule="evenodd"
+          d="M6.5 5h11a3 3 0 0 1 3 3v9.5a3 3 0 0 1-3 3h-11a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3Zm1 7.5v2h2v-2h-2Zm4.5 0v2h2v-2h-2Zm4.5 0v2h2v-2h-2Zm-9 4v2h2v-2h-2Zm4.5 0v2h2v-2h-2Z"
+          fill={cor}
+        />
+        <Path d="M8 3v3.5M16 3v3.5" {...traco(cor, espessura)} />
+      </Base>
+    );
+  }
+  return (
+    <Base tamanho={tamanho}>
+      <Rect x="3.5" y="5" width="17" height="15.5" rx="3" {...traco(cor, espessura)} />
+      <Path d="M3.5 10h17M8 3v3.5M16 3v3.5" {...traco(cor, espessura)} />
+      <Path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01" {...traco(cor, espessura + 0.5)} />
+    </Base>
+  );
+}
+
+// Missões — bandeira
+export function IconeBandeira({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
       <Path
-        d="M7 11V6.5a2.5 2.5 0 0 1 5 0V10M12 10V5.5a2.5 2.5 0 0 1 5 0V12"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinecap="round"
+        d="M5.5 4.5h11.3c.8 0 1.3.9.8 1.6L15.3 9l2.3 2.9c.5.7 0 1.6-.8 1.6H5.5"
+        {...traco(cor, espessura)}
+        fill={preenchido ? cor : 'none'}
       />
+      <Path d="M5.5 3.5v17" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// Classificação — pódio de barras
+export function IconeCartaoPontuacao({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  const props = preenchido ? { fill: cor } : traco(cor, espessura);
+  return (
+    <Base tamanho={tamanho}>
+      <Rect x="9.25" y="4.5" width="5.5" height="16" rx="1.6" {...props} />
+      <Rect x="3" y="10.5" width="5.5" height="10" rx="1.6" {...props} />
+      <Rect x="15.5" y="13.5" width="5.5" height="7" rx="1.6" {...props} />
+    </Base>
+  );
+}
+
+// Perfil — pessoa
+export function IconePerfil({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  const props = preenchido ? { fill: cor } : traco(cor, espessura);
+  return (
+    <Base tamanho={tamanho}>
+      <Circle cx="12" cy="8" r="3.75" {...props} />
+      <Path d="M4.75 19.6c.8-3.6 3.7-5.6 7.25-5.6s6.45 2 7.25 5.6a.8.8 0 0 1-.8 1H5.55a.8.8 0 0 1-.8-1Z" {...props} />
+    </Base>
+  );
+}
+
+// Hoje do gestor e notificações — sino
+export function IconeSino({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
       <Path
-        d="M7 11c-1.5 0-2.5 1.2-2.5 2.8v2.4C4.5 19 6.6 21 9.6 21h1.8c3 0 5.1-2.3 5.1-5.1v-3.4c0-1.2-.9-2.1-2-2.1"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
+        d="M12 3.5c-3.2 0-5.5 2.5-5.5 5.8v3.3l-1.5 2.7c-.4.7.1 1.6.9 1.6h12.2c.8 0 1.3-.9.9-1.6l-1.5-2.7V9.3c0-3.3-2.3-5.8-5.5-5.8Z"
+        {...traco(cor, espessura)}
+        fill={preenchido ? cor : 'none'}
       />
-    </Svg>
+      <Path d="M9.8 19.6a2.4 2.4 0 0 0 4.4 0" {...traco(cor, espessura)} />
+    </Base>
   );
 }
 
-export function IconeSino({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+// Turmas — grade 2×2 (tatame visto de cima)
+export function IconeTatame({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  const props = preenchido ? { fill: cor } : traco(cor, espessura);
   return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
+    <Base tamanho={tamanho}>
+      <Rect x="4" y="4" width="7" height="7" rx="2" {...props} />
+      <Rect x="13" y="4" width="7" height="7" rx="2" {...props} />
+      <Rect x="4" y="13" width="7" height="7" rx="2" {...props} />
+      <Rect x="13" y="13" width="7" height="7" rx="2" {...props} />
+    </Base>
+  );
+}
+
+// Alunos e graduação — faixa com nó
+export function IconeFaixa({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  if (preenchido) {
+    return (
+      <Base tamanho={tamanho}>
+        <Rect x="2.5" y="8" width="6.2" height="4" rx="1.2" fill={cor} />
+        <Rect x="15.3" y="8" width="6.2" height="4" rx="1.2" fill={cor} />
+        <Rect x="9.6" y="6.75" width="4.8" height="6.5" rx="1.5" fill={cor} />
+        <Path d="M10.6 14.5 9 20.5M13.4 14.5l1.6 6" {...traco(cor, espessura + 0.5)} />
+      </Base>
+    );
+  }
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M9.6 8H3.7a1.2 1.2 0 0 0-1.2 1.2v1.6A1.2 1.2 0 0 0 3.7 12h5.9M14.4 8h5.9a1.2 1.2 0 0 1 1.2 1.2v1.6a1.2 1.2 0 0 1-1.2 1.2h-5.9" {...traco(cor, espessura)} />
+      <Rect x="9.6" y="6.75" width="4.8" height="6.5" rx="1.5" {...traco(cor, espessura)} />
+      <Path d="M10.6 13.5 9 20.5M13.4 13.5l1.6 7" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// ---- Ícones de conteúdo ----
+
+export function IconeCadeado({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" {...traco(cor, espessura)} />
+      <Rect x="5.5" y="10.5" width="13" height="10" rx="2.5" {...traco(cor, espessura)} />
+      <Path d="M12 14.5v2" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeCheck({ tamanho, cor = COR_PADRAO, espessura = 2.25 }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M5 12.8 9.6 17.2 19 6.8" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// Check dentro de círculo — presença confirmada, missão concluída
+export function IconeCheckCirculo({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  if (preenchido) {
+    return (
+      <Base tamanho={tamanho}>
+        <Path
+          fillRule="evenodd"
+          d="M12 2.75a9.25 9.25 0 1 1 0 18.5 9.25 9.25 0 0 1 0-18.5Zm4.2 6.2a1 1 0 0 0-1.4-.1l-4.1 3.9-1.5-1.5a1 1 0 1 0-1.4 1.4l2.2 2.2a1 1 0 0 0 1.4 0l4.8-4.5a1 1 0 0 0 0-1.4Z"
+          fill={cor}
+        />
+      </Base>
+    );
+  }
+  return (
+    <Base tamanho={tamanho}>
+      <Circle cx="12" cy="12" r="8.75" {...traco(cor, espessura)} />
+      <Path d="m8.3 12.3 2.4 2.4 5-4.8" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// Vínculos — duas cordas (elo)
+export function IconeCorda({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M10 14a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-.9.9" {...traco(cor, espessura)} />
+      <Path d="M14 10a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l.9-.9" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeCirculo({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Circle cx="12" cy="12" r="8.75" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// Academia — poste de canto com cordas
+export function IconePoste({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Rect x="10" y="3" width="4" height="18" rx="2" {...traco(cor, espessura)} />
+      <Path d="M3.5 7.5H10M14 7.5h6.5M3.5 12H10M14 12h6.5M3.5 16.5H10M14 16.5h6.5" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeVoltar({ tamanho, cor = COR_PADRAO, espessura = 2.25 }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M15 4.5 7.5 12l7.5 7.5" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeChevron({ tamanho, cor = COR_PADRAO, espessura = 2.25 }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="m9 5 7 7-7 7" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeFechar({ tamanho, cor = COR_PADRAO, espessura = 2 }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M6.5 6.5l11 11M17.5 6.5l-11 11" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeMais({ tamanho, cor = COR_PADRAO, espessura = 2.25 }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M12 5v14M5 12h14" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeOlho({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M2.75 12C4.6 8 8 5.75 12 5.75S19.4 8 21.25 12C19.4 16 16 18.25 12 18.25S4.6 16 2.75 12Z" {...traco(cor, espessura)} />
+      <Circle cx="12" cy="12" r="3" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+export function IconeOlhoFechado({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M2.75 12C4.6 8 8 5.75 12 5.75S19.4 8 21.25 12C19.4 16 16 18.25 12 18.25S4.6 16 2.75 12Z" {...traco(cor, espessura)} />
+      <Circle cx="12" cy="12" r="3" {...traco(cor, espessura)} />
+      <Path d="M4.5 19.5 19.5 4.5" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// Erro/alerta — triângulo de cantos arredondados
+export function IconeAlerta({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Path d="M10.3 4.6a2 2 0 0 1 3.4 0l7.2 12.6a2 2 0 0 1-1.7 3H4.8a2 2 0 0 1-1.7-3l7.2-12.6Z" {...traco(cor, espessura)} />
+      <Path d="M12 9.5v4" {...traco(cor, espessura)} />
+      <Path d="M12 16.75h.01" {...traco(cor, espessura + 0.75)} />
+    </Base>
+  );
+}
+
+// Janela de check-in — relógio
+export function IconeRelogio({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
+      <Circle cx="12" cy="12" r="8.75" {...traco(cor, espessura)} />
+      <Path d="M12 7.5V12l3 2" {...traco(cor, espessura)} />
+    </Base>
+  );
+}
+
+// RF21: sequência — chama
+export function IconeChama({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
+  return (
+    <Base tamanho={tamanho}>
       <Path
-        d="M6 16c0-1 .5-1.6.5-4.2C6.5 8.6 8.8 6 12 6s5.5 2.6 5.5 5.8c0 2.6.5 3.2.5 4.2H6Z"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
+        d="M12 21c-3.7 0-6.5-2.6-6.5-6.2 0-3.3 2.3-5.4 3.6-8.3.2-.5.9-.6 1.2-.1.8 1.2 1.4 1.9 2.2 2.4.3-2.2 1.3-4.1 2.8-5.6.4-.4 1.1-.2 1.2.4.4 2.5 2.5 4.6 2.5 8.4C19 17.6 16 21 12 21Z"
+        {...traco(cor, espessura)}
+        fill={preenchido ? cor : 'none'}
       />
-      <Path d="M10 18.5a2 2 0 0 0 4 0" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Line x1="12" y1="3.5" x2="12" y2="6" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
+    </Base>
   );
 }
 
-export function IconeCadeado({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
+// RF19: medalha (fita + disco) — conquistas e 1º lugar
+export function IconeCinturao({ tamanho, cor = COR_PADRAO, espessura = TRACO, preenchido }: IconeProps) {
   return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinecap="round"
-      />
-      <Path
-        d="M6 10.5h12v8a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 18.5v-8Z"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
-      />
-      <Line x1="12" y1="14" x2="12" y2="16.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
+    <Base tamanho={tamanho}>
+      <Path d="M7.5 3.5h9l-2.6 5.2h-3.8L7.5 3.5Z" {...traco(cor, espessura)} fill={preenchido ? cor : 'none'} />
+      <Circle cx="12" cy="15" r="5.5" {...traco(cor, espessura)} fill={preenchido ? cor : 'none'} />
+    </Base>
   );
 }
 
-export function IconeCheck({ tamanho = 24, cor = Cores.texto, espessura = 2 }: IconeProps) {
+export function IconeSair({ tamanho, cor = COR_PADRAO, espessura = TRACO }: IconeProps) {
   return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 12.5 9.5 17 19 6.5"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-export function IconeCorda({ tamanho = 24, cor = Cores.texto, espessura = 1.4 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M3 8c3 3 3-3 6 0s3-3 6 0 3-3 6 0"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinecap="round"
-      />
-      <Path
-        d="M3 15c3 3 3-3 6 0s3-3 6 0 3-3 6 0"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinecap="round"
-      />
-    </Svg>
-  );
-}
-
-export function IconeCirculo({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="8" stroke={cor} strokeWidth={espessura} />
-    </Svg>
-  );
-}
-
-// RF06: faixa/grau — usado na seleção de perfil Aluno, em vez de ícone genérico de "estudante"
-export function IconeFaixa({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M3 8c0 3 2 3 2 6s-2 3-2 6M21 8c0 3-2 3-2 6s2 3 2 6"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinecap="round"
-      />
-      <Path d="M3 8h18" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Path
-        d="M9 8v6a3 3 0 0 0 3 3 3 3 0 0 0 3-3V8"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-// RF04: poste de canto + cordas — usado na seleção de perfil Academia, em vez de prédio genérico
-export function IconePoste({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Line x1="12" y1="4" x2="12" y2="21" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Circle cx="12" cy="3.2" r="1.2" stroke={cor} strokeWidth={espessura} />
-      <Path d="M5 8h14M4 13h16M5 18h14" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-// Ícones da casca de navegação (tab bar) — uma metáfora por aba, mesmo vocabulário visual do
-// DESIGN_BRIEF.md (ficha técnica, cartão de pontuação do juiz, tatame), não ícone de estoque
-// genérico. IconeLuva (Treinar), IconeSino (Hoje) e IconeFaixa (Alunos) já existiam acima e são
-// reaproveitados nas abas correspondentes — ver AlunoTabs.tsx/ProfessorTabs.tsx/AcademiaTabs.tsx.
-
-// RF14: ficha técnica (fight card) — lista de próximos compromissos, para a aba Agenda
-export function IconeFichaTecnica({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M7 4.5h10a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
-      />
-      <Path
-        d="M9.5 3.5h5a1 1 0 0 1 1 1v1h-7v-1a1 1 0 0 1 1-1Z"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
-      />
-      <Line x1="8.5" y1="10" x2="15.5" y2="10" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Line x1="8.5" y1="13.5" x2="15.5" y2="13.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Line x1="8.5" y1="17" x2="12.5" y2="17" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-// RF18: bandeira de checkpoint — objetivo/meta, para a aba Missões (aluno e gestor)
-export function IconeBandeira({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Line x1="6" y1="3.5" x2="6" y2="20.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Path
-        d="M6 4.5h10.5c.9 0 1.3 1 .7 1.7l-2.6 2.8 2.6 2.8c.6.7.2 1.7-.7 1.7H6V4.5Z"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-// RF20: cartão de pontuação do juiz — ranking, para a aba Classificação
-export function IconeCartaoPontuacao({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M5 5.5h14a1 1 0 0 1 1 1V17a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
-      />
-      <Line x1="4" y1="9.5" x2="20" y2="9.5" stroke={cor} strokeWidth={espessura} />
-      <Line x1="8" y1="13" x2="8" y2="14.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Line x1="12" y1="13" x2="12" y2="14.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Line x1="16" y1="13" x2="16" y2="14.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-// RF06: silhueta simples — perfil/conta, para a aba Perfil (aluno e gestor)
-export function IconePerfil({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="8" r="3.2" stroke={cor} strokeWidth={espessura} />
-      <Path d="M5.5 20c.6-3.6 3.4-6 6.5-6s5.9 2.4 6.5 6" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-// RF10: tatame visto de cima (piso dividido em módulos) — turmas, para a aba Turmas do gestor
-export function IconeTatame({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M4 4h16v16H4V4Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
-      <Line x1="4" y1="12" x2="20" y2="12" stroke={cor} strokeWidth={espessura} />
-      <Line x1="12" y1="4" x2="12" y2="20" stroke={cor} strokeWidth={espessura} />
-    </Svg>
-  );
-}
-
-// ---- Utilitários de interface (mesmo traço do resto do conjunto) ----
-
-export function IconeVoltar({ tamanho = 24, cor = Cores.texto, espessura = 1.8 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M15 5 8 12l7 7" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-export function IconeChevron({ tamanho = 24, cor = Cores.texto, espessura = 1.8 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="m9 5 7 7-7 7" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-export function IconeFechar({ tamanho = 24, cor = Cores.texto, espessura = 1.8 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M6 6l12 12M18 6 6 18" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-export function IconeMais({ tamanho = 24, cor = Cores.texto, espessura = 2 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 5v14M5 12h14" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-export function IconeOlho({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
-      <Circle cx="12" cy="12" r="3" stroke={cor} strokeWidth={espessura} />
-    </Svg>
-  );
-}
-
-export function IconeOlhoFechado({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
-      <Circle cx="12" cy="12" r="3" stroke={cor} strokeWidth={espessura} />
-      <Line x1="4" y1="20" x2="20" y2="4" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-    </Svg>
-  );
-}
-
-// Erro/alerta — triângulo de aviso, mesmo traço.
-export function IconeAlerta({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 3.5 21.5 20h-19L12 3.5Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
-      <Line x1="12" y1="10" x2="12" y2="14" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Circle cx="12" cy="17" r="0.6" stroke={cor} strokeWidth={espessura} />
-    </Svg>
-  );
-}
-
-// Relógio de round — contagem regressiva da janela de check-in.
-export function IconeRelogio({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="13" r="7.5" stroke={cor} strokeWidth={espessura} />
-      <Path d="M12 9v4l2.5 2M10 3h4" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-// RF21: sequência — chama.
-export function IconeChama({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 21c-3.6 0-6-2.4-6-5.6 0-3.4 2.6-5 3.4-8.4.9 1.6 1.6 2.4 2.6 3 .2-2.6 1.4-4.8 3.2-6.5-.3 3.3 2.8 5.6 2.8 9.6 0 3.4-2.4 7.9-6 7.9Z"
-        stroke={cor}
-        strokeWidth={espessura}
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-// RF19: cinturão de campeão (fivela central + correia) — medalhas e 1º lugar.
-export function IconeCinturao({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M2.5 9.5h4M17.5 9.5h4M2.5 14.5h4M17.5 14.5h4" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Path d="M6.5 7.5 12 5l5.5 2.5v9L12 19l-5.5-2.5v-9Z" stroke={cor} strokeWidth={espessura} strokeLinejoin="round" />
-      <Circle cx="12" cy="12" r="2.4" stroke={cor} strokeWidth={espessura} />
-    </Svg>
-  );
-}
-
-export function IconeSair({ tamanho = 24, cor = Cores.texto, espessura = 1.6 }: IconeProps) {
-  return (
-    <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none">
-      <Path d="M14 4.5H6.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H14" stroke={cor} strokeWidth={espessura} strokeLinecap="round" />
-      <Path d="M10.5 12h9M16.5 8.5 20 12l-3.5 3.5" stroke={cor} strokeWidth={espessura} strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
+    <Base tamanho={tamanho}>
+      <Path d="M13.5 4.5H7a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h6.5" {...traco(cor, espessura)} />
+      <Path d="M10.5 12h9.5M16.5 8.5 20 12l-3.5 3.5" {...traco(cor, espessura)} />
+    </Base>
   );
 }

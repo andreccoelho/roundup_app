@@ -1,7 +1,8 @@
 // Galeria de componentes — acessível só em __DEV__ (rota registrada em AuthStack.tsx só quando
 // __DEV__ é true; o guard abaixo é defesa em profundidade). Vitrine de tokens, componentes base e
 // de domínio, para validar o visual sem backend (docs/DESIGN.md).
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { View } from 'react-native';
 import { criarEstilos, Espacamento, Raios, useTema, type Esquema, type NomeCor } from '../../theme';
 
@@ -24,6 +25,7 @@ import {
   IconeAlerta,
   IconeMais,
   IconeSair,
+  IconeCheckCirculo,
 } from '../../components/icones';
 import Tela from '../../components/ui/Tela';
 import Texto, { type VarianteTexto } from '../../components/ui/Texto';
@@ -64,6 +66,15 @@ import IndicadorFrequencia from '../../components/ui/IndicadorFrequencia';
 import HeroCheckIn from '../../components/ui/HeroCheckIn';
 import MomentoConquista, { type Conquista } from '../../components/ui/MomentoConquista';
 import { COMPOSICOES, ComposicaoPorNome, type Composicao } from './composicoes';
+import CascaDemo, { type PerfilCasca } from './CascaDemo';
+
+// Em qual aba da casca cada composição aparece
+const CASCA: Record<Composicao, { perfil: PerfilCasca; aba: string; titulo: string }> = {
+  home: { perfil: 'aluno', aba: 'Treinar', titulo: 'Treinar' },
+  perfil: { perfil: 'aluno', aba: 'Perfil', titulo: 'Perfil' },
+  classificacao: { perfil: 'aluno', aba: 'Classificacao', titulo: 'Classificação' },
+  hoje: { perfil: 'gestor', aba: 'Hoje', titulo: 'Hoje' },
+};
 
 function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
   const styles = useEstilos();
@@ -117,6 +128,7 @@ const ICONES = {
   Alerta: IconeAlerta,
   Mais: IconeMais,
   Sair: IconeSair,
+  'Check círculo': IconeCheckCirculo,
 };
 
 export default function GaleriaScreen() {
@@ -139,6 +151,12 @@ export default function GaleriaScreen() {
   const { cores, forcarEsquema } = useTema();
   const styles = useEstilos();
   const [opcaoTema, setOpcaoTema] = useState<OpcaoTema>('sistema');
+  const navigation = useNavigation();
+
+  // Composição aberta: só a casca demonstrada aparece, sem o cabeçalho da Galeria
+  useEffect(() => {
+    navigation.setOptions({ headerShown: composicao === null });
+  }, [navigation, composicao]);
 
   function escolherTema(opcao: OpcaoTema) {
     setOpcaoTema(opcao);
@@ -149,12 +167,17 @@ export default function GaleriaScreen() {
 
   if (composicao) {
     return (
-      <Tela largura="lista" preenchimento={false} agrupada>
+      <View style={styles.flexCheio}>
+        <CascaDemo perfil={CASCA[composicao].perfil} aba={CASCA[composicao].aba}>
+          <Tela largura="lista" agrupada tituloGrande={CASCA[composicao].titulo}>
+            <ComposicaoPorNome nome={composicao} />
+          </Tela>
+        </CascaDemo>
+        {/* Cabeçalho de desenvolvimento: some nas capturas do relatório (data-dev="galeria") */}
         <View style={styles.voltarComposicao} {...({ dataSet: { dev: 'galeria' } } as object)}>
-          <Botao variante="voltar" titulo="Voltar à galeria" onPress={() => setComposicao(null)} />
+          <Botao variante="secundario" compacto titulo="Voltar à galeria" onPress={() => setComposicao(null)} />
         </View>
-        <ComposicaoPorNome nome={composicao} />
-      </Tela>
+      </View>
     );
   }
 
@@ -238,7 +261,10 @@ export default function GaleriaScreen() {
         <View style={styles.paleta}>
           {Object.entries(ICONES).map(([nome, Icone]) => (
             <View key={nome} style={styles.itemIcone}>
-              <Icone tamanho={28} cor={cores.texto} />
+              <View style={styles.parIcones}>
+                <Icone tamanho={28} cor={cores.texto} />
+                <Icone tamanho={28} cor={cores.tint} preenchido />
+              </View>
               <Texto variante="subheadline" cor="texto3">
                 {nome}
               </Texto>
@@ -557,9 +583,11 @@ const useEstilos = criarEstilos((c) => ({
   paleta: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.padrao },
   swatch: { width: 96 },
   swatchCor: { height: 40, borderRadius: Raios.campo, borderWidth: 1, borderColor: c.separador, marginBottom: Espacamento.minimo },
-  itemIcone: { width: 64, alignItems: 'center', gap: Espacamento.minimo },
+  itemIcone: { width: 76, alignItems: 'center', gap: Espacamento.minimo },
+  parIcones: { flexDirection: 'row', gap: 4 },
   estatisticas: { marginTop: Espacamento.padrao, marginBottom: Espacamento.padrao },
   sangria: { marginHorizontal: -Espacamento.padrao },
   amostraFaixa: { marginBottom: Espacamento.pequeno },
-  voltarComposicao: { paddingHorizontal: Espacamento.padrao },
+  voltarComposicao: { position: 'absolute', top: Espacamento.pequeno, right: Espacamento.padrao },
+  flexCheio: { flex: 1 },
 }));
