@@ -81,12 +81,12 @@ export default function VisaoConsolidadaScreen() {
 
       <CabecalhoSecao titulo="Frequência recente" />
       {frequencia === null ? (
-        <Texto variante="legenda">Sem check-ins recentes para calcular frequência.</Texto>
+        <Texto variante="subheadline">Sem check-ins recentes para calcular frequência.</Texto>
       ) : (
         <Cartao>
           <View style={styles.frequencia} accessible accessibilityLabel={`Frequência recente: ${frequencia}% dos últimos check-ins validados`}>
-            <Texto variante="placarGrande">{`${frequencia}%`}</Texto>
-            <Texto variante="legenda" style={styles.frequenciaTexto}>
+            <Texto variante="numeroGrande">{`${frequencia}%`}</Texto>
+            <Texto variante="subheadline" style={styles.frequenciaTexto}>
               dos últimos check-ins de alunos matriculados foram validados
             </Texto>
           </View>

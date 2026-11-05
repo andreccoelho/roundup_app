@@ -6,9 +6,9 @@
 // não precisam de 'topo' (o header já cobre); telas dentro das abas não precisam de 'base' (a tab
 // bar já soma insets.bottom). Telas sem header e fora das abas (auth) usam as duas.
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Cores, Espacamento, LarguraMaxima } from '../../theme';
+import { criarEstilos, Espacamento, LarguraMaxima } from '../../theme';
 
 type Borda = 'topo' | 'base';
 
@@ -25,6 +25,8 @@ interface TelaProps {
   estiloConteudo?: StyleProp<ViewStyle>;
   // Elemento fixo fora da rolagem (ex.: Aviso, que precisa ficar na viewport).
   sobreposicao?: ReactNode;
+  // Listas agrupadas inseridas pedem o fundo agrupado (systemGroupedBackground)
+  agrupada?: boolean;
 }
 
 export default function Tela({
@@ -37,8 +39,10 @@ export default function Tela({
   centralizarVertical = false,
   estiloConteudo,
   sobreposicao,
+  agrupada = false,
 }: TelaProps) {
   const insets = useSafeAreaInsets();
+  const styles = useEstilos();
   const maxWidth = largura === 'total' ? undefined : LarguraMaxima[largura];
 
   const coluna: StyleProp<ViewStyle> = [
@@ -53,7 +57,7 @@ export default function Tela({
 
   const conteudo = rolavel ? (
     <ScrollView
-      style={styles.raiz}
+      style={[styles.raiz, agrupada && styles.raizAgrupada]}
       contentContainerStyle={styles.rolagem}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
@@ -61,13 +65,13 @@ export default function Tela({
       <View style={coluna}>{children}</View>
     </ScrollView>
   ) : (
-    <View style={[styles.raiz, styles.rolagem]}>
+    <View style={[styles.raiz, agrupada && styles.raizAgrupada, styles.rolagem]}>
       <View style={[coluna, styles.flex]}>{children}</View>
     </View>
   );
 
   return (
-    <View style={styles.raiz}>
+    <View style={[styles.raiz, agrupada && styles.raizAgrupada]}>
       {teclado ? (
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           {conteudo}
@@ -80,11 +84,12 @@ export default function Tela({
   );
 }
 
-const styles = StyleSheet.create({
-  raiz: { flex: 1, backgroundColor: Cores.fundo },
+const useEstilos = criarEstilos((c) => ({
+  raiz: { flex: 1, backgroundColor: c.fundo },
+  raizAgrupada: { backgroundColor: c.fundoAgrupado },
   flex: { flex: 1 },
   rolagem: { flexGrow: 1, alignItems: 'center' },
   coluna: { width: '100%', flexGrow: 1 },
   preenchimento: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.padrao, paddingBottom: Espacamento.enorme },
   centralizar: { justifyContent: 'center' },
-});
+}));

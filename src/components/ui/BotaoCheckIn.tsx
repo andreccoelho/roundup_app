@@ -55,7 +55,7 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
       <Animated.View style={[styles.selo, { transform: [{ scale: escala }] }]} accessible accessibilityLabel="Check-in feito">
         <Animated.View style={[styles.flash, { opacity: flash }]} />
         <IconeCheck cor={Cores.sucesso} tamanho={18} />
-        <Texto variante="rotuloPlacar" cor="sucesso">
+        <Texto variante="caption" cor="sucesso">
           Feito
         </Texto>
       </Animated.View>
@@ -66,7 +66,7 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
     return (
       <View style={styles.selo} accessible accessibilityLabel={motivo ?? 'Check-in indisponível'}>
         <IconeCadeado cor={Cores.texto3} tamanho={16} />
-        <Texto variante="legenda" cor="texto2" style={styles.motivo} numberOfLines={2}>
+        <Texto variante="subheadline" cor="texto2" style={styles.motivo} numberOfLines={2}>
           {motivo ?? 'Fechado'}
         </Texto>
       </View>
@@ -91,7 +91,7 @@ export default function BotaoCheckIn({ estado, motivo, carregando, onPress }: Bo
       ) : (
         <>
           <IconeLuva cor={Cores.texto} tamanho={18} />
-          <Texto variante="rotuloPlacar" cor="texto">
+          <Texto variante="caption" cor="texto">
             Check-in
           </Texto>
         </>

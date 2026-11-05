@@ -139,11 +139,11 @@ export default function CadastroAlunoScreen() {
     <Tela largura="formulario" bordas={['topo', 'base']} teclado>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-      <Texto variante="rotuloPlacar" style={styles.etapa}>
+      <Texto variante="caption" style={styles.etapa}>
         Cadastro de aluno
       </Texto>
-      <Texto variante="display">Monte sua ficha</Texto>
-      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+      <Texto variante="largeTitle">Monte sua ficha</Texto>
+      <Texto variante="body" cor="texto2" style={styles.subtitulo}>
         Seus dados de atleta aparecem no seu perfil e para o seu professor.
       </Texto>
 
@@ -206,7 +206,7 @@ export default function CadastroAlunoScreen() {
       {ehMenorDeIdade ? (
         <View style={styles.blocoResponsavel}>
           <CabecalhoSecao titulo="Responsável legal" semMargem />
-          <Texto variante="legenda" style={styles.ajudaBloco}>
+          <Texto variante="subheadline" style={styles.ajudaBloco}>
             Como você é menor de 18 anos, precisamos dos dados de um responsável.
           </Texto>
           <CampoTexto
@@ -230,7 +230,7 @@ export default function CadastroAlunoScreen() {
       <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
 
       <View style={styles.rodape}>
-        <Texto variante="legenda">Já tem conta?</Texto>
+        <Texto variante="subheadline">Já tem conta?</Texto>
         <Botao titulo="Entrar" variante="texto" onPress={() => navigation.navigate('Login')} />
       </View>
     </Tela>

@@ -36,11 +36,11 @@ export default function ClassificacaoVisao({ linhas, usuarioId, mes, participa =
 
   return (
     <View>
-      <Texto variante="legenda" style={styles.legenda}>
+      <Texto variante="subheadline" style={styles.legenda}>
         {`Ranking mensal${mes ? ` de ${mes}` : ''}: pontos dos treinos validados neste mês na sua academia ou professor.`}
       </Texto>
       {!participa ? (
-        <Texto variante="legenda" cor="texto2" style={styles.legenda}>
+        <Texto variante="subheadline" cor="texto2" style={styles.legenda}>
           Você não participa da classificação: só você vê a sua pontuação. Dá para mudar isso no Perfil.
         </Texto>
       ) : null}
@@ -49,12 +49,12 @@ export default function ClassificacaoVisao({ linhas, usuarioId, mes, participa =
         <Cartao style={styles.minha}>
           <View style={styles.minhaLinha} accessible accessibilityLabel={`Sua posição: ${minhaPosicao + 1}º, ${linhas[minhaPosicao].pontos} pontos`}>
             <View>
-              <Texto variante="rotuloPlacar">Sua posição</Texto>
-              <Texto variante="placarGrande">{`${minhaPosicao + 1}º`}</Texto>
+              <Texto variante="caption">Sua posição</Texto>
+              <Texto variante="numeroGrande">{`${minhaPosicao + 1}º`}</Texto>
             </View>
             <View style={styles.minhaPontos}>
-              <Texto variante="rotuloPlacar">Pontos</Texto>
-              <Texto variante="placar">{linhas[minhaPosicao].pontos}</Texto>
+              <Texto variante="caption">Pontos</Texto>
+              <Texto variante="numero">{linhas[minhaPosicao].pontos}</Texto>
             </View>
           </View>
         </Cartao>

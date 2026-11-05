@@ -33,10 +33,10 @@ function Coluna({ item }: { item: ItemPodio }) {
     >
       {campeao ? <IconeCinturao tamanho={28} cor={Cores.ouro} /> : null}
       <Avatar nome={item.nome} fotoUrl={item.fotoUrl} tamanho={campeao ? 64 : 48} />
-      <Texto variante="corpoForte" numberOfLines={1} alinhamento="center" style={styles.nome}>
+      <Texto variante="headline" numberOfLines={1} alinhamento="center" style={styles.nome}>
         {item.nome}
       </Texto>
-      <Texto variante="placar" cor={campeao ? 'ouro' : 'texto'}>
+      <Texto variante="numero" cor={campeao ? 'ouro' : 'texto'}>
         {item.pontos}
       </Texto>
       <View
@@ -47,7 +47,7 @@ function Coluna({ item }: { item: ItemPodio }) {
           item.destaque && styles.blocoDestaque,
         ]}
       >
-        <Texto variante="placarGrande" cor={campeao ? 'sobreCor' : 'texto2'}>
+        <Texto variante="numeroGrande" cor={campeao ? 'sobreTint' : 'texto2'}>
           {item.posicao}
         </Texto>
       </View>

@@ -55,11 +55,11 @@ export default function PreferenciasNotificacaoScreen() {
 
   return (
     <Tela largura="lista">
-      <Texto variante="legenda" style={styles.intro}>
+      <Texto variante="subheadline" style={styles.intro}>
         Escolha quais avisos o RoundUp pode mandar para você.
       </Texto>
       {erro ? (
-        <Texto variante="legenda" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Texto variante="subheadline" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {erro}
         </Texto>
       ) : null}

@@ -81,13 +81,13 @@ export default function VincularAlunoScreen() {
         <View style={styles.linha}>
           <Avatar nome={destinatario.nomeAcademia ?? destinatario.nome} fotoUrl={destinatario.fotoUrl} tamanho={40} />
           <View style={styles.textos}>
-            <Texto variante="corpoForte">{destinatario.nomeAcademia ?? destinatario.nome}</Texto>
-            <Texto variante="legenda">{perfilDestinatario === 'academia' ? 'Academia' : 'Professor autônomo'}</Texto>
+            <Texto variante="headline">{destinatario.nomeAcademia ?? destinatario.nome}</Texto>
+            <Texto variante="subheadline">{perfilDestinatario === 'academia' ? 'Academia' : 'Professor autônomo'}</Texto>
           </View>
           {jaSolicitado ? (
             <View style={styles.solicitado} accessible accessibilityLabel="Solicitação enviada">
               <IconeCheck tamanho={16} cor={Cores.texto2} />
-              <Texto variante="rotuloPlacar" cor="texto2">
+              <Texto variante="caption" cor="texto2">
                 Enviado
               </Texto>
             </View>
@@ -137,7 +137,7 @@ export default function VincularAlunoScreen() {
       teclado
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} />}
     >
-      <Texto variante="corpo" cor="texto2" style={styles.intro}>
+      <Texto variante="body" cor="texto2" style={styles.intro}>
         Peça vínculo com sua academia ou professor. Assim que aceitarem, suas turmas e o check-in são liberados.
       </Texto>
       <CampoTexto rotulo="Buscar" placeholder="Nome da academia ou do professor" valor={busca} onAlterar={setBusca} autoCorrect={false} />
@@ -145,7 +145,7 @@ export default function VincularAlunoScreen() {
 
       <CabecalhoSecao titulo="Academias" contador={academiasFiltradas.length} semMargem />
       {academiasFiltradas.length === 0 ? (
-        <Texto variante="legenda" style={styles.vazio}>
+        <Texto variante="subheadline" style={styles.vazio}>
           {termo ? 'Nenhuma academia com esse nome.' : 'Nenhuma academia disponível.'}
         </Texto>
       ) : (
@@ -154,7 +154,7 @@ export default function VincularAlunoScreen() {
 
       <CabecalhoSecao titulo="Professores autônomos" contador={professoresFiltrados.length} />
       {professoresFiltrados.length === 0 ? (
-        <Texto variante="legenda" style={styles.vazio}>
+        <Texto variante="subheadline" style={styles.vazio}>
           {termo ? 'Nenhum professor com esse nome.' : 'Nenhum professor autônomo disponível.'}
         </Texto>
       ) : (

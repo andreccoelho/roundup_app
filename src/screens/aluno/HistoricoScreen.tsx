@@ -5,7 +5,7 @@
 // o componente errado esconderia esse status atrás de um rótulo que não é o dele.
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento, type NomeCor } from '../../theme';
+import { Cores, Espacamento, useTema, type NomeCor } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarHistoricoDoAluno } from '../../services/checkins';
 import { buscarTurma } from '../../services/turmas';
@@ -39,6 +39,7 @@ const ICONE_STATUS = { pendente: IconeRelogio, validado: IconeCheck, rejeitado: 
 
 export default function HistoricoScreen() {
   const { usuario } = useAuth();
+  const { cores } = useTema();
 
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
@@ -108,12 +109,12 @@ export default function HistoricoScreen() {
               accessibilityLabel={`${nomeTurma}, ${formatarDiaHora(paraData(checkIn.dataHora))}, ${ROTULO_STATUS_CHECKIN[checkIn.status]}`}
             >
               <View style={styles.textos}>
-                <Texto variante="corpoForte">{nomeTurma}</Texto>
-                <Texto variante="legenda">{formatarDiaHora(paraData(checkIn.dataHora))}</Texto>
+                <Texto variante="headline">{nomeTurma}</Texto>
+                <Texto variante="subheadline">{formatarDiaHora(paraData(checkIn.dataHora))}</Texto>
               </View>
               <View style={styles.status}>
-                <Icone tamanho={16} cor={Cores[COR_STATUS[checkIn.status]]} />
-                <Texto variante="rotuloPlacar" cor={COR_STATUS[checkIn.status]}>
+                <Icone tamanho={16} cor={cores[COR_STATUS[checkIn.status]]} />
+                <Texto variante="caption" cor={COR_STATUS[checkIn.status]}>
                   {ROTULO_STATUS_CHECKIN[checkIn.status]}
                 </Texto>
               </View>

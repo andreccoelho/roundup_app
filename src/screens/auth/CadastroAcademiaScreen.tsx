@@ -105,11 +105,11 @@ export default function CadastroAcademiaScreen() {
     <Tela largura="formulario" bordas={['topo', 'base']} teclado>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-      <Texto variante="rotuloPlacar" style={styles.etapa}>
+      <Texto variante="caption" style={styles.etapa}>
         Cadastro de academia
       </Texto>
-      <Texto variante="display">Abra seu ringue</Texto>
-      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+      <Texto variante="largeTitle">Abra seu ringue</Texto>
+      <Texto variante="body" cor="texto2" style={styles.subtitulo}>
         Vincule professores e alunos e acompanhe as métricas da unidade.
       </Texto>
 
@@ -175,7 +175,7 @@ export default function CadastroAcademiaScreen() {
       <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
 
       <View style={styles.rodape}>
-        <Texto variante="legenda">Já tem conta?</Texto>
+        <Texto variante="subheadline">Já tem conta?</Texto>
         <Botao titulo="Entrar" variante="texto" onPress={() => navigation.navigate('Login')} />
       </View>
     </Tela>

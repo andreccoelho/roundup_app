@@ -3,7 +3,7 @@
 // teclado físico/TV, então qualquer foco conta.
 import { useCallback, useState } from 'react';
 import { Platform, type ViewStyle } from 'react-native';
-import { Cores } from '../theme';
+import { CorFoco } from '../theme';
 
 type EventoFoco = { nativeEvent?: { target?: unknown }; target?: unknown };
 
@@ -24,7 +24,7 @@ export function useFocoVisivel() {
   return { focado, propsFoco: { onFocus, onBlur } };
 }
 
-// Anel de foco: 2px em `foco` (= acento), afastado 2px do controle. O outline nativo do navegador
+// Anel de foco: 2px em CorFoco (vermelho da marca, 3:1 nos dois temas), afastado 2px do controle. O outline nativo do navegador
 // fica sempre desligado — este anel é o substituto, não uma remoção.
 // outlineStyle 'none' é necessário: com 'auto' (padrão do input no Chrome) o navegador desenha o
 // anel nativo mesmo com largura 0.
@@ -32,6 +32,6 @@ export const estiloSemOutline: ViewStyle = { outlineWidth: 0, outlineStyle: 'non
 export const estiloAnelFoco: ViewStyle = {
   outlineStyle: 'solid',
   outlineWidth: 2,
-  outlineColor: Cores.foco,
+  outlineColor: CorFoco,
   outlineOffset: 2,
 } as ViewStyle;

@@ -106,11 +106,11 @@ export default function CadastroProfessorScreen() {
     <Tela largura="formulario" bordas={['topo', 'base']} teclado>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-      <Texto variante="rotuloPlacar" style={styles.etapa}>
+      <Texto variante="caption" style={styles.etapa}>
         Cadastro de professor
       </Texto>
-      <Texto variante="display">Seu corner</Texto>
-      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+      <Texto variante="largeTitle">Seu corner</Texto>
+      <Texto variante="body" cor="texto2" style={styles.subtitulo}>
         Você vai controlar turmas, presença e graduação dos seus alunos.
       </Texto>
 
@@ -170,7 +170,7 @@ export default function CadastroProfessorScreen() {
       ) : null}
 
       <View style={styles.campoToggle}>
-        <Texto variante="legenda" style={styles.rotuloToggle}>
+        <Texto variante="subheadline" style={styles.rotuloToggle}>
           Atuação
         </Texto>
         <Abas
@@ -182,7 +182,7 @@ export default function CadastroProfessorScreen() {
           selecionada={autonomo ? 'autonomo' : 'vinculado'}
           onSelecionar={(valor) => setAutonomo(valor === 'autonomo')}
         />
-        <Texto variante="legenda" cor="texto3" style={styles.ajudaToggle}>
+        <Texto variante="subheadline" cor="texto3" style={styles.ajudaToggle}>
           {autonomo
             ? 'Você mantém suas próprias turmas e alunos.'
             : 'Você poderá solicitar o vínculo com uma academia depois de entrar.'}
@@ -192,7 +192,7 @@ export default function CadastroProfessorScreen() {
       <Botao titulo="Criar conta" grande onPress={handleCadastrar} carregando={carregando} />
 
       <View style={styles.rodape}>
-        <Texto variante="legenda">Já tem conta?</Texto>
+        <Texto variante="subheadline">Já tem conta?</Texto>
         <Botao titulo="Entrar" variante="texto" onPress={() => navigation.navigate('Login')} />
       </View>
     </Tela>

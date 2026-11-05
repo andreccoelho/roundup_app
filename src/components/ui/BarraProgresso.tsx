@@ -60,17 +60,17 @@ export default function BarraProgresso({ nivel, xpAtual, xpProximoNivel }: Barra
     >
       <View style={styles.cabecalho}>
         <View style={styles.nivel}>
-          <Texto variante="rotuloPlacar">Nível</Texto>
-          <Texto variante="placar">{nivel}</Texto>
+          <Texto variante="caption">Nível</Texto>
+          <Texto variante="numero">{nivel}</Texto>
         </View>
         {maximo ? (
-          <Texto variante="rotuloPlacar" cor="texto">
+          <Texto variante="caption" cor="texto">
             Nível máximo
           </Texto>
         ) : (
           <View style={styles.xp}>
-            <Texto variante="placar">{xpExibido}</Texto>
-            <Texto variante="rotuloPlacar" cor="texto3">{`/ ${xpProximoNivel} XP`}</Texto>
+            <Texto variante="numero">{xpExibido}</Texto>
+            <Texto variante="caption" cor="texto3">{`/ ${xpProximoNivel} XP`}</Texto>
           </View>
         )}
       </View>
@@ -86,7 +86,7 @@ export default function BarraProgresso({ nivel, xpAtual, xpProximoNivel }: Barra
         </Animated.View>
       </View>
       {!maximo ? (
-        <Texto variante="legenda" cor="texto3" style={styles.falta}>
+        <Texto variante="subheadline" cor="texto3" style={styles.falta}>
           {`Faltam ${faltam} XP para o nível ${nivel + 1}`}
         </Texto>
       ) : null}

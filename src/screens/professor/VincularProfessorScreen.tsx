@@ -99,7 +99,7 @@ export default function VincularProfessorScreen() {
       <MensagemErro mensagem={erroSolicitacao} />
       <CabecalhoSecao titulo="Academias" contador={filtradas.length} semMargem />
       {filtradas.length === 0 ? (
-        <Texto variante="legenda" style={styles.vazio}>
+        <Texto variante="subheadline" style={styles.vazio}>
           Nenhuma academia com esse nome.
         </Texto>
       ) : (
@@ -112,13 +112,13 @@ export default function VincularProfessorScreen() {
               <View style={styles.linha}>
                 <Avatar nome={nome} fotoUrl={academia.fotoUrl} tamanho={40} />
                 <View style={styles.textos}>
-                  <Texto variante="corpoForte">{nome}</Texto>
-                  {academia.endereco ? <Texto variante="legenda">{academia.endereco}</Texto> : null}
+                  <Texto variante="headline">{nome}</Texto>
+                  {academia.endereco ? <Texto variante="subheadline">{academia.endereco}</Texto> : null}
                 </View>
                 {jaSolicitado ? (
                   <View style={styles.solicitado} accessible accessibilityLabel="Solicitação enviada">
                     <IconeCheck tamanho={16} cor={Cores.texto2} />
-                    <Texto variante="rotuloPlacar" cor="texto2">
+                    <Texto variante="caption" cor="texto2">
                       Enviado
                     </Texto>
                   </View>

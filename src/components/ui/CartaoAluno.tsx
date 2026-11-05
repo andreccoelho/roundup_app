@@ -21,14 +21,14 @@ export default function CartaoAluno({ nome, faixaOuGrau, fotoUrl, frequenciaRece
     <View style={styles.linha}>
       <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={44} />
       <View style={styles.textos}>
-        <Texto variante="corpoForte" numberOfLines={1}>
+        <Texto variante="headline" numberOfLines={1}>
           {nome}
         </Texto>
         {faixaOuGrau ? <SeloFaixa faixaOuGrau={faixaOuGrau} /> : null}
         {alerta ? (
           <View style={styles.alerta}>
             <IconeAlerta tamanho={14} cor={Cores.perigo} />
-            <Texto variante="legenda" cor="perigo">
+            <Texto variante="subheadline" cor="perigo">
               {alerta}
             </Texto>
           </View>

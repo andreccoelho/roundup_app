@@ -16,8 +16,8 @@ export default function IndicadorSequencia({ treinos }: IndicadorSequenciaProps)
   return (
     <View style={styles.container} accessible accessibilityLabel={`Sequência: ${treinos} ${rotulo}`}>
       <IconeChama tamanho={28} cor={treinos > 0 ? Cores.texto : Cores.texto3} />
-      <Texto variante="placarGrande">{exibido}</Texto>
-      <Texto variante="rotuloPlacar" style={styles.rotulo}>
+      <Texto variante="numeroGrande">{exibido}</Texto>
+      <Texto variante="caption" style={styles.rotulo}>
         {rotulo}
       </Texto>
     </View>

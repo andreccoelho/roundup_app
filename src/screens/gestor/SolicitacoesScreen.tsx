@@ -182,8 +182,8 @@ export default function SolicitacoesScreen() {
             <View style={styles.linha}>
               <Avatar nome={nomeSolicitante} tamanho={40} />
               <View style={styles.textos}>
-                <Texto variante="corpoForte">{nomeSolicitante}</Texto>
-                <Texto variante="legenda">{vinculo.perfilSolicitante === 'aluno' ? 'Quer treinar com você' : 'Quer dar aula na academia'}</Texto>
+                <Texto variante="headline">{nomeSolicitante}</Texto>
+                <Texto variante="subheadline">{vinculo.perfilSolicitante === 'aluno' ? 'Quer treinar com você' : 'Quer dar aula na academia'}</Texto>
               </View>
             </View>
             <View style={styles.acoes}>
@@ -216,7 +216,7 @@ export default function SolicitacoesScreen() {
         <>
           <CabecalhoSecao titulo={tituloSecaoVinculados} contador={vinculados.length} />
           {vinculados.length === 0 ? (
-            <Texto variante="legenda">{`Nenhum ${rotuloPerfil} vinculado ainda.`}</Texto>
+            <Texto variante="subheadline">{`Nenhum ${rotuloPerfil} vinculado ainda.`}</Texto>
           ) : (
             vinculados.map((vinculado, i) => (
               <View key={vinculado.vinculoId}>
@@ -224,9 +224,9 @@ export default function SolicitacoesScreen() {
                 <View style={styles.linha}>
                   <Avatar nome={vinculado.nome} tamanho={40} />
                   <View style={styles.textos}>
-                    <Texto variante="corpoForte">{vinculado.nome}</Texto>
+                    <Texto variante="headline">{vinculado.nome}</Texto>
                     {vinculado.matriculado !== undefined ? (
-                      <Texto variante="legenda" cor={vinculado.matriculado ? 'texto2' : 'texto3'}>
+                      <Texto variante="subheadline" cor={vinculado.matriculado ? 'texto2' : 'texto3'}>
                         {vinculado.matriculado ? 'Matriculado em uma turma' : 'Vinculado, sem matrícula ainda'}
                       </Texto>
                     ) : null}

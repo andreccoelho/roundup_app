@@ -28,7 +28,7 @@ export default function Checkbox({ rotulo, marcado, onAlterar, erro }: CheckboxP
       <View style={[styles.caixa, erro && styles.caixaErro, marcado && styles.caixaMarcada]}>
         {marcado ? <IconeCheck tamanho={16} cor={Cores.sobreCor} espessura={2.5} /> : null}
       </View>
-      <Texto variante="corpo" style={styles.texto}>
+      <Texto variante="body" style={styles.texto}>
         {rotulo}
       </Texto>
     </Pressable>

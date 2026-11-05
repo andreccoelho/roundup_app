@@ -22,11 +22,11 @@ export default function EstadoVazio({ titulo, descricao, icone: Icone = IconeLuv
       <View aria-hidden importantForAccessibility="no-hide-descendants">
         <Icone tamanho={64} cor={Cores.texto3} espessura={1.2} />
       </View>
-      <Texto variante="titulo" alinhamento="center" style={styles.titulo}>
+      <Texto variante="title3" alinhamento="center" style={styles.titulo}>
         {titulo}
       </Texto>
       {descricao ? (
-        <Texto variante="legenda" alinhamento="center" style={styles.descricao}>
+        <Texto variante="subheadline" alinhamento="center" style={styles.descricao}>
           {descricao}
         </Texto>
       ) : null}

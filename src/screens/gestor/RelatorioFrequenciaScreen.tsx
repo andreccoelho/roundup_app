@@ -71,7 +71,7 @@ export default function RelatorioFrequenciaScreen() {
       </View>
 
       {erro ? (
-        <Texto variante="legenda" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Texto variante="subheadline" cor="perigo" style={styles.erro} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {erro}
         </Texto>
       ) : null}
@@ -95,11 +95,11 @@ export default function RelatorioFrequenciaScreen() {
                 accessible
                 accessibilityLabel={`${linha.nome}: ${linha.presencas} de ${linha.totalSessoes} sessões`}
               >
-                <Texto variante="corpoForte" style={styles.nome}>
+                <Texto variante="headline" style={styles.nome}>
                   {linha.nome}
                 </Texto>
-                <Texto variante="placar">{linha.presencas}</Texto>
-                <Texto variante="legenda" cor="texto3">
+                <Texto variante="numero">{linha.presencas}</Texto>
+                <Texto variante="subheadline" cor="texto3">
                   {`/ ${linha.totalSessoes}`}
                 </Texto>
               </View>

@@ -54,9 +54,9 @@ export default function BandaIdentidade({
       <View style={compacta ? styles.linha : styles.coluna}>
         <Avatar nome={nome} fotoUrl={fotoUrl} tamanho={compacta ? 52 : 80} />
         <View style={compacta ? styles.textosLinha : styles.textosColuna}>
-          {sobretitulo ? <Texto variante="rotuloPlacar">{sobretitulo}</Texto> : null}
+          {sobretitulo ? <Texto variante="caption">{sobretitulo}</Texto> : null}
           <Texto
-            variante="display"
+            variante="largeTitle"
             numberOfLines={compacta ? 1 : 2}
             adjustsFontSizeToFit={compacta}
             minimumFontScale={0.7}
@@ -68,7 +68,7 @@ export default function BandaIdentidade({
       </View>
       {selo ? <View style={[styles.selo, !compacta && styles.seloCentro]}>{selo}</View> : null}
       {detalhes.map((detalhe) => (
-        <Texto key={detalhe} variante="legenda" alinhamento={compacta ? 'left' : 'center'} style={styles.detalhe}>
+        <Texto key={detalhe} variante="subheadline" alinhamento={compacta ? 'left' : 'center'} style={styles.detalhe}>
           {detalhe}
         </Texto>
       ))}
