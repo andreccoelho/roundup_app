@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import {
   iniciarAmbiente, encerrarAmbiente, limparDados, comoUsuario, semear, usuarioBase, AGORA,
   missaoBase, graduacaoBase,
@@ -74,5 +74,14 @@ describe('coleções de ciclos posteriores — bloqueadas ou com regra real', ()
     });
     const db = comoUsuario('aluno1');
     await assertFails(updateDoc(doc(db, 'consentimentosLGPD', 'consentimento1'), { aceito: false }));
+  });
+
+  test('RF31: o registro de notificações enviadas não é acessível pelo client', async () => {
+    await semear(async (db) => {
+      await setDoc(doc(db, 'notificacoes', 'n1'), { destinatarioId: 'aluno1', tipo: 'conquista', status: 'simulado' });
+    });
+    const db = comoUsuario('aluno1');
+    await assertFails(getDoc(doc(db, 'notificacoes', 'n1')));
+    await assertFails(setDoc(doc(db, 'notificacoes', 'n2'), { destinatarioId: 'aluno1' }));
   });
 });

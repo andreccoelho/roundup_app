@@ -9,6 +9,7 @@ import {
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../services/firebase';
 import { atualizarUsuario, buscarUsuario, criarUsuario } from '../services/usuarios';
+import { registrarDispositivo, desregistrarDispositivo } from '../services/notificacoes';
 import { Usuario } from '../types';
 import { agoraTimestamp } from '../utils/datas';
 
@@ -43,6 +44,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         const dadosUsuario = await buscarUsuario(user.uid);
         setUsuario(dadosUsuario);
+        // RF31: registro do aparelho para push — falha (Expo Go, web, permissão negada) não
+        // interfere no login
+        registrarDispositivo(user.uid).catch((e) => console.warn('registrarDispositivo falhou:', e));
       } else {
         setUsuario(null);
       }
@@ -80,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function logout(): Promise<void> {
+    await desregistrarDispositivo();
     await signOut(auth);
   }
 

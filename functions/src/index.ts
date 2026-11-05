@@ -109,3 +109,10 @@ export {
 
 // RF18: progresso automático e pontos de missão — ver missoes.ts
 export { atualizarMissoesNoCheckIn, creditarPontosDaMissao } from './missoes';
+
+// RF31: notificações push — ver notificacoes.ts
+export {
+  notificarNovaMissao, notificarMissaoConcluida, notificarGraduacao, notificarMarcoDeTreino, enviarLembretesDeSessao,
+} from './notificacoes';
+// Núcleo do lembrete diário, exportado para o teste chamar direto (o emulador não dispara agendamentos)
+export { enviarLembretesDoDia } from './notificacoes';
