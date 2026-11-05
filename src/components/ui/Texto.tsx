@@ -1,88 +1,81 @@
 // Texto — única porta de entrada tipográfica (docs/DESIGN.md). Nenhuma tela recompõe
 // fontSize/fontFamily/fontWeight na mão: escolhe uma variante e, se precisar, a cor.
 //
-// Três registros: display (Homebase, só caixa alta), placar (Oswald, números tabulares) e corpo
-// (sans do sistema). Títulos (display/titulo/secao) entram na árvore de acessibilidade como
-// "header" por padrão — navegação por cabeçalhos no leitor de tela.
+// Escala de tipos do iOS na fonte do sistema (Large Title a Caption). Números — XP, nível,
+// posição, contadores, horário — usam as variantes `numero*`: fonte do sistema em peso forte com
+// algarismos tabulares, como os totais do app Fitness. `marca` (Homebase) é só para o wordmark.
+// Dynamic Type: a fonte acompanha o tamanho do sistema; só os números grandes e o Large Title têm
+// teto (maxFontSizeMultiplier), onde o layout quebraria. Títulos entram na árvore de
+// acessibilidade como "header" por padrão.
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
-import { Cores, FamiliaFonte, TamanhoFonte, type NomeCor } from '../../theme';
+import { FamiliaFonte, Tipografia, useTema, type NomeCor } from '../../theme';
 
 export type VarianteTexto =
-  | 'display'
-  | 'titulo'
-  | 'secao'
-  | 'corpo'
-  | 'corpoForte'
-  | 'legenda'
-  | 'rotuloPlacar'
-  | 'placar'
-  | 'placarGrande'
-  | 'placarXL';
+  | 'largeTitle'
+  | 'title1'
+  | 'title2'
+  | 'title3'
+  | 'headline'
+  | 'body'
+  | 'callout'
+  | 'subheadline'
+  | 'footnote'
+  | 'caption'
+  | 'numero'
+  | 'numeroGrande'
+  | 'numeroXL'
+  | 'marca';
 
-const ESTILOS: Record<VarianteTexto, TextStyle> = {
+const TABULAR: TextStyle = { fontVariant: ['tabular-nums'] };
+
+const ESTILOS = StyleSheet.create<Record<VarianteTexto, TextStyle>>({
+  ...Tipografia,
+  numero: { fontSize: 22, lineHeight: 28, fontWeight: '700', ...TABULAR },
+  numeroGrande: { fontSize: 34, lineHeight: 41, fontWeight: '800', ...TABULAR },
+  numeroXL: { fontSize: 64, lineHeight: 72, fontWeight: '800', ...TABULAR },
   // Homebase só existe em caixa alta; letterSpacing abre o desenho condensado.
-  display: { fontFamily: FamiliaFonte.display, fontSize: TamanhoFonte.xxl, lineHeight: 36, letterSpacing: 1 },
-  titulo: { fontSize: TamanhoFonte.lg, lineHeight: 26, fontWeight: '700' },
-  // Cabeçalho de seção: Oswald caixa alta, mesmo idioma do rótulo de placar, um degrau acima.
-  secao: {
-    fontFamily: FamiliaFonte.placarSemiBold,
-    fontSize: TamanhoFonte.sm,
-    lineHeight: 18,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  corpo: { fontSize: TamanhoFonte.md, lineHeight: 22 },
-  corpoForte: { fontSize: TamanhoFonte.md, lineHeight: 22, fontWeight: '600' },
-  legenda: { fontSize: TamanhoFonte.sm, lineHeight: 20 },
-  rotuloPlacar: {
-    fontFamily: FamiliaFonte.placarSemiBold,
-    fontSize: TamanhoFonte.xs,
-    lineHeight: 16,
-    letterSpacing: 1.5,
-    textTransform: 'uppercase',
-  },
-  placar: { fontFamily: FamiliaFonte.placarBold, fontSize: TamanhoFonte.xl, lineHeight: 28, fontVariant: ['tabular-nums'] },
-  placarGrande: {
-    fontFamily: FamiliaFonte.placarBold,
-    fontSize: TamanhoFonte.placar,
-    lineHeight: 52,
-    fontVariant: ['tabular-nums'],
-  },
-  placarXL: {
-    fontFamily: FamiliaFonte.placarBold,
-    fontSize: TamanhoFonte.placarXL,
-    lineHeight: 100,
-    fontVariant: ['tabular-nums'],
-  },
-};
+  marca: { fontFamily: FamiliaFonte.marca, fontSize: 32, lineHeight: 36, letterSpacing: 1 },
+});
 
 const COR_PADRAO: Record<VarianteTexto, NomeCor> = {
-  display: 'texto',
-  titulo: 'texto',
-  secao: 'texto2',
-  corpo: 'texto',
-  corpoForte: 'texto',
-  legenda: 'texto2',
-  rotuloPlacar: 'texto2',
-  placar: 'texto',
-  placarGrande: 'texto',
-  placarXL: 'texto',
+  largeTitle: 'texto',
+  title1: 'texto',
+  title2: 'texto',
+  title3: 'texto',
+  headline: 'texto',
+  body: 'texto',
+  callout: 'texto',
+  subheadline: 'texto2',
+  footnote: 'texto2',
+  caption: 'texto2',
+  numero: 'texto',
+  numeroGrande: 'texto',
+  numeroXL: 'texto',
+  marca: 'texto',
 };
 
-const VARIANTES_CABECALHO: VarianteTexto[] = ['display', 'titulo', 'secao'];
+const VARIANTES_CABECALHO: VarianteTexto[] = ['largeTitle', 'title1', 'title2', 'title3', 'marca'];
+
+const TETO_ESCALA: Partial<Record<VarianteTexto, number>> = {
+  largeTitle: 1.6,
+  numero: 1.6,
+  numeroGrande: 1.4,
+  numeroXL: 1.2,
+  marca: 1.3,
+};
 
 interface TextoProps extends TextProps {
   variante?: VarianteTexto;
   cor?: NomeCor;
   alinhamento?: TextStyle['textAlign'];
-  // Força ligar/desligar o role "header" (padrão: ligado em display/titulo/secao).
+  // Força ligar/desligar o role "header" (padrão: ligado nos títulos).
   cabecalho?: boolean;
   children?: ReactNode;
 }
 
 export default function Texto({
-  variante = 'corpo',
+  variante = 'body',
   cor,
   alinhamento,
   cabecalho,
@@ -91,12 +84,13 @@ export default function Texto({
   children,
   ...resto
 }: TextoProps) {
+  const { cores } = useTema();
   const ehCabecalho = cabecalho ?? VARIANTES_CABECALHO.includes(variante);
   return (
     <Text
-      style={[ESTILOS[variante], { color: Cores[cor ?? COR_PADRAO[variante]] }, alinhamento ? { textAlign: alinhamento } : null, style]}
+      style={[ESTILOS[variante], { color: cores[cor ?? COR_PADRAO[variante]] }, alinhamento ? { textAlign: alinhamento } : null, style]}
       accessibilityRole={accessibilityRole ?? (ehCabecalho ? 'header' : undefined)}
-      maxFontSizeMultiplier={variante.startsWith('placar') || variante === 'display' ? 1.3 : undefined}
+      maxFontSizeMultiplier={TETO_ESCALA[variante]}
       {...resto}
     >
       {children}
@@ -104,4 +98,4 @@ export default function Texto({
   );
 }
 
-export const estilosTexto = StyleSheet.create(ESTILOS);
+export const estilosTexto = ESTILOS;

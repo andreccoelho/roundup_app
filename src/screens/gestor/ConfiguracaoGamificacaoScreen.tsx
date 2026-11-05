@@ -127,7 +127,7 @@ export default function ConfiguracaoGamificacaoScreen() {
       largura="formulario"
       sobreposicao={<Aviso mensagem={aviso ?? ''} tipo="sucesso" visivel={aviso !== null} onFechar={() => setAviso(null)} acimaDaTabBar />}
     >
-      <Texto variante="legenda" style={styles.intro}>
+      <Texto variante="subheadline" style={styles.intro}>
         {personalizada
           ? 'Estes são os valores da sua academia ou das suas turmas.'
           : 'Você está usando os valores padrão do RoundUp. Altere e salve para personalizar.'}

@@ -17,11 +17,11 @@ interface CabecalhoSecaoProps {
 export default function CabecalhoSecao({ titulo, contador, acaoTitulo, onAcao, semMargem }: CabecalhoSecaoProps) {
   return (
     <View style={[styles.linha, !semMargem && styles.margem]}>
-      <Texto variante="secao" style={styles.titulo}>
+      <Texto variante="footnote" cabecalho style={styles.titulo}>
         {titulo}
       </Texto>
       {contador !== undefined ? (
-        <Texto variante="rotuloPlacar" cor="texto3">
+        <Texto variante="caption" cor="texto3">
           {String(contador)}
         </Texto>
       ) : null}

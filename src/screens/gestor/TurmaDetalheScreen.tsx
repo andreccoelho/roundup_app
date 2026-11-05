@@ -194,16 +194,16 @@ export default function TurmaDetalheScreen() {
       largura="lista"
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} acimaDaTabBar />}
     >
-      <Texto variante="display">{turma.nome}</Texto>
+      <Texto variante="largeTitle">{turma.nome}</Texto>
       <View style={styles.meta}>
         <Etiqueta texto={turma.modalidade} />
         <Etiqueta texto={rotuloNivel(turma.nivel)} />
-        <Texto variante="rotuloPlacar" cor={turma.ativa ? 'sucesso' : 'texto3'}>
+        <Texto variante="caption" cor={turma.ativa ? 'sucesso' : 'texto3'}>
           {turma.ativa ? 'Ativa' : 'Inativa'}
         </Texto>
       </View>
-      {nomeProfessor ? <Texto variante="legenda">{`Professor: ${nomeProfessor}`}</Texto> : null}
-      {grade ? <Texto variante="legenda">{`Grade: ${grade}`}</Texto> : null}
+      {nomeProfessor ? <Texto variante="subheadline">{`Professor: ${nomeProfessor}`}</Texto> : null}
+      {grade ? <Texto variante="subheadline">{`Grade: ${grade}`}</Texto> : null}
 
       <View style={styles.acoes}>
         <Botao titulo="Nova sessão" icone={IconeMais} onPress={() => setFolhaAberta(true)} />
@@ -217,7 +217,7 @@ export default function TurmaDetalheScreen() {
 
       <CabecalhoSecao titulo="Sessões" contador={sessoes.length} />
       {sessoes.length === 0 ? (
-        <Texto variante="legenda">Nenhuma sessão criada ainda.</Texto>
+        <Texto variante="subheadline">Nenhuma sessão criada ainda.</Texto>
       ) : (
         sessoes.map((sessao, i) => {
           const inicio = paraData(sessao.inicio);
@@ -231,16 +231,16 @@ export default function TurmaDetalheScreen() {
                 style={({ pressed }) => [styles.linha, pressed && styles.pressionada]}
               >
                 <View style={styles.horario}>
-                  <Texto variante="placar">{formatarHora(inicio)}</Texto>
-                  <Texto variante="rotuloPlacar" cor="texto3" numberOfLines={1}>
+                  <Texto variante="numero">{formatarHora(inicio)}</Texto>
+                  <Texto variante="caption" cor="texto3" numberOfLines={1}>
                     {rotuloDia(inicio)}
                   </Texto>
                 </View>
                 <View style={styles.textos}>
-                  <Texto variante="rotuloPlacar" cor={sessao.status === 'aberta' ? 'sucesso' : sessao.status === 'cancelada' ? 'texto3' : 'texto2'}>
+                  <Texto variante="caption" cor={sessao.status === 'aberta' ? 'sucesso' : sessao.status === 'cancelada' ? 'texto3' : 'texto2'}>
                     {ROTULO_STATUS_SESSAO[sessao.status]}
                   </Texto>
-                  {sessao.descricao ? <Texto variante="legenda">{sessao.descricao}</Texto> : null}
+                  {sessao.descricao ? <Texto variante="subheadline">{sessao.descricao}</Texto> : null}
                 </View>
                 <IconeChevron tamanho={20} cor={Cores.texto3} />
               </Pressable>
@@ -251,14 +251,14 @@ export default function TurmaDetalheScreen() {
 
       <CabecalhoSecao titulo="Alunos matriculados" contador={matriculas.length} />
       {matriculas.length === 0 ? (
-        <Texto variante="legenda">Nenhum aluno matriculado ainda.</Texto>
+        <Texto variante="subheadline">Nenhum aluno matriculado ainda.</Texto>
       ) : (
         matriculas.map(({ matricula, nomeAluno }, i) => (
           <View key={matricula.id}>
             {i > 0 ? <LinhaFina /> : null}
             <View style={styles.linhaAluno}>
               <Avatar nome={nomeAluno} tamanho={32} />
-              <Texto variante="corpo">{nomeAluno}</Texto>
+              <Texto variante="body">{nomeAluno}</Texto>
             </View>
           </View>
         ))
@@ -273,7 +273,7 @@ export default function TurmaDetalheScreen() {
           onAlterar={setData}
           ajuda="Qualquer data da semana desejada. Uma sessão é criada em cada dia marcado abaixo, nessa semana."
         />
-        <Texto variante="legenda" style={styles.rotuloCampo}>
+        <Texto variante="subheadline" style={styles.rotuloCampo}>
           Dias da semana
         </Texto>
         <View style={styles.linhaChips}>

@@ -91,14 +91,14 @@ export default function MomentoConquista({ conquista, onFechar, posicaoFila }: M
 
         <View style={styles.coluna} accessibilityViewIsModal accessibilityRole="alert" accessibilityLiveRegion="assertive">
           {posicaoFila ? (
-            <Texto variante="rotuloPlacar" cor="texto3" alinhamento="center">
+            <Texto variante="caption" cor="texto3" alinhamento="center">
               {posicaoFila}
             </Texto>
           ) : null}
-          <Texto variante="rotuloPlacar" alinhamento="center" style={styles.sobretitulo}>
+          <Texto variante="caption" alinhamento="center" style={styles.sobretitulo}>
             Conquista
           </Texto>
-          <Texto variante="display" alinhamento="center" style={[styles.titulo, Sombras.duraAcento]}>
+          <Texto variante="largeTitle" alinhamento="center" style={[styles.titulo, Sombras.duraAcento]}>
             {TITULO[conquista.tipo]}
           </Texto>
 
@@ -106,7 +106,7 @@ export default function MomentoConquista({ conquista, onFechar, posicaoFila }: M
             {conquista.tipo === 'nivel' ? (
               <>
                 <IconeCinturao tamanho={48} cor={Cores.acento} />
-                <Texto variante="placarXL" alinhamento="center" accessibilityLabel={`Nível ${conquista.valor}`}>
+                <Texto variante="numeroXL" alinhamento="center" accessibilityLabel={`Nível ${conquista.valor}`}>
                   {String(conquista.valor)}
                 </Texto>
               </>
@@ -117,14 +117,14 @@ export default function MomentoConquista({ conquista, onFechar, posicaoFila }: M
             ) : (
               <>
                 <IconeMedalha tamanho={56} cor={Cores.acento} espessura={1.4} />
-                <Texto variante="placarXL" alinhamento="center">
+                <Texto variante="numeroXL" alinhamento="center">
                   {String(conquista.valor)}
                 </Texto>
               </>
             )}
           </Animated.View>
 
-          <Texto variante="titulo" alinhamento="center" cabecalho={false}>
+          <Texto variante="title3" alinhamento="center" cabecalho={false}>
             {conquista.rotulo}
           </Texto>
         </View>

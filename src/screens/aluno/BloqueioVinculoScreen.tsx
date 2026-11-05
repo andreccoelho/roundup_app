@@ -26,13 +26,13 @@ export default function BloqueioVinculoScreen({ onVincular, onAtualizar }: Bloqu
           aria-hidden
         />
       </View>
-      <Texto variante="rotuloPlacar" alinhamento="center">
+      <Texto variante="caption" alinhamento="center">
         Antes do primeiro round
       </Texto>
-      <Texto variante="display" alinhamento="center" style={styles.titulo}>
+      <Texto variante="largeTitle" alinhamento="center" style={styles.titulo}>
         Escolha seu corner
       </Texto>
-      <Texto variante="corpo" cor="texto2" alinhamento="center" style={styles.descricao}>
+      <Texto variante="body" cor="texto2" alinhamento="center" style={styles.descricao}>
         Vincule-se a uma academia ou a um professor autônomo para ver turmas, sessões e fazer check-in.
       </Texto>
 

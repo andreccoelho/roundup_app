@@ -48,13 +48,13 @@ export default function ContaPrivacidadeScreen() {
       }
     >
       <CabecalhoSecao titulo="Conta" semMargem />
-      <Texto variante="legenda">E-mail de acesso</Texto>
-      <Texto variante="corpoForte" style={styles.email}>
+      <Texto variante="subheadline">E-mail de acesso</Texto>
+      <Texto variante="headline" style={styles.email}>
         {usuario?.email ?? ''}
       </Texto>
 
       <CabecalhoSecao titulo="Privacidade" />
-      <Texto variante="corpo" cor="texto2">
+      <Texto variante="body" cor="texto2">
         Seus dados são tratados conforme a política de privacidade aceita no cadastro (LGPD, Lei 13.709/2018).
       </Texto>
 
@@ -62,9 +62,9 @@ export default function ContaPrivacidadeScreen() {
       <View style={styles.risco}>
         <View style={styles.riscoTitulo}>
           <IconeAlerta tamanho={20} cor={Cores.perigo} />
-          <Texto variante="corpoForte">Excluir conta</Texto>
+          <Texto variante="headline">Excluir conta</Texto>
         </View>
-        <Texto variante="legenda" style={styles.riscoTexto}>
+        <Texto variante="subheadline" style={styles.riscoTexto}>
           Remove sua conta e os dados pessoais associados. Esta ação não pode ser desfeita.
         </Texto>
         <View style={styles.riscoAcao}>

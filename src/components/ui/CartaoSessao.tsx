@@ -24,17 +24,17 @@ export default function CartaoSessao({ nomeTurma, detalhe, inicio, estado, motiv
     <View style={styles.linha}>
       {inicio ? (
         <View style={styles.horario} accessible accessibilityLabel={`${rotuloDia(inicio)} às ${formatarHora(inicio)}`}>
-          <Texto variante="placar">{formatarHora(inicio)}</Texto>
-          <Texto variante="rotuloPlacar" cor="texto3" numberOfLines={1}>
+          <Texto variante="numero">{formatarHora(inicio)}</Texto>
+          <Texto variante="caption" cor="texto3" numberOfLines={1}>
             {rotuloDia(inicio)}
           </Texto>
         </View>
       ) : null}
       <View style={styles.textos}>
-        <Texto variante="corpoForte" numberOfLines={2}>
+        <Texto variante="headline" numberOfLines={2}>
           {nomeTurma}
         </Texto>
-        {detalhe ? <Texto variante="legenda">{detalhe}</Texto> : null}
+        {detalhe ? <Texto variante="subheadline">{detalhe}</Texto> : null}
       </View>
       <BotaoCheckIn estado={estado} motivo={motivo} carregando={carregando} onPress={onCheckIn} />
     </View>

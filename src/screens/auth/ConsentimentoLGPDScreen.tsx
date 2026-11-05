@@ -37,16 +37,16 @@ export default function ConsentimentoLGPDScreen() {
     <Tela largura="formulario" bordas={['topo', 'base']}>
       <Botao variante="voltar" onPress={() => navigation.goBack()} />
 
-      <Texto variante="display" style={styles.titulo}>
+      <Texto variante="largeTitle" style={styles.titulo}>
         Seus dados
       </Texto>
-      <Texto variante="corpo" cor="texto2" style={styles.subtitulo}>
+      <Texto variante="body" cor="texto2" style={styles.subtitulo}>
         {`Antes de continuar, leia como o RoundUp trata seus dados pessoais (versão ${VERSAO_POLITICA_LGPD}).`}
       </Texto>
 
       <View style={styles.politica}>
         <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
-          <Texto variante="legenda">
+          <Texto variante="subheadline">
             [Texto da política de privacidade — placeholder. Substituir pelo conteúdo jurídico definitivo antes da
             entrega, com a descrição real de quais dados são coletados, com que finalidade, por quanto tempo são
             retidos e como o usuário pode exercer seus direitos sob a LGPD (Lei 13.709/2018), incluindo acesso,
@@ -61,7 +61,7 @@ export default function ConsentimentoLGPDScreen() {
 
       <Botao titulo="Continuar" grande onPress={handleContinuar} desabilitado={!aceito} />
       {!aceito ? (
-        <Texto variante="legenda" cor="texto3" alinhamento="center" style={styles.ajuda}>
+        <Texto variante="subheadline" cor="texto3" alinhamento="center" style={styles.ajuda}>
           Marque o aceite para continuar.
         </Texto>
       ) : null}

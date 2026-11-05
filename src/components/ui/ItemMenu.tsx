@@ -39,13 +39,13 @@ export default function ItemMenu({ rotulo, onPress, icone: Icone, descricao, val
           </View>
         ) : null}
         <View style={styles.textos}>
-          <Texto variante="corpo" cor={cor}>
+          <Texto variante="body" cor={cor}>
             {rotulo}
           </Texto>
-          {descricao ? <Texto variante="legenda">{descricao}</Texto> : null}
+          {descricao ? <Texto variante="subheadline">{descricao}</Texto> : null}
         </View>
         {valor ? (
-          <Texto variante="placar" cor="texto2" style={styles.valor}>
+          <Texto variante="numero" cor="texto2" style={styles.valor}>
             {valor}
           </Texto>
         ) : null}

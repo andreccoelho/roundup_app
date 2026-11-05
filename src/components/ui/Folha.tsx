@@ -29,7 +29,7 @@ export default function Folha({ visivel, onFechar, titulo, children }: FolhaProp
         <View style={[styles.folha, { paddingBottom: insets.bottom + Espacamento.padrao }]} accessibilityViewIsModal aria-modal role="dialog">
           <View style={styles.alca} aria-hidden />
           <View style={styles.cabecalho}>
-            <View style={styles.tituloArea}>{titulo ? <Texto variante="titulo">{titulo}</Texto> : null}</View>
+            <View style={styles.tituloArea}>{titulo ? <Texto variante="title3">{titulo}</Texto> : null}</View>
             <Pressable
               onPress={onFechar}
               hitSlop={8}

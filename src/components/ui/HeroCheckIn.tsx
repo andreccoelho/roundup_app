@@ -94,17 +94,17 @@ export default function HeroCheckIn({ nomeTurma, inicio, janelaInicio, janelaFim
         <View style={styles.conteudo}>
           <View style={styles.topo} accessible accessibilityLabel={`Próximo treino: ${nomeTurma}, ${rotuloDia(inicio)} às ${formatarHora(inicio)}${professor ? `, com ${professor}` : ''}`}>
             <View style={styles.horario}>
-              <Texto variante="rotuloPlacar">{rotuloDia(inicio)}</Texto>
-              <Texto variante="placarGrande">{formatarHora(inicio)}</Texto>
+              <Texto variante="caption">{rotuloDia(inicio)}</Texto>
+              <Texto variante="numeroGrande">{formatarHora(inicio)}</Texto>
             </View>
             <View style={styles.textos}>
-              <Texto variante="rotuloPlacar" cor="texto3">
+              <Texto variante="caption" cor="texto3">
                 Próximo treino
               </Texto>
-              <Texto variante="corpoForte" numberOfLines={2}>
+              <Texto variante="headline" numberOfLines={2}>
                 {nomeTurma}
               </Texto>
-              {professor ? <Texto variante="legenda">{`com ${professor}`}</Texto> : null}
+              {professor ? <Texto variante="subheadline">{`com ${professor}`}</Texto> : null}
             </View>
           </View>
 
@@ -127,7 +127,7 @@ export default function HeroCheckIn({ nomeTurma, inicio, janelaInicio, janelaFim
                 ) : (
                   <>
                     <IconeLuva tamanho={24} cor={Cores.sobreCor} espessura={2} />
-                    <Texto variante="secao" cor="sobreCor" style={styles.rotuloCta} cabecalho={false}>
+                    <Texto variante="footnote" cor="sobreTint" style={styles.rotuloCta} cabecalho={false}>
                       Fazer check-in
                     </Texto>
                   </>
@@ -136,7 +136,7 @@ export default function HeroCheckIn({ nomeTurma, inicio, janelaInicio, janelaFim
             ) : estado === 'foraDaJanela' ? (
               <View style={[styles.placa, styles.placaFechada]} accessible accessibilityLabel={descricaoEstado}>
                 <IconeCadeado tamanho={20} cor={Cores.texto2} />
-                <Texto variante="secao" cor="texto2" cabecalho={false}>
+                <Texto variante="footnote" cor="texto2" cabecalho={false}>
                   {antesDeAbrir ? `Abre em ${formatarDuracao(janelaInicio.getTime() - agora.getTime())}` : 'Check-in encerrado'}
                 </Texto>
               </View>
@@ -144,13 +144,13 @@ export default function HeroCheckIn({ nomeTurma, inicio, janelaInicio, janelaFim
               <View style={[styles.placa, styles.placaFeita]} accessible accessibilityLabel="Check-in feito. Treino registrado.">
                 <Animated.View style={[styles.flash, { opacity: flash }]} />
                 <IconeCheck tamanho={24} cor={Cores.sobreCor} espessura={2.5} />
-                <Texto variante="secao" cor="sobreCor" cabecalho={false}>
+                <Texto variante="footnote" cor="sobreTint" cabecalho={false}>
                   Treino registrado
                 </Texto>
               </View>
             )}
             {estado === 'disponivel' ? (
-              <Texto variante="legenda" cor="texto3" style={styles.nota}>
+              <Texto variante="subheadline" cor="texto3" style={styles.nota}>
                 {descricaoEstado}
               </Texto>
             ) : null}

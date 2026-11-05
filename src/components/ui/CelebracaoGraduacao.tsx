@@ -48,16 +48,16 @@ export default function CelebracaoGraduacao({ visivel, grau, modalidade, nomeAlu
           accessibilityViewIsModal
           accessibilityRole="alert"
         >
-          <Texto variante="rotuloPlacar" alinhamento="center">
+          <Texto variante="caption" alinhamento="center">
             Graduação registrada
           </Texto>
-          <Texto variante="display" alinhamento="center" style={[styles.titulo, Sombras.duraAcento]}>
+          <Texto variante="largeTitle" alinhamento="center" style={[styles.titulo, Sombras.duraAcento]}>
             Novo grau
           </Texto>
           <View style={styles.faixa}>
             <SeloFaixa faixaOuGrau={grau} tamanho="grande" />
           </View>
-          <Texto variante="corpo" cor="texto2" alinhamento="center">
+          <Texto variante="body" cor="texto2" alinhamento="center">
             {`${nomeAluno}, ${modalidade}`}
           </Texto>
           <View style={styles.acao}>

@@ -25,8 +25,8 @@ export default function Toggle({ rotulo, descricao, valor, onAlterar, desabilita
       aria-checked={valor}
     >
       <View style={styles.textos}>
-        <Texto variante="corpoForte">{rotulo}</Texto>
-        {descricao ? <Texto variante="legenda">{descricao}</Texto> : null}
+        <Texto variante="headline">{rotulo}</Texto>
+        {descricao ? <Texto variante="subheadline">{descricao}</Texto> : null}
       </View>
       <Switch
         value={valor}

@@ -53,13 +53,13 @@ export default function Medalha({ rotulo, conquistada = true, tipo = 'treinos', 
         <View style={styles.centro} aria-hidden>
           <Icone tamanho={18} cor={corConteudo} espessura={1.8} />
           {numero !== undefined ? (
-            <Texto variante="placar" style={[styles.numero, { color: corConteudo }]}>
+            <Texto variante="numero" style={[styles.numero, { color: corConteudo }]}>
               {String(numero)}
             </Texto>
           ) : null}
         </View>
       </View>
-      <Texto variante="legenda" cor={conquistada ? 'texto' : 'texto3'} alinhamento="center" style={styles.rotulo} numberOfLines={2}>
+      <Texto variante="subheadline" cor={conquistada ? 'texto' : 'texto3'} alinhamento="center" style={styles.rotulo} numberOfLines={2}>
         {rotulo}
       </Texto>
     </View>

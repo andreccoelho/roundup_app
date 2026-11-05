@@ -68,7 +68,7 @@ export default function AlunosScreen() {
 
   return (
     <Tela largura="lista">
-      <Texto variante="legenda" style={styles.intro}>
+      <Texto variante="subheadline" style={styles.intro}>
         Toque num aluno para registrar graduação. As marcas mostram as últimas presenças.
       </Texto>
       <CabecalhoSecao titulo="Alunos" contador={emQueda > 0 ? `${alunos.length}, ${emQueda} em queda` : alunos.length} semMargem />

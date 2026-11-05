@@ -126,14 +126,14 @@ export default function SessaoDetalheScreen() {
   return (
     <Tela largura="lista">
       <Cartao>
-        <Texto variante="rotuloPlacar" cor={sessao.status === 'aberta' ? 'sucesso' : 'texto2'}>
+        <Texto variante="caption" cor={sessao.status === 'aberta' ? 'sucesso' : 'texto2'}>
           {ROTULO_STATUS_SESSAO[sessao.status]}
         </Texto>
         <View style={styles.horario}>
-          <Texto variante="placarGrande">{formatarHora(inicio)}</Texto>
-          <Texto variante="rotuloPlacar">{rotuloDia(inicio)}</Texto>
+          <Texto variante="numeroGrande">{formatarHora(inicio)}</Texto>
+          <Texto variante="caption">{rotuloDia(inicio)}</Texto>
         </View>
-        <Texto variante="legenda">
+        <Texto variante="subheadline">
           {`Janela de check-in: ${formatarDiaHora(paraData(sessao.janelaCheckInInicio))} até ${formatarHora(paraData(sessao.janelaCheckInFim))}`}
         </Texto>
       </Cartao>
@@ -144,7 +144,7 @@ export default function SessaoDetalheScreen() {
         ) : sessao.status === 'aberta' ? (
           <Botao titulo="Encerrar sessão" onPress={handleEncerrar} carregando={processando} />
         ) : (
-          <Texto variante="legenda" alinhamento="center">
+          <Texto variante="subheadline" alinhamento="center">
             {sessao.status === 'encerrada' ? 'Sessão encerrada. Os check-ins abaixo ficam no histórico.' : 'Sessão cancelada.'}
           </Texto>
         )}
@@ -153,7 +153,7 @@ export default function SessaoDetalheScreen() {
 
       <CabecalhoSecao titulo="Check-ins recebidos" contador={pendentes > 0 ? `${checkIns.length} (${pendentes} aguardando)` : checkIns.length} />
       {checkIns.length === 0 ? (
-        <Texto variante="legenda">Nenhum check-in recebido ainda.</Texto>
+        <Texto variante="subheadline">Nenhum check-in recebido ainda.</Texto>
       ) : (
         checkIns.map(({ checkIn, nomeAluno }, i) => (
           <View key={checkIn.id}>
@@ -161,10 +161,10 @@ export default function SessaoDetalheScreen() {
             <View style={styles.linha} accessible accessibilityLabel={`${nomeAluno}, ${formatarHora(paraData(checkIn.dataHora))}, ${ROTULO_STATUS_CHECKIN[checkIn.status]}`}>
               <Avatar nome={nomeAluno} tamanho={36} />
               <View style={styles.textos}>
-                <Texto variante="corpoForte">{nomeAluno}</Texto>
-                <Texto variante="legenda">{`Check-in às ${formatarHora(paraData(checkIn.dataHora))}`}</Texto>
+                <Texto variante="headline">{nomeAluno}</Texto>
+                <Texto variante="subheadline">{`Check-in às ${formatarHora(paraData(checkIn.dataHora))}`}</Texto>
               </View>
-              <Texto variante="rotuloPlacar" cor={checkIn.status === 'validado' ? 'sucesso' : checkIn.status === 'rejeitado' ? 'perigo' : 'texto2'}>
+              <Texto variante="caption" cor={checkIn.status === 'validado' ? 'sucesso' : checkIn.status === 'rejeitado' ? 'perigo' : 'texto2'}>
                 {ROTULO_STATUS_CHECKIN[checkIn.status]}
               </Texto>
             </View>
