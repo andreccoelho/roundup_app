@@ -83,7 +83,8 @@ function LinhaLista({
         <Pressable
           onPress={onPress}
           accessibilityRole="button"
-          accessibilityLabel={accessibilityLabel ?? (descricao ? `${rotulo}. ${descricao}` : rotulo)}
+          // Sem rótulo próprio, o nome acessível é o texto visível (rótulo + descrição), sem divergir dele
+          accessibilityLabel={accessibilityLabel}
           style={({ pressed }) => [styles.linha, pressed && styles.pressionada, estiloSemOutline, focado && estiloAnelFoco]}
           {...propsFoco}
         >

@@ -1,90 +1,98 @@
-# RoundUp — Design ("Noite de luta")
+# RoundUp — Design (direção Apple)
 
-**Fonte única de decisões visuais.** Substitui `DESIGN_BRIEF.md`, `script.md` e `docs/AUDITORIA_UI.md`, que ficam só como histórico. Diagnóstico de origem: `RELATORIO_UI_UX.md`. Tokens implementados em `src/theme/tokens.ts`.
+**Fonte única de decisões visuais.** Substitui a direção "Noite de luta" (`docs/historico/DESIGN_noite_de_luta.md`). Tokens em `src/theme/tokens.ts`; tema em `src/theme/tema.tsx`. Resultado e decisões do redesign: `docs/REDESIGN_APPLE_RESULTADO.md`. Contraste: `docs/redesign-apple/contraste.md`.
 
-Conceito: o app como o ringue numa noite de evento — base escura de arena, superfícies como lona sob o refletor, um único acento de **corner vermelho** para ação e destaque.
+Conceito: o RoundUp com cara de app nativo moderno da Apple, seguindo as Human Interface Guidelines do iOS, como os apps Saúde, Fitness e Atividade: limpo, leve, com o vermelho da marca como cor de destaque (como o rosa no Fitness).
 
 ## Tema
-- **Só escuro.** `app.json` → `"userInterfaceStyle": "dark"`, `"backgroundColor": "#0B0B0C"`. Não existe tema claro.
-- Status bar sempre `light` (definida uma vez em `App.tsx`).
+- **Claro e escuro, seguindo o aparelho** (`useColorScheme`; no web, `prefers-color-scheme`). `app.json` → `"userInterfaceStyle": "automatic"`. `expo-system-ui` sincroniza o fundo da view nativa raiz com o tema (`App.tsx`). Status bar em `auto`.
+- Componentes nunca importam uma paleta: usam `useTema().cores` e `criarEstilos((c, escuro) => ({...}))`, que cria um StyleSheet por tema e devolve o do tema atual.
+- A Galeria (só `__DEV__`) tem um seletor Sistema/Claro/Escuro (`forcarEsquema`).
 
-## Paleta
+## Paleta (cores semânticas por tema, modelo das cores de sistema do iOS)
 
-| Token | Valor | Uso |
-|---|---|---|
-| `fundo` | `#0B0B0C` | fundo de toda tela |
-| `superficie1` | `#161618` | cards, inputs, linha destacada |
-| `superficie2` | `#222225` | folha, diálogo, estado pressionado |
-| `linha` | `#2C2C30` | separadores (decorativo) |
-| `linhaForte` | `#6E6E74` | borda de input, contornos de UI (≥3:1) |
-| `texto` | `#F4F2EE` | texto principal |
-| `texto2` | `#A8A6A1` | texto secundário |
-| `texto3` | `#8A8884` | terciário, placeholder |
-| `acento` | `#F03A2E` | CTA principal + 1 destaque por tela |
-| `sucesso` | `#2FB457` | check-in feito, presença |
-| `perigo` | `#E5322D` | erro, ação destrutiva |
-| `ouro` | `#D4A72C` | só 1º lugar do ranking e medalha de nível máximo |
-| `sobreCor` | `#0B0B0C` | texto/ícone sobre acento, sucesso, perigo, ouro |
-| `overlay` | `rgba(0,0,0,0.72)` | fundo de diálogo/folha/conquista |
-| `foco` | = `acento` | anel/realce de foco |
+| Token | Claro | Escuro | Uso |
+|---|---|---|---|
+| `fundo` | `#FFFFFF` | `#000000` | systemBackground |
+| `fundoAgrupado` | `#F2F2F7` | `#000000` | systemGroupedBackground — fundo de quase todas as telas |
+| `superficie` | `#FFFFFF` | `#1C1C1E` | secondarySystemGroupedBackground — células, cartões |
+| `superficieElevada` | `#FFFFFF` | `#2C2C2E` | sheet, alerta, toast, conquista |
+| `texto` | `#000000` | `#FFFFFF` | label |
+| `texto2` | `#56565C` | `#AEAEB2` | secondaryLabel (ajustado para 4,5:1) |
+| `texto3` | `#6A6A70` | `#98989F` | tertiaryLabel (ajustado), placeholder, chevron |
+| `separador` | `rgba(60,60,67,0.29)` | `rgba(84,84,88,0.65)` | separator, hairline |
+| `preenchimento` | `rgba(120,120,128,0.12)` | `rgba(120,120,128,0.32)` | fill — campos, botão cinza, trilhas |
+| `preenchimentoOpaco` | `#E5E5EA` | `#3A3A3C` | avatar (não soma camadas) |
+| `tint` | `#CC2A1F` | `#FF5A4F` | vermelho da marca como texto, ícone e controle |
+| `tintCheio` | `#CC2A1F` | `#CC2A1F` | fundo de botão cheio, chip selecionado, trilha do switch |
+| `tintSuave` | 8% do tint | 16% do tint | destaque leve (linha do próprio usuário, erro de formulário) |
+| `sucesso` / `sucessoCheio` | `#177A34` / `#1A7F37` | `#30D158` / `#1A7F37` | presença, check-in feito |
+| `perigo` / `perigoCheio` | `#C4231B` / `#C4231B` | `#FF6961` / `#C4231B` | erro, ação destrutiva |
+| `ouro` | `#876000` | `#FFD60A` | só 1º lugar e medalha máxima |
+| `controleSelecionado` | `#FFFFFF` | `#636366` | segmento ativo |
 
 Regras:
-- **Acento**: no máximo 1-2 usos por tela (CTA principal + um destaque). Texto sobre botão de acento sempre `#0B0B0C`.
-- **Ouro**: só 1º lugar do ranking e medalha de nível máximo.
-- `sucesso`/`perigo` são só funcionais.
-- Texto em `perigo` só sobre `fundo` (4,5:1); sobre superfícies cai abaixo de 4,5. `texto3` nunca sobre `superficie2`.
+- **Tint** é o único acento: botões principais, aba ativa, links, toggles, ícones de lista. Verde e ouro são só funcionais.
+- Rótulo sobre `tintCheio`, `perigoCheio` e `sucessoCheio` é sempre branco (5,1 a 5,8:1).
+- Anel de foco de teclado (web): `CorFoco` `#CC2A1F`, 2px, afastado 2px (5,4:1 no claro, 3,9:1 no escuro).
 - Cores de faixa (`CoresFaixa`) são dado de domínio e só aparecem no `SeloFaixa`.
 
-## Tipografia — sempre via `<Texto variante>` (`src/components/ui/Texto.tsx`)
+## Tipografia — fonte do sistema, sempre via `<Texto variante>`
 
-| Variante | Família | Tamanho / linha | Uso |
-|---|---|---|---|
-| `display` | Homebase (caixa alta nativa) | 32/36, ls 1 | título de tela/hero, wordmark |
-| `titulo` | sistema 700 | 20/26 | título de bloco, diálogo, folha |
-| `secao` | Oswald 600, CAIXA ALTA | 14/18, ls 1.5 | cabeçalho de seção |
-| `corpo` / `corpoForte` | sistema 400 / 600 | 16/22 | texto corrido, listas, nomes |
-| `legenda` | sistema 400 | 14/20 | metadados, ajuda |
-| `rotuloPlacar` | Oswald 600, CAIXA ALTA | 12/16, ls 1.5 | "NÍVEL", "XP", "SEQUÊNCIA" |
-| `placar` | Oswald 700, tabular | 24/28 | números de lista/estatística |
-| `placarGrande` | Oswald 700, tabular | 48/52 | hero (horário, XP) |
-| `placarXL` | Oswald 700, tabular | 96/100 | momento de conquista |
+| Variante | Tamanho / linha / peso | Uso |
+|---|---|---|
+| `largeTitle` | 34/41, bold | título grande da tela |
+| `title1` | 28/34, bold | título de tela empilhada (detalhe) |
+| `title2` | 22/28, bold | nome no perfil, título de conquista |
+| `title3` | 20/25, semibold | cabeçalho de bloco ("Progresso", "Medalhas"), saudação |
+| `headline` | 17/22, semibold | ênfase, botão |
+| `body` | 17/22 | texto corrido, linhas de lista |
+| `callout` | 16/21 | — |
+| `subheadline` | 15/20 | metadados, descrição |
+| `footnote` | 13/18 | cabeçalho e rodapé de lista agrupada, ajuda |
+| `caption` | 12/16 | rótulos mínimos |
+| `numero` / `numeroGrande` / `numeroXL` | 22 bold / 34 heavy / 64 heavy, `tabular-nums` | XP, nível, posição, horário, contadores |
+| `marca` | Homebase 32 | só wordmark |
 
-- **Caixa alta** liberada só em títulos Homebase e rótulos de placar Oswald (12-14px, letterSpacing 1.5).
-- **Números** (XP, nível, posição, contadores, horário do hero) sempre em Oswald.
-- **Sombra dura**: removida dos títulos. Permitida só em título `display` de hero/conquista, na cor do acento, offset 2/2 (`Sombras.duraAcento`).
-- Títulos (`display`, `titulo`, `secao`) recebem `accessibilityRole="header"` automaticamente.
-- Nenhum metadado unido por ponto médio: separar por peso/tamanho/linha.
+- **SF Pro no iOS, Roboto no Android, pilha do sistema no web** (Segoe UI no Windows). A Oswald saiu do app; a Homebase fica no logo, no splash e no wordmark.
+- **Dynamic Type**: `allowFontScaling` ativo em todo texto; teto (`maxFontSizeMultiplier`) só em Large Title (1,6×), números (1,2× a 1,6×) e na marca (1,3×).
+- Sem caixa alta. Títulos entram como `header` na árvore de acessibilidade.
 
 ## Forma
-- **Cantos vivos**: raio 2-4 (`Raios.vivo`, `Raios.pequeno`) em botões, inputs e cards. Pílula (`Raios.pilula`) só em chips.
-- **Corte diagonal** (`Geometria.corteDiagonal`): no máximo uma vez por tela — hero de check-in e card de faixa.
-- **Listas sem card com borda**: linhas sobre o fundo, separadas por `linha` (`LinhaFina`). A linha do próprio usuário ganha barra lateral de 3px em acento.
-- Sem sombra suave. Profundidade = superfícies (`fundo` → `superficie1` → `superficie2`) + overlay.
+- **Cantos contínuos** (`borderCurve: 'continuous'`): 10 em campos (`Raios.campo`), 12 em listas e cartões (`Raios.lista`), 16 em cartões de destaque e sheets (`Raios.destaque`), cápsula em botões e chips.
+- **Listas agrupadas inseridas** (`GrupoLista` + `LinhaLista`) como padrão: cabeçalho em Footnote, linhas de no mínimo 44pt, separador hairline recuado até o texto, chevron à direita quando navega, rodapé explicativo.
+- **Cartões de destaque** (`Cartao destaque`) só onde há um dado principal: check-in do dia, progresso de nível, posição na classificação, sessão do dia, contadores da academia. Sem borda; sombra muito sutil só no claro.
+- Saíram: textura de lona, corte diagonal, bandas de identidade com marca d'água, sombras duras, cantos vivos.
+
+## Materiais e navegação
+- **iOS**: cabeçalho transparente com material translúcido (`headerBlurEffect: 'systemChromeMaterial'`) e **Large Title** nas raízes das abas, que encolhe ao rolar (`contentInsetAdjustmentBehavior` na `Tela`).
+- **Android e web**: cabeçalho sólido no fundo agrupado (título Headline, voltar em tint); nas raízes das abas o cabeçalho some e a `Tela` desenha o título grande (`tituloGrande`).
+- **Tab bar translúcida** (`expo-blur`) no iOS e no web; sólida no Android e com "Reduzir transparência" ligado. Ícone ativo preenchido em tint, inativo em contorno `texto3`.
+- **Ícones**: SVG próprio no estilo SF Symbols (traço 1,75, pontas e junções arredondadas, versão preenchida para aba ativa), igual nas três plataformas. Sem `expo-symbols`.
+- **Fluxos curtos como sheet**: editar perfil, notificações, registrar graduação e pontuação (`presentation: 'modal'` = pageSheet no iOS), com "Cancelar" à esquerda e "Salvar"/"Registrar" à direita; notificações salvam a cada toque e só têm "OK". Criar turma, sessão e missão usam a `Folha` (pageSheet nativo no iOS; sheet desenhado no Android/web) com "Cancelar" e "Criar" na barra.
+- **Confirmações**: `Dialogo` vira `Alert.alert` nativo no iOS e no Android (botão destrutivo em vermelho); no web, o mesmo desenho do alerta do iOS.
 
 ## Componentes (resumo)
-- **Botao**: `primario` (acento, texto `sobreCor`), `secundario` (contorno `linhaForte`), `fantasma`, `destrutivo` (perigo), `texto`, `voltar` (alinhado à esquerda, com ícone). Pressed = escala 0.97. Foco visível no web.
-- **CampoTexto**: fundo `superficie1`, sublinhado `linhaForte`, foco em acento 2px, label acessível, erro em live region, mostrar/ocultar senha, máscara opcional de data/hora.
-- **Toggle**, **Checkbox**, **Abas**, **Etiqueta** (chip, único raio), **Dialogo**, **Folha**, **Aviso** (sucesso/erro/info, fixo na viewport), **EstadoVazio/EstadoErro** (ícone 64px + CTA), **CabecalhoSecao**, **ItemMenu**, **Estatistica**, **BandaIdentidade** (aluno/gestor).
-- Domínio: **HeroCheckIn**, **BarraProgresso** (segmentos por round, trilha ≥3:1), **SeloFaixa** (faixa de tecido SVG), **Medalha** (emblema SVG), **Podio** (blocos com alturas), **LinhaClassificacao**, **MomentoConquista**.
+- **Base**: Botao (cheio, cinza, simples, destrutivo, link, voltar; cápsula; pressionado = opacidade 0,7), CampoTexto (preenchido, rótulo sempre visível, borda de 2px no foco/erro), GrupoLista, LinhaLista, ItemMenu, Toggle, Abas (segmentado), Etiqueta (chip), Checkbox (círculo), Folha, Dialogo, Aviso (toast), EstadoVazio/EstadoErro (ícone em texto3, Title 3, uma linha, botão), Esqueleto, Cartao, Estatistica, Avatar, MensagemErro, CabecalhoSecao, CabecalhoPerfil, BotaoCabecalho, Logo.
+- **Domínio**: HeroCheckIn (cartão de destaque, botão cápsula de 50pt), AnelProgresso (anel de Atividade com o nível no centro), BarraProgresso (barra contínua), IndicadorSequencia (cartão compacto com chama), Medalha (emblema redondo; cinza translúcido com cadeado quando bloqueada; ouro só na máxima), Podio (três avatares com medalha de posição, sem blocos), LinhaClassificacao (linha do usuário em `tintSuave`), LinhaChamada (círculo de check), CartaoSessao, BotaoCheckIn, CartaoMissao, CartaoAluno, IndicadorFrequencia (pontos cheios × anéis), SeloFaixa, MomentoConquista e CelebracaoGraduacao (cartão central com emblema e "Continuar").
 
 ## Layout
-- Toda tela usa `<Tela>` (`src/components/ui/Tela.tsx`): fundo, safe area, coluna centralizada.
-- Web/tablet: só containers com `maxWidth` — **480** em auth/formulários, **720** em listas — centralizados. Sem 2 colunas nem rail lateral por enquanto.
-- Gutter lateral 16. Tab bar: altura 56 + `insets.bottom`; aba ativa com traço de 2px em acento.
-- Telas de gestor seguem o mesmo visual escuro do aluno.
+- Toda tela usa `<Tela>`: fundo do tema, safe area, coluna centralizada; web/tablet só com `maxWidth` — **480** em formulários e **720** em listas. Gutter de 16.
+- A tab bar fica sobre o conteúdo; a `Tela` soma a altura dela ao respiro inferior.
 
-## Motion
-- `Animated` do RN (sem reanimated). Haptics via `expo-haptics`.
-- Check-in: punch (escala) + flash + haptic. Conquista: flash de acento + número entrando. Contador de XP e preenchimento de barra animados.
-- **Tudo respeita reduce motion** (`AccessibilityInfo.isReduceMotionEnabled`): sem animação, estado final direto.
+## Movimento e haptics
+- `Animated` do RN com molas curtas (`Mola`: damping 18, stiffness 220), sem overshoot exagerado. Sem `react-native-reanimated`.
+- Check-in confirmado: o ✓ cresce com mola + haptic de sucesso. Aviso entra com mola. Conquista: o cartão sobe de 92% para 100% e o fundo escurece.
+- Haptics (`expo-haptics`): seleção em toggles, abas, chips e checkbox; impacto leve ao fazer check-in e ao marcar presença; sucesso no check-in confirmado e na conquista; aviso em erro.
+- **Reduce motion**: sem mola nem fade, estado final direto. **Reduce transparency**: tab bar sólida (o blur do cabeçalho nativo do iOS respeita a configuração sozinho).
 
 ## Imagens
-- Nenhuma foto ou ilustração externa. Estados vazios e conquistas usam os ícones SVG próprios em tamanho grande.
-- Ícone do app, adaptive icon e splash: logo invertido sobre `#0B0B0C`.
+- Sem fotos nem ilustrações externas. Estados vazios usam os ícones próprios em 56pt. Logo: versão escura no claro, invertida no escuro (`Logo`).
+- Ícone do app, adaptive icon e splash: inalterados (logo invertido sobre `#0B0B0C`).
 
 ## Dependências
-- Aprovada: `expo-haptics`.
-- Não usar: `react-native-reanimated`, `expo-linear-gradient`, `@react-native-community/datetimepicker`. Gradiente, se preciso, via `react-native-svg`.
+- Aprovadas e usadas: `expo-haptics`, `expo-system-ui`, `expo-blur`. Aprovada e não usada: `expo-symbols`.
+- Removida: `@expo-google-fonts/oswald`.
 
 ## Dados
-- Redesign só de apresentação. O `SeloFaixa` interpreta o texto livre atual de faixa (ex.: "roxa", "azul", "preta", "2º grau"); não há mudança de modelo nem de Firestore.
+- Redesign só de apresentação: nenhuma mudança em serviços, tipos, regras ou testes. O `SeloFaixa` continua interpretando o texto livre de faixa (R-05).

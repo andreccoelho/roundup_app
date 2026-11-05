@@ -27,6 +27,7 @@ export interface PaletaCores {
   separador: string; // separator, translúcido
   separadorOpaco: string; // opaqueSeparator — onde a transparência somaria camadas
   preenchimento: string; // fill — campos, botão cinza, trilhas
+  preenchimentoOpaco: string; // systemGray5 — avatar (não soma camadas sobre linhas destacadas)
   tint: string; // vermelho da marca como texto/ícone/controle
   tintCheio: string; // fundo de botão cheio (rótulo `sobreTint`)
   tintSuave: string; // fundo de destaque leve (linha do próprio usuário)
@@ -52,6 +53,7 @@ export const CoresClaro: PaletaCores = {
   separador: 'rgba(60,60,67,0.29)',
   separadorOpaco: '#C6C6C8',
   preenchimento: 'rgba(120,120,128,0.12)',
+  preenchimentoOpaco: '#E5E5EA',
   tint: '#CC2A1F',
   tintCheio: '#CC2A1F',
   tintSuave: 'rgba(204,42,31,0.08)',
@@ -77,6 +79,7 @@ export const CoresEscuro: PaletaCores = {
   separador: 'rgba(84,84,88,0.65)',
   separadorOpaco: '#38383A',
   preenchimento: 'rgba(120,120,128,0.32)',
+  preenchimentoOpaco: '#3A3A3C',
   tint: '#FF5A4F',
   tintCheio: '#CC2A1F',
   tintSuave: 'rgba(255,90,79,0.16)',

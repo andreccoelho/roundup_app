@@ -87,7 +87,7 @@ export default function PerfilAlunoVisao({
       </Cartao>
 
       <GrupoLista titulo="Graduação">
-        <LinhaLista accessibilityLabel={`Faixa: ${faixa ?? 'não informada'}`}>
+        <LinhaLista>
           <SeloFaixa faixaOuGrau={faixa ?? 'Faixa não informada'} />
         </LinhaLista>
       </GrupoLista>

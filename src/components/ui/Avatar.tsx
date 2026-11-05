@@ -42,7 +42,8 @@ export default function Avatar({ nome, fotoUrl, tamanho = 40 }: AvatarProps) {
 }
 
 const useEstilos = criarEstilos((c) => ({
-  fundo: { backgroundColor: c.preenchimento },
+  // Opaco: sobre a linha destacada (tintSuave) um fundo translúcido derrubava o contraste das iniciais
+  fundo: { backgroundColor: c.preenchimentoOpaco },
   iniciais: { alignItems: 'center', justifyContent: 'center' },
   textoIniciais: { color: c.texto2, fontWeight: '600' },
 }));

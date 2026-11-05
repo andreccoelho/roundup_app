@@ -166,14 +166,16 @@ Confirmado no plano anterior (`docs/PLANO_REGRAS_CICLO2_3.md`): essas duas não 
 
 ## Redesign "Noite de luta" — decisões tomadas pela opção conservadora
 
+Revisadas no redesign Apple (`docs/REDESIGN_APPLE_RESULTADO.md`): R-02, R-03 e R-08 mudaram; as demais continuam valendo.
+
 ### R-01 — Lint não existe no projeto
 O pedido de rodar "o lint" ao fim de cada fase não tem alvo: não há ESLint, config nem script `lint` no `package.json`. `npx expo lint` instalaria `eslint` e `eslint-config-expo` e criaria um arquivo de config — dependências fora da lista aprovada (só `expo-haptics`). **Decisão:** não configurar; a verificação por fase é `npx tsc --noEmit` (modo `strict`). **A validar:** aprovar `npx expo lint` numa rodada própria.
 
-### R-02 — `userInterfaceStyle: "dark"` e `backgroundColor` raiz exigem `expo-system-ui`
-Pela doc do SDK 57 (`config/app`), `userInterfaceStyle` no Android e o `backgroundColor` raiz no iOS só têm efeito com `expo-system-ui` instalado. Não está na lista aprovada. **Decisão:** configurar os dois campos no `app.json` mesmo assim (inofensivos sem o pacote) e garantir o fundo escuro pelo próprio app (`App.tsx` + tema do React Navigation). Sem o pacote, pode haver um frame da cor padrão do sistema atrás da raiz em transições nativas. **A validar:** aprovar `npx expo install expo-system-ui`.
+### R-02 — `userInterfaceStyle` e `backgroundColor` raiz exigem `expo-system-ui` — ✅ RESOLVIDO
+No redesign Apple, `expo-system-ui` foi instalado e o app passou a `userInterfaceStyle: "automatic"`, seguindo a aparência do aparelho. `App.tsx` chama `SystemUI.setBackgroundColorAsync` com o fundo do tema atual, então a view nativa da raiz acompanha claro/escuro nas transições.
 
 ### R-03 — Qual é a "medalha de nível máximo" (única em ouro)
-`docs/DESIGN.md` reserva o ouro para o 1º do ranking e a "medalha de nível máximo", mas os marcos de `src/config/gamificacao.ts` não têm uma medalha de nível. **Decisão:** a medalha mais alta da progressão principal (`treinos-100`, "100 treinos") é a única marcada como `maxima`. **A validar:** se deve ser outra (ex.: uma medalha nova de "nível 11"), o que exigiria mudar a config de marcos.
+`docs/DESIGN.md` reserva o ouro para o 1º do ranking e a "medalha de nível máximo", mas os marcos de `src/config/gamificacao.ts` não têm uma medalha de nível. **Decisão:** a medalha mais alta da progressão principal (`treinos-100`, "100 treinos") é a única marcada como `maxima`. No redesign Apple ela é o único emblema em ouro (`#876000` no claro, `#FFD60A` no escuro); as demais conquistadas ficam no tint. **A validar:** se deve ser outra (ex.: uma medalha nova de "nível 11"), o que exigiria mudar a config de marcos.
 
 ### R-04 — Texto da Classificação deixa de dizer "Ranking mensal" — ✅ DESFEITO
 Com RN04 implementada (item 4), a tela voltou a dizer "Ranking mensal de {mês}: pontos dos treinos validados neste mês na sua academia ou professor".
@@ -187,8 +189,8 @@ A tela aberta por "Meus vínculos" só lista academias/professores para pedir v�
 ### R-07 — Home do Aluno sem o nome do professor no hero
 O HeroCheckIn aceita `professor`, mas a Home não buscava o professor de cada sessão (a Agenda busca). Buscar exigiria uma chamada nova ao Firestore na Home. **Decisão:** a Home não mostra o professor; a Agenda mostra. **A validar:** se vale a leitura extra.
 
-### R-08 — "Encerrar sessão" sem confirmação
-A ação principal da sessão virou botão primário, mas segue sem diálogo de confirmação (comportamento original). **A validar:** se encerrar por engano é um risco real (a sessão encerrada não reabre).
+### R-08 — "Encerrar sessão" sem confirmação — ✅ RESOLVIDO
+No redesign Apple, "Encerrar sessão" virou botão destrutivo e pede confirmação no alerta do sistema ("O check-in fecha para todos os alunos e a sessão não pode ser reaberta."). A chamada ao serviço é a mesma; só ganhou o passo de confirmação.
 
 ### R-09 — Conquistas: medalha de graduação fora da detecção
 O `useConquistas` só detecta medalhas de treinos e de sequência. A de "Primeira graduação" depende de `graduacoes`, que a Home não lê; ler exigiria uma consulta nova ao Firestore. A subida de faixa em si é detectada (pelo `usuario.faixaOuGrau`). **A validar:** se vale adicionar a leitura de graduações na Home.

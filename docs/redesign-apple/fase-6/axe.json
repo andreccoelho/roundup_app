@@ -1,0 +1,92 @@
+[
+  {
+    "nome": "claro-login",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-selecao",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-lgpd",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-cadastro",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-recuperar",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-home",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-perfil",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-classificacao",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "claro-hoje",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-login",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-selecao",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-lgpd",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-cadastro",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-recuperar",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-home",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-perfil",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-classificacao",
+    "erros": [],
+    "violacoes": []
+  },
+  {
+    "nome": "escuro-hoje",
+    "erros": [],
+    "violacoes": []
+  }
+]

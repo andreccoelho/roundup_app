@@ -37,7 +37,7 @@ function LinhaClassificacao({ posicao, nome, pontos, fotoUrl, destaque, separado
             {nome}
           </Texto>
           {destaque ? (
-            <Texto variante="caption" cor="tint">
+            <Texto variante="caption" cor="texto2">
               Você
             </Texto>
           ) : null}
