@@ -174,6 +174,7 @@ export const DuracaoAnimacao = {
   base: 250,
   lenta: 350,
   contador: 600,
+  celebracao: 550, // MomentoConquista: emblema e halo
 } as const;
 
 // Mola curta e discreta (Animated.spring) — sem overshoot exagerado
