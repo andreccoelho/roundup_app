@@ -1,4 +1,6 @@
-import { calcularProgressoNivel, lerTabelaNiveis, validarConfiguracao } from './gamificacao';
+import { Timestamp } from 'firebase/firestore';
+import type { CheckIn, StatusSessao } from '../types';
+import { calcularProgressoNivel, calcularSequencia, lerTabelaNiveis, validarConfiguracao } from './gamificacao';
 
 const VALIDOS = { pontosPorCheckin: 10, pontosPorMissao: 30, niveisXp: [100, 250, 450] };
 
@@ -49,5 +51,35 @@ describe('validarConfiguracao (RF33)', () => {
 
   test('recusa tabela vazia', () => {
     expect(validarConfiguracao({ ...VALIDOS, niveisXp: [] })).toMatch(/de 1 a 30/);
+  });
+});
+
+describe('calcularSequencia (RF21, por sessão agendada)', () => {
+  const AGORA = new Date(2026, 10, 20, 12, 0);
+  const diasAtras = (dias: number) => Timestamp.fromDate(new Date(AGORA.getTime() - dias * 24 * 60 * 60 * 1000));
+  const sessao = (id: string, dias: number, status: StatusSessao = 'encerrada') => ({ id, status, janelaCheckInFim: diasAtras(dias) });
+  const checkin = (sessaoId: string, status: CheckIn['status']) => ({ sessaoId, status } as CheckIn);
+
+  test('conta as sessões validadas mais recentes até a primeira falta', () => {
+    const sessoes = [sessao('s1', 1), sessao('s2', 4), sessao('s3', 8), sessao('s4', 10)];
+    const checkins = [checkin('s1', 'validado'), checkin('s2', 'validado'), checkin('s4', 'validado')];
+    expect(calcularSequencia(sessoes, checkins, AGORA)).toBe(2);
+  });
+
+  test('dias sem sessão no meio não quebram a sequência', () => {
+    const sessoes = [sessao('s1', 1), sessao('s2', 7), sessao('s3', 14)];
+    const checkins = sessoes.map((s) => checkin(s.id, 'validado'));
+    expect(calcularSequencia(sessoes, checkins, AGORA)).toBe(3);
+  });
+
+  test('sessão cancelada, janela ainda aberta e check-in pendente não quebram', () => {
+    const sessoes = [sessao('aberta', -0.1), sessao('cancelada', 1, 'cancelada'), sessao('pendente', 2), sessao('s1', 3)];
+    const checkins = [checkin('pendente', 'pendente'), checkin('s1', 'validado')];
+    expect(calcularSequencia(sessoes, checkins, AGORA)).toBe(1);
+  });
+
+  test('check-in rejeitado quebra', () => {
+    const sessoes = [sessao('s1', 1), sessao('s2', 2)];
+    expect(calcularSequencia(sessoes, [checkin('s1', 'rejeitado'), checkin('s2', 'validado')], AGORA)).toBe(0);
   });
 });

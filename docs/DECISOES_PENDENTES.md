@@ -111,11 +111,17 @@ Medalhas são calculadas ao vivo (`src/utils/gamificacao.ts`, `calcularMedalhas(
 
 ---
 
-## 6. RF21 — sequência conta dias, não sessões
+## 6. RF21 — sequência por sessão agendada — ✅ RESOLVIDO
 
-`calcularSequencia()` conta **dias consecutivos com ao menos um check-in validado**, não sessões consecutivas — um aluno que treina 2x no mesmo dia soma 1 dia de sequência, não 2. Também não distingue "faltou porque a academia não teve aula naquele dia" de "faltou porque o aluno não foi": qualquer dia sem check-in validado quebra a sequência, mesmo sem sessão agendada.
+A sequência passou a contar **sessões**, não dias civis: `calcularSequencia()` (app) e `maiorSequenciaDeSessoes()` (`functions/src/sequencia.ts`, missão de sequência e medalha) usam o mesmo critério. Percorrendo as sessões do aluno (as que têm ele em `leitoresIds`):
+- check-in validado conta +1;
+- sessão cuja janela de check-in já fechou sem presença validada (faltou ou foi rejeitado) **quebra** a sequência;
+- sessão cancelada, sessão com a janela ainda aberta e check-in pendente de validação **não contam nem quebram**;
+- dia sem sessão não afeta nada, e duas sessões no mesmo dia contam 2.
 
-**Decisão a validar:** sequência por dia civil está correto, ou deveria ser por sessão agendada (só quebra se houve sessão e o aluno não foi)?
+Os textos mudaram de "dias seguidos" para "treinos seguidos" (indicador da Home e medalhas de sequência). O app lê as últimas 120 sessões do aluno (`listarSessoesPassadasDoAluno`), o que limita a sequência exibida a 120 — a maior medalha é 30. Novo índice composto em `sessoes` (`leitoresIds` + `inicio` decrescente, e `leitoresIds` + `responsavelId` para a function).
+
+**A validar:** "sessão do aluno" é a que tem ele em `leitoresIds`, ou seja, das turmas em que estava matriculado quando a sessão existia. Sessão que o professor nunca abriu, mas cuja janela passou, conta como falta (o check-in é possível em sessão `agendada` dentro da janela, RN08).
 
 ---
 
