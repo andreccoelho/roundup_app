@@ -50,6 +50,12 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 **Divergência de código de requisito:** o pedido citava "RNF03 do relatório" para o limite de um lembrete por dia de treino. Na lista oficial (`docs/requisitos/requisitos-v1-2026-09.csv`), o RNF03 é "Armazenamento seguro de credenciais", e nenhum requisito fala desse limite. O código implementa o limite, mas o rastreia só como RF31. **A validar:** qual código o relatório deve usar para essa regra.
 
+### Ambiente das Cloud Functions — parcialmente alinhado
+
+- `firebase-functions` atualizado de 7.3.2 para 7.4.0 (versão menor; o aviso de "outdated" do emulador sumiu). `firebase-admin` continua fixo em 13.10.0 pelo motivo registrado em `docs/decisoes-tecnicas.md` (o 14.x quebra o emulador com `ERR_REQUIRE_ESM`).
+- **Node:** `functions/package.json` continua declarando Node 22, que é o runtime certo para o deploy (o Cloud Functions não suporta versões ímpares como a 21). A máquina de desenvolvimento tem Node 21, e o emulador avisa e usa a 21. Os testes passam assim. Para alinhar de vez é preciso instalar o Node 22 na máquina (ex.: pelo instalador oficial ou `nvm-windows`) — mudança de sistema, não foi feita.
+- **Java:** o `firebase-tools` 15 exige Java 21+, e o Java padrão da máquina é o 20. Os testes desta rodada rodaram com o OpenJDK 22 de `~/.jdks`, só na execução.
+
 ---
 
 ## 1. Valores de gamificação (`src/config/gamificacao.ts`)
