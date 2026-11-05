@@ -17,7 +17,7 @@ import SeloFaixa from '../../components/ui/SeloFaixa';
 import Etiqueta from '../../components/ui/Etiqueta';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import ItemMenu from '../../components/ui/ItemMenu';
-import { IconeCadeado, IconeCorda, IconePerfil, IconePoste, IconeSair, IconeSino } from '../../components/icones';
+import { IconeCadeado, IconeCartaoPontuacao, IconeCorda, IconePerfil, IconePoste, IconeSair, IconeSino } from '../../components/icones';
 
 export default function PerfilScreen() {
   const { usuario, logout } = useAuth();
@@ -58,6 +58,13 @@ export default function PerfilScreen() {
         <CabecalhoSecao titulo="Gestão" />
         <ItemMenu rotulo="Solicitações pendentes" descricao="Pedidos de vínculo de alunos" icone={IconeCorda} onPress={() => navigation.navigate('Solicitacoes')} />
         <ItemMenu rotulo="Vincular-se a uma academia" icone={IconePoste} onPress={() => navigation.navigate('VincularProfessor')} separador />
+        <ItemMenu
+          rotulo="Pontuação e níveis"
+          descricao="Pontos por check-in, por missão e tabela de níveis"
+          icone={IconeCartaoPontuacao}
+          onPress={() => navigation.navigate('ConfiguracaoGamificacao')}
+          separador
+        />
 
         <CabecalhoSecao titulo="Conta" />
         <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={() => navigation.navigate('EditarPerfil')} />

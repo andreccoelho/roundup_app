@@ -125,6 +125,9 @@ describe('excluirConta (RF29)', () => {
       await setDoc(doc(db, 'checkins', 'passada_aluno2'), checkinBase('passada', 'turmaCheia', 'aluno2', A, { status: 'validado', pontos: 10 }));
       await setDoc(doc(db, 'classificacoes', `aluno2_${A}`), classificacaoBase('aluno2', A, { pontos: 10 }));
       await setDoc(doc(db, 'missoes', 'missaoA'), missaoBase(A));
+      await setDoc(doc(db, 'configuracoesGamificacao', A), {
+        id: A, responsavelId: A, pontosPorCheckin: 15, pontosPorMissao: 30, niveisXp: [100], atualizadoEm: AGORA,
+      });
 
       // turma sem aluno: apagada com a sessão
       await setDoc(doc(db, 'turmas', 'turmaVazia'), turmaBase(A, 'academia'));
@@ -139,6 +142,7 @@ describe('excluirConta (RF29)', () => {
     expect(await ler(`vinculos/professor1_${A}`)).toBeUndefined();
     expect(await ler('turmas/turmaVazia')).toBeUndefined();
     expect(await ler('sessoes/sessaoVazia')).toBeUndefined();
+    expect(await ler(`configuracoesGamificacao/${A}`)).toBeUndefined();
 
     expect((await ler('turmas/turmaCheia'))?.ativa).toBe(false);
     expect((await ler('sessoes/futura'))?.status).toBe('cancelada');

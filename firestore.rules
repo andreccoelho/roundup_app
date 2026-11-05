@@ -121,6 +121,46 @@ service cloud.firestore {
         && meuId() in get(/databases/$(database)/documents/usuarios/$(alunoId)/privado/vinculos).data.get('responsaveisIds', []);
     }
 
+    // RF33, RN01: pontos que um check-in validado vale no escopo do responsável — a configuração
+    // dele ou o padrão 10 (== XP_POR_CHECKIN_VALIDADO em src/config/gamificacao.ts; Rules não
+    // importa TS, mantenha os dois iguais)
+    function pontosPorCheckinDe(responsavelId) {
+      return exists(/databases/$(database)/documents/configuracoesGamificacao/$(responsavelId))
+        ? get(/databases/$(database)/documents/configuracoesGamificacao/$(responsavelId)).data.pontosPorCheckin
+        : 10;
+    }
+
+    // RN01, lado da classificação: o check-in de origem é deste aluno neste escopo, e os pontos
+    // dele mudaram NESTA transação exatamente pelo `delta` que a classificação está recebendo.
+    function creditoAcompanhaCheckIn(checkinId, alunoId, responsavelId, delta) {
+      return delta != 0
+        && get(/databases/$(database)/documents/checkins/$(checkinId)).data.alunoId == alunoId
+        && get(/databases/$(database)/documents/checkins/$(checkinId)).data.responsavelId == responsavelId
+        && getAfter(/databases/$(database)/documents/checkins/$(checkinId)).data.pontos
+             - get(/databases/$(database)/documents/checkins/$(checkinId)).data.pontos == delta;
+    }
+
+    // RN01, lado do check-in: a classificação indicada em `classificacaoId` mudou NESTA transação
+    // pelo mesmo delta, apontando de volta para este check-in. Sem isso, zerar os pontos do
+    // check-in sem estornar e validar de novo creditaria duas vezes.
+    function classificacaoAcompanhaCheckIn(checkinId) {
+      return existsAfter(/databases/$(database)/documents/classificacoes/$(request.resource.data.classificacaoId))
+        && getAfter(/databases/$(database)/documents/classificacoes/$(request.resource.data.classificacaoId)).data.origemCheckinId == checkinId
+        && getAfter(/databases/$(database)/documents/classificacoes/$(request.resource.data.classificacaoId)).data.alunoId == resource.data.alunoId
+        && getAfter(/databases/$(database)/documents/classificacoes/$(request.resource.data.classificacaoId)).data.responsavelId == resource.data.responsavelId
+        && getAfter(/databases/$(database)/documents/classificacoes/$(request.resource.data.classificacaoId)).data.pontos
+             - (exists(/databases/$(database)/documents/classificacoes/$(request.resource.data.classificacaoId))
+                  ? get(/databases/$(database)/documents/classificacoes/$(request.resource.data.classificacaoId)).data.pontos
+                  : 0)
+           == request.resource.data.pontos - resource.data.pontos;
+    }
+
+    function pontosDeMissaoValidos() {
+      return request.resource.data.pontos is int
+        && request.resource.data.pontos >= 0
+        && request.resource.data.pontos <= 1000;
+    }
+
     // RF18, RF23: a missão existe, é do usuário autenticado e é do tipo 'personalizada' — único
     // tipo cujo progresso o responsável marca à mão (os outros são automáticos, por Cloud Function)
     function souDonoDeMissaoPersonalizada(missaoId) {
@@ -301,9 +341,21 @@ service cloud.firestore {
                     && request.resource.data.status == 'pendente'
                     && request.resource.data.pontos == 0
                     && janelaCheckInValida(request.resource.data.sessaoId);
-      // validação de check-in é RF22, Ciclo 3, por isso apenas o responsável escreve
+      // RF22: só o responsável valida. RN01, RF33: os pontos só mudam de 0 para os pontos por
+      // check-in do responsável (validar) ou para 0 (desfazer), e sempre com a classificação
+      // acompanhando na mesma transação (classificacaoAcompanhaCheckIn).
       allow update: if autenticado()
-                    && resource.data.responsavelId == meuId();
+                    && resource.data.responsavelId == meuId()
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'pontos', 'validadoPor', 'validadoEm', 'classificacaoId'])
+                    && (request.resource.data.pontos == resource.data.pontos
+                        || (resource.data.pontos == 0
+                            && request.resource.data.status == 'validado'
+                            && request.resource.data.pontos == pontosPorCheckinDe(resource.data.responsavelId)
+                            && classificacaoAcompanhaCheckIn(checkinId))
+                        || (request.resource.data.pontos == 0
+                            && request.resource.data.status != 'validado'
+                            && classificacaoAcompanhaCheckIn(checkinId)));
       allow delete: if false;
     }
 
@@ -317,12 +369,16 @@ service cloud.firestore {
       allow read: if autenticado()
                   && (resource.data.get('ativa', false) == true
                       || resource.data.get('responsavelId', '') == meuId());
+      // RF33: pontos da missão inteiros de 0 a 1000, mesmo limite de pontosPorMissao — sem isso
+      // uma missão poderia valer qualquer número quando a Cloud Function creditar a conclusão
       allow create: if autenticado()
                     && souGestor()
-                    && request.resource.data.responsavelId == meuId();
+                    && request.resource.data.responsavelId == meuId()
+                    && pontosDeMissaoValidos();
       allow update: if autenticado()
                     && resource.data.responsavelId == meuId()
-                    && request.resource.data.responsavelId == resource.data.responsavelId;
+                    && request.resource.data.responsavelId == resource.data.responsavelId
+                    && pontosDeMissaoValidos();
       allow delete: if autenticado() && resource.data.responsavelId == meuId();
     }
 
@@ -374,12 +430,12 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ---------- classificacoes (RF20, RN04, RN09, RNF11) ----------
-    // RN01: pontos só podem mudar em exatamente ±XP_POR_CHECKIN_VALIDADO por escrita — crédito
-    // (create ou update) ou estorno (update) de UM check-in por vez, nunca um valor arbitrário.
-    // O NÚMERO 10 abaixo é PROVISÓRIO (== src/config/gamificacao.ts, XP_POR_CHECKIN_VALIDADO;
-    // Firestore Rules não importa TS, mantenha os dois em sincronia manual se mudar); a TRAVA em
-    // si — só um delta fixo por escrita, nunca um valor livre — não é provisória, é RN01.
+    // ---------- classificacoes (RF20, RN04, RN09, RNF11, RF33) ----------
+    // RN01: toda escrita do client acompanha a validação (ou o estorno) de UM check-in na mesma
+    // transação — `origemCheckinId` aponta para ele e o delta de pontos tem que ser exatamente o
+    // que os pontos do check-in mudaram (creditoAcompanhaCheckIn). O valor do crédito vem da regra
+    // de `checkins`, que só aceita os pontos por check-in configurados pelo responsável (RF33, ou
+    // 10 por padrão). Pontos de missão são creditados por Cloud Function (Admin SDK), fora daqui.
     // RN04: um documento por aluno/responsável/mês, id `${alunoId}_${responsavelId}_${periodo}`.
     // RN09, RNF11: leitura pelo próprio aluno, pelo responsável do escopo ou por quem estiver em
     // `leitoresIds` — mesmo padrão de `sessoes`, puramente resource.data, provável para a consulta
@@ -390,7 +446,7 @@ service cloud.firestore {
                   && (resource.data.get('alunoId', '') == meuId()
                       || resource.data.get('responsavelId', '') == meuId()
                       || meuId() in resource.data.get('leitoresIds', []));
-      // Só existe um caminho de create: o primeiro crédito de XP deste aluno neste escopo e mês.
+      // Só existe um caminho de create: o primeiro crédito deste aluno neste escopo e mês.
       allow create: if autenticado()
                     && souGestor()
                     && request.resource.data.responsavelId == meuId()
@@ -400,22 +456,46 @@ service cloud.firestore {
                     && classificacaoId == request.resource.data.alunoId + '_' + request.resource.data.responsavelId
                                           + '_' + request.resource.data.periodo
                     && !('leitoresIds' in request.resource.data)
-                    && request.resource.data.pontos == 10;
+                    && request.resource.data.origemCheckinId is string
+                    && request.resource.data.pontos > 0
+                    && creditoAcompanhaCheckIn(request.resource.data.origemCheckinId,
+                                               request.resource.data.alunoId, request.resource.data.responsavelId,
+                                               request.resource.data.pontos);
       allow update: if autenticado()
                     && resource.data.responsavelId == meuId()
-                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pontos', 'atualizadoEm'])
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pontos', 'atualizadoEm', 'origemCheckinId'])
                     && request.resource.data.pontos >= 0
-                    && (request.resource.data.pontos == resource.data.pontos + 10
-                        || request.resource.data.pontos == resource.data.pontos - 10);
+                    && request.resource.data.origemCheckinId is string
+                    && creditoAcompanhaCheckIn(request.resource.data.origemCheckinId,
+                                               resource.data.alunoId, resource.data.responsavelId,
+                                               request.resource.data.pontos - resource.data.pontos);
       allow delete: if false;
     }
 
-    // ---------- Coleções de ciclos posteriores ----------
-    // Bloqueio explícito enquanto não modeladas, evita coleção aberta em produção. RF33 segue
-    // bloqueada porque nenhum código lê/escreve nela ainda — src/config/gamificacao.ts usa
-    // valores fixos no lugar (ver docs/DECISOES_PENDENTES.md); RF33 de verdade é ligar essa
-    // coleção no lugar do arquivo fixo, ainda não feito.
-    match /configuracoesGamificacao/{doc} { allow read, write: if false; }  // RF33, Ciclo 3
+    // ---------- configuracoesGamificacao (RF33) ----------
+    // Um documento por responsável, id == uid dele. Leitura por qualquer autenticado: são só
+    // números (pontos e tabela de níveis), e o aluno precisa da tabela para calcular o nível.
+    // Os limites são os de LIMITES_CONFIGURACAO em src/config/gamificacao.ts. A ordem crescente
+    // da tabela de níveis é validada no app (Rules não tem laço para percorrer a lista).
+    match /configuracoesGamificacao/{responsavelId} {
+      allow read: if autenticado();
+      allow create, update: if autenticado()
+                            && responsavelId == meuId()
+                            && souGestor()
+                            && request.resource.data.responsavelId == meuId()
+                            && request.resource.data.keys().hasOnly(['id', 'responsavelId', 'pontosPorCheckin',
+                                                                     'pontosPorMissao', 'niveisXp', 'atualizadoEm'])
+                            && request.resource.data.pontosPorCheckin is int
+                            && request.resource.data.pontosPorCheckin >= 1
+                            && request.resource.data.pontosPorCheckin <= 100
+                            && request.resource.data.pontosPorMissao is int
+                            && request.resource.data.pontosPorMissao >= 0
+                            && request.resource.data.pontosPorMissao <= 1000
+                            && request.resource.data.niveisXp is list
+                            && request.resource.data.niveisXp.size() >= 1
+                            && request.resource.data.niveisXp.size() <= 30;
+      allow delete: if autenticado() && responsavelId == meuId();
+    }
 
     // RF28, RNF10: consentimento é registro de auditoria, imutável após criação
     match /consentimentosLGPD/{doc} {

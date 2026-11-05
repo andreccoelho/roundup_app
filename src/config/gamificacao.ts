@@ -4,13 +4,28 @@
 // antes da entrega do TCC. Ver docs/DECISOES_PENDENTES.md para a lista completa de decisões
 // provisórias e o RF/RN de cada uma.
 
-// RF16, RN01: pontos creditados por check-in validado
+// RF33: os valores abaixo são o PADRÃO, usado quando o responsável não personalizou a pontuação
+// (configuracoesGamificacao/{responsavelId}). Ver ConfiguracaoGamificacaoScreen.
+
+// RF16, RN01: pontos creditados por check-in validado. O 10 também está escrito em
+// firestore.rules (pontosPorCheckinDe) — Rules não importa TS, mantenha os dois iguais.
 export const XP_POR_CHECKIN_VALIDADO = 10;
+
+// RF23, RF33: valor sugerido de pontos ao criar uma missão
+export const PONTOS_POR_MISSAO_PADRAO = 30;
 
 // RF17: XP acumulado (cumulativo, não por degrau) necessário para completar cada nível —
 // progressão provisória em +50 por degrau (100, +150, +200, +250, +300, +350, +400, +450,
 // +500, +550)
 export const NIVEIS_XP = [100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250] as const;
+
+// RF33: limites aceitos na personalização — os mesmos conferidos em firestore.rules
+// (configuracoesGamificacao e missoes)
+export const LIMITES_CONFIGURACAO = {
+  pontosPorCheckin: { minimo: 1, maximo: 100 },
+  pontosPorMissao: { minimo: 0, maximo: 1000 },
+  niveis: { minimo: 1, maximo: 30 },
+} as const;
 
 // RF20, RN04: janela de tempo considerada na classificação — cada mês tem o próprio documento
 // em `classificacoes` (ver periodoDe() em utils/datas.ts), então o ranking recomeça sozinho na
