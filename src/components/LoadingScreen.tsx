@@ -1,19 +1,22 @@
-// Carregamento de raiz (sessão/perfil/vínculo). Fundo do tema, marca e indicador — sem flash
-// branco entre a splash e a primeira tela.
-import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
-import { Cores, Espacamento } from '../theme';
+// Carregamento de raiz (sessão/perfil/vínculo). Fundo do tema, logo e indicador — sem flash da
+// cor errada entre a splash e a primeira tela.
+import { ActivityIndicator, View } from 'react-native';
+import { criarEstilos, Espacamento, useTema } from '../theme';
+import Logo from './Logo';
 
 export default function LoadingScreen() {
+  const styles = useEstilos();
+  const { cores } = useTema();
   return (
     <View style={styles.container} accessibilityLabel="Carregando" accessibilityRole="progressbar">
-      <Image source={require('../../assets/roundup_logo_invertida.png')} style={styles.logo} resizeMode="contain" accessible={false} />
-      <ActivityIndicator size="small" color={Cores.texto2} />
+      {/* Mesma proporção do splash (imageWidth 200): a troca splash → loading não "pula". */}
+      <Logo tamanho={200} style={styles.logo} />
+      <ActivityIndicator size="small" color={cores.texto2} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Espacamento.grande, backgroundColor: Cores.fundo },
-  // Mesma proporção do splash (imageWidth 200): a troca splash → loading não "pula".
-  logo: { width: 200, height: 200, marginVertical: -40 },
-});
+const useEstilos = criarEstilos((c) => ({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: Espacamento.grande, backgroundColor: c.fundo },
+  logo: { marginVertical: -40 },
+}));

@@ -34,7 +34,9 @@ export interface PaletaCores {
   sucesso: string;
   sucessoCheio: string;
   perigo: string;
+  perigoCheio: string; // fundo de botão destrutivo (rótulo `sobreTint`, 5,8:1)
   ouro: string; // só 1º lugar do ranking e medalha máxima
+  controleSelecionado: string; // segmento ativo do controle segmentado
   overlay: string; // fundo atrás de alerta/conquista
   sombra: string;
 }
@@ -57,7 +59,9 @@ export const CoresClaro: PaletaCores = {
   sucesso: '#177A34',
   sucessoCheio: '#1A7F37',
   perigo: '#C4231B',
+  perigoCheio: '#C4231B',
   ouro: '#876000',
+  controleSelecionado: '#FFFFFF',
   overlay: 'rgba(0,0,0,0.4)',
   sombra: '#000000',
 };
@@ -80,7 +84,9 @@ export const CoresEscuro: PaletaCores = {
   sucesso: '#30D158',
   sucessoCheio: '#1A7F37',
   perigo: '#FF6961',
+  perigoCheio: '#C4231B',
   ouro: '#FFD60A',
+  controleSelecionado: '#636366',
   overlay: 'rgba(0,0,0,0.6)',
   sombra: '#000000',
 };

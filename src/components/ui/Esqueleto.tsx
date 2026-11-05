@@ -1,9 +1,9 @@
-// Esqueleto de carregamento — pulso de superficie1 para superficie2. Com reduce motion fica
-// parado. `forma="linha"` imita uma linha de lista (avatar/ícone + 2 linhas de texto), mais fiel
+// Esqueleto de carregamento — blocos em `preenchimento` com pulso suave de opacidade (como os
+// placeholders do iOS). Com reduce motion fica parado. `forma="linha"` imita uma linha de lista (avatar/ícone + 2 linhas de texto), mais fiel
 // ao conteúdo real que blocos genéricos.
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { Cores, Espacamento, Raios } from '../../theme';
+import { criarEstilos, Espacamento } from '../../theme';
 import { DRIVER_NATIVO } from '../../utils/animacao';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
 
@@ -15,7 +15,8 @@ interface EsqueletoProps {
   forma?: 'bloco' | 'linha';
 }
 
-export default function Esqueleto({ altura = 16, largura = '100%', raio = Raios.pequeno, repeticoes = 1, forma = 'bloco' }: EsqueletoProps) {
+export default function Esqueleto({ altura = 16, largura = '100%', raio = 8, repeticoes = 1, forma = 'bloco' }: EsqueletoProps) {
+  const styles = useEstilos();
   const reduzido = useMovimentoReduzido();
   const opacidade = useRef(new Animated.Value(0.5)).current;
 
@@ -55,11 +56,11 @@ export default function Esqueleto({ altura = 16, largura = '100%', raio = Raios.
   );
 }
 
-const styles = StyleSheet.create({
-  bloco: { backgroundColor: Cores.superficie2, borderRadius: Raios.vivo },
+const useEstilos = criarEstilos((c) => ({
+  bloco: { backgroundColor: c.preenchimento, borderRadius: 6 },
   espacoEntreBlocos: { marginTop: Espacamento.pequeno },
   linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, paddingVertical: Espacamento.medio },
-  separada: { borderTopWidth: 1, borderTopColor: Cores.linha },
+  separada: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.separador },
   marcador: { width: 40, height: 40, borderRadius: 20 },
   textos: { flex: 1, gap: Espacamento.pequeno },
-});
+}));

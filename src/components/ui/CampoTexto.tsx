@@ -1,11 +1,12 @@
-// CampoTexto — único campo de texto do app (docs/DESIGN.md). Fundo superficie1, sublinhado
-// linhaForte (3,6:1) que vira acento 2px no foco e perigo no erro. Rótulo vira o nome
+// CampoTexto — único campo de texto do app (docs/DESIGN.md). Campo arredondado preenchido, no
+// estilo do iOS: rótulo sempre visível acima (é ele, e não uma borda, que identifica o campo),
+// fundo `preenchimento`, borda de 2px em tint no foco e em perigo no erro. Rótulo vira o nome
 // acessível do input; erro é anunciado (live region). Senha com mostrar/ocultar. Máscara opcional
 // de data (DD/MM/AAAA) e hora (HH:MM) com teclado numérico — o valor entregue continua sendo o
 // texto formatado, exatamente como as telas já validavam antes.
 import { useState, type Ref } from 'react';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
-import { Cores, Espacamento, Raios, TamanhoFonte } from '../../theme';
+import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { Alturas, criarEstilos, Espacamento, Raios, Tipografia, useTema } from '../../theme';
 import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
 import { IconeOlho, IconeOlhoFechado } from '../icones';
 import Texto from './Texto';
@@ -66,16 +67,18 @@ export default function CampoTexto({
   const [focado, setFocado] = useState(false);
   const [senhaVisivel, setSenhaVisivel] = useState(false);
   const olho = useFocoVisivel();
+  const { cores } = useTema();
+  const styles = useEstilos();
 
-  const corBorda = erro ? Cores.perigo : focado ? Cores.foco : Cores.linhaForte;
+  const corBorda = erro ? cores.perigo : focado ? cores.tint : 'transparent';
   const ehSenha = Boolean(secureTextEntry);
 
   return (
     <View style={styles.container}>
-      <Texto variante="subheadline" cor={focado ? 'texto' : 'texto2'} style={styles.rotulo} cabecalho={false}>
+      <Texto variante="footnote" style={styles.rotulo} cabecalho={false}>
         {rotulo}
       </Texto>
-      <View style={[styles.caixa, { borderBottomColor: corBorda }, (focado || erro) && styles.caixaRealce]}>
+      <View style={[styles.caixa, { borderColor: corBorda }]}>
         <TextInput
           ref={refCampo}
           style={[styles.campo, multiline && styles.campoMultilinha, estiloSemOutline]}
@@ -84,9 +87,9 @@ export default function CampoTexto({
           onFocus={() => setFocado(true)}
           onBlur={() => setFocado(false)}
           placeholder={placeholder ?? (mascara === 'data' ? 'DD/MM/AAAA' : mascara === 'hora' ? 'HH:MM' : undefined)}
-          placeholderTextColor={Cores.texto3}
-          selectionColor={Cores.acento}
-          cursorColor={Cores.acento}
+          placeholderTextColor={cores.texto3}
+          selectionColor={cores.tint}
+          cursorColor={cores.tint}
           secureTextEntry={ehSenha && !senhaVisivel}
           keyboardType={mascara ? 'number-pad' : keyboardType}
           maxLength={mascara === 'data' ? 10 : mascara === 'hora' ? 5 : undefined}
@@ -104,16 +107,16 @@ export default function CampoTexto({
             accessibilityLabel={senhaVisivel ? 'Ocultar senha' : 'Mostrar senha'}
             {...olho.propsFoco}
           >
-            {senhaVisivel ? <IconeOlhoFechado tamanho={20} cor={Cores.texto2} /> : <IconeOlho tamanho={20} cor={Cores.texto2} />}
+            {senhaVisivel ? <IconeOlhoFechado tamanho={20} cor={cores.texto2} /> : <IconeOlho tamanho={20} cor={cores.texto2} />}
           </Pressable>
         ) : null}
       </View>
       {erro ? (
-        <Texto variante="subheadline" cor="perigo" style={styles.mensagem} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <Texto variante="footnote" cor="perigo" style={styles.mensagem} accessibilityRole="alert" accessibilityLiveRegion="polite">
           {erro}
         </Texto>
       ) : ajuda ? (
-        <Texto variante="subheadline" cor="texto3" style={styles.mensagem}>
+        <Texto variante="footnote" cor="texto2" style={styles.mensagem}>
           {ajuda}
         </Texto>
       ) : null}
@@ -121,28 +124,26 @@ export default function CampoTexto({
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos((c) => ({
   container: { marginBottom: Espacamento.padrao },
-  rotulo: { marginBottom: Espacamento.minimo + 2 },
+  rotulo: { marginBottom: Espacamento.minimo + 2, marginLeft: Espacamento.minimo },
   caixa: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Cores.superficie1,
-    borderTopLeftRadius: Raios.pequeno,
-    borderTopRightRadius: Raios.pequeno,
-    borderBottomWidth: 1,
-    marginBottom: 1, // compensa o 2px do foco/erro sem pular o layout
+    backgroundColor: c.preenchimento,
+    borderRadius: Raios.campo,
+    borderCurve: 'continuous',
+    borderWidth: 2,
   },
-  caixaRealce: { borderBottomWidth: 2, marginBottom: 0 },
   campo: {
     flex: 1,
-    minHeight: 48,
+    minHeight: Alturas.campo,
     paddingHorizontal: Espacamento.medio,
-    paddingVertical: Espacamento.medio,
-    fontSize: TamanhoFonte.md,
-    color: Cores.texto,
+    paddingVertical: Espacamento.pequeno + 2,
+    ...Tipografia.body,
+    color: c.texto,
   },
   campoMultilinha: { minHeight: 96, textAlignVertical: 'top' },
   olho: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', marginRight: Espacamento.minimo },
-  mensagem: { marginTop: Espacamento.minimo },
-});
+  mensagem: { marginTop: Espacamento.minimo, marginLeft: Espacamento.minimo },
+}));

@@ -1,7 +1,8 @@
-// EstadoVazio — convite à ação: ícone próprio em 64px, título, descrição e CTA opcional.
+// EstadoVazio — padrão do iOS (ContentUnavailableView): ícone grande em texto3, título em
+// Title 3, uma linha de explicação e um botão opcional.
 import type { ComponentType } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento } from '../../theme';
+import { View } from 'react-native';
+import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { IconeLuva } from '../icones';
 import Botao from './Botao';
 import Texto from './Texto';
@@ -12,15 +13,17 @@ interface EstadoVazioProps {
   icone?: ComponentType<{ tamanho?: number; cor?: string; espessura?: number }>;
   acaoTitulo?: string;
   onAcao?: () => void;
-  // CTA em acento quando é a ação principal da tela (ex.: bloqueio de vínculo).
+  // Botão cheio no tint quando é a ação principal da tela (ex.: bloqueio de vínculo)
   acaoPrimaria?: boolean;
 }
 
 export default function EstadoVazio({ titulo, descricao, icone: Icone = IconeLuva, acaoTitulo, onAcao, acaoPrimaria }: EstadoVazioProps) {
+  const styles = useEstilos();
+  const { cores } = useTema();
   return (
     <View style={styles.container}>
       <View aria-hidden importantForAccessibility="no-hide-descendants">
-        <Icone tamanho={64} cor={Cores.texto3} espessura={1.2} />
+        <Icone tamanho={56} cor={cores.texto3} espessura={1.6} />
       </View>
       <Texto variante="title3" alinhamento="center" style={styles.titulo}>
         {titulo}
@@ -32,16 +35,16 @@ export default function EstadoVazio({ titulo, descricao, icone: Icone = IconeLuv
       ) : null}
       {acaoTitulo && onAcao ? (
         <View style={styles.acao}>
-          <Botao titulo={acaoTitulo} variante={acaoPrimaria ? 'primario' : 'secundario'} onPress={onAcao} />
+          <Botao titulo={acaoTitulo} variante={acaoPrimaria ? 'primario' : 'secundario'} compacto={!acaoPrimaria} onPress={onAcao} />
         </View>
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useEstilos = criarEstilos(() => ({
   container: { alignItems: 'center', justifyContent: 'center', paddingVertical: Espacamento.extraGrande, paddingHorizontal: Espacamento.grande },
   titulo: { marginTop: Espacamento.padrao },
-  descricao: { marginTop: Espacamento.minimo, maxWidth: 360 },
-  acao: { marginTop: Espacamento.grande, alignSelf: 'stretch', maxWidth: 320, width: '100%', marginHorizontal: 'auto' },
-});
+  descricao: { marginTop: Espacamento.minimo, maxWidth: 320 },
+  acao: { marginTop: Espacamento.padrao + 4, alignItems: 'center' },
+}));
