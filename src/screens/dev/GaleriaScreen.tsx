@@ -47,13 +47,14 @@ import ItemMenu from '../../components/ui/ItemMenu';
 import GrupoLista from '../../components/ui/GrupoLista';
 import LinhaLista from '../../components/ui/LinhaLista';
 import Estatistica from '../../components/ui/Estatistica';
-import BandaIdentidade from '../../components/ui/BandaIdentidade';
 import EstadoVazio from '../../components/ui/EstadoVazio';
 import EstadoErro from '../../components/ui/EstadoErro';
 import Esqueleto from '../../components/ui/Esqueleto';
 
 import CartaoSessao from '../../components/ui/CartaoSessao';
 import BarraProgresso from '../../components/ui/BarraProgresso';
+import AnelProgresso from '../../components/ui/AnelProgresso';
+import LinhaChamada, { type StatusChamada } from '../../components/ui/LinhaChamada';
 import CartaoMissao from '../../components/ui/CartaoMissao';
 import Medalha from '../../components/ui/Medalha';
 import CelebracaoGraduacao from '../../components/ui/CelebracaoGraduacao';
@@ -148,6 +149,12 @@ export default function GaleriaScreen() {
   const [senha, setSenha] = useState('segredo1');
   const [composicao, setComposicao] = useState<Composicao | null>(null);
   const [conquistaDemo, setConquistaDemo] = useState<Conquista | null>(null);
+  const [chamadaDemo, setChamadaDemo] = useState<{ nome: string; status: StatusChamada }[]>([
+    { nome: 'Ana Beatriz', status: 'validado' },
+    { nome: 'Carlos Eduardo', status: 'pendente' },
+    { nome: 'João Pedro', status: 'validado' },
+    { nome: 'Marina Costa', status: 'aguardando' },
+  ]);
   const { cores, forcarEsquema } = useTema();
   const styles = useEstilos();
   const [opcaoTema, setOpcaoTema] = useState<OpcaoTema>('sistema');
@@ -374,27 +381,6 @@ export default function GaleriaScreen() {
         <Estatistica valor="18/24" rotulo="Presentes" tamanho="grande" />
       </Secao>
 
-      <Secao titulo="BandaIdentidade">
-        <View style={styles.sangria}>
-          <BandaIdentidade
-            compacta
-            sobHeader
-            sobretitulo="Treinar"
-            nome="Ana Beatriz"
-            selo={<SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" />}
-          />
-          <View style={styles.espaco} />
-          <BandaIdentidade
-            sobHeader
-            nome="Ana Beatriz Souza"
-            selo={<SeloFaixa faixaOuGrau="Faixa roxa, 2º grau" />}
-            detalhes={['Membro desde setembro de 2026']}
-          />
-          <View style={styles.espaco} />
-          <BandaIdentidade variante="gestor" compacta sobHeader sobretitulo="Hoje" nome="Academia Corner" detalhes={['Rua do Ringue, 120']} />
-        </View>
-      </Secao>
-
       <Secao titulo="Cartao e Avatar">
         <Cartao>
           <Texto variante="body">Cartão comum: superfície, raio 12 contínuo, sem borda.</Texto>
@@ -490,39 +476,49 @@ export default function GaleriaScreen() {
         />
       </Secao>
 
-      <Secao titulo="Linhas de sessão (CartaoSessao + BotaoCheckIn)">
-        <CartaoSessao nomeTurma="Muay Thai — Turma A" detalhe="com Mestre Kleber" inicio={new Date(Date.now() + 25 * 60000)} estado="disponivel" onCheckIn={() => {}} />
-        <LinhaFina />
-        <CartaoSessao nomeTurma="Boxe — Turma B" inicio={new Date(Date.now() + 26 * 3600000)} estado="foraDaJanela" motivo="Abre amanhã" />
-        <LinhaFina />
-        <CartaoSessao nomeTurma="Muay Thai — Turma C" inicio={new Date(Date.now() - 20 * 3600000)} estado="realizado" />
-        <LinhaFina />
-        <CartaoSessao nomeTurma="Sem horário (lista antiga)" detalhe="15/10/2026, 19:00" estado="disponivel" onCheckIn={() => {}} />
+      <Secao titulo="Progresso e sequência">
+        <Cartao destaque>
+          <AnelProgresso nivel={4} xpAtual={320} xpProximoNivel={500} />
+        </Cartao>
+        <View style={styles.espaco} />
+        <View style={styles.linha}>
+          <View style={styles.flex}>
+            <IndicadorSequencia treinos={7} />
+          </View>
+          <View style={styles.flex}>
+            <IndicadorSequencia treinos={0} />
+          </View>
+        </View>
+        <View style={styles.espaco} />
+        <Cartao>
+          <BarraProgresso nivel={11} xpAtual={1} xpProximoNivel={1} />
+        </Cartao>
       </Secao>
 
-      <Secao titulo="Progresso">
-        <BarraProgresso nivel={4} xpAtual={320} xpProximoNivel={500} />
-        <View style={styles.espaco} />
-        <BarraProgresso nivel={11} xpAtual={1} xpProximoNivel={1} />
-        <View style={styles.espaco} />
-        <IndicadorSequencia treinos={7} />
-      </Secao>
-
-      <Secao titulo="Missões">
-        <CartaoMissao titulo="Treine 3 vezes esta semana" descricao="Presença" progressoAtual={2} meta={3} pontos={30} />
-        <LinhaFina />
-        <CartaoMissao titulo="Primeiro check-in" descricao="Boas-vindas" progressoAtual={1} meta={1} concluida />
-        <LinhaFina />
-        <CartaoMissao titulo="500 pontos no mês" descricao="Pontuação" progressoAtual={320} meta={500} />
+      <Secao titulo="Sessões e missões">
+        <GrupoLista titulo="Próximos treinos" semMargem>
+          <CartaoSessao nomeTurma="Muay Thai — Turma A" detalhe="com Mestre Kleber" inicio={new Date(Date.now() + 25 * 60000)} estado="disponivel" onCheckIn={() => {}} />
+          <CartaoSessao nomeTurma="Boxe — Turma B" inicio={new Date(Date.now() + 26 * 3600000)} estado="foraDaJanela" motivo="Abre amanhã" />
+          <CartaoSessao nomeTurma="Muay Thai — Turma C" inicio={new Date(Date.now() - 20 * 3600000)} estado="realizado" />
+        </GrupoLista>
+        <GrupoLista titulo="Missões">
+          <CartaoMissao titulo="Treine 3 vezes esta semana" descricao="Presença" progressoAtual={2} meta={3} pontos={30} />
+          <CartaoMissao titulo="Primeiro check-in" descricao="Boas-vindas" progressoAtual={1} meta={1} concluida />
+          <CartaoMissao titulo="500 pontos no mês" descricao="Pontuação" progressoAtual={320} meta={500} />
+        </GrupoLista>
       </Secao>
 
       <Secao titulo="Medalhas">
-        <Linha>
-          <Medalha rotulo="10 treinos" tipo="treinos" numero={10} />
-          <Medalha rotulo="7 treinos seguidos" tipo="sequencia" numero={7} />
-          <Medalha rotulo="100 treinos" tipo="treinos" numero={100} maxima />
-          <Medalha rotulo="Primeira graduação" tipo="graduacoes" numero={1} conquistada={false} />
-        </Linha>
+        <Cartao>
+          <View style={styles.gradeMedalhas}>
+            <Medalha rotulo="10 treinos" tipo="treinos" numero={10} />
+            <Medalha rotulo="7 treinos seguidos" tipo="sequencia" numero={7} />
+            <Medalha rotulo="100 treinos" tipo="treinos" numero={100} maxima />
+            <Medalha rotulo="Primeira graduação" tipo="graduacoes" numero={1} conquistada={false} />
+            <Medalha rotulo="30 treinos seguidos" tipo="sequencia" numero={30} conquistada={false} />
+            <Medalha rotulo="30 treinos" tipo="treinos" numero={30} conquistada={false} />
+          </View>
+        </Cartao>
       </Secao>
 
       <Secao titulo="SeloFaixa (texto livre interpretado)">
@@ -532,8 +528,8 @@ export default function GaleriaScreen() {
           </View>
         ))}
         <View style={styles.espaco} />
-        <Cartao corteDiagonal>
-          <Texto variante="caption" alinhamento="center">
+        <Cartao>
+          <Texto variante="footnote" alinhamento="center">
             Graduação
           </Texto>
           <View style={styles.espaco} />
@@ -556,15 +552,33 @@ export default function GaleriaScreen() {
           segundo={{ posicao: 2, nome: 'Carlos Eduardo', pontos: 860, destaque: true }}
           terceiro={{ posicao: 3, nome: 'João Pedro', pontos: 790 }}
         />
-        <LinhaClassificacao posicao={4} nome="Marina Costa" pontos={710} destaque />
-        <LinhaFina />
-        <LinhaClassificacao posicao={5} nome="Rafael Souza" pontos={640} />
+        <GrupoLista semMargem>
+          <LinhaClassificacao posicao={4} nome="Marina Costa" pontos={710} />
+          <LinhaClassificacao posicao={5} nome="Rafael Souza" pontos={640} destaque />
+          <LinhaClassificacao posicao={6} nome="Bianca Lopes" pontos={520} />
+        </GrupoLista>
+      </Secao>
+
+      <Secao titulo="Chamada do professor">
+        <GrupoLista titulo="Muay Thai — Turma A" rodape="Toque no círculo para confirmar a presença de quem fez check-in." semMargem>
+          {chamadaDemo.map((a) => (
+            <LinhaChamada
+              key={a.nome}
+              nome={a.nome}
+              status={a.status}
+              onAlternar={() =>
+                setChamadaDemo((prev) => prev.map((p) => (p.nome === a.nome ? { ...p, status: p.status === 'validado' ? 'pendente' : 'validado' } : p)))
+              }
+            />
+          ))}
+        </GrupoLista>
       </Secao>
 
       <Secao titulo="Gestor: aluno e frequência">
-        <CartaoAluno nome="Maria Silva" faixaOuGrau="Faixa azul" frequenciaRecente={[true, true, false, true, true]} />
-        <LinhaFina />
-        <CartaoAluno nome="Pedro Lima" faixaOuGrau="Faixa branca" frequenciaRecente={[true, false, false, false, false]} alerta="Queda de frequência" />
+        <GrupoLista semMargem>
+          <CartaoAluno nome="Maria Silva" faixaOuGrau="Faixa azul" frequenciaRecente={[true, true, false, true, true]} />
+          <CartaoAluno nome="Pedro Lima" faixaOuGrau="Faixa branca" frequenciaRecente={[true, false, false, false, false]} alerta="Queda de frequência" />
+        </GrupoLista>
         <View style={styles.espaco} />
         <IndicadorFrequencia presencas={[true, false, true, true, true]} />
       </Secao>
@@ -588,6 +602,7 @@ const useEstilos = criarEstilos((c) => ({
   estatisticas: { marginTop: Espacamento.padrao, marginBottom: Espacamento.padrao },
   sangria: { marginHorizontal: -Espacamento.padrao },
   amostraFaixa: { marginBottom: Espacamento.pequeno },
+  gradeMedalhas: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-around', rowGap: Espacamento.padrao },
   voltarComposicao: { position: 'absolute', top: Espacamento.pequeno, right: Espacamento.padrao },
   flexCheio: { flex: 1 },
 }));

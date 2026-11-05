@@ -1,20 +1,18 @@
-// MomentoConquista — a celebração do lado do aluno (RELATORIO_UI_UX.md, UX-16/R18): tela cheia,
-// fundo preto, flash de acento, número em placarXL, título display com sombra dura em acento e
-// haptic. Para subida de nível, nova faixa e nova medalha.
+// MomentoConquista — a celebração do lado do aluno (UX-16/R18) como cartão central contido, no
+// padrão dos prêmios do app Fitness: emblema grande (nível, faixa ou medalha), título, uma linha de
+// explicação e "Continuar". Para subida de nível, nova faixa e nova medalha.
 //
-// Reduce motion: sem flash e sem entrada animada — aparece direto, haptic mantido (não é
-// movimento visual).
-import { useEffect, useRef, type ComponentType } from 'react';
-import { Animated, Easing, Modal, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Cores, DuracaoAnimacao, Espacamento, LarguraMaxima, Sombras } from '../../theme';
+// Entrada: o cartão sobe de 92% para 100% com mola curta, e o fundo escurece em fade. Haptic de
+// sucesso. Reduce motion: aparece direto, haptic mantido (não é movimento visual).
+import { useEffect, useRef } from 'react';
+import { Animated, Modal, View } from 'react-native';
+import { criarEstilos, Espacamento, Mola, useTema } from '../../theme';
 import { DRIVER_NATIVO } from '../../utils/animacao';
-import { hapticaImpacto, hapticaSucesso } from '../../utils/haptica';
+import { hapticaSucesso } from '../../utils/haptica';
 import { useMovimentoReduzido } from '../../hooks/useMovimentoReduzido';
-import { IconeChama, IconeCinturao, IconeFaixa, IconeLuva } from '../icones';
 import Botao from './Botao';
+import Medalha, { type TipoMedalha } from './Medalha';
 import SeloFaixa from './SeloFaixa';
-import TexturaLona from './TexturaLona';
 import Texto from './Texto';
 
 export type TipoConquista = 'nivel' | 'faixa' | 'medalha';
@@ -24,7 +22,7 @@ export interface Conquista {
   // nível: o número; faixa: o texto da faixa; medalha: a quantidade do marco.
   valor: string | number;
   rotulo: string;
-  icone?: 'treinos' | 'sequencia' | 'graduacoes';
+  icone?: TipoMedalha;
 }
 
 interface MomentoConquistaProps {
@@ -40,110 +38,88 @@ const TITULO: Record<TipoConquista, string> = {
   medalha: 'Nova medalha',
 };
 
-const ICONE_MEDALHA: Record<string, ComponentType<{ tamanho?: number; cor?: string; espessura?: number }>> = {
-  treinos: IconeLuva,
-  sequencia: IconeChama,
-  graduacoes: IconeFaixa,
-};
-
 export default function MomentoConquista({ conquista, onFechar, posicaoFila }: MomentoConquistaProps) {
-  const insets = useSafeAreaInsets();
   const reduzido = useMovimentoReduzido();
-  const flash = useRef(new Animated.Value(0)).current;
+  const { cores } = useTema();
+  const styles = useEstilos();
   const entrada = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (!conquista) return;
-    hapticaImpacto();
-    const t = setTimeout(hapticaSucesso, DuracaoAnimacao.lenta);
+    hapticaSucesso();
     if (reduzido) {
-      flash.setValue(0);
       entrada.setValue(1);
-      return () => clearTimeout(t);
+      return;
     }
-    flash.setValue(0);
     entrada.setValue(0);
-    Animated.parallel([
-      Animated.sequence([
-        Animated.timing(flash, { toValue: 0.9, duration: 90, useNativeDriver: DRIVER_NATIVO }),
-        Animated.timing(flash, { toValue: 0, duration: DuracaoAnimacao.dramatica, useNativeDriver: DRIVER_NATIVO }),
-      ]),
-      Animated.timing(entrada, {
-        toValue: 1,
-        duration: DuracaoAnimacao.dramatica,
-        easing: Easing.out(Easing.back(1.6)),
-        useNativeDriver: DRIVER_NATIVO,
-      }),
-    ]).start();
-    return () => clearTimeout(t);
-  }, [conquista, reduzido, flash, entrada]);
+    Animated.spring(entrada, { toValue: 1, ...Mola, useNativeDriver: DRIVER_NATIVO }).start();
+  }, [conquista, reduzido, entrada]);
 
   if (!conquista) return null;
 
-  const IconeMedalha = ICONE_MEDALHA[conquista.icone ?? 'treinos'] ?? IconeLuva;
-  const escala = entrada.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
+  const escala = entrada.interpolate({ inputRange: [0, 1], outputRange: [0.92, 1] });
 
   return (
-    <Modal visible transparent={false} animationType={reduzido ? 'none' : 'fade'} onRequestClose={onFechar} statusBarTranslucent>
-      <View style={[styles.fundo, { paddingTop: insets.top + Espacamento.grande, paddingBottom: insets.bottom + Espacamento.grande }]}>
-        <TexturaLona opacidade={0.06} />
-        <Animated.View style={[styles.flash, { opacity: flash }]} aria-hidden />
-
-        <View style={styles.coluna} accessibilityViewIsModal accessibilityRole="alert" accessibilityLiveRegion="assertive">
+    <Modal visible transparent animationType={reduzido ? 'none' : 'fade'} onRequestClose={onFechar} statusBarTranslucent>
+      <View style={styles.fundo}>
+        <Animated.View
+          style={[styles.cartao, { opacity: entrada, transform: [{ scale: escala }] }]}
+          accessibilityViewIsModal
+          accessibilityRole="alert"
+          accessibilityLiveRegion="assertive"
+          aria-modal
+        >
           {posicaoFila ? (
-            <Texto variante="caption" cor="texto3" alinhamento="center">
+            <Texto variante="caption" alinhamento="center">
               {posicaoFila}
             </Texto>
           ) : null}
-          <Texto variante="caption" alinhamento="center" style={styles.sobretitulo}>
-            Conquista
-          </Texto>
-          <Texto variante="largeTitle" alinhamento="center" style={[styles.titulo, Sombras.duraAcento]}>
+          <View style={styles.emblema}>
+            {conquista.tipo === 'nivel' ? (
+              <View style={[styles.discoNivel, { backgroundColor: cores.tintCheio }]} accessible accessibilityLabel={`Nível ${conquista.valor}`}>
+                <Texto variante="caption" style={styles.textoDisco}>
+                  Nível
+                </Texto>
+                <Texto variante="numeroXL" style={[styles.textoDisco, styles.numeroDisco]}>
+                  {String(conquista.valor)}
+                </Texto>
+              </View>
+            ) : conquista.tipo === 'faixa' ? (
+              <SeloFaixa faixaOuGrau={String(conquista.valor)} tamanho="grande" />
+            ) : (
+              <Medalha rotulo={conquista.rotulo} semRotulo tipo={conquista.icone ?? 'treinos'} numero={conquista.valor} tamanho={112} />
+            )}
+          </View>
+          <Texto variante="title2" alinhamento="center">
             {TITULO[conquista.tipo]}
           </Texto>
-
-          <Animated.View style={[styles.centro, { opacity: entrada, transform: [{ scale: escala }] }]}>
-            {conquista.tipo === 'nivel' ? (
-              <>
-                <IconeCinturao tamanho={48} cor={Cores.acento} />
-                <Texto variante="numeroXL" alinhamento="center" accessibilityLabel={`Nível ${conquista.valor}`}>
-                  {String(conquista.valor)}
-                </Texto>
-              </>
-            ) : conquista.tipo === 'faixa' ? (
-              <View style={styles.faixa}>
-                <SeloFaixa faixaOuGrau={String(conquista.valor)} tamanho="grande" />
-              </View>
-            ) : (
-              <>
-                <IconeMedalha tamanho={56} cor={Cores.acento} espessura={1.4} />
-                <Texto variante="numeroXL" alinhamento="center">
-                  {String(conquista.valor)}
-                </Texto>
-              </>
-            )}
-          </Animated.View>
-
-          <Texto variante="title3" alinhamento="center" cabecalho={false}>
+          <Texto variante="subheadline" alinhamento="center" style={styles.rotulo}>
             {conquista.rotulo}
           </Texto>
-        </View>
-
-        <View style={styles.acao}>
-          <Botao titulo="Continuar" grande onPress={onFechar} />
-        </View>
+          <View style={styles.acao}>
+            <Botao titulo="Continuar" onPress={onFechar} />
+          </View>
+        </Animated.View>
       </View>
     </Modal>
   );
 }
 
-const styles = StyleSheet.create({
-  fundo: { flex: 1, backgroundColor: Cores.fundo, paddingHorizontal: Espacamento.grande, justifyContent: 'space-between', alignItems: 'center' },
-  flash: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Cores.acento },
-  coluna: { flex: 1, width: '100%', maxWidth: LarguraMaxima.formulario, justifyContent: 'center' },
-  sobretitulo: { marginTop: Espacamento.pequeno },
-  titulo: { marginTop: Espacamento.pequeno },
-  centro: { alignItems: 'center', marginVertical: Espacamento.extraGrande },
-  faixa: { paddingVertical: Espacamento.grande },
-  acao: { width: '100%', maxWidth: LarguraMaxima.formulario },
-});
+const useEstilos = criarEstilos((c, escuro) => ({
+  fundo: { flex: 1, backgroundColor: c.overlay, alignItems: 'center', justifyContent: 'center', padding: Espacamento.grande },
+  cartao: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: c.superficieElevada,
+    borderRadius: 24,
+    borderCurve: 'continuous',
+    padding: Espacamento.grande,
+    ...(escuro ? {} : { boxShadow: '0px 12px 40px rgba(0,0,0,0.18)' }),
+  },
+  emblema: { alignItems: 'center', marginTop: Espacamento.pequeno, marginBottom: Espacamento.padrao + 4 },
+  discoNivel: { width: 132, height: 132, borderRadius: 66, alignItems: 'center', justifyContent: 'center' },
+  textoDisco: { color: '#FFFFFF' },
+  numeroDisco: { marginTop: -6 },
+  rotulo: { marginTop: Espacamento.minimo },
+  acao: { marginTop: Espacamento.grande },
+}));

@@ -1,9 +1,9 @@
-// Podio — top 3 do ranking (RF20) como pódio de verdade: blocos com alturas 1º > 2º > 3º na ordem
-// visual 2º-1º-3º, posição em placar dentro do bloco. O 1º é o único em ouro (docs/DESIGN.md).
-// A coluna do próprio aluno ganha o traço de acento no topo do bloco.
-import { StyleSheet, View } from 'react-native';
-import { Cores, Espacamento, Raios } from '../../theme';
-import { IconeCinturao } from '../icones';
+// Podio — destaque leve dos três primeiros do ranking (RF20), sem os blocos de pódio: avatares
+// maiores (o 1º maior e um pouco acima), uma medalha redonda com a posição presa ao avatar, nome e
+// pontos. O 1º é o único em ouro (docs/DESIGN.md); 2º e 3º usam a medalha neutra. A coluna do
+// próprio aluno ganha o rótulo "Você" em tint.
+import { View } from 'react-native';
+import { criarEstilos, Espacamento, useTema } from '../../theme';
 import Avatar from './Avatar';
 import Texto from './Texto';
 
@@ -21,41 +21,42 @@ interface PodioProps {
   terceiro?: ItemPodio;
 }
 
-const ALTURA_BLOCO: Record<number, number> = { 1: 104, 2: 76, 3: 56 };
-
 function Coluna({ item }: { item: ItemPodio }) {
+  const { cores } = useTema();
+  const styles = useEstilos();
   const campeao = item.posicao === 1;
+  const tamanho = campeao ? 76 : 60;
   return (
     <View
-      style={styles.coluna}
+      style={[styles.coluna, !campeao && styles.colunaLateral]}
       accessible
       accessibilityLabel={`${item.posicao}º lugar: ${item.nome}, ${item.pontos} pontos${item.destaque ? ', você' : ''}`}
     >
-      {campeao ? <IconeCinturao tamanho={28} cor={Cores.ouro} /> : null}
-      <Avatar nome={item.nome} fotoUrl={item.fotoUrl} tamanho={campeao ? 64 : 48} />
-      <Texto variante="headline" numberOfLines={1} alinhamento="center" style={styles.nome}>
+      <View>
+        <Avatar nome={item.nome} fotoUrl={item.fotoUrl} tamanho={tamanho} />
+        <View style={[styles.medalha, { backgroundColor: campeao ? cores.ouro : cores.superficieElevada, borderColor: cores.superficie }]}>
+          <Texto variante="footnote" style={[styles.posicao, { color: campeao ? cores.fundo : cores.texto }]} maxFontSizeMultiplier={1.2}>
+            {item.posicao}
+          </Texto>
+        </View>
+      </View>
+      <Texto variante="subheadline" cor="texto" numberOfLines={1} alinhamento="center" style={styles.nome}>
         {item.nome}
       </Texto>
-      <Texto variante="numero" cor={campeao ? 'ouro' : 'texto'}>
+      <Texto variante="headline" style={styles.pontos}>
         {item.pontos}
       </Texto>
-      <View
-        style={[
-          styles.bloco,
-          { height: ALTURA_BLOCO[item.posicao] ?? 48 },
-          campeao ? styles.blocoOuro : null,
-          item.destaque && styles.blocoDestaque,
-        ]}
-      >
-        <Texto variante="numeroGrande" cor={campeao ? 'sobreTint' : 'texto2'}>
-          {item.posicao}
+      {item.destaque ? (
+        <Texto variante="caption" cor="tint">
+          Você
         </Texto>
-      </View>
+      ) : null}
     </View>
   );
 }
 
 export default function Podio({ primeiro, segundo, terceiro }: PodioProps) {
+  const styles = useEstilos();
   return (
     <View style={styles.container}>
       {segundo ? <Coluna item={segundo} /> : <View style={styles.colunaVazia} />}
@@ -65,29 +66,23 @@ export default function Podio({ primeiro, segundo, terceiro }: PodioProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    gap: Espacamento.pequeno,
-    paddingTop: Espacamento.padrao,
-    borderBottomWidth: 1,
-    borderBottomColor: Cores.linhaForte,
-  },
-  coluna: { flex: 1, maxWidth: 120, alignItems: 'center', gap: Espacamento.minimo },
+const useEstilos = criarEstilos(() => ({
+  container: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: Espacamento.padrao, paddingVertical: Espacamento.padrao },
+  coluna: { flex: 1, maxWidth: 120, alignItems: 'center', gap: 2 },
+  colunaLateral: { marginTop: Espacamento.grande },
   colunaVazia: { flex: 1, maxWidth: 120 },
-  nome: { maxWidth: '100%' },
-  bloco: {
-    alignSelf: 'stretch',
-    marginTop: Espacamento.minimo,
-    backgroundColor: Cores.superficie2,
-    borderTopLeftRadius: Raios.vivo,
-    borderTopRightRadius: Raios.vivo,
+  medalha: {
+    position: 'absolute',
+    right: -4,
+    bottom: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2.5,
     alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingTop: Espacamento.pequeno,
+    justifyContent: 'center',
   },
-  blocoOuro: { backgroundColor: Cores.ouro },
-  blocoDestaque: { borderTopWidth: 3, borderTopColor: Cores.acento },
-});
+  posicao: { fontWeight: '700', fontVariant: ['tabular-nums'] },
+  nome: { marginTop: Espacamento.pequeno, maxWidth: '100%' },
+  pontos: { fontVariant: ['tabular-nums'] },
+}));
