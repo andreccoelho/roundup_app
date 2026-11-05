@@ -40,7 +40,7 @@ export default function CelebracaoGraduacao({ visivel, grau, modalidade, nomeAlu
   return (
     <Modal visible={visivel} transparent animationType={reduzido ? 'none' : 'fade'} onRequestClose={onFechar} statusBarTranslucent>
       <View style={styles.fundo}>
-        <Animated.View style={[styles.cartao, { opacity: entrada, transform: [{ scale: escala }] }]} accessibilityViewIsModal accessibilityRole="alert" aria-modal>
+        <Animated.View style={[styles.cartao, { opacity: entrada, transform: [{ scale: escala }] }]} accessibilityViewIsModal accessibilityRole="alert">
           <Texto variante="footnote" alinhamento="center">
             Graduação registrada
           </Texto>

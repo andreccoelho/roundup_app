@@ -62,7 +62,9 @@ Regras:
 - **Cantos contínuos** (`borderCurve: 'continuous'`): 10 em campos (`Raios.campo`), 12 em listas e cartões (`Raios.lista`), 16 em cartões de destaque e sheets (`Raios.destaque`), cápsula em botões e chips.
 - **Listas agrupadas inseridas** (`GrupoLista` + `LinhaLista`) como padrão: cabeçalho em Footnote, linhas de no mínimo 44pt, separador hairline recuado até o texto, chevron à direita quando navega, rodapé explicativo.
 - **Cartões de destaque** (`Cartao destaque`) só onde há um dado principal: check-in do dia, progresso de nível, posição na classificação, sessão do dia, contadores da academia. Sem borda; sombra muito sutil só no claro.
-- Saíram: textura de lona, corte diagonal, bandas de identidade com marca d'água, sombras duras, cantos vivos.
+- **Fundo de identidade** (`FundoIdentidade`): a lona de ringue e a marca d'água do logo da direção anterior, agora dentro de um cartão de destaque (canto 16, sem a banda full-bleed). Fica no topo dos perfis (`CabecalhoPerfil`) e na saudação de Home, Hoje e do painel da academia. `aluno`: lona + marca d'água; `gestor` (professor e academia): só marca d'água. Marca d'água a 4% no claro e 6% no escuro, no canto superior direito, sem cobrir o avatar.
+- **Lona** (`TexturaLona`): trama diagonal na cor de texto do tema (4,5% no claro, 7% no escuro), também no cartão de check-in e no cartão da conquista. Decorativa e fora da árvore de acessibilidade.
+- Saíram: corte diagonal, bandas full-bleed, sombras duras, cantos vivos.
 
 ## Materiais e navegação
 - **iOS**: cabeçalho transparente com material translúcido (`headerBlurEffect: 'systemChromeMaterial'`) e **Large Title** nas raízes das abas, que encolhe ao rolar (`contentInsetAdjustmentBehavior` na `Tela`).
@@ -74,7 +76,8 @@ Regras:
 
 ## Componentes (resumo)
 - **Base**: Botao (cheio, cinza, simples, destrutivo, link, voltar; cápsula; pressionado = opacidade 0,7), CampoTexto (preenchido, rótulo sempre visível, borda de 2px no foco/erro), GrupoLista, LinhaLista, ItemMenu, Toggle, Abas (segmentado), Etiqueta (chip), Checkbox (círculo), Folha, Dialogo, Aviso (toast), EstadoVazio/EstadoErro (ícone em texto3, Title 3, uma linha, botão), Esqueleto, Cartao, Estatistica, Avatar, MensagemErro, CabecalhoSecao, CabecalhoPerfil, BotaoCabecalho, Logo.
-- **Domínio**: HeroCheckIn (cartão de destaque, botão cápsula de 50pt), AnelProgresso (anel de Atividade com o nível no centro), BarraProgresso (barra contínua), IndicadorSequencia (cartão compacto com chama), Medalha (emblema redondo; cinza translúcido com cadeado quando bloqueada; ouro só na máxima), Podio (três avatares com medalha de posição, sem blocos), LinhaClassificacao (linha do usuário em `tintSuave`), LinhaChamada (círculo de check), CartaoSessao, BotaoCheckIn, CartaoMissao, CartaoAluno, IndicadorFrequencia (pontos cheios × anéis), SeloFaixa, MomentoConquista e CelebracaoGraduacao (cartão central com emblema e "Continuar").
+- **Identidade**: FundoIdentidade, TexturaLona.
+- **Domínio**: HeroCheckIn (cartão de destaque com lona, botão cápsula de 50pt), AnelProgresso (anel de Atividade com o nível no centro), BarraProgresso (barra contínua), IndicadorSequencia (cartão compacto com chama), Medalha (emblema redondo; cinza translúcido com cadeado quando bloqueada; ouro só na máxima), Podio (três avatares com medalha de posição, sem blocos), LinhaClassificacao (linha do usuário em `tintSuave`), LinhaChamada (círculo de check), CartaoSessao, BotaoCheckIn, CartaoMissao, CartaoAluno, IndicadorFrequencia (pontos cheios × anéis), SeloFaixa, MomentoConquista e CelebracaoGraduacao (cartão central com emblema e "Continuar").
 
 ## Layout
 - Toda tela usa `<Tela>`: fundo do tema, safe area, coluna centralizada; web/tablet só com `maxWidth` — **480** em formulários e **720** em listas. Gutter de 16.

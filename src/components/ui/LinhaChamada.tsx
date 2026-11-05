@@ -68,7 +68,7 @@ function LinhaChamada({ nome, fotoUrl, status, processando, onAlternar, separado
             {...propsFoco}
           >
             {processando ? (
-              <ActivityIndicator color={cores.texto2} />
+              <ActivityIndicator color={cores.texto2} accessibilityLabel="Carregando" />
             ) : presente ? (
               <IconeCheckCirculo tamanho={30} cor={cores.sucesso} preenchido />
             ) : (

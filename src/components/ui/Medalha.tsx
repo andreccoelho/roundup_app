@@ -41,7 +41,7 @@ export default function Medalha({ rotulo, conquistada = true, tipo = 'treinos', 
   const r = tamanho / 2;
 
   return (
-    <View style={[styles.container, { width: tamanho + 20 }]} accessible accessibilityLabel={`Medalha: ${rotulo}${conquistada ? ', conquistada' : ', ainda não conquistada'}`}>
+    <View style={[styles.container, { width: tamanho + 20 }]} accessible accessibilityRole="image" accessibilityLabel={`Medalha: ${rotulo}${conquistada ? ', conquistada' : ', ainda não conquistada'}`}>
       <View style={{ width: tamanho, height: tamanho }}>
         <Svg width={tamanho} height={tamanho} aria-hidden>
           <Circle cx={r} cy={r} r={r} fill={corDisco} />
