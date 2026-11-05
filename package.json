@@ -43,8 +43,8 @@
     "web:8082": "expo start --web --port 8082",
     "web:8083": "expo start --web --port 8083",
     "web:3-perfis": "concurrently -n aluno,professor,academia -c blue,magenta,green \"npm run web:8081\" \"npm run web:8082\" \"npm run web:8083\"",
-    "test:rules": "firebase emulators:exec --only firestore \"jest tests/rules --runInBand\"",
-    "test:functions": "npm --prefix functions run build && firebase emulators:exec --only functions,firestore \"jest tests/functions --runInBand\"",
+    "test:rules": "firebase emulators:exec --project demo-roundup-app --only firestore \"jest tests/rules --runInBand\"",
+    "test:functions": "npm --prefix functions run build && firebase emulators:exec --project demo-roundup-app --only functions,firestore \"jest tests/functions --runInBand\"",
     "test:unit": "jest src"
   },
   "private": true
