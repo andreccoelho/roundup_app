@@ -1,6 +1,7 @@
-// RF18: missões ativas no escopo do vínculo do aluno, com progresso parcial. Progresso só
-// existe depois que o responsável cria a missão e passa a marcar progresso (RF23 ainda não tem
-// tela — ver docs/DECISOES_PENDENTES.md item 2); até lá, toda missão aparece com progresso zero.
+// RF18: missões ativas de todos os responsáveis com quem o aluno tem vínculo, com progresso.
+// O progresso de presença/pontuação/sequência é atualizado por Cloud Function quando um check-in
+// é validado; o de missão personalizada, quando o responsável marca a conclusão. Missão sem
+// documento de progresso ainda aparece com progresso zero.
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Espacamento } from '../../theme';
@@ -36,16 +37,16 @@ export default function MissoesScreen() {
     setErro(null);
     try {
       const responsaveis = await listarResponsaveisAtivosDoAluno(usuario.id);
-      const responsavelId = responsaveis[0];
-      if (!responsavelId) {
+      if (responsaveis.length === 0) {
         setItens([]);
         return;
       }
 
-      const [missoes, progresso] = await Promise.all([
-        listarMissoesAtivasDoResponsavel(responsavelId),
+      const [missoesPorResponsavel, progresso] = await Promise.all([
+        Promise.all(responsaveis.map((id) => listarMissoesAtivasDoResponsavel(id))),
         listarProgressoPorAluno(usuario.id),
       ]);
+      const missoes = missoesPorResponsavel.flat();
       const progressoPorMissao = new Map(progresso.map((p) => [p.missaoId, p]));
       setItens(missoes.map((missao) => ({ missao, progresso: progressoPorMissao.get(missao.id) ?? null })));
     } catch (e) {

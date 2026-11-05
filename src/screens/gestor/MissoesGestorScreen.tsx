@@ -1,11 +1,17 @@
 // RF23: criação e gestão de missões personalizadas pelo responsável (professor autônomo ou
 // academia). Campos usados são só os que existem em types/index.ts (Missao) — "público-alvo" e
 // "período de vigência" do RF23 original não têm campo modelado ainda, ficam de fora.
+// RF18: missões presença/pontuação/sequência têm progresso automático (Cloud Function); só as
+// personalizadas ganham o botão "Marcar conclusões", que abre a lista de alunos vinculados.
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { criarMissao, listarMissoesPorResponsavel, atualizarMissao } from '../../services/missoes';
+import {
+  criarMissao, listarMissoesPorResponsavel, atualizarMissao, listarProgressoDaMissao, marcarConclusaoPersonalizada,
+} from '../../services/missoes';
+import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
+import { buscarUsuario } from '../../services/usuarios';
 import { Missao, TipoMissao } from '../../types';
 import Botao from '../../components/ui/Botao';
 import Etiqueta from '../../components/ui/Etiqueta';
@@ -22,6 +28,12 @@ import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import MensagemErro from '../../components/ui/MensagemErro';
 import { IconeBandeira, IconeMais } from '../../components/icones';
 import { mensagemErro } from '../../utils/mensagensErro';
+
+interface AlunoConclusao {
+  alunoId: string;
+  nome: string;
+  concluida: boolean;
+}
 
 const TIPOS: { valor: TipoMissao; rotulo: string }[] = [
   { valor: 'presenca', rotulo: 'Presença' },
@@ -45,6 +57,12 @@ export default function MissoesGestorScreen() {
   const [pontos, setPontos] = useState('');
   const [erroForm, setErroForm] = useState<string | null>(null);
   const [criando, setCriando] = useState(false);
+
+  const [missaoConclusoes, setMissaoConclusoes] = useState<Missao | null>(null);
+  const [alunosConclusao, setAlunosConclusao] = useState<AlunoConclusao[]>([]);
+  const [carregandoConclusoes, setCarregandoConclusoes] = useState(false);
+  const [erroConclusoes, setErroConclusoes] = useState<string | null>(null);
+  const [salvandoAlunoId, setSalvandoAlunoId] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     if (!usuario) return;
@@ -123,6 +141,46 @@ export default function MissoesGestorScreen() {
     }
   }
 
+  // RF18: alunos com vínculo aceito (listarVinculosAceitosDaAcademia filtra por destinatarioId,
+  // serve igual para professor autônomo) e o progresso atual de cada um nesta missão
+  async function abrirConclusoes(missao: Missao) {
+    if (!usuario) return;
+    setMissaoConclusoes(missao);
+    setCarregandoConclusoes(true);
+    setErroConclusoes(null);
+    try {
+      const [vinculos, progresso] = await Promise.all([
+        listarVinculosAceitosDaAcademia(usuario.id, 'aluno'),
+        listarProgressoDaMissao(missao.id, usuario.id),
+      ]);
+      const concluidos = new Set(progresso.filter((p) => p.concluida).map((p) => p.alunoId));
+      const alunos = await Promise.all(
+        vinculos.map(async (v) => {
+          const aluno = await buscarUsuario(v.solicitanteId);
+          return { alunoId: v.solicitanteId, nome: aluno?.nome ?? 'Aluno', concluida: concluidos.has(v.solicitanteId) };
+        }),
+      );
+      setAlunosConclusao(alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
+    } catch (e: any) {
+      setErroConclusoes(mensagemErro(e, 'Não foi possível carregar os alunos. Tente novamente.'));
+    } finally {
+      setCarregandoConclusoes(false);
+    }
+  }
+
+  async function handleAlternarConclusao(aluno: AlunoConclusao) {
+    if (!missaoConclusoes) return;
+    setSalvandoAlunoId(aluno.alunoId);
+    setErroConclusoes(null);
+    try {
+      await marcarConclusaoPersonalizada(missaoConclusoes, aluno.alunoId, !aluno.concluida);
+      setAlunosConclusao((prev) => prev.map((a) => (a.alunoId === aluno.alunoId ? { ...a, concluida: !a.concluida } : a)));
+    } catch (e: any) {
+      setErroConclusoes(mensagemErro(e, 'Não foi possível salvar a conclusão. Tente novamente.'));
+    } finally {
+      setSalvandoAlunoId(null);
+    }
+  }
 
   const ativas = missoes.filter((m) => m.ativa).length;
 
@@ -155,6 +213,11 @@ export default function MissoesGestorScreen() {
                 desabilitado={processandoId === missao.id}
                 onAlterar={() => handleAlternarAtiva(missao)}
               />
+              {missao.tipo === 'personalizada' ? (
+                <View style={styles.acaoMissao}>
+                  <Botao compacto variante="secundario" titulo="Marcar conclusões" onPress={() => abrirConclusoes(missao)} />
+                </View>
+              ) : null}
             </View>
           ))}
         </>
@@ -186,6 +249,37 @@ export default function MissoesGestorScreen() {
 
         <Botao titulo="Criar missão" onPress={handleCriar} carregando={criando} />
       </Folha>
+
+      <Folha
+        visivel={missaoConclusoes !== null}
+        onFechar={() => setMissaoConclusoes(null)}
+        titulo={missaoConclusoes ? `Conclusões: ${missaoConclusoes.titulo}` : 'Conclusões'}
+      >
+        <Texto variante="legenda" style={styles.rotuloCampo}>
+          {`Marque quem cumpriu a missão. Cada conclusão vale ${missaoConclusoes?.pontos ?? 0} pts na classificação do mês.`}
+        </Texto>
+        <MensagemErro mensagem={erroConclusoes} />
+        {carregandoConclusoes ? (
+          <Esqueleto forma="linha" repeticoes={3} />
+        ) : alunosConclusao.length === 0 && !erroConclusoes ? (
+          <Texto variante="corpo" cor="texto2">
+            Nenhum aluno vinculado ainda.
+          </Texto>
+        ) : (
+          alunosConclusao.map((aluno, i) => (
+            <View key={aluno.alunoId}>
+              {i > 0 ? <LinhaFina /> : null}
+              <Toggle
+                rotulo={aluno.nome}
+                descricao={aluno.concluida ? 'Concluída' : 'Em curso'}
+                valor={aluno.concluida}
+                desabilitado={salvandoAlunoId === aluno.alunoId}
+                onAlterar={() => handleAlternarConclusao(aluno)}
+              />
+            </View>
+          ))
+        )}
+      </Folha>
     </Tela>
   );
 }
@@ -196,4 +290,5 @@ const styles = StyleSheet.create({
   linhaTipos: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   linhaNumeros: { flexDirection: 'row', gap: Espacamento.padrao },
   campoNumero: { flex: 1 },
+  acaoMissao: { alignItems: 'flex-start', marginBottom: Espacamento.pequeno },
 });

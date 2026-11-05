@@ -106,3 +106,6 @@ export { excluirConta } from './exclusaoConta';
 export {
   definirLeitoresDaClassificacao, atualizarLeitoresNoVinculo, atualizarLeitoresNaParticipacao,
 } from './classificacao';
+
+// RF18: progresso automático e pontos de missão — ver missoes.ts
+export { atualizarMissoesNoCheckIn, creditarPontosDaMissao } from './missoes';

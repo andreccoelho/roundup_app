@@ -43,13 +43,17 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 ---
 
-## 2. `missoesProgresso` — quem escreve (RF18)
+## 2. `missoesProgresso` — quem escreve (RF18) — ✅ RESOLVIDO
 
-**Decidido:** só o responsável (professor/academia) cria e atualiza o progresso do aluno em uma missão — nunca o aluno. Mesmo espírito de RN01 (pontuação só após validação humana): progresso autodeclarado pelo aluno seria tão "driblável" quanto pontos autocreditados.
+O aluno continua sem permissão para escrever o próprio progresso (testado em `tests/rules/missoes.test.ts`).
 
-**Consequência prática:** hoje **nenhuma tela escreve `missoesProgresso`** — a tela de criação/gestão de missões (RF23) ainda não foi construída (é Ciclo 3), então o progresso do aluno aparece vazio ("0 de X") até essa tela existir. A leitura (RF18, aluno vê progresso) já funciona.
+- **Presença, pontuação e sequência:** progresso automático. A Cloud Function `atualizarMissoesNoCheckIn` roda quando um check-in entra ou sai de `validado` e recalcula do zero o progresso do aluno em todas as missões automáticas ativas do responsável. Ela conta só check-ins validados **a partir da criação da missão**. Presença conta check-ins; pontuação soma os pontos dos check-ins (sem os pontos de outras missões); sequência usa a **maior** sequência de dias seguidos desde a criação, para a missão concluída não voltar a "em curso" quando a sequência quebra. Um estorno de validação pode desfazer a conclusão.
+- **Personalizada:** o responsável marca a conclusão à mão, aluno por aluno, no botão "Marcar conclusões" da tela de missões do gestor. A regra só deixa o responsável escrever progresso de missão personalizada dele.
+- **Pontos da missão:** a Cloud Function `creditarPontosDaMissao` credita `missao.pontos` na classificação do mês da conclusão e estorna se a conclusão for desfeita. `pontosCreditados`/`periodoCredito` no próprio progresso evitam crédito em dobro; o client não pode escrever esses campos. RN01 continua valendo: a conclusão sempre vem de check-in validado pelo responsável ou de marcação do próprio responsável.
+- `missoesProgresso.delete` passou a ser negado ao client: apagar um progresso concluído deixaria os pontos creditados sem estorno.
+- A tela de missões do aluno passou a mostrar as missões de todos os vínculos ativos, não só do primeiro.
 
-**Decisão a validar:** confirma que o responsável marca progresso manualmente (ex.: ao validar um check-in que conta para uma missão de "presença"), ou isso devia ser automático a partir dos check-ins validados? Automatizar exigiria lógica adicional (cliente ou Cloud Function) não escrita nesta rodada.
+**A validar:** se missão desativada deve parar de contar (hoje, sim: só missões ativas são recalculadas, e o progresso já alcançado fica).
 
 ---
 
