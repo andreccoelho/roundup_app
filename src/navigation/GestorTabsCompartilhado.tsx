@@ -9,14 +9,15 @@ import AlunosScreen from '../screens/gestor/AlunosScreen';
 import RegistrarGraduacaoScreen from '../screens/gestor/RegistrarGraduacaoScreen';
 import MissoesGestorScreen from '../screens/gestor/MissoesGestorScreen';
 import { GestorStackParamList } from './types';
-import { opcoesHeader } from './opcoesCasca';
+import { opcoesFolha, opcoesRaiz, useOpcoesHeader } from './opcoesCasca';
 
 const TurmasStack = createNativeStackNavigator<GestorStackParamList>();
 
 export function TurmasNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <TurmasStack.Navigator initialRouteName="Turmas" screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <TurmasStack.Screen name="Turmas" component={TurmasScreen} options={{ title: 'Turmas' }} />
+      <TurmasStack.Screen name="Turmas" component={TurmasScreen} options={{ ...opcoesRaiz, title: 'Turmas' }} />
       <TurmasStack.Screen name="TurmaDetalhe" component={TurmaDetalheScreen} options={{ title: 'Turma' }} />
       <TurmasStack.Screen name="SessaoDetalhe" component={SessaoDetalheScreen} options={{ title: 'Sessão' }} />
       <TurmasStack.Screen
@@ -36,13 +37,14 @@ export type AlunosStackParamList = {
 const AlunosStack = createNativeStackNavigator<AlunosStackParamList>();
 
 export function AlunosNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <AlunosStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <AlunosStack.Screen name="Alunos" component={AlunosScreen} options={{ title: 'Alunos' }} />
+      <AlunosStack.Screen name="Alunos" component={AlunosScreen} options={{ ...opcoesRaiz, title: 'Alunos' }} />
       <AlunosStack.Screen
         name="RegistrarGraduacao"
         component={RegistrarGraduacaoScreen}
-        options={{ title: 'Registrar graduação' }}
+        options={opcoesFolha('Registrar graduação')}
       />
     </AlunosStack.Navigator>
   );
@@ -52,9 +54,10 @@ type MissoesGestorStackParamList = { Missoes: undefined };
 const MissoesGestorStack = createNativeStackNavigator<MissoesGestorStackParamList>();
 
 export function MissoesGestorNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <MissoesGestorStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <MissoesGestorStack.Screen name="Missoes" component={MissoesGestorScreen} options={{ title: 'Missões' }} />
+      <MissoesGestorStack.Screen name="Missoes" component={MissoesGestorScreen} options={{ ...opcoesRaiz, title: 'Missões' }} />
     </MissoesGestorStack.Navigator>
   );
 }

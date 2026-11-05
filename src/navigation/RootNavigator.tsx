@@ -1,5 +1,5 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { temaNavegacao } from './opcoesCasca';
+import { useTemaNavegacao } from './opcoesCasca';
 import { useAuth } from '../contexts/AuthContext';
 import { AuthStack } from './AuthStack';
 import { AlunoRaiz } from './AlunoRaiz';
@@ -9,6 +9,7 @@ import LoadingScreen from '../components/LoadingScreen';
 
 export function RootNavigator() {
   const { usuarioAuth, usuario, carregando } = useAuth();
+  const temaNavegacao = useTemaNavegacao();
 
   if (carregando) {
     return <LoadingScreen />;

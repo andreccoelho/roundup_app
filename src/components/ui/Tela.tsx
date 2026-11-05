@@ -1,16 +1,25 @@
-// Tela — contêiner raiz de toda tela (docs/DESIGN.md): fundo do tema, safe area, coluna
-// centralizada com largura máxima em web/tablet (480 em auth/forms, 720 em listas — sem layout de
-// 2 colunas), rolagem e KeyboardAvoidingView opcionais.
+// Tela — contêiner raiz de toda tela (docs/DESIGN.md): fundo do tema (agrupado ou não), safe
+// area, coluna centralizada com largura máxima em web/tablet (480 em auth/forms, 720 em listas —
+// sem layout de 2 colunas), rolagem e KeyboardAvoidingView opcionais.
 //
-// `bordas`: quais insets esta tela aplica por conta própria. Telas dentro de um stack com header
-// não precisam de 'topo' (o header já cobre); telas dentro das abas não precisam de 'base' (a tab
-// bar já soma insets.bottom). Telas sem header e fora das abas (auth) usam as duas.
-import type { ReactNode } from 'react';
+// Navegação: no iOS o cabeçalho é transparente com blur e Large Title (opcoesCasca.tsx); a rolagem
+// usa contentInsetAdjustmentBehavior "automatic" para o conteúdo começar abaixo do cabeçalho e o
+// título grande encolher ao rolar. Fora do iOS, nas telas raiz das abas o cabeçalho some e esta
+// Tela desenha o título grande (`tituloGrande`). A tab bar é translúcida e fica por cima do
+// conteúdo: o respiro inferior soma a altura dela (BottomTabBarHeightContext).
+//
+// `bordas`: quais insets esta tela aplica por conta própria. Telas sem header e fora das abas
+// (auth) usam as duas.
+import { useContext, type ReactNode } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomTabBarHeightContext } from '@react-navigation/bottom-tabs';
 import { criarEstilos, Espacamento, LarguraMaxima } from '../../theme';
+import Texto from './Texto';
 
 type Borda = 'topo' | 'base';
+
+const IOS = Platform.OS === 'ios';
 
 interface TelaProps {
   children: ReactNode;
@@ -18,8 +27,8 @@ interface TelaProps {
   teclado?: boolean;
   largura?: 'formulario' | 'lista' | 'total';
   bordas?: Borda[];
-  // Gutter lateral de 16 + respiro inferior. Desligar quando a tela começa com um bloco
-  // full-bleed (BandaIdentidade) e aplica o gutter por seção.
+  // Gutter lateral de 16 + respiro inferior. Desligar quando a tela começa com um bloco que vai de
+  // borda a borda e aplica o gutter por seção.
   preenchimento?: boolean;
   centralizarVertical?: boolean;
   estiloConteudo?: StyleProp<ViewStyle>;
@@ -27,6 +36,8 @@ interface TelaProps {
   sobreposicao?: ReactNode;
   // Listas agrupadas inseridas pedem o fundo agrupado (systemGroupedBackground)
   agrupada?: boolean;
+  // Título da tela raiz de uma aba (Large Title). No iOS quem desenha é o cabeçalho nativo.
+  tituloGrande?: string;
 }
 
 export default function Tela({
@@ -40,40 +51,62 @@ export default function Tela({
   estiloConteudo,
   sobreposicao,
   agrupada = false,
+  tituloGrande,
 }: TelaProps) {
   const insets = useSafeAreaInsets();
+  const alturaTabBar = useContext(BottomTabBarHeightContext) ?? 0;
   const styles = useEstilos();
   const maxWidth = largura === 'total' ? undefined : LarguraMaxima[largura];
+  const tituloNaTela = tituloGrande && !IOS;
+  const topo = bordas.includes('topo') || tituloNaTela;
 
   const coluna: StyleProp<ViewStyle> = [
     styles.coluna,
     { maxWidth },
     preenchimento && styles.preenchimento,
-    bordas.includes('topo') && { paddingTop: insets.top + (preenchimento ? Espacamento.padrao : 0) },
+    topo && { paddingTop: insets.top + (preenchimento ? Espacamento.padrao : 0) },
     bordas.includes('base') && { paddingBottom: insets.bottom + Espacamento.enorme },
+    alturaTabBar > 0 && { paddingBottom: alturaTabBar + Espacamento.grande },
     centralizarVertical && styles.centralizar,
     estiloConteudo,
   ];
 
-  const conteudo = rolavel ? (
-    <ScrollView
-      style={[styles.raiz, agrupada && styles.raizAgrupada]}
-      contentContainerStyle={styles.rolagem}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={coluna}>{children}</View>
-    </ScrollView>
-  ) : (
-    <View style={[styles.raiz, agrupada && styles.raizAgrupada, styles.rolagem]}>
-      <View style={[coluna, styles.flex]}>{children}</View>
-    </View>
-  );
+  const titulo = tituloNaTela ? (
+    <Texto variante="largeTitle" style={[styles.tituloGrande, !preenchimento && styles.tituloSemGutter]}>
+      {tituloGrande}
+    </Texto>
+  ) : null;
+
+  // No iOS a rolagem existe mesmo quando a tela não rola (scrollEnabled false): é ela que aplica o
+  // inset do cabeçalho transparente.
+  const conteudo =
+    rolavel || IOS ? (
+      <ScrollView
+        style={[styles.raiz, agrupada && styles.raizAgrupada]}
+        contentContainerStyle={styles.rolagem}
+        contentInsetAdjustmentBehavior="automatic"
+        scrollEnabled={rolavel}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[coluna, !rolavel && styles.flex]}>
+          {titulo}
+          {children}
+        </View>
+      </ScrollView>
+    ) : (
+      <View style={[styles.raiz, agrupada && styles.raizAgrupada, styles.rolagem]}>
+        <View style={[coluna, styles.flex]}>
+          {titulo}
+          {children}
+        </View>
+      </View>
+    );
 
   return (
     <View style={[styles.raiz, agrupada && styles.raizAgrupada]}>
       {teclado ? (
-        <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView style={styles.flex} behavior={IOS ? 'padding' : undefined}>
           {conteudo}
         </KeyboardAvoidingView>
       ) : (
@@ -92,4 +125,6 @@ const useEstilos = criarEstilos((c) => ({
   coluna: { width: '100%', flexGrow: 1 },
   preenchimento: { paddingHorizontal: Espacamento.padrao, paddingTop: Espacamento.padrao, paddingBottom: Espacamento.enorme },
   centralizar: { justifyContent: 'center' },
+  tituloGrande: { marginBottom: Espacamento.padrao, marginTop: Espacamento.minimo },
+  tituloSemGutter: { paddingHorizontal: Espacamento.padrao },
 }));
