@@ -121,6 +121,13 @@ service cloud.firestore {
         && meuId() in get(/databases/$(database)/documents/usuarios/$(alunoId)/privado/vinculos).data.get('responsaveisIds', []);
     }
 
+    // RF18, RF23: a missão existe, é do usuário autenticado e é do tipo 'personalizada' — único
+    // tipo cujo progresso o responsável marca à mão (os outros são automáticos, por Cloud Function)
+    function souDonoDeMissaoPersonalizada(missaoId) {
+      let missao = get(/databases/$(database)/documents/missoes/$(missaoId)).data;
+      return missao.responsavelId == meuId() && missao.tipo == 'personalizada';
+    }
+
     // ---------- usuarios (RF01 a RF06) ----------
     match /usuarios/{usuarioId} {
       // leitura ampla é necessária para as consultas de descoberta de academias e professores
@@ -320,10 +327,14 @@ service cloud.firestore {
     }
 
     // ---------- missoesProgresso (RF18) ----------
-    // PROVISÓRIO: decisão de produto — só o responsável (professor/academia) escreve progresso,
-    // nunca o aluno, mesmo espírito de RN01 (evitar progresso autodeclarado/"driblável"). Ver
-    // docs/DECISOES_PENDENTES.md. `responsavelId` é desnormalizado da missão na escrita (não há
-    // get() cruzado dentro da regra de leitura, list-safe).
+    // Decisão de produto: o aluno nunca escreve o próprio progresso (mesmo espírito de RN01,
+    // progresso autodeclarado seria "driblável"). Missões presença/pontuação/sequência têm progresso
+    // automático, escrito só pela Cloud Function atualizarMissoesNoCheckIn (Admin SDK); o
+    // responsável só escreve progresso de missão PERSONALIZADA dele, marcando a conclusão à mão.
+    // Os pontos da missão são creditados pela Cloud Function creditarPontosDaMissao, que guarda
+    // `pontosCreditados`/`periodoCredito` aqui — campos que o client não toca. Sem delete: apagar
+    // um progresso concluído deixaria os pontos creditados sem estorno.
+    // `responsavelId` é desnormalizado da missão na escrita (leitura list-safe, sem get()).
     match /missoesProgresso/{progressoId} {
       allow read: if autenticado()
                   && (resource.data.get('alunoId', '') == meuId()
@@ -331,13 +342,17 @@ service cloud.firestore {
       allow create: if autenticado()
                     && souGestor()
                     && request.resource.data.responsavelId == meuId()
-                    && souResponsavelDoAluno(request.resource.data.alunoId);
+                    && progressoId == request.resource.data.missaoId + '_' + request.resource.data.alunoId
+                    && souResponsavelDoAluno(request.resource.data.alunoId)
+                    && souDonoDeMissaoPersonalizada(request.resource.data.missaoId)
+                    && request.resource.data.keys().hasOnly(['id', 'missaoId', 'alunoId', 'responsavelId',
+                                                             'progressoAtual', 'concluida', 'dataConclusao', 'atualizadoEm']);
       allow update: if autenticado()
                     && resource.data.responsavelId == meuId()
-                    && request.resource.data.alunoId == resource.data.alunoId
-                    && request.resource.data.missaoId == resource.data.missaoId
-                    && request.resource.data.responsavelId == resource.data.responsavelId;
-      allow delete: if autenticado() && resource.data.responsavelId == meuId();
+                    && souDonoDeMissaoPersonalizada(resource.data.missaoId)
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['progressoAtual', 'concluida', 'dataConclusao', 'atualizadoEm']);
+      allow delete: if false;
     }
 
     // ---------- graduacoes (RF25, RN03) ----------

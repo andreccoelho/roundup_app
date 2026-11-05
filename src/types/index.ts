@@ -157,10 +157,10 @@ export interface Missao {
   atualizadoEm: Date;
 }
 
-// RF18 (Ciclo 2): acompanhamento do progresso de missões por aluno. `responsavelId` desnormaliza
-// o dono da missão (decisão: só o responsável escreve progresso, nunca o aluno — mesmo espírito
-// de RN01, ver docs/DECISOES_PENDENTES.md) e habilita a leitura filtrada do gestor sem get()
-// cruzado em firestore.rules.
+// RF18: progresso de missões por aluno, id determinístico `${missaoId}_${alunoId}`. Escrito pela
+// Cloud Function atualizarMissoesNoCheckIn (presença, pontuação, sequência) ou pelo responsável
+// (personalizada) — nunca pelo aluno. `pontosCreditados`/`periodoCredito` são escritos só pela
+// Cloud Function creditarPontosDaMissao, para saber o que estornar se a conclusão for desfeita.
 export interface MissaoProgresso {
   id: string;
   missaoId: string;
@@ -169,6 +169,8 @@ export interface MissaoProgresso {
   progressoAtual: number;
   concluida: boolean;
   dataConclusao?: Date;
+  pontosCreditados?: number;
+  periodoCredito?: string;
   atualizadoEm: Date;
 }
 

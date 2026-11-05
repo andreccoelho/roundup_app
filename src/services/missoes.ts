@@ -1,7 +1,8 @@
-// RF18 (Ciclo 2, progresso de missões) e RF23 (Ciclo 3, criação de missões — a tela de criação
-// ainda não existe, fica para quando RF23 for construído).
+// RF18 (progresso de missões) e RF23 (criação de missões, MissoesGestorScreen). O progresso das
+// missões presença/pontuação/sequência é automático (Cloud Function atualizarMissoesNoCheckIn);
+// daqui o client só marca a conclusão de missão personalizada.
 import {
-  doc, getDoc, setDoc, updateDoc, deleteDoc,
+  doc, getDoc, setDoc, updateDoc, deleteDoc, deleteField,
   collection, query, where, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -56,24 +57,9 @@ export async function listarMissoesAtivasDoResponsavel(responsavelId: string): P
 
 // ── Progresso de missões ──────────────────────────────────────────────────────
 
-export async function criarProgresso(progresso: MissaoProgresso): Promise<void> {
-  await setDoc(doc(db, COLECAO_PROGRESSO, progresso.id), progresso);
-}
-
 export async function buscarProgresso(id: string): Promise<MissaoProgresso | null> {
   const snap = await getDoc(doc(db, COLECAO_PROGRESSO, id));
   return snap.exists() ? (snap.data() as MissaoProgresso) : null;
-}
-
-export async function atualizarProgresso(
-  id: string,
-  dados: Partial<MissaoProgresso>,
-): Promise<void> {
-  await updateDoc(doc(db, COLECAO_PROGRESSO, id), dados);
-}
-
-export async function removerProgresso(id: string): Promise<void> {
-  await deleteDoc(doc(db, COLECAO_PROGRESSO, id));
 }
 
 export async function listarProgressoPorAluno(alunoId: string): Promise<MissaoProgresso[]> {
@@ -82,8 +68,32 @@ export async function listarProgressoPorAluno(alunoId: string): Promise<MissaoPr
   return snap.docs.map(d => d.data() as MissaoProgresso);
 }
 
-export async function listarProgressoPorMissao(missaoId: string): Promise<MissaoProgresso[]> {
-  const q = query(collection(db, COLECAO_PROGRESSO), where('missaoId', '==', missaoId));
+// Filtra também por responsavelId: só por missaoId a consulta não é provada pela regra de leitura
+// (que olha alunoId/responsavelId — ver docs/decisoes-tecnicas.md).
+export async function listarProgressoDaMissao(missaoId: string, responsavelId: string): Promise<MissaoProgresso[]> {
+  const q = query(
+    collection(db, COLECAO_PROGRESSO),
+    where('responsavelId', '==', responsavelId),
+    where('missaoId', '==', missaoId),
+  );
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as MissaoProgresso);
+}
+
+// RF18, RF23: o responsável marca ou desmarca a conclusão de uma missão personalizada para um
+// aluno. Os pontos da missão são creditados (ou estornados) pela Cloud Function
+// creditarPontosDaMissao, não aqui — o client não escreve pontos de missão.
+export async function marcarConclusaoPersonalizada(missao: Missao, alunoId: string, concluida: boolean): Promise<void> {
+  const id = `${missao.id}_${alunoId}`;
+  const agora = new Date();
+  await setDoc(doc(db, COLECAO_PROGRESSO, id), {
+    id,
+    missaoId: missao.id,
+    alunoId,
+    responsavelId: missao.responsavelId,
+    progressoAtual: concluida ? missao.meta : 0,
+    concluida,
+    dataConclusao: concluida ? agora : deleteField(),
+    atualizadoEm: agora,
+  }, { merge: true });
 }
