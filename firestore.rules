@@ -136,7 +136,9 @@ service cloud.firestore {
                         // vinculosAtivos saiu daqui na Fase 1 desta rodada (ver usuarios/privado abaixo).
                         || ((souDestinatarioDeVinculoAceito(usuarioId) || souDestinatarioEncerrandoVinculo(usuarioId))
                             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['autonomo', 'atualizadoEm'])));
-      allow delete: if false;  // exclusão é RF29, Ciclo 4
+      // RF29: o client nunca apaga a conta direto — a Cloud Function excluirConta (Admin SDK,
+      // ignora estas regras) faz a limpeza em cascata e apaga este documento por último.
+      allow delete: if false;
     }
 
     // RN05, RN06: vínculos ativos do usuário — array movido para cá (Fase 1 desta rodada)

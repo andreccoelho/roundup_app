@@ -98,3 +98,6 @@ export const sincronizarLeitorNaAtualizacaoDeMatricula = onDocumentUpdated(
     }
   },
 );
+
+// RF29: exclusão de conta em cascata — ver exclusaoConta.ts
+export { excluirConta } from './exclusaoConta';
