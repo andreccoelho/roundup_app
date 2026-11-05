@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Platform } from "react-native";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 
 const firebaseConfig = {
@@ -32,3 +33,5 @@ export const auth = initializeAuth(app, {
 
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+// RF29: Cloud Functions chamáveis (functions/src) — região padrão us-central1
+export const functions = getFunctions(app);

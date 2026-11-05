@@ -5,10 +5,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
-  deleteUser,
 } from 'firebase/auth';
-import { auth } from '../services/firebase';
-import { atualizarUsuario, buscarUsuario, criarUsuario, removerUsuario } from '../services/usuarios';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../services/firebase';
+import { atualizarUsuario, buscarUsuario, criarUsuario } from '../services/usuarios';
 import { Usuario } from '../types';
 import { agoraTimestamp } from '../utils/datas';
 
@@ -83,25 +83,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
   }
 
-  // RF29: exclusão de conta e dados. PENDÊNCIA CONHECIDA — sinalizando, não decidindo sozinho:
-  // firestore.rules hoje nega `usuarios.delete` incondicionalmente
-  // (`allow delete: if false;` — comentário no próprio arquivo já dizia "exclusão é RF29,
-  // Ciclo 4"). Essa chamada é real e vai até o Firestore, mas falha com permissão negada até a
-  // regra ser revisada — e revisá-la não é só trocar `if false` por uma condição: apagar só o
-  // documento raiz deixaria órfãos em `usuarios/{uid}/privado`, `matriculas`, `checkins`,
-  // `vinculos`, `graduacoes`, `classificacoes` etc., que hoje têm o uid do dono, mas nenhum
-  // gatilho de limpeza em cascata (precisaria de Cloud Function com Admin SDK, que já existe no
-  // projeto para outro propósito — sincronização de leitoresIds — e poderia ganhar mais uma
-  // função, ou de uma estratégia de exclusão em duas fases). Por isso a exclusão do Firestore é
-  // tentada ANTES da exclusão da conta no Firebase Auth: se a primeira falhar (caso de hoje), a
-  // conta nunca é removida do Auth, e o usuário não fica sem acesso a uma conta cujos dados
-  // ainda existem.
+  // RF29: exclusão de conta e dados. Toda a limpeza (documentos do usuário em todas as coleções,
+  // foto no Storage e, por último, a conta no Firebase Auth) roda na Cloud Function excluirConta
+  // (functions/src/exclusaoConta.ts), com Admin SDK — o client não tem permissão para apagar
+  // nada disso sozinho (`usuarios.delete` continua negado em firestore.rules). Se a função
+  // falhar, a conta não é removida e o erro sobe para a tela, que mostra o Aviso fixo.
   async function excluirConta(): Promise<void> {
     if (!auth.currentUser || !usuario) {
       throw new Error('Nenhum usuário autenticado.');
     }
-    await removerUsuario(usuario.id);
-    await deleteUser(auth.currentUser);
+    await httpsCallable(functions, 'excluirConta')();
+    // A conta já não existe no Auth, mas o token local ainda vale até expirar — sair limpa a
+    // sessão e o RootNavigator volta para o login.
+    await signOut(auth);
   }
 
   async function atualizarPerfil(

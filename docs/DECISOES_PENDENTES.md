@@ -8,14 +8,27 @@ Lista de checagem para revisão com a orientadora antes da entrega do TCC. Toda 
 
 Diferente da lista numerada abaixo (decisões de **métrica/produto** de gamificação, ajustáveis por número), isto é um **bloqueio de funcionalidade**: sem isso, RF29 não funciona de verdade em produção, independente de qualquer decisão de produto.
 
-### RF29 — exclusão de conta: falta limpeza em cascata
+### RF29 — exclusão de conta: ✅ RESOLVIDO (limpeza em cascata por Cloud Function)
 
-A tela (`src/screens/compartilhado/ExcluirContaSecao.tsx`) e a chamada (`AuthContext.excluirConta()`) são reais e a UI já trata a falha de forma legível (`Aviso` com a mensagem fixa "Não foi possível excluir sua conta agora.", nunca o texto técnico do Firebase). Mas a chamada real **falha hoje por dois motivos empilhados**, não só um:
+A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.ts`, Admin SDK), chamada por `AuthContext.excluirConta()`. Ela só apaga o uid do token de quem chama e faz, nesta ordem:
 
-1. **`firestore.rules` nega `usuarios.delete` incondicionalmente** (`allow delete: if false`) — o mais simples de corrigir, é só mudar a condição.
-2. **Mesmo que a regra abrisse, apagar só `usuarios/{uid}` deixaria dado órfão**: `usuarios/{uid}/privado/vinculos`, `matriculas`, `checkins`, `vinculos`, `graduacoes`, `classificacoes` — todos têm o uid do dono espalhado, sem nenhum gatilho de limpeza em cascata hoje. Abrir só a regra sem resolver isso apagaria a conta mas deixaria o rastro de dados pessoais no banco, o oposto do que a LGPD (RF29 é sobre isso) exige.
+1. Apaga os dados do usuário como aluno: `matriculas`, `checkins`, `classificacoes`, `missoesProgresso`, `graduacoes` e `consentimentosLGPD`.
+2. Tira o uid de `leitoresIds` de todas as sessões.
+3. Se for professor ou academia, trata as turmas (decisão abaixo).
+4. Apaga os `vinculos` em que ele é solicitante ou destinatário. Quando era destinatário de um vínculo aceito, o id sai de `responsaveisIds` do solicitante e, se o solicitante for professor, `autonomo` volta a `true` (mesmo efeito de `encerrarVinculo()`).
+5. Apaga `usuarios/{uid}` com a subcoleção `privado`.
+6. Apaga os arquivos em `usuarios/{uid}/` no Storage.
+7. Por último, apaga a conta no Firebase Auth. Se algo antes falhar, a conta continua existindo e o usuário pode tentar de novo (todos os passos são idempotentes).
 
-**Não implementado nesta sessão, de propósito — é trabalho de backend fora do escopo desta rodada de UI.** A solução mais provável é uma Cloud Function (Admin SDK, mesmo padrão já usado no projeto para sincronizar `leitoresIds` em `functions/src/index.ts`) disparada por um pedido de exclusão, que apaga em cascata e só então libera a exclusão do documento raiz — ou uma exclusão em duas fases (marca para exclusão, um processo de backend confirma depois). Qualquer uma das duas é decisão de arquitetura de backend, não de interface.
+`usuarios.delete` continua `false` em `firestore.rules`: o client nunca apaga a conta direto. Teste de integração em `tests/functions/exclusao-conta.test.ts`, que agora sobe também os emuladores de Auth e Storage.
+
+**Decisão para professor e academia (tomada pelo autor):**
+- Turma com alguma matrícula de aluno não é apagada. Ela vira inativa, as sessões futuras (`agendada`/`aberta`) viram `cancelada` e as matrículas ativas viram `inativa`, preservando o histórico dos alunos (check-ins, pontos, graduações e progresso de missões, que são dados deles).
+- Turma sem nenhuma matrícula é apagada junto com as sessões.
+- Turma de academia em que ele só leciona perde o campo `professorId`.
+- Missões do responsável viram inativas; o progresso dos alunos fica.
+
+**A validar:** nesses documentos preservados fica o uid do responsável excluído (`responsavelId`, `professorId` de sessões passadas, `validadoPor`). Tratei como pseudonimizado, porque depois da exclusão de `usuarios/{uid}` e da conta no Auth o uid não identifica mais ninguém. Também apago `consentimentosLGPD`, como pedido; se a orientação jurídica for guardar o registro de consentimento como prova, basta tirar essa coleção da função.
 
 ---
 

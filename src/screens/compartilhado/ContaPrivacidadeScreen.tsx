@@ -2,10 +2,9 @@
 // saiu da tela principal do Perfil (era um botão vermelho logo acima de "Sair",
 // RELATORIO_UI_UX.md UI-08/UX-09) e mora aqui, atrás de uma navegação e de uma confirmação.
 //
-// Ver comentário em AuthContext.tsx#excluirConta sobre a pendência de regra do Firestore que hoje
-// faz a chamada real falhar (allow delete: if false em usuarios) — e por que essa falha não pode
-// aparecer como o texto técnico do Firebase: a mensagem mostrada é sempre a mesma frase fixa em
-// português; o erro real vai só pro console, para depuração.
+// A exclusão roda na Cloud Function excluirConta (ver AuthContext.tsx#excluirConta). Uma falha
+// nunca aparece como o texto técnico do Firebase: a mensagem mostrada é sempre a mesma frase fixa
+// em português; o erro real vai só pro console, para depuração.
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Cores, Espacamento } from '../../theme';
@@ -30,8 +29,8 @@ export default function ContaPrivacidadeScreen() {
     setExcluindo(true);
     try {
       await excluirConta();
-      // Sucesso desloga sozinho (Firebase Auth remove a sessão) — RootNavigator troca de raiz
-      // sem navegação manual daqui.
+      // Sucesso desloga (excluirConta() chama signOut) — RootNavigator troca de raiz sem
+      // navegação manual daqui.
     } catch (e) {
       console.warn('excluirConta() falhou:', e);
       setAvisoVisivel(true);
