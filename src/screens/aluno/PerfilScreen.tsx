@@ -11,6 +11,7 @@ import { PerfilAlunoNavigationProp } from '../../navigation/AlunoTabs';
 import { listarHistoricoDoAluno } from '../../services/checkins';
 import { listarGraduacoesPorAluno } from '../../services/graduacoes';
 import { listarClassificacoesDoAluno } from '../../services/classificacoes';
+import { buscarNiveisDoAluno } from '../../services/configuracoesGamificacao';
 import { calcularMedalhas, calcularProgressoNivel, calcularSequencia, MedalhaComEstado, ProgressoNivel } from '../../utils/gamificacao';
 import { formatarMesAno } from '../../utils/datas';
 import Tela from '../../components/ui/Tela';
@@ -53,10 +54,12 @@ export default function PerfilScreen() {
       const validados = historico.filter((c) => c.status === 'validado').length;
       const sequenciaAtual = calcularSequencia(historico);
       const pontosTotais = classificacoes.reduce((soma, c) => soma + c.pontos, 0);
+      // RF33: tabela de níveis do responsável em que o aluno mais pontuou
+      const niveis = await buscarNiveisDoAluno(classificacoes);
 
       setTreinosValidados(validados);
       setSequencia(sequenciaAtual);
-      setProgresso(calcularProgressoNivel(pontosTotais));
+      setProgresso(calcularProgressoNivel(pontosTotais, niveis));
       setMedalhas(calcularMedalhas(validados, sequenciaAtual, graduacoes.length));
     } catch {
       // Seção secundária — falha aqui não impede o resto do perfil (ex.: Sair).

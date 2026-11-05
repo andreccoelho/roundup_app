@@ -34,7 +34,7 @@ describe('coleções de ciclos posteriores — bloqueadas ou com regra real', ()
     await assertFails(setDoc(doc(db, 'graduacoes', 'graduacao1'), graduacaoBase('aluno1', 'academia1')));
   });
 
-  test('escrita em configuracoesGamificacao é negada mesmo com payload completo', async () => {
+  test('RF33: configuracoesGamificacao em documento que não é do próprio uid é negada', async () => {
     await semear(async (db) => {
       await setDoc(doc(db, 'usuarios', 'academia1'), usuarioBase({ perfil: 'academia' }));
     });
@@ -44,7 +44,7 @@ describe('coleções de ciclos posteriores — bloqueadas ou com regra real', ()
       responsavelId: 'academia1',
       pontosPorCheckin: 10,
       pontosPorMissao: 20,
-      pontosPorGraduacao: 50,
+      niveisXp: [100],
       atualizadoEm: AGORA,
     }));
   });

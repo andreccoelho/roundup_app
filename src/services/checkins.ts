@@ -4,7 +4,7 @@ import {
   collection, query, where, orderBy, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { CheckIn, Sessao, Matricula, Classificacao } from '../types';
+import { CheckIn, Sessao, Matricula, Classificacao, ConfiguracaoGamificacao } from '../types';
 import { agoraTimestamp, periodoDe } from '../utils/datas';
 import { getDocSeguro } from './firestoreSeguro';
 import { XP_POR_CHECKIN_VALIDADO } from '../config/gamificacao';
@@ -13,6 +13,7 @@ const COLECAO = 'checkins';
 const COLECAO_SESSOES = 'sessoes';
 const COLECAO_MATRICULAS = 'matriculas';
 const COLECAO_CLASSIFICACOES = 'classificacoes';
+const COLECAO_CONFIGURACOES = 'configuracoesGamificacao';
 
 // RF13, RN02, RN08: o ID `${sessaoId}_${alunoId}` garante RN02 por construção;
 // a transação evita a corrida entre a checagem e a gravação
@@ -111,18 +112,18 @@ export async function buscarCheckInDaSessao(sessaoId: string, alunoId: string): 
 // `souAluno() && alunoId == meuId()`). Por isso a "chamada" só alterna presença de quem já fez
 // o próprio check-in; quem ainda não fez aparece como pendente, sem toggle.
 //
-// RF16, RN01, RN04 (valores PROVISÓRIOS, ver docs/DECISOES_PENDENTES.md): validar credita
-// XP_POR_CHECKIN_VALIDADO em checkins.pontos e em
+// RF16, RN01, RN04, RF33: validar credita os pontos por check-in do responsável (configuração
+// dele, ou XP_POR_CHECKIN_VALIDADO por padrão) em checkins.pontos e em
 // classificacoes/{alunoId}_{responsavelId}_{AAAA-MM}, no mês (fuso local) em que o treino
-// aconteceu — o estorno cai no mesmo documento, mesmo que seja feito no mês seguinte. `checkin.pontos > 0` guarda contra creditar duas
-// vezes se o professor alternar o toggle repetidamente.
+// aconteceu. Desfazer a validação estorna exatamente o que o check-in recebeu (`checkin.pontos`),
+// no mesmo documento de classificação (`checkin.classificacaoId`) — mesmo que o responsável tenha
+// mudado a configuração ou o mês tenha virado nesse meio-tempo. `checkin.pontos > 0` guarda contra
+// creditar duas vezes se o professor alternar o toggle repetidamente.
 //
-// Escreve o valor de `pontos` já somado (literal), não `increment()`: a regra de
-// `classificacoes` valida `request.resource.data.pontos == resource.data.pontos ± 10`
-// exatamente para travar o delta (RN01) — depender de `increment()` deixaria a regra refém de
-// como o motor de regras resolve transforms, então lemos o valor atual dentro da própria
-// transação e calculamos o novo valor no client. Todos os `transacao.get()` (checkin e
-// classificação) vêm antes de qualquer `transacao.update()/set()`, como o SDK exige.
+// RN01 na regra: o check-in grava `classificacaoId` e a classificação grava `origemCheckinId`, e
+// cada lado confere que o outro mudou na MESMA transação com o mesmo delta (ver firestore.rules).
+// Por isso os pontos vão como valor literal já somado, não `increment()`: lemos o valor atual
+// dentro da transação. Todos os `transacao.get()` vêm antes de qualquer escrita, como o SDK exige.
 export async function validarCheckIn(
   checkinId: string,
   responsavelId: string,
@@ -141,32 +142,43 @@ export async function validarCheckIn(
     const vaiEstornar = novoStatus === 'pendente' && checkin.pontos > 0;
 
     const periodo = periodoDe(checkin.dataHora.toDate());
-    const classificacaoId = `${checkin.alunoId}_${checkin.responsavelId}_${periodo}`;
+    const classificacaoId = vaiEstornar && checkin.classificacaoId
+      ? checkin.classificacaoId
+      : `${checkin.alunoId}_${checkin.responsavelId}_${periodo}`;
     const classificacaoRef = doc(db, COLECAO_CLASSIFICACOES, classificacaoId);
 
     let pontosAtuais = 0;
+    let pontosDoCheckin = 0;
     if (vaiCreditar || vaiEstornar) {
       const classificacaoSnap = await transacao.get(classificacaoRef);
       pontosAtuais = classificacaoSnap.exists() ? (classificacaoSnap.data() as Classificacao).pontos : 0;
     }
+    if (vaiCreditar) {
+      const configSnap = await transacao.get(doc(db, COLECAO_CONFIGURACOES, checkin.responsavelId));
+      pontosDoCheckin = configSnap.exists()
+        ? (configSnap.data() as ConfiguracaoGamificacao).pontosPorCheckin
+        : XP_POR_CHECKIN_VALIDADO;
+    }
 
     transacao.update(checkinRef, {
       status: novoStatus,
-      pontos: vaiCreditar ? XP_POR_CHECKIN_VALIDADO : vaiEstornar ? 0 : checkin.pontos,
+      pontos: vaiCreditar ? pontosDoCheckin : vaiEstornar ? 0 : checkin.pontos,
       validadoPor: responsavelId,
       validadoEm: agoraTimestamp(),
+      ...(vaiCreditar || vaiEstornar ? { classificacaoId } : {}),
     });
 
     if (vaiCreditar || vaiEstornar) {
-      const delta = vaiCreditar ? XP_POR_CHECKIN_VALIDADO : -XP_POR_CHECKIN_VALIDADO;
+      const delta = vaiCreditar ? pontosDoCheckin : -checkin.pontos;
       transacao.set(
         classificacaoRef,
         {
           id: classificacaoId,
           alunoId: checkin.alunoId,
           responsavelId: checkin.responsavelId,
-          periodo,
+          periodo: classificacaoId.slice(-7),
           pontos: pontosAtuais + delta,
+          origemCheckinId: checkinId,
           atualizadoEm: agoraTimestamp(),
         },
         { merge: true },

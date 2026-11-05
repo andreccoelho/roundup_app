@@ -145,6 +145,9 @@ async function tratarTurmasDoGestor(db: Firestore, uid: string): Promise<void> {
   const missoes = await db.collection('missoes').where('responsavelId', '==', uid).get();
   missoes.docs.forEach((m) => escritas.push({ tipo: 'atualizar', ref: m.ref, dados: { ativa: false, atualizadoEm: agora } }));
 
+  // RF33: a personalização de pontos e níveis é só dele
+  escritas.push({ tipo: 'apagar', ref: db.doc(`configuracoesGamificacao/${uid}`) });
+
   await gravarEmLotes(db, escritas);
 }
 

@@ -12,6 +12,8 @@ import {
 } from '../../services/missoes';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
 import { buscarUsuario } from '../../services/usuarios';
+import { buscarConfiguracao, valoresEfetivos } from '../../services/configuracoesGamificacao';
+import { LIMITES_CONFIGURACAO } from '../../config/gamificacao';
 import { Missao, TipoMissao } from '../../types';
 import Botao from '../../components/ui/Botao';
 import Etiqueta from '../../components/ui/Etiqueta';
@@ -57,6 +59,8 @@ export default function MissoesGestorScreen() {
   const [pontos, setPontos] = useState('');
   const [erroForm, setErroForm] = useState<string | null>(null);
   const [criando, setCriando] = useState(false);
+  // RF33: valor sugerido de pontos ao criar uma missão (configuração do responsável ou padrão)
+  const [pontosSugeridos, setPontosSugeridos] = useState('');
 
   const [missaoConclusoes, setMissaoConclusoes] = useState<Missao | null>(null);
   const [alunosConclusao, setAlunosConclusao] = useState<AlunoConclusao[]>([]);
@@ -69,7 +73,9 @@ export default function MissoesGestorScreen() {
     setCarregando(true);
     setErro(null);
     try {
-      setMissoes(await listarMissoesPorResponsavel(usuario.id));
+      const [lista, config] = await Promise.all([listarMissoesPorResponsavel(usuario.id), buscarConfiguracao(usuario.id)]);
+      setMissoes(lista);
+      setPontosSugeridos(String(valoresEfetivos(config).pontosPorMissao));
     } catch (e: any) {
       setErro(mensagemErro(e));
     } finally {
@@ -86,7 +92,7 @@ export default function MissoesGestorScreen() {
     setDescricao('');
     setTipo('presenca');
     setMeta('');
-    setPontos('');
+    setPontos(pontosSugeridos);
     setErroForm(null);
   }
 
@@ -102,8 +108,9 @@ export default function MissoesGestorScreen() {
       setErroForm('Meta precisa ser um número maior que zero.');
       return;
     }
-    if (!pontos.trim() || Number.isNaN(pontosNumero) || pontosNumero < 0) {
-      setErroForm('Pontos precisa ser um número válido.');
+    const { minimo, maximo } = LIMITES_CONFIGURACAO.pontosPorMissao;
+    if (!pontos.trim() || !Number.isInteger(pontosNumero) || pontosNumero < minimo || pontosNumero > maximo) {
+      setErroForm(`Pontos precisa ser um número inteiro de ${minimo} a ${maximo}.`);
       return;
     }
 
@@ -186,7 +193,14 @@ export default function MissoesGestorScreen() {
 
   return (
     <Tela largura="lista">
-      <Botao titulo="Nova missão" icone={IconeMais} onPress={() => setFolhaAberta(true)} />
+      <Botao
+        titulo="Nova missão"
+        icone={IconeMais}
+        onPress={() => {
+          if (!pontos) setPontos(pontosSugeridos);
+          setFolhaAberta(true);
+        }}
+      />
 
       {carregando ? (
         <View style={styles.espacoTopo}>

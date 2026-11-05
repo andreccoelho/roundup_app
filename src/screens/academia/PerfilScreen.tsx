@@ -77,6 +77,13 @@ export default function PerfilScreen() {
           onPress={() => navigation.navigate('VisaoConsolidada')}
           separador
         />
+        <ItemMenu
+          rotulo="Pontuação e níveis"
+          descricao="Pontos por check-in, por missão e tabela de níveis"
+          icone={IconeCartaoPontuacao}
+          onPress={() => navigation.navigate('ConfiguracaoGamificacao')}
+          separador
+        />
 
         <CabecalhoSecao titulo="Conta" />
         <ItemMenu rotulo="Editar perfil" icone={IconePerfil} onPress={() => navigation.navigate('EditarPerfil')} />
