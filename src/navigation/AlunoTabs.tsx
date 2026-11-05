@@ -19,7 +19,7 @@ import PreferenciasNotificacaoScreen from '../screens/compartilhado/Preferencias
 import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import ContaPrivacidadeScreen from '../screens/compartilhado/ContaPrivacidadeScreen';
 import { IconeLuva, IconeFichaTecnica, IconeBandeira, IconeCartaoPontuacao, IconePerfil } from '../components/icones';
-import { iconeAba, opcoesHeader, useOpcoesTabBar } from './opcoesCasca';
+import { iconeAba, opcoesFolha, opcoesRaiz, useOpcoesHeader, useOpcoesTabBar } from './opcoesCasca';
 
 export type TreinarStackParamList = {
   Dashboard: undefined;
@@ -53,15 +53,12 @@ export type PerfilAlunoNavigationProp = NativeStackNavigationProp<PerfilAlunoSta
 
 const TreinarStack = createNativeStackNavigator<TreinarStackParamList>();
 function TreinarNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
-    <TreinarStack.Navigator initialRouteName="Dashboard" screenOptions={{ ...opcoesHeader, headerShown: false }}>
-      <TreinarStack.Screen name="Dashboard" component={DashboardScreen} />
-      <TreinarStack.Screen
-        name="TurmasDisponiveis"
-        component={TurmasDisponiveisScreen}
-        options={{ headerShown: true, title: 'Turmas disponíveis' }}
-      />
-      <TreinarStack.Screen name="Historico" component={HistoricoScreen} options={{ headerShown: true, title: 'Histórico' }} />
+    <TreinarStack.Navigator initialRouteName="Dashboard" screenOptions={{ ...opcoesHeader, headerShown: true }}>
+      <TreinarStack.Screen name="Dashboard" component={DashboardScreen} options={{ ...opcoesRaiz, title: 'Treinar' }} />
+      <TreinarStack.Screen name="TurmasDisponiveis" component={TurmasDisponiveisScreen} options={{ title: 'Turmas disponíveis' }} />
+      <TreinarStack.Screen name="Historico" component={HistoricoScreen} options={{ title: 'Histórico' }} />
     </TreinarStack.Navigator>
   );
 }
@@ -69,9 +66,10 @@ function TreinarNavigator() {
 type AgendaStackParamList = { Agenda: undefined };
 const AgendaStack = createNativeStackNavigator<AgendaStackParamList>();
 function AgendaNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <AgendaStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <AgendaStack.Screen name="Agenda" component={AgendaScreen} options={{ title: 'Agenda' }} />
+      <AgendaStack.Screen name="Agenda" component={AgendaScreen} options={{ ...opcoesRaiz, title: 'Agenda' }} />
     </AgendaStack.Navigator>
   );
 }
@@ -79,9 +77,10 @@ function AgendaNavigator() {
 type MissoesStackParamList = { Missoes: undefined };
 const MissoesStack = createNativeStackNavigator<MissoesStackParamList>();
 function MissoesNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <MissoesStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <MissoesStack.Screen name="Missoes" component={MissoesScreen} options={{ title: 'Missões' }} />
+      <MissoesStack.Screen name="Missoes" component={MissoesScreen} options={{ ...opcoesRaiz, title: 'Missões' }} />
     </MissoesStack.Navigator>
   );
 }
@@ -89,24 +88,26 @@ function MissoesNavigator() {
 type ClassificacaoStackParamList = { Classificacao: undefined };
 const ClassificacaoStack = createNativeStackNavigator<ClassificacaoStackParamList>();
 function ClassificacaoNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <ClassificacaoStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <ClassificacaoStack.Screen name="Classificacao" component={ClassificacaoScreen} options={{ title: 'Classificação' }} />
+      <ClassificacaoStack.Screen name="Classificacao" component={ClassificacaoScreen} options={{ ...opcoesRaiz, title: 'Classificação' }} />
     </ClassificacaoStack.Navigator>
   );
 }
 
 const PerfilStack = createNativeStackNavigator<PerfilAlunoStackParamList>();
 function PerfilNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
-      <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: 'Editar perfil' }} />
+      <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ ...opcoesRaiz, title: 'Perfil' }} />
+      <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={opcoesFolha('Editar perfil')} />
       <PerfilStack.Screen name="VincularAluno" component={VincularAlunoScreen} options={{ title: 'Vincular-se' }} />
       <PerfilStack.Screen
         name="PreferenciasNotificacao"
         component={PreferenciasNotificacaoScreen}
-        options={{ title: 'Preferências de notificação' }}
+        options={opcoesFolha('Notificações')}
       />
       <PerfilStack.Screen name="ContaPrivacidade" component={ContaPrivacidadeScreen} options={{ title: 'Conta e privacidade' }} />
     </PerfilStack.Navigator>

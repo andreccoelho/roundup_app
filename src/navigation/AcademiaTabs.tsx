@@ -18,7 +18,7 @@ import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import ContaPrivacidadeScreen from '../screens/compartilhado/ContaPrivacidadeScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
 import { IconeSino, IconeTatame, IconeFaixa, IconeBandeira, IconePerfil } from '../components/icones';
-import { iconeAba, opcoesHeader, useOpcoesTabBar } from './opcoesCasca';
+import { iconeAba, opcoesFolha, opcoesRaiz, useOpcoesHeader, useOpcoesTabBar } from './opcoesCasca';
 
 export type HojeAcademiaStackParamList = { Dashboard: undefined };
 
@@ -52,19 +52,21 @@ export type PerfilAcademiaNavigationProp = NativeStackNavigationProp<PerfilAcade
 
 const HojeStack = createNativeStackNavigator<HojeAcademiaStackParamList>();
 function HojeNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
-    <HojeStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: false }}>
-      <HojeStack.Screen name="Dashboard" component={DashboardScreen} />
+    <HojeStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
+      <HojeStack.Screen name="Dashboard" component={DashboardScreen} options={{ ...opcoesRaiz, title: 'Hoje' }} />
     </HojeStack.Navigator>
   );
 }
 
 const PerfilStack = createNativeStackNavigator<PerfilAcademiaStackParamList>();
 function PerfilNavigator() {
+  const opcoesHeader = useOpcoesHeader();
   return (
     <PerfilStack.Navigator screenOptions={{ ...opcoesHeader, headerShown: true }}>
-      <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Perfil' }} />
-      <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={{ title: 'Editar perfil' }} />
+      <PerfilStack.Screen name="Perfil" component={PerfilScreen} options={{ ...opcoesRaiz, title: 'Perfil' }} />
+      <PerfilStack.Screen name="EditarPerfil" component={EditarPerfilScreen} options={opcoesFolha('Editar perfil')} />
       <PerfilStack.Screen
         name="SolicitacoesProfessores"
         component={SolicitacoesScreen}
@@ -81,12 +83,12 @@ function PerfilNavigator() {
       <PerfilStack.Screen
         name="PreferenciasNotificacao"
         component={PreferenciasNotificacaoScreen}
-        options={{ title: 'Preferências de notificação' }}
+        options={opcoesFolha('Notificações')}
       />
       <PerfilStack.Screen
         name="ConfiguracaoGamificacao"
         component={ConfiguracaoGamificacaoScreen}
-        options={{ title: 'Pontuação e níveis' }}
+        options={opcoesFolha('Pontuação e níveis')}
       />
       <PerfilStack.Screen name="ContaPrivacidade" component={ContaPrivacidadeScreen} options={{ title: 'Conta e privacidade' }} />
     </PerfilStack.Navigator>

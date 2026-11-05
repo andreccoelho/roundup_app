@@ -9,7 +9,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import BloqueioVinculoScreen from '../screens/aluno/BloqueioVinculoScreen';
 import VincularAlunoScreen from '../screens/aluno/VincularAlunoScreen';
 import { AlunoTabs } from './AlunoTabs';
-import { opcoesHeader } from './opcoesCasca';
+import { useOpcoesHeader } from './opcoesCasca';
 
 type BloqueioStackParamList = {
   Bloqueio: undefined;
@@ -20,6 +20,7 @@ const Stack = createNativeStackNavigator<BloqueioStackParamList>();
 
 export function AlunoRaiz() {
   const { usuario } = useAuth();
+  const opcoesHeader = useOpcoesHeader();
   const [status, setStatus] = useState<'verificando' | 'bloqueado' | 'liberado'>('verificando');
 
   const verificar = useCallback(async () => {
