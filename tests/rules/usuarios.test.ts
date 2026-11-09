@@ -18,6 +18,46 @@ describe('usuarios', () => {
     await assertSucceeds(getDoc(doc(db, 'usuarios', 'aluno1')));
   });
 
+  describe('RNF04: dados pessoais em usuarios/{uid}/privado/dados', () => {
+    const dadosPessoais = { email: 'aluno1@example.com', dataNascimento: AGORA, responsavelLegal: { nome: 'Mãe', contato: 'mae@example.com' } };
+
+    test('o dono lê e grava os próprios dados pessoais', async () => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+      });
+      const db = comoUsuario('aluno1');
+      await assertSucceeds(setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'dados'), dadosPessoais));
+      await assertSucceeds(getDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'dados')));
+    });
+
+    test('outro usuário autenticado não lê nem grava os dados pessoais', async () => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+        await setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'dados'), dadosPessoais);
+      });
+      const dbIntruso = comoUsuario('academia1');
+      await assertFails(getDoc(doc(dbIntruso, 'usuarios', 'aluno1', 'privado', 'dados')));
+      await assertFails(setDoc(doc(dbIntruso, 'usuarios', 'aluno1', 'privado', 'dados'), { email: 'x@example.com' }));
+    });
+
+    test('o documento raiz continua legível por outro autenticado, sem os dados pessoais', async () => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+        await setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'dados'), dadosPessoais);
+      });
+      const snap = await assertSucceeds(getDoc(doc(comoUsuario('academia1'), 'usuarios', 'aluno1')));
+      expect(snap.data()).not.toHaveProperty('email');
+      expect(snap.data()).not.toHaveProperty('dataNascimento');
+      expect(snap.data()).not.toHaveProperty('responsavelLegal');
+    });
+
+    test.each(['email', 'dataNascimento', 'responsavelLegal'])('criar o documento raiz com %s é negado', async (campo) => {
+      const db = comoUsuario('aluno1');
+      await assertFails(setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno', [campo]: dadosPessoais[campo as keyof typeof dadosPessoais] })));
+      await assertSucceeds(setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' })));
+    });
+  });
+
   test('editar documento de terceiro é negado', async () => {
     await semear(async (db) => {
       await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
