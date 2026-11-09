@@ -1,6 +1,6 @@
 // RF28, RNF10: consentimento LGPD, inserido no onboarding entre SelecaoPerfilScreen e a tela de
-// Cadastro do perfil escolhido. O texto da política abaixo é placeholder de conteúdo (decisão
-// jurídica, não de UI) — só a estrutura (versão, aceite, registro) é real.
+// Cadastro do perfil escolhido. O texto da política fica em src/constants/politicaPrivacidade.ts
+// e precisa de revisão jurídica antes da entrega.
 //
 // O registro em `consentimentosLGPD` (RF28) exige `request.auth != null` e
 // `usuarioId == meuId()` (ver firestore.rules) — não dá para gravar aqui, porque a conta ainda
@@ -18,8 +18,9 @@ import Botao from '../../components/ui/Botao';
 import Checkbox from '../../components/ui/Checkbox';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
+import { POLITICA_PRIVACIDADE, VERSAO_POLITICA_LGPD } from '../../constants/politicaPrivacidade';
 
-export const VERSAO_POLITICA_LGPD = '1.0';
+export { VERSAO_POLITICA_LGPD };
 
 type Rota = RouteProp<AuthStackParamList, 'ConsentimentoLGPD'>;
 type Navegacao = NativeStackNavigationProp<AuthStackParamList, 'ConsentimentoLGPD'>;
@@ -47,12 +48,16 @@ export default function ConsentimentoLGPDScreen() {
 
       <View style={styles.politica}>
         <ScrollView nestedScrollEnabled showsVerticalScrollIndicator>
-          <Texto variante="subheadline">
-            [Texto da política de privacidade — placeholder. Substituir pelo conteúdo jurídico definitivo antes da
-            entrega, com a descrição real de quais dados são coletados, com que finalidade, por quanto tempo são
-            retidos e como o usuário pode exercer seus direitos sob a LGPD (Lei 13.709/2018), incluindo acesso,
-            correção e eliminação (RF29).]
-          </Texto>
+          {POLITICA_PRIVACIDADE.map((secao) => (
+            <View key={secao.titulo} style={styles.secao}>
+              <Texto variante="headline">{secao.titulo}</Texto>
+              {secao.paragrafos.map((p) => (
+                <Texto key={p} variante="subheadline" style={styles.paragrafo}>
+                  {p}
+                </Texto>
+              ))}
+            </View>
+          ))}
         </ScrollView>
       </View>
 
@@ -80,6 +85,8 @@ const useEstilos = criarEstilos((c) => ({
     padding: Espacamento.padrao,
     maxHeight: 280,
   },
+  secao: { marginBottom: Espacamento.padrao },
+  paragrafo: { marginTop: Espacamento.pequeno },
   aceite: { marginTop: Espacamento.grande, marginBottom: Espacamento.padrao },
   ajuda: { marginTop: Espacamento.pequeno },
 }));
