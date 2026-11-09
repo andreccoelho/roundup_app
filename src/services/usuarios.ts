@@ -2,13 +2,14 @@
 // RNF04: `usuarios/{uid}` raiz é legível por qualquer autenticado, então email, dataNascimento e
 // responsavelLegal ficam em usuarios/{uid}/privado/dados (só o dono lê) — ver DadosPessoaisPrivados.
 import {
-  doc, getDoc, updateDoc, deleteDoc, writeBatch,
+  doc, getDoc, updateDoc, deleteDoc, deleteField, writeBatch,
   collection, query, where, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { DadosPessoaisPrivados, Usuario } from '../types';
 
 const COLECAO = 'usuarios';
+const CAMPOS_PESSOAIS = ['email', 'dataNascimento', 'responsavelLegal'] as const;
 
 function refDadosPrivados(id: string) {
   return doc(db, COLECAO, id, 'privado', 'dados');
@@ -47,7 +48,36 @@ export async function buscarUsuario(id: string): Promise<Usuario | null> {
 export async function buscarMeuUsuario(id: string): Promise<Usuario | null> {
   const [publico, privado] = await Promise.all([getDoc(doc(db, COLECAO, id)), getDoc(refDadosPrivados(id))]);
   if (!publico.exists()) return null;
-  return { ...(publico.data() as Usuario), ...(privado.exists() ? (privado.data() as DadosPessoaisPrivados) : {}) };
+  const dadosPublicos = publico.data() as Usuario;
+  const dadosPrivados = privado.exists() ? (privado.data() as Partial<DadosPessoaisPrivados>) : {};
+  // Em caso de conflito vale o privado (é o destino da migração, e o que o usuário edita hoje)
+  const usuario: Usuario = { ...dadosPublicos, ...dadosPrivados };
+  await migrarCamposLegados(id, dadosPublicos, dadosPrivados);
+  return usuario;
+}
+
+// RNF04: contas criadas antes da separação ainda têm email/dataNascimento/responsavelLegal no
+// documento raiz, que qualquer autenticado lê. Cada usuário move os próprios campos no login (só
+// ele pode escrever nos dois documentos); o script scripts/migrar-dados-pessoais.cjs faz o mesmo
+// para todo mundo de uma vez, com credenciais Admin. Falha aqui nunca derruba o login: o usuário
+// só continua com o dado no lugar antigo até o próximo acesso.
+async function migrarCamposLegados(
+  id: string,
+  publico: Usuario,
+  privado: Partial<DadosPessoaisPrivados>,
+): Promise<void> {
+  const legados = CAMPOS_PESSOAIS.filter((campo) => publico[campo] !== undefined);
+  if (legados.length === 0) return;
+  try {
+    const paraPrivado: Record<string, unknown> = {};
+    legados.forEach((campo) => { paraPrivado[campo] = privado[campo] ?? publico[campo]; });
+    const lote = writeBatch(db);
+    lote.set(refDadosPrivados(id), paraPrivado, { merge: true });
+    lote.update(doc(db, COLECAO, id), Object.fromEntries(legados.map((campo) => [campo, deleteField()])));
+    await lote.commit();
+  } catch (e) {
+    console.warn('migração de dados pessoais falhou (tenta de novo no próximo login):', e);
+  }
 }
 
 export async function atualizarUsuario(id: string, dados: Partial<Usuario>): Promise<void> {
