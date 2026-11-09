@@ -223,6 +223,8 @@ do documento privado) fica documentada como trabalho do Ciclo 3, junto de RF09.
 - `firestore.rules`: criar o documento raiz com qualquer um dos três campos é negado.
 - Excluir conta (RF29) já cobre o novo documento: `recursiveDelete` de `usuarios/{uid}` apaga a subcoleção `privado`.
 
-**Migração:** documentos criados antes desta mudança ainda têm os campos no raiz até rodar `node scripts/migrar-dados-pessoais.cjs --aplicar` (dry-run por padrão; exige credenciais Admin). Enquanto não rodar, o vazamento continua para esses usuários.
+**Migração:** documentos criados antes desta mudança ainda têm os campos no raiz. Dois caminhos, que podem coexistir (ambos idempotentes):
+- **No login** (`buscarMeuUsuario`): o próprio usuário move seus campos para `privado/dados` e os remove do raiz num lote; falha não derruba o login. Só cobre quem voltar ao app — quem não voltar continua exposto.
+- **Em massa:** `node scripts/migrar-dados-pessoais.cjs --aplicar` (dry-run por padrão; exige credenciais Admin) cobre todo mundo de uma vez. Ainda não foi rodado em produção.
 
 **Não coberto:** `participaClassificacao` e `preferenciasNotificacao` continuam no raiz — baixa sensibilidade e há gatilho (`classificacao.ts`) escutando o documento raiz.

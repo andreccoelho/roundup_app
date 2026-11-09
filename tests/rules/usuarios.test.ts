@@ -1,5 +1,5 @@
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, runTransaction } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove, runTransaction, writeBatch, deleteField } from 'firebase/firestore';
 import {
   iniciarAmbiente, encerrarAmbiente, limparDados,
   comoUsuario, semear, usuarioBase, vinculoBase, vinculosPrivadoBase, AGORA,
@@ -49,6 +49,21 @@ describe('usuarios', () => {
       expect(snap.data()).not.toHaveProperty('email');
       expect(snap.data()).not.toHaveProperty('dataNascimento');
       expect(snap.data()).not.toHaveProperty('responsavelLegal');
+    });
+
+    // Migração no login (buscarMeuUsuario): conta antiga com os campos no raiz move para o privado
+    test('o dono migra os campos legados: grava no privado e remove do raiz no mesmo lote', async () => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno', ...dadosPessoais }));
+      });
+      const db = comoUsuario('aluno1');
+      const lote = writeBatch(db);
+      lote.set(doc(db, 'usuarios', 'aluno1', 'privado', 'dados'), dadosPessoais, { merge: true });
+      lote.update(doc(db, 'usuarios', 'aluno1'), { email: deleteField(), dataNascimento: deleteField(), responsavelLegal: deleteField() });
+      await assertSucceeds(lote.commit());
+      const raiz = await getDoc(doc(db, 'usuarios', 'aluno1'));
+      expect(raiz.data()).not.toHaveProperty('email');
+      expect(raiz.data()?.perfil).toBe('aluno');
     });
 
     test.each(['email', 'dataNascimento', 'responsavelLegal'])('criar o documento raiz com %s é negado', async (campo) => {
