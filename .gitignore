@@ -49,3 +49,6 @@ firebase-export-*/
 /ios
 /android
 .firebase/
+
+# IDE
+.idea/
