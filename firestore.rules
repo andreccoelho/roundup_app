@@ -172,9 +172,12 @@ service cloud.firestore {
     match /usuarios/{usuarioId} {
       // leitura ampla é necessária para as consultas de descoberta de academias e professores
       allow read: if autenticado();
+      // RNF04: este documento é legível por qualquer autenticado, então os dados pessoais
+      // sensíveis não podem nascer aqui — vão para usuarios/{uid}/privado/dados (só o dono lê).
       allow create: if autenticado()
                     && usuarioId == meuId()
-                    && request.resource.data.perfil in ['aluno', 'professor', 'academia'];
+                    && request.resource.data.perfil in ['aluno', 'professor', 'academia']
+                    && !request.resource.data.keys().hasAny(['email', 'dataNascimento', 'responsavelLegal']);
       allow update: if autenticado()
                     && ((usuarioId == meuId() && request.resource.data.perfil == resource.data.perfil)
                         // RN06: o destinatário de um vínculo professor-academia aceito ou recém

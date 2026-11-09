@@ -213,3 +213,16 @@ literalmente RF09 ("a academia consulte, aceite e encerre vínculos com professo
 Ciclo 3 e está fora do escopo desta rodada. `responderSolicitacao()` grava `autonomo: false`
 no aceite; a reversão para `true` (e a remoção da entrada correspondente em `responsaveisIds`
 do documento privado) fica documentada como trabalho do Ciclo 3, junto de RF09.
+
+## 2026-11-08 — `usuarios/{uid}/privado/dados`: e-mail, nascimento e responsável legal saem do documento raiz (RNF04, RF28)
+
+**Problema:** `usuarios/{uid}` é legível por qualquer autenticado (a descoberta de academias e professores precisa disso), e o documento guardava `email`, `dataNascimento` e `responsavelLegal` (dado de menores, RF30). Qualquer usuário logado lia esses campos de qualquer outro. O Firestore não filtra campos na leitura, então a correção é de modelo, não de regra.
+
+**Decisão:** os três campos moram em `usuarios/{uid}/privado/dados`, coberto pela regra `privado/{doc}` que já existia (só o dono lê e escreve). O raiz mantém só o que a descoberta e as telas de outras pessoas usam (nome, foto, perfil, modalidades, faixa/graduação, dados institucionais da academia, `autonomo`, preferências).
+- `criarUsuario()` grava os dois documentos num `writeBatch`; `buscarMeuUsuario()` (só o usuário logado) mescla os dois para as telas de perfil; `buscarUsuario()` devolve só o público.
+- `firestore.rules`: criar o documento raiz com qualquer um dos três campos é negado.
+- Excluir conta (RF29) já cobre o novo documento: `recursiveDelete` de `usuarios/{uid}` apaga a subcoleção `privado`.
+
+**Migração:** documentos criados antes desta mudança ainda têm os campos no raiz até rodar `node scripts/migrar-dados-pessoais.cjs --aplicar` (dry-run por padrão; exige credenciais Admin). Enquanto não rodar, o vazamento continua para esses usuários.
+
+**Não coberto:** `participaClassificacao` e `preferenciasNotificacao` continuam no raiz — baixa sensibilidade e há gatilho (`classificacao.ts`) escutando o documento raiz.

@@ -8,7 +8,7 @@ import {
 } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../services/firebase';
-import { atualizarUsuario, buscarUsuario, criarUsuario } from '../services/usuarios';
+import { atualizarUsuario, buscarMeuUsuario, criarUsuario } from '../services/usuarios';
 import { registrarDispositivo, desregistrarDispositivo } from '../services/notificacoes';
 import { Usuario } from '../types';
 import { agoraTimestamp } from '../utils/datas';
@@ -42,7 +42,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUsuarioAuth(user);
       if (user) {
-        const dadosUsuario = await buscarUsuario(user.uid);
+        // RNF04: email, nascimento e responsável legal vêm de privado/dados (só o dono lê)
+        const dadosUsuario = await buscarMeuUsuario(user.uid);
         setUsuario(dadosUsuario);
         // RF31: registro do aparelho para push — falha (Expo Go, web, permissão negada) não
         // interfere no login

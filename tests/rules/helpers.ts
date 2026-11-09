@@ -59,7 +59,7 @@ export function minutosAPartirDeAgora(minutos: number): Timestamp {
 export function usuarioBase(overrides: Record<string, unknown> = {}) {
   return {
     nome: 'Usuário de teste',
-    email: 'teste@example.com',
+    // RNF04: sem email aqui — o documento raiz é legível por qualquer autenticado
     criadoEm: AGORA,
     atualizadoEm: AGORA,
     ...overrides,

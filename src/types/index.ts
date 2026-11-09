@@ -12,10 +12,15 @@ export interface ResponsavelLegal {
   contato: string; // e-mail ou telefone — RF30 não distingue, texto livre
 }
 
+// RNF04, RF28: `usuarios/{uid}` raiz é legível por qualquer autenticado (descoberta de academias
+// e professores). Os dados pessoais sensíveis — email, dataNascimento, responsavelLegal — por isso
+// NÃO ficam lá: moram em usuarios/{uid}/privado/dados (legível só pelo dono, ver
+// DadosPessoaisPrivados). Em memória, `Usuario` do usuário LOGADO traz os três já mesclados
+// (buscarMeuUsuario); o `Usuario` de qualquer outra pessoa vem sem eles.
 export interface Usuario {
   id: string;
   nome: string;
-  email: string;
+  email?: string;       // só no usuário logado — vem de privado/dados
   perfil: Perfil;
   fotoUrl?: string;
   autonomo?: boolean;   // RF05, RF08: só se aplica a perfil 'professor' — nasce true (RN06), vira false ao aceitar vínculo com academia
@@ -24,12 +29,20 @@ export interface Usuario {
   graduacao?: string;     // RF05: só perfil 'professor'
   nomeAcademia?: string;  // RF04: só perfil 'academia' — nome institucional, distinto de `nome` (contato)
   endereco?: string;      // RF04: só perfil 'academia'
-  dataNascimento?: Timestamp;       // RF30: só perfil 'aluno' — determina se responsavelLegal é obrigatório
-  responsavelLegal?: ResponsavelLegal; // RF30: obrigatório quando dataNascimento indica menor de 18 anos
+  dataNascimento?: Timestamp;       // RF30: só perfil 'aluno' — determina se responsavelLegal é obrigatório (privado/dados)
+  responsavelLegal?: ResponsavelLegal; // RF30: obrigatório quando dataNascimento indica menor de 18 anos (privado/dados)
   preferenciasNotificacao?: PreferenciasNotificacao; // RF31
   participaClassificacao?: boolean; // RNF11: só perfil 'aluno' — ausente conta como true (padrão é participar)
   criadoEm: Timestamp;
   atualizadoEm: Timestamp;
+}
+
+// RNF04: documento privado em usuarios/{uid}/privado/dados — só o dono lê e escreve (regra
+// `usuarios/{usuarioId}/privado/{doc}`); as Cloud Functions leem pelo Admin SDK.
+export interface DadosPessoaisPrivados {
+  email: string;
+  dataNascimento?: Timestamp;
+  responsavelLegal?: ResponsavelLegal;
 }
 
 // RF31: preferências de notificação por tipo (ausente ou true = quer receber). O envio é das Cloud

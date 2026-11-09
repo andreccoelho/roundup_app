@@ -44,7 +44,8 @@ export const POLITICA_PRIVACIDADE: SecaoPolitica[] = [
   {
     titulo: '4. Quem pode ver seus dados',
     paragrafos: [
-      'Seus dados de perfil (nome, foto, perfil, modalidades, faixa ou graduação, e demais informações do cadastro) ficam acessíveis a outros usuários autenticados do RoundUp, porque isso é necessário para que alunos encontrem academias e professores, e para que gestores encontrem alunos para vínculo.',
+      'Seus dados de perfil (nome, foto, tipo de perfil, modalidades, faixa ou graduação e, no caso de academias, nome e endereço) ficam acessíveis a outros usuários autenticados do RoundUp, porque isso é necessário para que alunos encontrem academias e professores, e para que gestores identifiquem alunos e professores vinculados a eles.',
+      'Seu e-mail, sua data de nascimento e os dados do responsável legal (para menores de 18 anos) ficam guardados em área reservada e só você tem acesso a eles pelo app.',
       'Seu histórico de treino (check-ins, pontos, missões e graduações) é visível para você e para a academia ou professor responsável pela turma. A classificação mensal é visível aos participantes do mesmo vínculo; o aluno pode optar por não participar dela nas configurações.',
       'Usamos prestadores de serviço para operar o app: o Google Firebase (autenticação, banco de dados, armazenamento de fotos e funções do servidor) e o serviço de notificações push da Expo. Eles tratam os dados apenas para prestar o serviço, e alguns podem operar servidores fora do Brasil, com as garantias previstas na LGPD para transferência internacional.',
       'Só compartilhamos dados com autoridades quando houver obrigação legal.',
