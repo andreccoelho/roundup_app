@@ -25,7 +25,11 @@ export interface Usuario {
   fotoUrl?: string;
   autonomo?: boolean;   // RF05, RF08: só se aplica a perfil 'professor' — nasce true (RN06), vira false ao aceitar vínculo com academia
   modalidades?: string[]; // RF04, RF05, RF06: oferecidas (academia), lecionadas (professor) ou praticadas (aluno)
-  faixaOuGrau?: string;   // RF06: só perfil 'aluno'
+  faixaOuGrau?: string;   // RF06: só perfil 'aluno' — graduação principal (a mais recente registrada), usada nos selos
+  // RF06, RF25, RN03: só perfil 'aluno' — graduação por modalidade ({ 'Jiu-Jitsu': 'Faixa azul, 2º grau' }).
+  // Declarada pelo aluno no cadastro; depois só muda pelo registro do professor/academia (Cloud Function
+  // aplicarGraduacaoNoPerfil, a partir de `graduacoes/{id}`).
+  graduacoes?: Record<string, string>;
   graduacao?: string;     // RF05: só perfil 'professor'
   nomeAcademia?: string;  // RF04: só perfil 'academia' — nome institucional, distinto de `nome` (contato)
   endereco?: string;      // RF04: só perfil 'academia'

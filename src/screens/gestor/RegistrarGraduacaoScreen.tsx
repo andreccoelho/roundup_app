@@ -1,4 +1,4 @@
-// RF25, RN03: registro de graduação — sempre decisão humana explícita do responsável. O
+// RF25, RN03, RF06: registro de graduação — sempre decisão humana explícita do responsável. O
 // Dialogo de confirmação existe por isso: a tela nunca submete sozinha a partir de um cálculo
 // de pontos, e a confirmação é o ponto onde a decisão humana fica explícita na interface.
 // Histórico é imutável depois de criado (ver firestore.rules) — sem tela de edição.
@@ -19,6 +19,10 @@ import CampoTexto from '../../components/ui/CampoTexto';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
+import GraduacaoSelector from '../../components/ui/GraduacaoSelector';
+import Etiqueta from '../../components/ui/Etiqueta';
+import { MODALIDADES, MODALIDADE_OUTRA } from '../../constants/modalidades';
+import { ESCOLHA_VAZIA, EscolhaGraduacao, SEM_GRADUACAO, modalidadeSemGraduacao, textoGraduacao } from '../../constants/graduacoes';
 import { mensagemErro } from '../../utils/mensagensErro';
 
 type Rota = RouteProp<AlunosStackParamList, 'RegistrarGraduacao'>;
@@ -28,8 +32,14 @@ export default function RegistrarGraduacaoScreen() {
   const navigation = useNavigation();
   const { alunoId, nomeAluno } = useRoute<Rota>().params;
 
-  const [modalidade, setModalidade] = useState('');
-  const [grau, setGrau] = useState('');
+  // Modalidade escolhida na lista (ou "Outra" + texto livre); a graduação vem do seletor da modalidade.
+  const [escolhida, setEscolhida] = useState('');
+  const [outraModalidade, setOutraModalidade] = useState('');
+  const [escolha, setEscolha] = useState<EscolhaGraduacao>(ESCOLHA_VAZIA);
+  const [grauOutra, setGrauOutra] = useState('');
+  const ehOutra = escolhida === MODALIDADE_OUTRA;
+  const modalidade = ehOutra ? outraModalidade : escolhida;
+  const grau = ehOutra ? grauOutra : textoGraduacao(escolhida, escolha);
   const [observacoes, setObservacoes] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
@@ -38,8 +48,8 @@ export default function RegistrarGraduacaoScreen() {
 
   function handlePedirConfirmacao() {
     setErro(null);
-    if (!modalidade.trim() || !grau.trim()) {
-      setErro('Preencha modalidade e grau.');
+    if (!modalidade.trim() || !grau.trim() || grau === SEM_GRADUACAO) {
+      setErro('Escolha a modalidade e uma graduação.');
       return;
     }
     setConfirmando(true);
@@ -61,8 +71,10 @@ export default function RegistrarGraduacaoScreen() {
       });
       setConfirmando(false);
       setGraduacaoRegistrada({ grau: grauConfirmado, modalidade: modalidadeConfirmada });
-      setModalidade('');
-      setGrau('');
+      setEscolhida('');
+      setOutraModalidade('');
+      setEscolha(ESCOLHA_VAZIA);
+      setGrauOutra('');
       setObservacoes('');
     } catch (e: any) {
       setConfirmando(false);
@@ -88,12 +100,29 @@ export default function RegistrarGraduacaoScreen() {
 
       <MensagemErro mensagem={erro} />
 
-      <CampoTexto rotulo="Modalidade" valor={modalidade} onAlterar={setModalidade} placeholder="Ex.: Muay Thai" />
-      <CampoTexto rotulo="Grau" valor={grau} onAlterar={setGrau} placeholder="Ex.: Faixa azul, 2º grau" />
-      {grau.trim() ? (
-        <View style={styles.previa} accessibilityLabel="Prévia do selo">
-          <SeloFaixa faixaOuGrau={grau.trim()} />
-        </View>
+      <Texto variante="subheadline" style={styles.rotuloModalidade} cabecalho={false}>
+        Modalidade
+      </Texto>
+      <View style={styles.grade} role="radiogroup" aria-label="Modalidade">
+        {[...MODALIDADES.filter((m) => !modalidadeSemGraduacao(m)), MODALIDADE_OUTRA].map((m) => (
+          <Etiqueta
+            key={m}
+            texto={m}
+            selecionada={escolhida === m}
+            onPress={() => {
+              setEscolhida(m);
+              setEscolha(ESCOLHA_VAZIA);
+            }}
+          />
+        ))}
+      </View>
+      {ehOutra ? (
+        <>
+          <CampoTexto rotulo="Qual modalidade?" valor={outraModalidade} onAlterar={setOutraModalidade} />
+          <CampoTexto rotulo="Grau" valor={grauOutra} onAlterar={setGrauOutra} placeholder="Ex.: Faixa azul, 2º grau" />
+        </>
+      ) : escolhida ? (
+        <GraduacaoSelector modalidade={escolhida} escolha={escolha} onAlterar={setEscolha} />
       ) : null}
       <CampoTexto
         rotulo="Observações (opcional)"
@@ -133,5 +162,7 @@ export default function RegistrarGraduacaoScreen() {
 
 const styles = StyleSheet.create({
   espaco: { height: Espacamento.grande },
+  rotuloModalidade: { marginBottom: Espacamento.pequeno },
+  grade: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
 });

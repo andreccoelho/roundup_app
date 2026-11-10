@@ -179,7 +179,12 @@ service cloud.firestore {
                     && request.resource.data.perfil in ['aluno', 'professor', 'academia']
                     && !request.resource.data.keys().hasAny(['email', 'dataNascimento', 'responsavelLegal']);
       allow update: if autenticado()
-                    && ((usuarioId == meuId() && request.resource.data.perfil == resource.data.perfil)
+                    && ((usuarioId == meuId() && request.resource.data.perfil == resource.data.perfil
+                         // RN03, RF25: o aluno declara a graduação só no cadastro (create). Depois ela é
+                         // decisão do professor/academia e entra pela Cloud Function
+                         // aplicarGraduacaoNoPerfil (Admin SDK, ignora estas regras).
+                         && !(resource.data.perfil == 'aluno'
+                              && request.resource.data.diff(resource.data).affectedKeys().hasAny(['faixaOuGrau', 'graduacoes'])))
                         // RN06: o destinatário de um vínculo professor-academia aceito ou recém
                         // encerrado grava só autonomo/atualizadoEm do professor — contraparte de
                         // responderSolicitacao() (vira false) e encerrarVinculo() (volta a true).

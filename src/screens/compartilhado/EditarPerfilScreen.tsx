@@ -1,5 +1,5 @@
 // RF06: edição de perfil, compartilhada pelas 3 raízes — campos variam por usuario.perfil
-// (faixaOuGrau só aluno, graduacao só professor, nomeAcademia/endereco só academia), mas
+// (graduacao só professor — a do aluno é só leitura, RN03: quem muda é o professor —, nomeAcademia/endereco só academia), mas
 // modalidades e foto são comuns aos 3. Nunca edita perfil/email/id (ver AuthContext.atualizarPerfil).
 //
 // Foto: expo-image-picker (já era dependência instalada, nunca usada) + upload real para
@@ -23,6 +23,7 @@ import BotaoCabecalho from '../../components/ui/BotaoCabecalho';
 import Aviso from '../../components/ui/Aviso';
 import Tela from '../../components/ui/Tela';
 import SeloFaixa from '../../components/ui/SeloFaixa';
+import Texto from '../../components/ui/Texto';
 import MensagemErro from '../../components/ui/MensagemErro';
 import { mensagemErro } from '../../utils/mensagensErro';
 
@@ -43,7 +44,6 @@ export default function EditarPerfilScreen() {
   const navigation = useNavigation();
 
   const [nome, setNome] = useState(usuario?.nome ?? '');
-  const [faixaOuGrau, setFaixaOuGrau] = useState(usuario?.faixaOuGrau ?? '');
   const [graduacao, setGraduacao] = useState(usuario?.graduacao ?? '');
   const [nomeAcademia, setNomeAcademia] = useState(usuario?.nomeAcademia ?? '');
   const [endereco, setEndereco] = useState(usuario?.endereco ?? '');
@@ -101,7 +101,6 @@ export default function EditarPerfilScreen() {
         nome: nome.trim(),
         modalidades: modalidadesFinal,
       };
-      if (usuario.perfil === 'aluno') dados.faixaOuGrau = faixaOuGrau.trim();
       if (usuario.perfil === 'professor') dados.graduacao = graduacao.trim();
       if (usuario.perfil === 'academia') {
         dados.nomeAcademia = nomeAcademia.trim();
@@ -151,14 +150,17 @@ export default function EditarPerfilScreen() {
       <CampoTexto rotulo="Nome" valor={nome} onAlterar={setNome} autoComplete="name" />
 
       {usuario.perfil === 'aluno' ? (
-        <>
-          <CampoTexto rotulo="Faixa ou grau" valor={faixaOuGrau} onAlterar={setFaixaOuGrau} placeholder="Ex.: Faixa roxa, 2º grau" />
-          {faixaOuGrau.trim() ? (
-            <View style={styles.previa}>
-              <SeloFaixa faixaOuGrau={faixaOuGrau.trim()} />
-            </View>
-          ) : null}
-        </>
+        <View style={styles.graduacoesAluno}>
+          <Texto variante="subheadline" cabecalho={false}>
+            Graduação
+          </Texto>
+          {Object.entries(usuario.graduacoes ?? {}).map(([modalidade, grau]) => (
+            <SeloFaixa key={modalidade} faixaOuGrau={`${modalidade}: ${grau}`} />
+          ))}
+          <Texto variante="footnote" cor="texto2">
+            Quem atualiza a sua graduação é o seu professor ou a sua academia.
+          </Texto>
+        </View>
       ) : null}
 
       {usuario.perfil === 'professor' ? (
@@ -196,5 +198,6 @@ export default function EditarPerfilScreen() {
 const styles = StyleSheet.create({
   fotoSecao: { alignItems: 'center', gap: Espacamento.minimo, marginBottom: Espacamento.grande },
   pressionada: { opacity: 0.8 },
+  graduacoesAluno: { gap: Espacamento.pequeno, marginBottom: Espacamento.padrao },
   previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
 });
