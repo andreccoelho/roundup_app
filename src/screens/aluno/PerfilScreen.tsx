@@ -82,6 +82,7 @@ export default function PerfilScreen() {
         nome={usuario?.nome ?? ''}
         fotoUrl={usuario?.fotoUrl}
         faixa={usuario?.faixaOuGrau}
+        graduacoes={usuario?.graduacoes}
         email={usuario?.email}
         membroDesde={usuario?.criadoEm ? formatarMesAno(usuario.criadoEm) : undefined}
         nivel={progresso?.nivel ?? 1}

@@ -16,6 +16,7 @@ import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import GrupoLista from '../../components/ui/GrupoLista';
 import ItemMenu from '../../components/ui/ItemMenu';
 import LinhaLista from '../../components/ui/LinhaLista';
+import Texto from '../../components/ui/Texto';
 import Toggle from '../../components/ui/Toggle';
 import { IconeCadeado, IconeChama, IconeCorda, IconePerfil, IconeSair, IconeSino } from '../../components/icones';
 
@@ -32,6 +33,7 @@ interface PerfilAlunoVisaoProps {
   nome: string;
   fotoUrl?: string;
   faixa?: string;
+  graduacoes?: Record<string, string>;
   email?: string;
   membroDesde?: string;
   nivel: number;
@@ -53,6 +55,7 @@ export default function PerfilAlunoVisao({
   nome,
   fotoUrl,
   faixa,
+  graduacoes,
   email,
   membroDesde,
   nivel,
@@ -87,9 +90,22 @@ export default function PerfilAlunoVisao({
       </Cartao>
 
       <GrupoLista titulo="Graduação">
-        <LinhaLista>
-          <SeloFaixa faixaOuGrau={faixa ?? 'Faixa não informada'} />
-        </LinhaLista>
+        {graduacoes && Object.keys(graduacoes).length > 0 ? (
+          Object.entries(graduacoes).map(([modalidade, grau]) => (
+            <LinhaLista key={modalidade}>
+              <View style={styles.graduacaoModalidade}>
+                <Texto variante="caption" cor="texto2">
+                  {modalidade}
+                </Texto>
+                <SeloFaixa faixaOuGrau={grau || 'Não informada'} />
+              </View>
+            </LinhaLista>
+          ))
+        ) : (
+          <LinhaLista>
+            <SeloFaixa faixaOuGrau={faixa ?? 'Faixa não informada'} />
+          </LinhaLista>
+        )}
       </GrupoLista>
 
       {modalidades.length > 0 ? (
@@ -142,6 +158,7 @@ export default function PerfilAlunoVisao({
 }
 
 const useEstilos = criarEstilos((c) => ({
+  graduacaoModalidade: { gap: Espacamento.minimo },
   stats: { flexDirection: 'row', alignItems: 'center' },
   divisor: { width: 0.5, alignSelf: 'stretch', backgroundColor: c.separador },
   modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, padding: Espacamento.padrao },

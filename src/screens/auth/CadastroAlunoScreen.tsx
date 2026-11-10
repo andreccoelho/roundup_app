@@ -1,5 +1,5 @@
-// RF01, RF06: cadastro do perfil Aluno — nome, e-mail, senha, modalidade(s) praticada(s),
-// faixa ou grau atual. Persiste em Firebase Auth + `usuarios` (Firestore) via useAuth().cadastrar.
+// RF01, RF06, RF25: cadastro do perfil Aluno — nome, e-mail, senha, modalidade(s) praticada(s),
+// graduação por modalidade (seletor, RF06). Persiste em Firebase Auth + `usuarios` (Firestore) via useAuth().cadastrar.
 // Sem os 4 estados de carregando/vazio/erro de tela: formulário sem busca de dados no mount, só
 // ação de envio (já representada pelo `carregando` do próprio Botao).
 import { useState } from 'react';
@@ -21,7 +21,14 @@ import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import MensagemErro from '../../components/ui/MensagemErro';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
-import SeloFaixa from '../../components/ui/SeloFaixa';
+import GraduacaoSelector from '../../components/ui/GraduacaoSelector';
+import {
+  ESCOLHA_VAZIA,
+  EscolhaGraduacao,
+  NAO_SE_APLICA,
+  SEM_GRADUACAO,
+  textoGraduacao,
+} from '../../constants/graduacoes';
 
 type Rota = RouteProp<AuthStackParamList, 'CadastroAluno'>;
 
@@ -62,7 +69,8 @@ export default function CadastroAlunoScreen() {
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [modalidades, setModalidades] = useState<string[]>([]);
   const [outraModalidade, setOutraModalidade] = useState('');
-  const [faixaOuGrau, setFaixaOuGrau] = useState('');
+  const [graduacoes, setGraduacoes] = useState<Record<string, EscolhaGraduacao>>({});
+  const [faixaOutra, setFaixaOutra] = useState('');
   const [dataNascimento, setDataNascimento] = useState('');
   const [nomeResponsavel, setNomeResponsavel] = useState('');
   const [contatoResponsavel, setContatoResponsavel] = useState('');
@@ -70,6 +78,33 @@ export default function CadastroAlunoScreen() {
   const [erros, setErros] = useState<Erros>({});
   const [erroConta, setErroConta] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
+
+  // Modalidades da lista fixa que exigem escolha de graduação (a "Outra" tem campo de texto próprio).
+  const modalidadesFixas = modalidades.filter((m) => m !== MODALIDADE_OUTRA);
+  const outraSelecionada = modalidades.includes(MODALIDADE_OUTRA);
+
+  // `faixaOuGrau` segue sendo um único texto: vale a primeira graduação real escolhida; sem
+  // nenhuma, "Sem graduação" ou "Não se aplica".
+  function faixaOuGrauFinal(): string {
+    const textos = [
+      ...modalidadesFixas.map((m) => textoGraduacao(m, graduacoes[m])),
+      ...(outraSelecionada ? [faixaOutra.trim()] : []),
+    ].filter(Boolean);
+    return (
+      textos.find((t) => t !== SEM_GRADUACAO && t !== NAO_SE_APLICA) ??
+      textos.find((t) => t === SEM_GRADUACAO) ??
+      textos[0] ??
+      ''
+    );
+  }
+
+  // RF06: mapa modalidade → graduação declarada (a "Outra" entra com o nome digitado).
+  function graduacoesFinais(): Record<string, string> {
+    const mapa: Record<string, string> = {};
+    for (const m of modalidadesFixas) mapa[m] = textoGraduacao(m, graduacoes[m]);
+    if (outraSelecionada && outraModalidade.trim()) mapa[outraModalidade.trim()] = faixaOutra.trim();
+    return mapa;
+  }
 
   const nascimento = parseDataBr(dataNascimento);
   const ehMenorDeIdade = nascimento !== null && calcularIdade(nascimento) < IDADE_MINIMA_SEM_RESPONSAVEL;
@@ -84,7 +119,9 @@ export default function CadastroAlunoScreen() {
     if (resolverModalidades(modalidades, outraModalidade, MODALIDADE_OUTRA).length === 0) {
       novosErros.modalidades = 'Selecione ao menos uma modalidade.';
     }
-    if (!faixaOuGrau.trim()) novosErros.faixaOuGrau = 'Informe sua faixa ou grau atual.';
+    const faltaGraduacao =
+      modalidadesFixas.some((m) => !textoGraduacao(m, graduacoes[m])) || (outraSelecionada && !faixaOutra.trim());
+    if (faltaGraduacao) novosErros.faixaOuGrau = 'Escolha a graduação de cada modalidade (ou "Sem graduação").';
     if (!dataNascimento.trim()) novosErros.dataNascimento = 'Informe sua data de nascimento.';
     else if (!nascimento) novosErros.dataNascimento = 'Data inválida. Use o formato DD/MM/AAAA.';
 
@@ -108,7 +145,8 @@ export default function CadastroAlunoScreen() {
         nome: nome.trim(),
         perfil: 'aluno',
         modalidades: resolverModalidades(modalidades, outraModalidade, MODALIDADE_OUTRA),
-        faixaOuGrau: faixaOuGrau.trim(),
+        faixaOuGrau: faixaOuGrauFinal(),
+        graduacoes: graduacoesFinais(),
         dataNascimento: paraTimestamp(nascimento!),
         ...(ehMenorDeIdade
           ? { responsavelLegal: { nome: nomeResponsavel.trim(), contato: contatoResponsavel.trim() } }
@@ -190,17 +228,26 @@ export default function CadastroAlunoScreen() {
         onAlterarOutraTexto={setOutraModalidade}
         erro={erros.modalidades}
       />
-      <CampoTexto
-        rotulo="Faixa ou grau atual"
-        placeholder="Ex.: Faixa roxa, 2º grau"
-        valor={faixaOuGrau}
-        onAlterar={setFaixaOuGrau}
-        erro={erros.faixaOuGrau}
-      />
-      {faixaOuGrau.trim() ? (
-        <View style={styles.previa}>
-          <SeloFaixa faixaOuGrau={faixaOuGrau.trim()} />
-        </View>
+      {modalidadesFixas.map((m) => (
+        <GraduacaoSelector
+          key={m}
+          modalidade={m}
+          escolha={graduacoes[m] ?? ESCOLHA_VAZIA}
+          onAlterar={(e) => setGraduacoes((g) => ({ ...g, [m]: e }))}
+        />
+      ))}
+      {outraSelecionada ? (
+        <CampoTexto
+          rotulo="Faixa ou grau atual (outra modalidade)"
+          placeholder="Ex.: Faixa roxa, 2º grau"
+          valor={faixaOutra}
+          onAlterar={setFaixaOutra}
+        />
+      ) : null}
+      {erros.faixaOuGrau ? (
+        <Texto variante="subheadline" cor="perigo" accessibilityRole="alert" accessibilityLiveRegion="polite" style={styles.erroGraduacao}>
+          {erros.faixaOuGrau}
+        </Texto>
       ) : null}
       <CampoTexto rotulo="Data de nascimento" mascara="data" valor={dataNascimento} onAlterar={setDataNascimento} erro={erros.dataNascimento} />
 
@@ -241,7 +288,7 @@ export default function CadastroAlunoScreen() {
 const useEstilos = criarEstilos((c) => ({
   etapa: { marginTop: Espacamento.grande, marginBottom: Espacamento.minimo },
   subtitulo: { marginTop: Espacamento.pequeno, marginBottom: Espacamento.grande },
-  previa: { marginTop: -Espacamento.pequeno, marginBottom: Espacamento.padrao },
+  erroGraduacao: { marginBottom: Espacamento.padrao },
   blocoResponsavel: {
     marginTop: Espacamento.pequeno,
     marginBottom: Espacamento.padrao,

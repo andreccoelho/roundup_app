@@ -89,6 +89,30 @@ describe('usuarios', () => {
     await assertFails(updateDoc(doc(db, 'usuarios', 'aluno1'), { perfil: 'professor' }));
   });
 
+  describe('RN03, RF25: graduação do aluno só muda pelo professor/academia', () => {
+    test.each(['faixaOuGrau', 'graduacoes'])('o aluno não altera o próprio %s depois do cadastro', async (campo) => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno', faixaOuGrau: 'Faixa branca', graduacoes: { 'Jiu-Jitsu': 'Faixa branca' } }));
+      });
+      const db = comoUsuario('aluno1');
+      const valor = campo === 'graduacoes' ? { 'Jiu-Jitsu': 'Faixa preta' } : 'Faixa preta';
+      await assertFails(updateDoc(doc(db, 'usuarios', 'aluno1'), { [campo]: valor }));
+    });
+
+    test('o aluno declara a graduação ao criar o perfil e segue editando os outros campos', async () => {
+      const db = comoUsuario('aluno1');
+      await assertSucceeds(setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno', faixaOuGrau: 'Faixa branca', graduacoes: { 'Jiu-Jitsu': 'Faixa branca' } })));
+      await assertSucceeds(updateDoc(doc(db, 'usuarios', 'aluno1'), { nome: 'Novo nome', atualizadoEm: AGORA }));
+    });
+
+    test('professor continua editando a própria graduação (campo `graduacao`)', async () => {
+      await semear(async (db) => {
+        await setDoc(doc(db, 'usuarios', 'professor1'), usuarioBase({ perfil: 'professor', autonomo: true }));
+      });
+      await assertSucceeds(updateDoc(doc(comoUsuario('professor1'), 'usuarios', 'professor1'), { graduacao: 'Faixa preta' }));
+    });
+  });
+
   test('RN06: academia destinatária de vínculo professor-academia aceito atualiza autonomo do professor', async () => {
     await semear(async (db) => {
       await setDoc(doc(db, 'usuarios', 'professor1'), usuarioBase({ perfil: 'professor', autonomo: true }));

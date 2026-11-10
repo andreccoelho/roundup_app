@@ -106,6 +106,7 @@ export default function DashboardScreen() {
     usuarioId: usuario?.id,
     nivel: progresso?.nivel,
     faixa: usuario?.faixaOuGrau,
+    graduacoes: usuario?.graduacoes,
     medalhas,
     pronto: progressoPronto,
   });

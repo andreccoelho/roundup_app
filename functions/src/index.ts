@@ -110,6 +110,9 @@ export {
 // RF18: progresso automático e pontos de missão — ver missoes.ts
 export { atualizarMissoesNoCheckIn, creditarPontosDaMissao } from './missoes';
 
+// RF25, RN03: projeta a graduação registrada no perfil do aluno — ver graduacoes.ts
+export { aplicarGraduacaoNoPerfil } from './graduacoes';
+
 // RF31: notificações push — ver notificacoes.ts
 export {
   notificarNovaMissao, notificarMissaoConcluida, notificarGraduacao, notificarMarcoDeTreino, enviarLembretesDeSessao,
