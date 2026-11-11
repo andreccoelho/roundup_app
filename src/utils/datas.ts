@@ -119,3 +119,15 @@ export function gerarDatasRecorrentes(inicio: Date, fim: Date, diasSemana: numbe
 
   return datas;
 }
+
+// Novo início/fim de uma sessão, mantendo o dia dela. null se o horário for inválido.
+export function reagendarHorario(
+  dia: Date,
+  horarioInicio: string,
+  horarioFim: string,
+): { inicio: Date; fim: Date } | null {
+  const inicio = combinarDataHora(dia, horarioInicio);
+  const fim = combinarDataHora(dia, horarioFim);
+  if (!inicio || !fim || fim.getTime() <= inicio.getTime()) return null;
+  return { inicio, fim };
+}

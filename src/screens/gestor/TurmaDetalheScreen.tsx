@@ -1,4 +1,5 @@
-// RF10, RF11, RF12: detalhe da turma — alunos matriculados, sessões e criação de sessão
+// RF10, RF11, RF12: detalhe da turma — alunos matriculados, sessões, criação de sessão e, para o
+// responsável pela turma, mudar o horário e excluir (soft delete, ver services/turmasGestao.ts)
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -8,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { buscarTurma } from '../../services/turmas';
 import { listarMatriculasPorTurma } from '../../services/matriculas';
 import { listarSessoesPorTurma, criarSessao } from '../../services/sessoes';
+import { alterarHorarioTurma, excluirTurma, reativarTurma } from '../../services/turmasGestao';
 import { buscarUsuario } from '../../services/usuarios';
 import { Matricula, Sessao, Turma } from '../../types';
 import { combinarDataHora, gerarDatasRecorrentes, paraData, parseDataBr, semanaContendo } from '../../utils/datas';
@@ -21,6 +23,7 @@ import Botao from '../../components/ui/Botao';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
 import Folha from '../../components/ui/Folha';
+import Dialogo from '../../components/ui/Dialogo';
 import Aviso from '../../components/ui/Aviso';
 import Avatar from '../../components/ui/Avatar';
 import ItemMenu from '../../components/ui/ItemMenu';
@@ -63,6 +66,15 @@ export default function TurmaDetalheScreen() {
   const [erroForm, setErroForm] = useState<string | null>(null);
   const [folhaAberta, setFolhaAberta] = useState(false);
   const [sucesso, setSucesso] = useState<string | null>(null);
+
+  // Mudar horário / excluir: só o responsável pela turma (firestore.rules: turmas.update)
+  const [folhaHorarioAberta, setFolhaHorarioAberta] = useState(false);
+  const [novoInicio, setNovoInicio] = useState('');
+  const [novoFim, setNovoFim] = useState('');
+  const [salvandoHorario, setSalvandoHorario] = useState(false);
+  const [erroHorario, setErroHorario] = useState<string | null>(null);
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [processandoTurma, setProcessandoTurma] = useState(false);
 
   function alternarDiaSemana(valor: number) {
     setDiasSemana((atual) => (atual.includes(valor) ? atual.filter((d) => d !== valor) : [...atual, valor]));
@@ -163,6 +175,62 @@ export default function TurmaDetalheScreen() {
     }
   }
 
+  function abrirAlterarHorario() {
+    setNovoInicio(turma?.horarioInicio ?? '');
+    setNovoFim(turma?.horarioFim ?? '');
+    setErroHorario(null);
+    setFolhaHorarioAberta(true);
+  }
+
+  async function handleAlterarHorario() {
+    if (!turma || salvandoHorario) return;
+    setErroHorario(null);
+    setSalvandoHorario(true);
+    try {
+      const ajustadas = await alterarHorarioTurma(turma, novoInicio.trim(), novoFim.trim());
+      setFolhaHorarioAberta(false);
+      setSucesso(
+        ajustadas > 0
+          ? `Horário atualizado em ${ajustadas} ${ajustadas === 1 ? 'sessão futura' : 'sessões futuras'}.`
+          : 'Horário da turma atualizado.',
+      );
+      await carregarTudo();
+    } catch (e) {
+      setErroHorario(mensagemErro(e, 'Não foi possível alterar o horário. Tente novamente.'));
+    } finally {
+      setSalvandoHorario(false);
+    }
+  }
+
+  async function handleExcluir() {
+    if (!turma || processandoTurma) return;
+    setProcessandoTurma(true);
+    try {
+      await excluirTurma(turma);
+      setConfirmandoExclusao(false);
+      navigation.goBack();
+    } catch (e) {
+      setConfirmandoExclusao(false);
+      setErro(mensagemErro(e, 'Não foi possível excluir a turma. Tente novamente.'));
+    } finally {
+      setProcessandoTurma(false);
+    }
+  }
+
+  async function handleReativar() {
+    if (!turma || processandoTurma) return;
+    setProcessandoTurma(true);
+    try {
+      await reativarTurma(turma);
+      setSucesso('Turma reativada.');
+      await carregarTudo();
+    } catch (e) {
+      setErro(mensagemErro(e, 'Não foi possível reativar a turma. Tente novamente.'));
+    } finally {
+      setProcessandoTurma(false);
+    }
+  }
+
   if (carregando) {
     return (
       <Tela largura="lista" agrupada>
@@ -183,6 +251,8 @@ export default function TurmaDetalheScreen() {
       </Tela>
     );
   }
+
+  const ehResponsavel = usuario?.id === turma.responsavelId;
 
   const grade =
     turma.diasSemana && turma.diasSemana.length > 0
@@ -216,6 +286,16 @@ export default function TurmaDetalheScreen() {
       <View style={styles.acoes}>
         <Botao titulo="Nova sessão" icone={IconeMais} variante="secundario" onPress={() => setFolhaAberta(true)} />
       </View>
+      {ehResponsavel ? (
+        <View style={styles.acoesTurma}>
+          <Botao titulo="Alterar horário" variante="texto" onPress={abrirAlterarHorario} />
+          {turma.ativa ? (
+            <Botao titulo="Excluir turma" variante="texto" onPress={() => setConfirmandoExclusao(true)} />
+          ) : (
+            <Botao titulo="Reativar turma" variante="texto" onPress={handleReativar} desabilitado={processandoTurma} />
+          )}
+        </View>
+      ) : null}
       <GrupoLista semMargem>
         <ItemMenu
           rotulo="Relatório de frequência"
@@ -274,6 +354,38 @@ export default function TurmaDetalheScreen() {
       </GrupoLista>
 
       <Folha
+        visivel={folhaHorarioAberta}
+        onFechar={() => setFolhaHorarioAberta(false)}
+        titulo="Alterar horário"
+        acao={{ titulo: 'Salvar', onPress: handleAlterarHorario, carregando: salvandoHorario }}
+      >
+        <MensagemErro mensagem={erroHorario} />
+        <View style={styles.linhaHorarios}>
+          <View style={styles.campoHorario}>
+            <CampoTexto rotulo="Início" mascara="hora" valor={novoInicio} onAlterar={setNovoInicio} />
+          </View>
+          <View style={styles.campoHorario}>
+            <CampoTexto rotulo="Fim" mascara="hora" valor={novoFim} onAlterar={setNovoFim} />
+          </View>
+        </View>
+        <Texto variante="subheadline" cor="texto3">
+          O novo horário vale para a turma e para as sessões futuras ainda agendadas. Sessões que já aconteceram não mudam.
+        </Texto>
+      </Folha>
+
+      <Dialogo
+        visivel={confirmandoExclusao}
+        titulo="Excluir turma"
+        mensagem={`Excluir "${turma.nome}"? A turma deixa de aparecer para os alunos e as sessões futuras agendadas serão canceladas. O histórico de presenças e pontos é mantido, e você pode reativar a turma depois.`}
+        tituloConfirmar="Excluir"
+        destrutivo
+        onConfirmar={handleExcluir}
+        carregando={processandoTurma}
+        tituloCancelar="Cancelar"
+        onCancelar={() => setConfirmandoExclusao(false)}
+      />
+
+      <Folha
         visivel={folhaAberta}
         onFechar={() => setFolhaAberta(false)}
         titulo="Nova sessão"
@@ -312,6 +424,7 @@ export default function TurmaDetalheScreen() {
 const useEstilos = criarEstilos((c) => ({
   meta: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: Espacamento.minimo + 2, marginTop: Espacamento.pequeno, marginBottom: Espacamento.pequeno },
   acoes: { marginTop: Espacamento.grande, marginBottom: Espacamento.medio },
+  acoesTurma: { flexDirection: 'row', justifyContent: 'center', gap: Espacamento.grande, marginBottom: Espacamento.medio },
   linha: { flexDirection: 'row', alignItems: 'center', gap: Espacamento.medio, minHeight: 60, paddingVertical: Espacamento.pequeno + 2, paddingHorizontal: Espacamento.padrao },
   pressionada: { backgroundColor: c.preenchimento },
   horario: { width: 64 },

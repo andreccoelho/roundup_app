@@ -2,7 +2,7 @@
 // não depender do fuso da máquina onde a suíte roda.
 process.env.TZ = 'America/Sao_Paulo';
 
-import { parseDataHora, parseDataBr, combinarDataHora, gerarDatasRecorrentes, semanaContendo, paraTimestamp, paraData, periodoDe } from './datas';
+import { parseDataHora, parseDataBr, combinarDataHora, gerarDatasRecorrentes, semanaContendo, paraTimestamp, paraData, periodoDe, reagendarHorario } from './datas';
 
 describe('parseDataHora', () => {
   test('interpreta a data (DD/MM/AAAA) e a hora no fuso local, não em UTC', () => {
@@ -141,5 +141,26 @@ describe('periodoDe (RN04)', () => {
     const data = new Date(2026, 9, 31, 22, 0);
     expect(data.getUTCMonth()).toBe(10);
     expect(periodoDe(data)).toBe('2026-10');
+  });
+});
+
+describe('reagendarHorario (RF10, RF12)', () => {
+  const dia = new Date(2026, 8, 8, 0, 0); // 08/09/2026
+
+  test('mantém o dia da sessão e troca só o horário', () => {
+    const novo = reagendarHorario(new Date(2026, 8, 8, 19, 0), '20:30', '21:45');
+    expect(novo).not.toBeNull();
+    expect(novo!.inicio).toEqual(new Date(2026, 8, 8, 20, 30));
+    expect(novo!.fim).toEqual(new Date(2026, 8, 8, 21, 45));
+  });
+
+  test('recusa término igual ou anterior ao início', () => {
+    expect(reagendarHorario(dia, '20:00', '20:00')).toBeNull();
+    expect(reagendarHorario(dia, '20:00', '19:00')).toBeNull();
+  });
+
+  test('recusa horário fora do formato HH:MM', () => {
+    expect(reagendarHorario(dia, '8h', '21:00')).toBeNull();
+    expect(reagendarHorario(dia, '19:00', '25:00')).toBeNull();
   });
 });
