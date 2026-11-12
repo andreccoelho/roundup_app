@@ -1,0 +1,50 @@
+% =====================================================================
+%  RESUMO EM LÍNGUA PORTUGUESA (obrigatório) -- Manual, seção 2.1.8
+% ---------------------------------------------------------------------
+%  Regras (ABNT NBR 6028:2021):
+%   - UM ÚNICO parágrafo, sem recuo, espaço simples;
+%   - entre 150 e 500 palavras;
+%   - frases concisas e afirmativas; terceira pessoa do singular e voz
+%     ativa ("Este trabalho analisa...", e não "Neste trabalho eu analisei...");
+%   - deve apresentar: OBJETIVO, MÉTODO, RESULTADOS e CONCLUSÕES;
+%   - sem citações, figuras, tabelas ou equações;
+%   - palavras-chave logo abaixo, separadas por ponto e vírgula (;) e
+%     terminadas com ponto final (.).
+%  DICA: escreva o resumo por último, quando o trabalho estiver pronto.
+% =====================================================================
+\setlength{\absparsep}{18pt}
+\begin{resumo}
+\SingleSpacing
+\noindent A evasão de praticantes é um problema recorrente em academias de
+lutas e artes marciais, e muitos alunos abandonam o treino antes de
+perceber os seus benefícios físicos e mentais. Este trabalho apresenta o
+RoundUp, um aplicativo móvel gamificado que busca aumentar o engajamento e
+a retenção dos alunos e apoiar professores e academias na gestão das
+turmas. O projeto foi conduzido como um processo de ideação: treze ideias
+de funcionalidades foram convertidas em requisitos, que orientaram a
+construção do aplicativo e, ao mesmo tempo, foram avaliados por meio de um
+questionário respondido por seis praticantes e ex-praticantes. Como nenhum
+professor respondeu, o questionário e o procedimento de análise foram
+testados com 65 respostas sintéticas, geradas a partir de 12 personas e
+mantidas separadas dos dados reais. O protótipo foi desenvolvido em React
+Native com Firebase, com três perfis de usuário (aluno, professor e
+academia), e implementa 29 dos 33 requisitos funcionais, entre eles
+registro de presença com validação pelo professor, pontos de experiência,
+níveis, sequência de treinos, medalhas, classificação, missões, registro
+de graduação, relatórios de frequência e consentimento conforme a LGPD. As
+regras de negócio que protegem a gamificação foram implementadas nas
+regras de segurança do banco de dados e cobertas por testes automatizados.
+Na avaliação real, os recursos que tornam o progresso visível, como a
+barra de progresso até a graduação e o histórico de presença, tiveram as
+melhores notas; lembretes e mensagens automáticas, as piores; e os
+comentários apontaram o excesso de notificações e de dados a inserir como
+motivos de abandono do aplicativo, o que levou a tornar as notificações
+configuráveis e a classificação opcional. Conclui-se que a gamificação
+centrada no progresso visível é a direção mais promissora para o
+aplicativo, que parte da evasão tem causas externas que um aplicativo não
+resolve e que os requisitos de gestão ainda precisam ser avaliados por
+professores reais.
+
+\vspace{\onelineskip}
+\noindent\textbf{Palavras-chave}: gamificação; artes marciais; retenção; engenharia de requisitos; personas.
+\end{resumo}

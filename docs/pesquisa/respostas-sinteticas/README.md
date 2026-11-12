@@ -1,4 +1,4 @@
-# Respostas sintéticas do formulário (Apêndice C)
+# Respostas sintéticas do formulário
 
 Scripts usados para gerar e enviar as 65 respostas sintéticas do formulário "Todo mundo começa. Poucos continuam.". Essas respostas servem só para testar o instrumento e a análise. Não são dados de pesquisa e não entram nos resultados do TCC.
 

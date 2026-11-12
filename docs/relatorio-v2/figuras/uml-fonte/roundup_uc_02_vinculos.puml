@@ -1,0 +1,21 @@
+@startuml RoundUp_UC_02_Vinculos
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Aluno
+actor Professor
+actor Academia
+Academia --|> Professor
+
+package "Vínculos" {
+  usecase "UC06 Solicitar Vínculo\ncom Academia (RF07)" as UC06
+  usecase "UC07 Gerenciar Vínculos\nde Professores (RF09)" as UC07
+  usecase "UC08 Vincular-se a Academia\nou Professor (RF08)" as UC08
+}
+
+Professor -- UC06
+Academia -- UC07
+Aluno -- UC08
+
+@enduml

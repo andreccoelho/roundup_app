@@ -1,0 +1,64 @@
+% =====================================================================
+%  LISTAS -- Manual, seções 2.1.9 a 2.1.12
+% ---------------------------------------------------------------------
+%  São OPCIONAIS, mas tornam-se OBRIGATÓRIAS quando houver MAIS DE 5
+%  itens do tipo no trabalho. Se tiver 5 ou menos, você pode remover a
+%  lista colocando % no início da(s) linha(s) correspondente(s).
+%
+%  As listas de ilustrações, quadros, tabelas e códigos são geradas
+%  AUTOMATICAMENTE a partir dos \caption{} do texto.
+%  As listas de siglas e de símbolos são escritas À MÃO, logo abaixo.
+% =====================================================================
+
+% --- Lista de ilustrações (figuras, gráficos, fluxogramas, fotos...) ---
+\pdfbookmark[0]{\listfigurename}{lof}
+\listoffigures*
+\cleardoublepage
+
+% --- Lista de quadros (quadro = conteúdo textual, com bordas fechadas) ---
+\pdfbookmark[0]{\listofquadrosname}{loq}
+\listofquadros*
+\cleardoublepage
+
+% --- Lista de tabelas (tabela = dados numéricos, bordas laterais abertas) ---
+\pdfbookmark[0]{\listtablename}{lot}
+\listoftables*
+\cleardoublepage
+
+% --- Lista de códigos (útil no relatório técnico) ---------------------
+\ifrelatorio
+  \pdfbookmark[0]{\listofcodigosname}{loc}
+  \listofcodigos*
+  \cleardoublepage
+\fi
+
+% --- Lista de abreviaturas e siglas (em ORDEM ALFABÉTICA) -------------
+% Na primeira vez que a sigla aparece no texto, escreva o nome completo
+% seguido da sigla entre parênteses: "Associação Brasileira de Normas
+% Técnicas (ABNT)". Depois, use apenas a sigla.
+\begin{siglas}
+  \item[ABNT] Associação Brasileira de Normas Técnicas
+  \item[CT] Caso de Teste
+  \item[IA] Inteligência Artificial
+  \item[LGPD] Lei Geral de Proteção de Dados Pessoais
+  \item[LLM] \textit{Large Language Model} (modelo de linguagem de grande porte)
+  \item[MoSCoW] \textit{Must, Should, Could, Won't} (método de priorização)
+  \item[NoSQL] \textit{Not only SQL} (banco de dados não relacional)
+  \item[RF] Requisito Funcional
+  \item[RN] Regra de Negócio
+  \item[RNF] Requisito Não Funcional
+  \item[TCC] Trabalho de Conclusão de Curso
+  \item[UC] Caso de Uso (\textit{Use Case})
+  \item[UML] \textit{Unified Modeling Language}
+  \item[WCAG] \textit{Web Content Accessibility Guidelines}
+  \item[XP] Pontos de experiência (\textit{experience points})
+\end{siglas}
+
+% --- Lista de símbolos (na ORDEM em que aparecem no texto) ------------
+% Este trabalho não usa símbolos matemáticos; lista desativada.
+% \begin{simbolos}
+%   \item[$ \sigma $] Tensão normal
+%   \item[$ F $] Força aplicada
+%   \item[$ A $] Área da seção transversal
+%   \item[$ \in $] Pertence
+% \end{simbolos}

@@ -1,0 +1,14 @@
+ideia,nome,media_praticante,media_ex,media_geral,mediana_geral,n
+I01,Pontos de experiência (XP),3.5,4,3.67,4.0,6
+I02,Check-in de presença,3.5,2.5,3.17,3.5,6
+I03,Contador de frequência,3,4,3.33,4.0,6
+I04,Ofensiva (sequência),3.5,4,3.67,4.0,6
+I05,Missões e desafios semanais,3.5,2.5,3.17,3.5,6
+I06,Ranking de frequência,3.5,4,3.67,4.0,6
+I07,Medalhas por marcos,3.5,4,3.67,4.0,6
+I08,Barra de progresso da graduação,3.75,4,3.83,4.0,6
+I09,Histórico de presença e evolução,4,3.5,3.83,4.0,6
+I10,Mural/feed da turma,3.75,2.5,3.33,4.0,6
+I11,Lembretes nos dias de treino,3.25,2.5,3,3.5,6
+I12,Alerta/mensagem após ausência,,2.5,2.5,2.5,2
+I13,Relatório da turma (professor),,,,,0
