@@ -1,0 +1,113 @@
+% =====================================================================
+%  CAPÍTULO 1 -- INTRODUÇÃO
+%  Formato: PROJETO APLICADO (relatório técnico + protótipo)
+%
+%  O Manual recomenda texto corrido, sem dividir a introdução em seções.
+% =====================================================================
+
+\chapter{Introdução e objetivos}
+\label{cap:introducao}
+
+% (a) Contexto e problema
+A prática regular de lutas e artes marciais está associada a benefícios
+que vão além do condicionamento físico. Em revisão sistemática com
+meta-análise, \citeonline{moore2020} encontraram efeitos positivos do
+treinamento em artes marciais sobre o bem-estar e a saúde mental dos
+praticantes, incluindo a redução de sintomas de ansiedade e depressão.
+Esses benefícios, porém, só aparecem com a continuidade do treino. Na
+prática das academias, uma parte expressiva dos alunos abandona a
+atividade antes de consolidar o hábito, seja pela percepção lenta da
+própria evolução, pela falta de metas claras, pelo distanciamento do
+professor ou por mudanças na rotina. Para o aluno, o abandono interrompe
+o ciclo em que os ganhos se tornariam perceptíveis; para a academia e o
+professor, representa perda de receita e de vínculo com a turma.
+
+% (b) Solução proposta
+Para enfrentar esse problema, este projeto propõe o \textbf{RoundUp}, um
+aplicativo móvel que aplica \textbf{gamificação} -- o uso de elementos de
+design de jogos em contextos que não são jogos \cite{deterding2011} -- ao
+acompanhamento dos treinos. Para o aluno, o aplicativo oferece mecânicas
+como pontos de experiência, sequências de treino, medalhas e uma barra de
+progresso rumo à próxima graduação. Para o professor, oferece apoio à
+gestão: registro de presença, criação de missões para a turma e alertas
+sobre alunos com queda de frequência. O sistema distingue três perfis de
+usuário: o \textbf{aluno}, o \textbf{professor}, que pode atuar de forma
+autônoma, e a \textbf{academia}, que reúne professores, turmas e alunos.
+O protótipo resultante é de natureza \textbf{digital} (Regulamento,
+Art.~10): um aplicativo funcional em React Native com \textit{back-end}
+no Firebase.
+
+% Natureza de ideação do projeto
+Por se tratar de um domínio em que o valor de cada mecânica de jogo para
+o público ainda é pouco conhecido, o projeto foi conduzido como um
+\textbf{projeto de ideação}. Em vez de partir de requisitos fechados, o
+autor elaborou um conjunto de ideias de funcionalidades e as converteu em
+\textbf{requisitos iniciais}. Esses mesmos requisitos tiveram dois usos
+simultâneos: orientaram a construção do aplicativo e se tornaram os itens
+de um questionário de avaliação de ideias (\textit{survey}), respondido
+por praticantes e ex-praticantes reais. Como houve poucos respondentes
+(seis) e nenhum professor entre eles, foram construídas 12 personas
+sintéticas e, a partir delas, geradas 65 \textbf{respostas sintéticas} ao
+questionário, com apoio de um modelo de linguagem de grande porte (LLM).
+Essas respostas foram usadas para testar o instrumento e o procedimento
+de análise, e não como evidência da percepção de usuários. A \autoref{fig:ciclo-ideacao}, no
+\autoref{cap:requisitos}, ilustra esse ciclo.
+
+% (c) Objetivos
+O objetivo geral deste projeto é \textbf{idear, desenvolver e avaliar o
+RoundUp, um aplicativo gamificado para academias de lutas e artes
+marciais, voltado a aumentar o engajamento e a retenção dos alunos e a
+apoiar o professor na gestão da turma}. Os objetivos específicos são:
+
+\begin{enumerate}
+  \item identificar fatores de motivação e de evasão de praticantes de
+        lutas e artes marciais;
+  \item elaborar ideias de mecânicas de gamificação e de apoio ao
+        professor e convertê-las em requisitos iniciais rastreáveis;
+  \item avaliar a percepção de valor dessas ideias com usuários reais,
+        por meio de um questionário;
+  \item construir personas sintéticas e usá-las como insumo
+        complementar da ideação e para gerar respostas de teste que
+        verifiquem o questionário e o procedimento de análise, sem
+        misturá-las aos dados reais;
+  \item modelar e implementar um protótipo do aplicativo com os
+        requisitos priorizados;
+  \item considerar, desde a concepção, a conformidade com a Lei Geral de
+        Proteção de Dados Pessoais (LGPD), inclusive no tratamento de dados
+        de menores de idade \cite{lgpd2018}.
+\end{enumerate}
+
+% (d) Justificativa
+O projeto tem relevância social, por contribuir para a permanência de
+alunos em uma atividade associada à saúde física e mental; relevância
+técnica, por articular engenharia de requisitos, gamificação,
+desenvolvimento móvel e proteção de dados pessoais em uma solução
+prática; e relevância metodológica, por documentar o uso de personas e
+respostas sintéticas como insumo complementar da ideação e como dados de
+teste de um instrumento de pesquisa, deixando explícito o que elas podem
+e o que não podem mostrar. Soma-se a isso a vivência do autor
+com as artes marciais, que facilita o acesso a praticantes e professores.
+
+% (e) Escopo
+O escopo do projeto concentra-se em academias de lutas e artes marciais
+no Brasil e em duas perspectivas de uso: a do aluno (engajamento) e a do
+professor (gestão). Ficam fora do escopo: outras modalidades esportivas,
+prescrição de treinos ou orientação nutricional, integração com
+dispositivos vestíveis, análise de movimentos por visão computacional e
+aspectos comerciais, como monetização e escalabilidade em produção. A
+avaliação do impacto de longo prazo sobre a evasão também ultrapassa o
+prazo do TCC.
+
+O recorte abrange lutas e artes marciais em geral: o aplicativo não depende de
+uma modalidade específica, e o usuário escolhe a sua no cadastro.
+
+% (f) Estrutura do relatório
+Este relatório está organizado da seguinte forma: o
+\autoref{cap:requisitos} apresenta os fundamentos que orientaram a
+ideação, o processo de ideação e os requisitos do projeto; o
+\autoref{cap:modelagem}, as modelagens funcional, estática e dinâmica; o
+\autoref{cap:implementacao}, as estratégias de implementação do
+protótipo; o \autoref{cap:testes}, os procedimentos de avaliação das
+ideias com usuários reais, o teste do questionário com respostas
+sintéticas e os testes do protótipo; e o \autoref{cap:resultados}, os resultados e as
+considerações finais.

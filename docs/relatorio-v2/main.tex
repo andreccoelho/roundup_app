@@ -1,0 +1,122 @@
+% =====================================================================
+%  TEMPLATE DE TCC -- CURSOS DE ENGENHARIA -- CENTRO UNIVERSITÁRIO IBMEC
+% ---------------------------------------------------------------------
+%  Este é o ARQUIVO PRINCIPAL. É ele que deve ser compilado.
+%  No Overleaf: Menu > Main document = main.tex | Compiler = pdfLaTeX
+%
+%  Baseado em:
+%    - Regulamento de TCC dos Cursos de Engenharia do Ibmec (v2026.1)
+%    - Manual para Elaboração de Trabalhos Científicos -- Ibmec, 4. ed., 2022
+%    - Normas ABNT (NBR 14724, 6023, 6024, 6027, 6028, 10520)
+%
+%  O QUE VOCÊ PRECISA EDITAR (em ordem):
+%    1. config/dados.tex       -> seu nome, título, curso, orientador, banca
+%    2. Linha "\relatoriofalse" abaixo -> escolha o formato do TCC
+%    3. pretextuais/*.tex      -> resumo, abstract, agradecimentos etc.
+%    4. capitulos/<formato>/   -> um arquivo .tex por capítulo
+%    5. referencias/referencias.bib -> suas referências bibliográficas
+%
+%  O QUE VOCÊ NÃO PRECISA (NEM DEVE) EDITAR:
+%    - config/estilo.tex (formatação ABNT/Ibmec já pronta)
+% =====================================================================
+
+\documentclass[
+  12pt,                 % fonte 12 no corpo do texto (Manual, Quadro 2)
+  oneside,              % impressão só na frente da folha (troque por twoside p/ frente e verso)
+  a4paper,              % papel A4
+  chapter=TITLE,        % títulos de capítulo (seção primária) em CAIXA ALTA
+  section=TITLE,        % seção secundária em CAIXA ALTA
+  sumario=abnt-6027-2012,
+  english,              % idioma adicional (para o Abstract)
+  brazil                % idioma principal: português do Brasil
+]{abntex2}
+
+% ---------------------------------------------------------------------
+% ESCOLHA DO FORMATO DO TCC (Regulamento, Art. 6º)
+% ---------------------------------------------------------------------
+%   \relatoriofalse  -> PESQUISA CIENTÍFICA  -> dissertação monográfica
+%                       (usa os capítulos da pasta capitulos/monografia)
+%   \relatoriotrue   -> PROJETO APLICADO     -> relatório técnico + protótipo
+%                       (usa os capítulos da pasta capitulos/relatorio)
+% ---------------------------------------------------------------------
+\newif\ifrelatorio
+\relatoriotrue   % <- PROJETO APLICADO (relatório técnico) -- definido para o RoundUp
+
+% ---------------------------------------------------------------------
+% CAIXAS DE ORIENTAÇÃO
+% ---------------------------------------------------------------------
+% Os capítulos trazem caixas com dicas do que escrever em cada parte.
+%   \mostrarorientacoestrue  -> as caixas aparecem no PDF (use enquanto escreve)
+%   \mostrarorientacoesfalse -> as caixas somem (use na versão entregue à banca)
+% ---------------------------------------------------------------------
+\newif\ifmostrarorientacoes
+\mostrarorientacoestrue
+
+% Formatação (não editar) e dados do trabalho (editar!)
+\input{config/estilo}
+\input{config/dados}
+
+% Pacote extra deste projeto: diagramas desenhados direto no LaTeX (TikZ)
+\usepackage{tikz}
+\usepackage{multicol}
+\usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric,shapes.multipart}
+
+% =====================================================================
+\begin{document}
+
+\selectlanguage{brazil}
+\frenchspacing
+
+% ---------------------------------------------------------------------
+% ELEMENTOS PRÉ-TEXTUAIS  (não aparecem no sumário e não têm número
+% de página impresso, mas as folhas são contadas a partir da folha de rosto)
+% ---------------------------------------------------------------------
+\pretextual
+
+\input{pretextuais/capa}              % obrigatório
+\input{pretextuais/folha-de-rosto}    % obrigatório (+ ficha catalográfica no verso)
+% \input{pretextuais/errata}          % opcional -- retire o % se precisar
+\input{pretextuais/folha-de-aprovacao}% obrigatório
+\input{pretextuais/dedicatoria}       % opcional -- coloque % na frente para remover
+\input{pretextuais/agradecimentos}    % opcional
+\input{pretextuais/epigrafe}          % opcional
+\input{pretextuais/resumo}            % obrigatório
+\input{pretextuais/abstract}          % obrigatório
+\input{pretextuais/listas}            % listas de ilustrações, tabelas, siglas, símbolos
+\input{pretextuais/sumario}           % obrigatório
+
+% ---------------------------------------------------------------------
+% ELEMENTOS TEXTUAIS  (a numeração de página começa a aparecer aqui)
+% ---------------------------------------------------------------------
+\textual
+
+\ifrelatorio
+  % ===== PROJETO APLICADO: RELATÓRIO TÉCNICO (Regulamento, Art. 9º) =====
+  \input{capitulos/relatorio/01-introducao}
+  \input{capitulos/relatorio/02-requisitos}
+  \input{capitulos/relatorio/03-modelagem}
+  \input{capitulos/relatorio/04-implementacao}
+  \input{capitulos/relatorio/05-testes-validacao}
+  \input{capitulos/relatorio/06-resultados-consideracoes-finais}
+\else
+  % ===== PESQUISA CIENTÍFICA: DISSERTAÇÃO MONOGRÁFICA (Manual, seção 2.2) =====
+  \input{capitulos/monografia/01-introducao}
+  \input{capitulos/monografia/02-referencial-teorico}
+  \input{capitulos/monografia/03-metodologia}
+  \input{capitulos/monografia/04-resultados-discussao}
+  \input{capitulos/monografia/05-conclusao}
+\fi
+
+% ---------------------------------------------------------------------
+% ELEMENTOS PÓS-TEXTUAIS
+% ---------------------------------------------------------------------
+\postextual
+
+% Referências (obrigatório) -- geradas automaticamente a partir do .bib
+\bibliography{referencias/referencias}
+
+% \input{postextuais/glossario}       % opcional -- retire o % se precisar
+\input{postextuais/apendices}         % opcional
+% \input{postextuais/anexos}            % opcional
+
+\end{document}

@@ -1,0 +1,89 @@
+% =====================================================================
+%  APÊNDICES -- Manual, seção 2.3.3
+%  APÊNDICE = material ELABORADO PELO AUTOR (questionários, personas,
+%  prompts, código-fonte). Pelo Manual, no sumário aparece só "APÊNDICES".
+% =====================================================================
+\begin{apendicesenv}
+\partapendices
+\addtocontents{toc}{\protect\setcounter{tocdepth}{-1}}
+
+% ---------------------------------------------------------------------
+\chapter{Questionário de avaliação das ideias}
+\label{ap:questionario}
+
+Este apêndice reproduz o questionário aplicado aos usuários reais, também
+usado na geração das respostas sintéticas. O formulário foi feito no
+Google Forms, com tempo estimado de resposta de 6 a 8 minutos, e abria com
+o texto de apresentação e consentimento abaixo.
+
+\begin{citacao}
+Este questionário faz parte de um Trabalho de Conclusão de Curso em
+Engenharia da Computação no Centro Universitário Ibmec. O objetivo é
+entender o que motiva as pessoas a continuarem treinando lutas e artes
+marciais, o que leva ao abandono da prática, e avaliar a receptividade a
+um aplicativo de acompanhamento e engajamento voltado a academias.
+
+As respostas são anônimas e serão utilizadas exclusivamente para fins
+acadêmicos, de forma agregada, sem identificação individual. O contato
+(quando fornecido) é guardado separadamente das respostas e usado só para
+convite a testes. O fornecimento de contato ao final é opcional e serve
+apenas para convite a testes futuros do aplicativo. Você pode desistir a
+qualquer momento simplesmente fechando a página. O tratamento dos dados
+segue a Lei Geral de Proteção de Dados (Lei 13.709/2018).
+
+Em caso de dúvidas, entre em contato pelo e-mail
+andreccoelho2004@gmail.com.
+\end{citacao}
+
+Depois das perguntas de perfil, o respondente era encaminhado a uma das
+três seções conforme a resposta à quarta pergunta, e todos terminavam na
+seção de encerramento. As alternativas das perguntas fechadas foram
+reconstruídas a partir das respostas registradas no formulário e das
+listas do \textit{script} de geração das respostas sintéticas, que
+validava cada resposta contra as alternativas do formulário; por isso,
+todas as alternativas listadas existem no formulário, mas alguma
+alternativa nunca escolhida pode não aparecer.
+
+{\small\SingleSpacing
+\setlength{\columnsep}{0.8cm}
+\begin{multicols}{2}
+\input{postextuais/questionario}
+\end{multicols}
+}
+
+% ---------------------------------------------------------------------
+\chapter{Artefatos técnicos no repositório}
+\label{ap:artefatos}
+
+O código-fonte e a documentação técnica do RoundUp estão no repositório
+público do projeto, na versão entregue com este relatório, marcada com a
+\textit{tag} \texttt{relatorio-v2}:
+\url{https://github.com/andreccoelho/roundup_app/tree/relatorio-v2}.
+O \autoref{qua:artefatos} indica onde está cada artefato; os caminhos são
+relativos à raiz do repositório.
+
+\begin{quadro}[!htb]
+  \caption{Artefatos técnicos do projeto no repositório}
+  \label{qua:artefatos}
+  \centering
+  \footnotesize
+  \begin{tabular}{|p{4.6cm}|p{5.2cm}|p{3.4cm}|}
+    \hline
+    \textbf{Artefato} & \textbf{Caminho} & \textbf{Relação com o texto} \\ \hline
+    Lista oficial de requisitos (RF, RN e RNF) & \path{docs/requisitos/requisitos-v1-2026-09.csv} & \autoref{cap:requisitos} \\ \hline
+    Especificação dos 30 casos de uso & \path{docs/requisitos/especificacao-casos-uso.md} & \autoref{sec:modelagem-funcional} \\ \hline
+    Fontes dos diagramas de casos de uso (PlantUML) & \path{docs/relatorio-v2/figuras/uml-fonte/} & \autoref{cap:modelagem} \\ \hline
+    Registro das decisões técnicas & \path{docs/decisoes-tecnicas.md} & \autoref{cap:implementacao} \\ \hline
+    Código do aplicativo (React Native e Expo) & \path{src/} & \autoref{cap:implementacao} \\ \hline
+    Funções de servidor (Cloud Functions) & \path{functions/src/} & \autoref{cap:implementacao} \\ \hline
+    Regras de segurança do Firestore e do Storage & \path{firestore.rules}, \path{storage.rules} & \autoref{cap:modelagem} e \autoref{cap:implementacao} \\ \hline
+    Testes automatizados (regras, funções e utilitários) & \path{tests/}, \path{src/utils/*.test.ts} & \autoref{cap:testes} \\ \hline
+    \textit{Script} das contas de demonstração (academia, professor e aluno) & \path{scripts/seed-demo.cjs} & -- \\ \hline
+    Dados anonimizados e \textit{scripts} de análise do questionário & \path{docs/relatorio-v2/dados/}, \path{docs/relatorio-v2/scripts/} & \autoref{cap:testes} \\ \hline
+    Fichas das personas sintéticas & \path{docs/pesquisa/personas-sinteticas.md} & \autoref{sec:val-personas} \\ \hline
+    Geração e envio das respostas sintéticas & \path{docs/pesquisa/respostas-sinteticas/} & \autoref{sec:val-personas} \\ \hline
+  \end{tabular}
+  \fonte{Elaborado pelo autor (2026).}
+\end{quadro}
+
+\end{apendicesenv}

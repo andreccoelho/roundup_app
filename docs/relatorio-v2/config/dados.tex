@@ -1,0 +1,66 @@
+% =====================================================================
+%  config/dados.tex  --  DADOS DO SEU TRABALHO (EDITE ESTE ARQUIVO!)
+% ---------------------------------------------------------------------
+%  Tudo o que você escrever aqui aparece automaticamente na capa, na
+%  folha de rosto e na folha de aprovação. Basta trocar o texto que está
+%  entre as chaves { }. Não apague as chaves nem a barra invertida (\).
+% =====================================================================
+
+% --- Instituição e curso ---------------------------------------------
+\instituicao{Centro Universitário Ibmec}
+
+% Escolha UM dos cursos abaixo (deixe os outros com % na frente):
+\newcommand{\imprimircurso}{Engenharia de Computação}
+% \newcommand{\imprimircurso}{Engenharia Civil}
+% \newcommand{\imprimircurso}{Engenharia Mecânica}
+% \newcommand{\imprimircurso}{Engenharia de Produção}
+
+% Grau pretendido (normalmente não precisa mudar)
+\newcommand{\imprimirgrau}{Bacharel em \imprimircurso}
+
+% --- Autor e trabalho -------------------------------------------------
+% Escreva seu nome completo normalmente (maiúsculas e minúsculas).
+% A capa converte para CAIXA ALTA sozinha.
+\autor{André Costa Coelho}
+
+% Título: claro e preciso. Se houver subtítulo, use o comando \subtitulo.
+\titulo{RoundUp}
+% Subtítulo (opcional). Deixe vazio {} se não houver.
+\newcommand{\imprimirsubtitulo}{aplicativo gamificado para engajamento e retenção de praticantes de artes marciais}
+
+% Título em inglês (usado no Abstract)
+\tituloestrangeiro{RoundUp: a gamified app for engagement and retention of martial arts practitioners}
+
+% --- Local e ano ------------------------------------------------------
+\local{Rio de Janeiro}
+\data{2026}
+
+% --- Orientação -------------------------------------------------------
+% Titulações (Manual, 2.1.4): Especialista = Esp.; Mestre = Ms.; Doutor = Dr.
+% Para orientadora, use "Profa." e "Orientadora".
+\orientador{Profa. Dra. Talita Vieira Ribeiro}  % confira a titulação (Ms./Dra.)
+\newcommand{\imprimirrotuloorientador}{Orientadora}  % ou Orientadora
+% Coorientador (opcional): retire o % da linha abaixo
+% \coorientador{Prof. Ms. Nome do Coorientador}
+
+% --- Banca examinadora (Regulamento, Art. 14) ------------------------
+% Membro 1 = orientador (preside a banca); membros 2 e 3 = examinadores.
+\newcommand{\bancaorientador}{Profa. Dra. Talita Vieira Ribeiro}
+\newcommand{\bancaorientadorinst}{Centro Universitário Ibmec}
+\newcommand{\bancaexaminadorum}{Prof. Ms. Nome do Examinador 1}
+\newcommand{\bancaexaminadoruminst}{Centro Universitário Ibmec}
+\newcommand{\bancaexaminadordois}{Prof. Dr. Nome do Examinador 2}
+\newcommand{\bancaexaminadordoisinst}{Instituição do Examinador 2}
+
+% Data da defesa (deixe em branco até a defesa)
+\newcommand{\dataaprovacao}{\underline{\hspace{1cm}}/\underline{\hspace{1cm}}/\underline{\hspace{1.5cm}}}
+
+% --- Informações do PDF (aparecem nas propriedades do arquivo) --------
+\makeatletter
+\AtBeginDocument{\hypersetup{
+  pdftitle={\@title},
+  pdfauthor={\@author},
+  pdfsubject={Trabalho de Conclusão de Curso -- \imprimircurso},
+  pdfcreator={LaTeX com abnTeX2},
+}}
+\makeatother

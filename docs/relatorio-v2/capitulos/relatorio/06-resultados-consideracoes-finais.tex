@@ -1,0 +1,115 @@
+% =====================================================================
+%  CAPÍTULO 6 -- RESULTADOS E CONSIDERAÇÕES FINAIS
+%  (Regulamento, Art. 9º, item vi; Manual, seção 2.2.3)
+%  O Manual recomenda que a parte conclusiva NÃO contenha citações.
+% =====================================================================
+
+\chapter{Resultados e considerações finais}
+\label{cap:resultados}
+
+Este projeto conduziu a concepção do RoundUp como um processo de
+ideação, no qual as ideias de funcionalidades foram convertidas em
+requisitos e esses requisitos foram usados, ao mesmo tempo, para
+construir o aplicativo e para avaliar as ideias com usuários reais. Essa estratégia permitiu rastrear cada
+funcionalidade desde a ideia até a decisão de mantê-la, ajustá-la ou
+revisá-la, e daí até o código e os testes.
+
+\section{Resultados alcançados}
+
+Os objetivos específicos apresentados no \autoref{cap:introducao} foram
+atingidos da seguinte forma:
+
+\begin{enumerate}
+  \item \textbf{Fatores de motivação e evasão.} Atingido de forma
+        exploratória e limitada. Os praticantes reais indicaram a saúde
+        mental, a saúde física e o convívio com a turma como motivos para
+        continuar treinando, e os dois ex-praticantes pararam por falta de
+        tempo ou conflito com a rotina. Ambos afirmaram que um aplicativo
+        não teria mudado sua decisão, o que sugere que parte da evasão tem
+        causa externa ao treino. A visão dos professores sobre a evasão não
+        pôde ser levantada.
+  \item \textbf{Ideias convertidas em requisitos rastreáveis.} Atingido.
+        Treze ideias originaram, junto com os requisitos de base, 33
+        requisitos funcionais, 9 regras de negócio e 11 requisitos não
+        funcionais, todos registrados com origem, ciclo, prioridade e
+        situação.
+  \item \textbf{Avaliação com usuários reais.} Atingido, com amostra
+        pequena. Seis respondentes avaliaram as ideias; os recursos de
+        progresso visível tiveram as melhores notas, e lembretes e
+        mensagens automáticas, as piores. Os comentários reforçaram
+        requisitos de baixo esforço de registro, de controle de
+        notificações e de privacidade.
+  \item \textbf{Personas e teste do instrumento.} Atingido. Doze personas
+        sintéticas orientaram a geração de 65 respostas de teste, enviadas
+        a uma cópia do formulário. O teste confirmou o roteamento das três
+        seções, inclusive a do professor, e o funcionamento do procedimento
+        de análise, que fica pronto para uma nova coleta real. Como insumo
+        complementar da ideação, as personas levaram o autor a revisitar
+        os requisitos, principalmente os voltados a professores e
+        academias; as respostas sintéticas foram mantidas separadas dos
+        dados reais e não entraram nas notas que definiram a situação de
+        cada requisito.
+  \item \textbf{Modelagem e implementação do protótipo.} Atingido. O
+        protótipo é um aplicativo funcional com três perfis de usuário. Dos
+        33 requisitos funcionais, 29 foram implementados e 4 ficaram
+        parciais: a data de conquista das medalhas, o público-alvo e a
+        vigência das missões, a validação do envio de notificações em
+        aparelho e a personalização das faixas. As regras de negócio que protegem a gamificação,
+        como a validação humana antes do crédito de pontos, foram
+        implementadas nas regras de segurança do banco de dados e
+        cobertas por testes automatizados.
+  \item \textbf{Conformidade com a LGPD.} Atingido. O consentimento no
+        cadastro, o registro do responsável legal de alunos menores de
+        idade, a guarda dos dados pessoais em documento visível só ao
+        próprio usuário, o isolamento dos dados entre academias e professores e a
+        exclusão de conta com remoção dos dados em cascata foram
+        implementados. Fica em aberto se o registro do consentimento deve
+        ser preservado após a exclusão, como prova, o que depende de
+        orientação jurídica.
+\end{enumerate}
+
+\section{Considerações sobre o uso de respostas sintéticas}
+
+As personas e as respostas sintéticas foram úteis para dois fins: como
+insumo complementar da ideação, ao dar voz a perfis que a coleta real não
+alcançou e levar o autor a repensar os requisitos, e como dados de teste
+do questionário e da análise, principalmente na seção do professor. Elas não substituem a coleta com
+usuários reais, porque reproduzem padrões supostos por quem as gerou;
+quando ficam próximas dos dados reais, isso mostra apenas que o gerador
+copiou bem o padrão que lhe deu origem. A lição prática é manter os dois
+conjuntos sempre separados, identificar cada resposta sintética e
+registrar o método de geração, para que nenhuma conclusão sobre os
+usuários dependa delas.
+
+\section{Limitações}
+
+\begin{itemize}
+  \item A amostra real é pequena (seis respondentes), pouco diversa
+        (todos de Jiu-Jitsu) e não incluiu professores; seus resultados
+        servem para orientar decisões, não para generalizar.
+  \item Nenhum professor real respondeu, de modo que os requisitos de
+        gestão não foram avaliados; as respostas sintéticas de professor
+        servem apenas como dados de teste.
+  \item Os valores-padrão de gamificação (pontos por presença, níveis e
+        marcos de medalha) não foram calibrados com uso real, e a interface
+        foi verificada apenas na versão web, sem teste em aparelho.
+  \item O efeito do aplicativo sobre a evasão não pôde ser medido no prazo
+        do TCC, e parte da evasão tem causas externas, como falta de tempo
+        e lesões, que estão fora do alcance de um aplicativo.
+\end{itemize}
+
+\section{Trabalhos futuros}
+
+\begin{itemize}
+  \item Concluir os requisitos parciais: registro da data de conquista
+        das medalhas, público-alvo e vigência das missões, validação das
+        notificações em aparelho e faixas configuráveis pelo gestor.
+  \item Reaplicar o questionário com uma amostra maior, incluindo
+        outras modalidades, concentrando a investigação nas ideias marcadas
+        como ``a revisar''.
+  \item Aplicar o questionário a professores e donos de academia reais,
+        para avaliar os requisitos de gestão hoje marcados como ``sem
+        dados''.
+  \item Realizar um estudo de acompanhamento, medindo a frequência dos
+        alunos antes e depois do uso do aplicativo.
+\end{itemize}
