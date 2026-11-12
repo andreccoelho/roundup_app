@@ -1,0 +1,29 @@
+@startuml RoundUp_UC_01_Contas
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Aluno
+actor Professor
+actor Academia
+Academia --|> Professor
+
+package "Contas" {
+  usecase "UC01 Cadastrar Conta\n(RF01)" as UC01
+  usecase "UC02 Autenticar-se e\nRecuperar Senha (RF02)" as UC02
+  usecase "UC03 Gerenciar Perfil\nda Academia (RF04)" as UC03
+  usecase "UC04 Gerenciar Perfil\ndo Professor (RF05)" as UC04
+  usecase "UC05 Gerenciar Perfil\ndo Aluno (RF06)" as UC05
+}
+
+Aluno -- UC01
+Professor -- UC01
+Academia -- UC01
+Aluno -- UC02
+Professor -- UC02
+Academia -- UC02
+Academia -- UC03
+Professor -- UC04
+Aluno -- UC05
+
+@enduml

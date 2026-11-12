@@ -1,0 +1,452 @@
+% =====================================================================
+%  CAPÍTULO 5 -- PROCEDIMENTOS DE TESTES E VALIDAÇÃO
+%  (Regulamento, Art. 9º, item v)
+% ---------------------------------------------------------------------
+%  Em linguagem simples:
+%   - TESTAR  = verificar se o aplicativo foi construído CORRETAMENTE
+%               (faz o que foi especificado, sem falhas?).
+%   - VALIDAR = verificar se foi construído o aplicativo CERTO
+%               (as ideias resolvem o problema do usuário?).
+%  Num projeto de ideação, a VALIDAÇÃO DAS IDEIAS vem antes e acontece
+%  em paralelo à construção. Por isso este capítulo começa por ela.
+%
+%  A tabela de notas (tab-survey.tex) e a figura do survey são GERADAS
+%  pelo script scripts/analise_survey.py. Se os dados mudarem, rode o
+%  script de novo em vez de editar os números à mão.
+% =====================================================================
+
+\chapter{Testes e validação}
+\label{cap:testes}
+
+A avaliação do RoundUp ocorreu em três frentes: (i) a avaliação das
+ideias por usuários reais, por meio de um questionário; (ii) o teste do
+questionário e do procedimento de análise com respostas sintéticas; e
+(iii) os testes do protótipo em relação aos requisitos. Apenas a primeira
+frente \textbf{valida as ideias}, isto é, verifica se as funcionalidades
+propostas fazem sentido para o público; as outras duas \textbf{testam}
+instrumentos e software, verificando se fazem o que foi especificado.
+
+\section{Avaliação das ideias com usuários reais}
+\label{sec:val-survey}
+
+\subsection{Instrumento e aplicação}
+
+O questionário foi elaborado no Google Forms, com termo de consentimento
+na primeira página, e recebeu respostas em 18 e 19 de setembro de 2026.
+Após as perguntas de perfil, o respondente era encaminhado a uma de três
+seções, conforme sua relação atual com as lutas: \textbf{professor},
+\textbf{praticante} (treina atualmente) ou \textbf{ex-praticante} (já
+treinou, mas parou). Cada seção combinava:
+
+\begin{itemize}
+  \item perguntas sobre motivação, evasão e acompanhamento dos treinos;
+  \item a avaliação de cada ideia do \autoref{qua:ideias}, convertida em
+        recurso do aplicativo, em uma escala de 1 (pouco útil) a 5 (muito
+        útil);
+  \item perguntas abertas sobre funcionalidades desejadas e motivos para
+        abandonar o aplicativo.
+\end{itemize}
+
+Nem todas as ideias foram apresentadas a todos os perfis: o alerta de
+ausência (I12) foi apresentado a professores e ex-praticantes, e o
+relatório da turma (I13), apenas a professores. As perguntas completas
+estão no \autoref{ap:questionario}.
+
+O link do questionário foi divulgado por WhatsApp, em conversas e grupos
+do círculo de contatos do autor. Essa forma de divulgação explica o perfil
+da amostra: como o autor pratica Jiu-Jitsu, todos os respondentes vieram
+dessa modalidade, e nenhum professor foi alcançado.
+
+\subsection{Perfil dos respondentes}
+
+Foram obtidas \textbf{seis respostas}: quatro de praticantes e duas de
+ex-praticantes. \textbf{Nenhum professor respondeu}, o que impede avaliar,
+com usuários reais, as ideias voltadas à gestão. A \autoref{tab:perfil}
+resume o perfil da amostra. Os dados pessoais de contato informados por
+alguns respondentes foram descartados da análise.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Perfil dos respondentes do questionário}
+  \label{tab:perfil}
+  \footnotesize
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Característica} & \textbf{Praticantes} & \textbf{Ex-praticantes} \\
+    \midrule
+    Respondentes                    & 4 & 2 \\
+    Gênero feminino / masculino     & 2 / 2 & 0 / 2 \\
+    Menos de 18 anos                & 1 & 0 \\
+    18 a 34 anos                    & 0 & 2 \\
+    35 a 44 anos                    & 3 & 0 \\
+    Pratica(va) Jiu-Jitsu           & 4 & 2 \\
+    Treina(ou) há mais de 3 anos    & 3 & 2 \\
+    \bottomrule
+  \end{tabular}
+  \fonte{Dados da pesquisa (2026).}
+\end{table}
+
+\subsection{Como os dados foram analisados}
+
+Com apenas seis respostas, não faz sentido usar testes estatísticos para
+afirmar que uma ideia é ``melhor'' que outra: qualquer diferença pode ser
+fruto do acaso. Por isso, a análise é \textbf{descritiva}. Para cada
+ideia foram calculadas duas medidas:
+
+\begin{itemize}
+  \item a \textbf{média}: soma das notas dividida pelo número de notas. É
+        fácil de interpretar, mas muda bastante quando uma única pessoa
+        dá notas muito altas ou muito baixas;
+  \item a \textbf{mediana}: o valor do meio quando as notas são
+        colocadas em ordem. Ela é menos afetada por respostas extremas e,
+        por isso, ajuda a conferir se a média está ``puxada'' por alguém.
+\end{itemize}
+
+Por exemplo, se três pessoas dão as notas 1, 4 e 5, a média é 3,3, mas a
+mediana é 4: a nota 1 puxa a média para baixo, enquanto a mediana mostra
+que a maioria avaliou bem.
+
+\subsection{Resultados quantitativos}
+
+A \autoref{tab:survey-notas} apresenta as notas atribuídas a cada ideia.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Notas atribuídas às ideias (escala de 1 a 5)}
+  \label{tab:survey-notas}
+  \footnotesize
+  \begin{tabular}{clccccc}
+    \toprule
+    & & \multicolumn{3}{c}{\textbf{Média}} & & \\
+    \cmidrule(lr){3-5}
+    \textbf{ID} & \textbf{Ideia} & \textbf{Prat.} & \textbf{Ex-prat.} & \textbf{Geral} & \textbf{Mediana} & \textbf{n} \\
+    \midrule
+\input{capitulos/relatorio/tab-survey}% (inclui o \bottomrule)
+  \end{tabular}
+  \fonte{Dados da pesquisa (2026). Prat. = praticantes (n = 4);
+         Ex-prat. = ex-praticantes (n = 2); ``--'' = ideia não apresentada ao perfil.}
+\end{table}
+
+De modo geral, as ideias receberam avaliação moderadamente positiva: onze
+das doze ideias avaliadas têm mediana igual ou superior a 3,5. As mais
+bem avaliadas foram a \textbf{barra de progresso até a próxima
+graduação} (I08) e o \textbf{histórico de presença e evolução} (I09),
+ambas com média 3,8 -- coerentes com o eixo ``progresso visível'' da
+literatura sobre gamificação. As menos bem avaliadas foram a mensagem
+automática após ausência (I12, média 2,5, avaliada apenas pelos dois
+ex-praticantes), os lembretes (I11, média 3,0), o \textit{check-in}
+(I02) e as missões semanais (I05), ambos com média 3,2.
+
+Dois cuidados são necessários na leitura desses números. Primeiro, as
+respostas foram muito heterogêneas: uma respondente atribuiu nota máxima
+a todas as ideias, e outro atribuiu notas 1 ou 2 à maioria delas. Com
+seis pessoas, cada uma dessas respostas desloca bastante as médias.
+Segundo, as diferenças entre ideias são pequenas (quase todas entre 3,0
+e 3,8) e não devem ser lidas como uma classificação definitiva.
+
+\subsection{Resultados qualitativos}
+
+As respostas abertas e de múltipla escolha trouxeram indícios que não
+aparecem nas notas:
+
+\begin{itemize}
+  \item \textbf{Motivação}: todos os praticantes apontaram a saúde mental
+        e o alívio do estresse como motivo para continuar treinando; três
+        de quatro citaram também a saúde física e o convívio com a turma.
+  \item \textbf{Frequência}: nenhum praticante registra a própria
+        frequência (dois acompanham ``só mentalmente'' e dois não
+        acompanham), e dois deles apontaram a frequência como a
+        informação que hoje ``se perde''. Isso reforça RF15 e RF24.
+  \item \textbf{Graduação}: o praticante com menos tempo de treino (3 a 6
+        meses) declarou não fazer ideia do que precisa para a próxima
+        graduação, justamente a fase em que a evasão tende a ser maior.
+        Isso reforça RF17 e RF25.
+  \item \textbf{Evasão}: os dois ex-praticantes pararam por falta de tempo
+        ou conflito com a rotina; ambos foram procurados pelo professor e
+        ambos afirmaram que o aplicativo não teria mudado sua decisão.
+        Isso sugere um limite importante: parte da evasão tem causas
+        externas que um aplicativo não resolve.
+  \item \textbf{Riscos de abandono do aplicativo}: os respondentes citaram
+        ``muitas notificações'' e ``inserir muitos dados constantemente''.
+        Esses comentários reforçaram o RNF01 (\textit{check-in} em até três
+        toques) e levaram a tornar as notificações configuráveis por tipo
+        (RF31).
+  \item \textbf{Privacidade}: a disposição a usar o aplicativo caso os
+        dados ficassem visíveis apenas para o aluno e o professor variou
+        de 1 a 4, o que reforçou a adesão opcional à classificação (RNF11)
+        e a decisão de não incorporar o mural da turma.
+\end{itemize}
+
+\section{Teste do instrumento com respostas sintéticas}
+\label{sec:val-personas}
+
+Como a coleta real teve seis respostas e nenhuma de professor, parte do
+questionário, incluindo toda a seção do professor e as ideias I12 e I13,
+nunca havia sido processada. Para testar o formulário e o procedimento de
+análise sem misturar dados sintéticos com a coleta real, foram geradas
+\textbf{65 respostas sintéticas} a partir de personas. Esta seção
+descreve como elas foram produzidas e o que o teste verificou.
+
+\subsection{Personas e geração das respostas}
+
+Foram construídas \textbf{12 personas sintéticas}: seis alunos ativos,
+quatro ex-alunos e dois professores, um deles dono de academia,
+distribuídos pelas faixas etárias do próprio formulário. As fichas
+(\autoref{ap:personas}) descrevem idade, modalidade, rotina, motivações,
+riscos de evasão e postura diante da gamificação, e trazem respostas-modelo
+ao questionário. Elas foram escritas a partir do padrão observado nas seis
+respostas reais, como respostas abertas curtas, recusas de uma palavra,
+acentos faltando e três padrões de uso da escala (notas iguais em tudo,
+variação estreita e discriminação forte).
+
+As respostas foram geradas por um \textit{script} em Python, escrito com
+apoio do Claude (Anthropic, identificador \texttt{claude-opus-5-5}) em
+26 de outubro de 2026. O \textit{script} combina bancos de respostas
+curtas por pergunta com regras por perfil e faixa etária, e sorteia as
+combinações com semente fixa (\texttt{random.seed(26102026)}), o que
+torna a geração reproduzível. \textbf{Não houve um \textit{prompt} por
+resposta}: as 12 fichas orientaram as regras, e as 65 linhas não
+correspondem uma a uma às fichas. A \autoref{tab:perfil-personas} mostra
+a distribuição resultante, definida para cobrir os perfis ausentes da
+amostra real; entre os dez professores, quatro são donos de academia, e
+os ex-alunos têm doze motivos principais de abandono diferentes.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Perfil das respostas sintéticas}
+  \label{tab:perfil-personas}
+  \footnotesize
+  \begin{tabular}{lccc}
+    \toprule
+    \textbf{Característica} & \textbf{Alunos ativos} & \textbf{Ex-alunos} & \textbf{Professores} \\
+    \midrule
+    Respostas                           & 32 & 23 & 10 \\
+    Gênero feminino / masculino         & 8 / 24 & 8 / 14 & 1 / 9 \\
+    Menos de 18 anos                    & 8 & 2 & 0 \\
+    18 a 24 anos                        & 9 & 6 & 0 \\
+    25 a 34 anos                        & 6 & 6 & 3 \\
+    35 a 44 anos                        & 6 & 5 & 3 \\
+    45 anos ou mais                     & 3 & 4 & 4 \\
+    Jiu-Jitsu / outras modalidades      & 11 / 21 & 12 / 11 & 6 / 4 \\
+    \bottomrule
+  \end{tabular}
+  \fonte{Elaborado pelo autor (2026). Uma resposta de ex-aluno não
+         informa o gênero. As outras modalidades incluem Boxe, Muay Thai,
+         Judô, Taekwondo, Karatê e MMA.}
+\end{table}
+
+O envio foi feito por Google Apps Script, no editor de uma
+\textbf{cópia} do formulário (``RoundUp (Personas IA)''), sem planilha de
+respostas vinculada à pesquisa: cada resposta foi primeiro validada contra
+as alternativas do formulário e depois registrada pela API do Google
+Forms, sem passar pelo link público. As 65 respostas foram enviadas em 26
+de outubro de 2026, entre 13h12 e 13h14, cada uma com o marcador
+\texttt{sintetico-<ID>} no campo de contato (A01 a A32 para alunos, E01 a
+E23 para ex-alunos e P01 a P10 para professores). A conferência da
+exportação confirmou as 65 respostas com o marcador e nenhuma resposta
+sintética na base da pesquisa real.
+
+\subsection{O que o teste verificou}
+
+O teste confirmou que:
+
+\begin{itemize}
+  \item o formulário aceita as combinações de alternativas previstas, já
+        que todas as 65 respostas passaram pela validação contra as
+        alternativas antes do registro;
+  \item o roteamento por perfil leva às três seções, inclusive a do
+        professor, que nunca havia recebido respostas, com os itens das
+        ideias I12 e I13;
+  \item o procedimento de análise (\texttt{scripts/analise\_personas.py})
+        lê a exportação do formulário, identifica as colunas de cada perfil,
+        trata variações de acento e espaços e gera as tabelas desta seção.
+        O mesmo procedimento poderá ser usado em uma nova coleta real que
+        inclua professores;
+  \item os dois conjuntos de dados ficaram separados: as respostas
+        sintéticas não entraram na \autoref{tab:survey-notas} nem nas
+        decisões sobre os requisitos.
+\end{itemize}
+
+\subsection{Resultados descritivos do teste}
+
+A \autoref{tab:personas-comparacao} apresenta as médias das respostas
+sintéticas ao lado das médias reais. Ela é mostrada apenas para documentar
+a saída da análise e verificar o gerador: \textbf{os valores sintéticos
+refletem as regras escritas pelo autor e pelo modelo, e não a percepção de
+usuários}.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Notas médias das respostas sintéticas e das respostas reais}
+  \label{tab:personas-comparacao}
+  \footnotesize
+  \begin{tabular}{clcccccc}
+    \toprule
+    & & \multicolumn{3}{c}{\textbf{Sintéticas}} & \multicolumn{2}{c}{\textbf{Alunos e ex-alunos}} & \\
+    \cmidrule(lr){3-5}\cmidrule(lr){6-7}
+    \textbf{ID} & \textbf{Ideia} & \textbf{Alunos} & \textbf{Ex-al.} & \textbf{Prof.} & \textbf{Sintét.} & \textbf{Reais} & \textbf{Dif.} \\
+    \midrule
+\input{capitulos/relatorio/tab-personas}% (inclui o \bottomrule)
+  \end{tabular}
+  \fonte{Elaborado pelo autor (2026). Sintéticas: 32 alunos, 23 ex-alunos,
+         10 professores; reais: 6. Dif. = sintéticas menos reais. ``--'' =
+         ideia não apresentada ao perfil.}
+\end{table}
+
+Nas ideias de progresso visível (I01, I04, I07, I08 e I09), as médias
+sintéticas ficaram a no máximo 0,3 ponto das reais. Isso era esperado,
+porque as regras do gerador foram escritas a partir das respostas reais, e
+não confirma nada sobre as ideias; mostra apenas que o gerador reproduziu
+o padrão que lhe deu origem. As maiores diferenças, no \textit{check-in}
+(I02), nas missões (I05), no contador de frequência (I03) e no alerta após
+ausência (I12), indicam onde as regras do gerador se afastaram dos dados
+reais e devem ser recalibradas se ele for reutilizado. O gerador também produziu menos notas extremas do que os respondentes
+reais, e as respostas abertas sintéticas repetem frases idênticas entre
+linhas diferentes, efeito dos bancos de respostas que não seria esperado
+de pessoas reais.
+
+\subsection{Limitação}
+
+As respostas sintéticas reproduzem padrões supostos pelo pesquisador e
+pelo modelo de linguagem. Elas servem como insumo complementar da
+ideação, para repensar os requisitos, e para testar o instrumento e a
+análise, mas \textbf{não servem como evidência de validação das ideias
+nem da percepção de usuários}
+\cite{argyle2023,aher2023}. As respostas de professor e de dono de
+academia são as mais frágeis, porque a base real não tinha nenhuma
+resposta desse perfil: as dez linhas de professor derivam de apenas duas
+fichas e funcionam como hipóteses a validar e como dados de teste da
+seção do professor.
+
+\section{Testes do protótipo}
+\label{sec:testes-prototipo}
+
+Os testes do protótipo verificam se o software faz o que foi
+especificado. Eles foram organizados em três níveis: testes automatizados
+de unidade, testes automatizados das regras de segurança e das funções
+de servidor, executados em emulador local, e um roteiro de teste manual
+da interface para o Ciclo 1.
+
+\subsection{Testes automatizados}
+
+A \autoref{tab:suites} resume as suítes de testes do repositório. Os
+testes das regras de segurança são os mais importantes do projeto,
+porque é nas regras que estão garantidas as regras de negócio que
+protegem a credibilidade da gamificação (RN01, RN02 e RN08) e o
+isolamento de dados (RNF04).
+
+\begin{table}[!htb]
+  \centering
+  \caption{Suítes de testes automatizados}
+  \label{tab:suites}
+  \footnotesize
+  \begin{tabular}{p{3.6cm}p{6.6cm}cc}
+    \toprule
+    \textbf{Suíte} & \textbf{O que verifica} & \textbf{Casos} & \textbf{Aprovados} \\
+    \midrule
+    Unidade (\texttt{src/utils}) & Datas e janelas de sessão, sequência, níveis e validação da configuração & 34 & 34 \\
+    Regras do Firestore (\texttt{tests/rules}) & Usuários, vínculos, turmas, matrículas, sessões, \textit{check-ins}, classificação, missões, configuração, notificações e coleções bloqueadas & 106 & 106 \\
+    Cloud Functions (\texttt{tests/functions}) & Leitores de sessões e classificações, progresso e pontos de missões, exclusão de conta e notificações & 29 & 29 \\
+    \bottomrule
+  \end{tabular}
+  \fonte{Elaborado pelo autor (2026). Todas as suítes executadas em 5 nov. 2026.}
+\end{table}
+
+As três suítes foram executadas em 5 de novembro de 2026. Os testes de
+regras e de Cloud Functions rodaram nos emuladores do Firebase
+(\texttt{firebase-tools} 15.29.0), que exigem Java 21 ou superior; foi
+usado o OpenJDK 22, e as funções rodaram no Node 21, embora o projeto
+declare o Node 22. A suíte de Cloud Functions usa também os emuladores de
+autenticação e de armazenamento, necessários para testar a exclusão de
+conta. Todas as suítes passaram integralmente na versão final
+do código, depois da correção descrita na
+\autoref{sec:defeitos-testes}.
+
+A \autoref{tab:testes} relaciona os principais casos de teste aos
+requisitos.
+
+\begin{table}[!htb]
+  \centering
+  \caption{Casos de teste do protótipo}
+  \label{tab:testes}
+  \footnotesize
+  \begin{tabular}{ccp{6.0cm}p{3.2cm}}
+    \toprule
+    \textbf{Caso} & \textbf{Requisito} & \textbf{Descrição} & \textbf{Esperado} \\
+    \midrule
+    CT01 & RF13, RN08 & Aluno matriculado faz \textit{check-in} dentro da janela & Aceito \\
+    CT02 & RN02 & Segundo \textit{check-in} na mesma sessão & Negado \\
+    CT03 & RN08 & \textit{Check-in} antes da abertura ou depois do fim da janela & Negado \\
+    CT04 & RN05 & \textit{Check-in} de aluno não matriculado & Negado \\
+    CT05 & RN01 & Aluno tenta marcar o próprio \textit{check-in} como validado & Negado \\
+    CT06 & RF22 & Responsável pela sessão valida o \textit{check-in} & Aceito \\
+    CT07 & RF16, RN01 & Crédito do valor configurado e estorno do valor recebido & Aceito \\
+    CT08 & RN01 & Alteração arbitrária de pontos na classificação & Negado \\
+    CT09 & RNF04 & Aluno de outra turma tenta ler a sessão & Negado \\
+    CT10 & RF11 & Matrícula nova inclui o aluno nas sessões futuras & Aluno incluído \\
+    CT11 & RF28 & Alteração de consentimento LGPD já registrado & Negado \\
+    CT12 & RF29 & Exclusão de conta apaga os dados do usuário e preserva os de outros & Aceito \\
+    CT13 & RN09, RNF11 & Aluno lê a classificação de outro escopo ou de quem não participa & Negado \\
+    CT14 & RF18 & Aluno grava o próprio progresso de missão & Negado \\
+    CT15 & RNF01 & \textit{Check-in} a partir da tela inicial (roteiro manual) & $\leq$ 3 toques \\
+    \bottomrule
+  \end{tabular}
+  \fonte{Elaborado pelo autor (2026), a partir de \texttt{tests/} e
+         \texttt{docs/roteiro-teste-ciclo1.md}.}
+\end{table}
+
+Os casos CT01 a CT09, CT11, CT13 e CT14 correspondem a testes da suíte
+de regras; o CT10 e o CT12, à suíte de Cloud Functions; e o CT15, ao
+roteiro manual, segundo o
+qual o \textit{check-in} exige dois toques na agenda e um toque na tela
+inicial da versão final da interface.
+
+\subsection{Verificações de qualidade da interface}
+
+Na última rodada de refinamento da interface, o código passou pela
+verificação de tipos do TypeScript em modo estrito sem erros, e nove
+telas foram analisadas, nos temas claro e escuro, com a ferramenta de
+acessibilidade axe-core (critérios WCAG 2.1, níveis A e AA), sem violações
+registradas. As cores de texto foram ajustadas para atingir a razão
+mínima de contraste de 4,5:1 nos dois temas; por isso, o vermelho de
+destaque e os cinzas de texto ficaram um pouco mais escuros que os
+padrões do iOS no tema claro. A interface foi conferida na versão web; o
+comportamento exclusivo dos aparelhos, como as barras translúcidas, os
+gestos das folhas e o retorno tátil, ainda precisa ser verificado em
+dispositivo.
+
+\subsection{Defeitos encontrados pelos testes}
+\label{sec:defeitos-testes}
+
+Os testes automatizados revelaram defeitos que não apareceriam em uma
+avaliação apenas visual. O mais relevante foi a descoberta de que o
+motor de regras do Firestore recusa consultas de lista cuja permissão
+dependa de dados de outra coleção, o que levou às decisões de modelagem
+da \autoref{sec:modelagem-estatica}. Também foi encontrado um caso em que
+a gravação do vínculo e do documento privado, feita na mesma transação,
+era negada porque a regra lia o estado anterior à transação; a correção
+foi usar as funções que leem o estado posterior.
+
+Na primeira execução da suíte de Cloud Functions, só um dos quatro testes
+passou: os três que esperavam a sincronização de \texttt{leitoresIds} na
+matrícula, no cancelamento e na reativação pararam pelo limite de tempo,
+e o único aprovado era justamente o que espera que nada aconteça. A causa
+era de configuração, e não de lógica: o emulador subia no projeto
+padrão do Firebase (\texttt{roundup-app-a5a82}), enquanto os testes
+gravavam no projeto de demonstração \texttt{demo-roundup-app}, de modo
+que os gatilhos das funções escutavam o projeto errado. A correção
+(\textit{commit} \texttt{6098f4e}) fixou o projeto
+\texttt{demo-roundup-app} nos dois comandos de teste, o que também impede
+o emulador de acessar o projeto de produção, e aumentou o limite de tempo
+da suíte de 5 para 20 segundos, já que a espera dentro do teste pode
+chegar a 10 segundos. Depois da correção, as quatro passaram.
+
+\subsection{Teste de usabilidade}
+
+O pré-projeto previa um teste de usabilidade com usuários reais em uma
+academia parceira, com aplicação do questionário SUS \cite{brooke1996}.
+Esse teste não foi realizado nesta entrega e fica registrado como
+trabalho futuro (\autoref{cap:resultados}). Por isso, a usabilidade do
+protótipo foi verificada apenas pelos critérios objetivos descritos
+acima, como o número de toques do \textit{check-in} e a análise de
+acessibilidade.

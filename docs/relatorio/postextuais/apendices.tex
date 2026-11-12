@@ -1,0 +1,148 @@
+% =====================================================================
+%  APÊNDICES -- Manual, seção 2.3.3
+%  APÊNDICE = material ELABORADO PELO AUTOR (questionários, personas,
+%  prompts, código-fonte). Pelo Manual, no sumário aparece só "APÊNDICES".
+% =====================================================================
+\begin{apendicesenv}
+\partapendices
+\addtocontents{toc}{\protect\setcounter{tocdepth}{-1}}
+
+% ---------------------------------------------------------------------
+\chapter{Especificação dos casos de uso}
+\label{ap:casos-uso}
+
+Este apêndice reproduz a especificação textual dos 30 casos de uso do
+RoundUp, organizados pelas categorias da base de requisitos
+(\autoref{sec:modelagem-funcional}). Quando o ator é o professor, a
+academia herda o caso de uso por generalização de ator.
+
+{\footnotesize\SingleSpacing
+\setlength{\columnsep}{0.8cm}
+\begin{multicols}{2}
+\input{postextuais/especificacao-casos-uso}
+\end{multicols}
+}
+
+% ---------------------------------------------------------------------
+\chapter{Questionário de avaliação das ideias}
+\label{ap:questionario}
+
+Este apêndice reproduz o questionário aplicado aos usuários reais, também
+usado na geração das respostas sintéticas. O formulário foi feito no
+Google Forms, com tempo estimado de resposta de 6 a 8 minutos, e abria com
+o texto de apresentação e consentimento abaixo.
+
+\begin{citacao}
+Este questionário faz parte de um Trabalho de Conclusão de Curso em
+Engenharia da Computação no Centro Universitário Ibmec. O objetivo é
+entender o que motiva as pessoas a continuarem treinando lutas e artes
+marciais, o que leva ao abandono da prática, e avaliar a receptividade a
+um aplicativo de acompanhamento e engajamento voltado a academias.
+
+As respostas são anônimas e serão utilizadas exclusivamente para fins
+acadêmicos, de forma agregada, sem identificação individual. O contato
+(quando fornecido) é guardado separadamente das respostas e usado só para
+convite a testes. O fornecimento de contato ao final é opcional e serve
+apenas para convite a testes futuros do aplicativo. Você pode desistir a
+qualquer momento simplesmente fechando a página. O tratamento dos dados
+segue a Lei Geral de Proteção de Dados (Lei 13.709/2018).
+
+Em caso de dúvidas, entre em contato pelo e-mail
+andreccoelho2004@gmail.com.
+\end{citacao}
+
+Depois das perguntas de perfil, o respondente era encaminhado a uma das
+três seções conforme a resposta à quarta pergunta, e todos terminavam na
+seção de encerramento. As alternativas das perguntas fechadas foram
+reconstruídas a partir das respostas registradas no formulário e das
+listas do \textit{script} de geração das respostas sintéticas, que
+validava cada resposta contra as alternativas do formulário; por isso,
+todas as alternativas listadas existem no formulário, mas alguma
+alternativa nunca escolhida pode não aparecer.
+
+{\small\SingleSpacing
+\setlength{\columnsep}{0.8cm}
+\begin{multicols}{2}
+\input{postextuais/questionario}
+\end{multicols}
+}
+
+% ---------------------------------------------------------------------
+\chapter{Personas sintéticas}
+\label{ap:personas}
+
+As 12 personas abaixo são sintéticas. Elas foram escritas a partir do
+padrão das seis respostas reais e serviram para apoiar decisões de
+experiência do usuário e para orientar as regras do gerador de respostas
+de teste (\autoref{sec:val-personas}). As personas de professor e de dono
+de academia são hipóteses a validar, porque nenhum professor real
+respondeu ao questionário. O \autoref{qua:mapa-personas} resume as
+personas.
+
+\begin{quadro}[!htb]
+  \caption{Mapa das personas sintéticas}
+  \label{qua:mapa-personas}
+  \centering
+  \footnotesize
+  \begin{tabular}{|c|p{2.3cm}|p{2.6cm}|c|p{1.9cm}|p{3.4cm}|}
+    \hline
+    \textbf{ID} & \textbf{Persona} & \textbf{Perfil} & \textbf{Faixa} & \textbf{Modalidade} & \textbf{Postura com a gamificação} \\ \hline
+    A1 & Davi, 16 & Aluno ativo & $<$ 18 & Jiu-Jitsu & Gosta, mas responde no automático \\ \hline
+    A2 & Lucas, 21 & Aluno ativo & 18--24 & Muay Thai & Entusiasta de \textit{ranking} e ofensiva \\ \hline
+    A3 & Rafaela, 29 & Aluno ativo & 25--34 & Boxe & Quer dados, rejeita exposição \\ \hline
+    A4 & Patrícia, 38 & Aluno ativo & 35--44 & Jiu-Jitsu & Aprova tudo de forma morna \\ \hline
+    A5 & Marcelo, 42 & Aluno ativo & 35--44 & Jiu-Jitsu & Cético, vê o app como trabalho extra \\ \hline
+    A6 & Sérgio, 51 & Aluno ativo & 45+ & Muay Thai & Indiferente, valoriza só o histórico \\ \hline
+    E1 & Gabriel, 20 & Ex-aluno & 18--24 & Jiu-Jitsu & Gosta da ideia, odeia notificação \\ \hline
+    E2 & Thiago, 31 & Ex-aluno & 25--34 & Boxe & Neutro, nota 4 em tudo \\ \hline
+    E3 & Juliana, 40 & Ex-aluno & 35--44 & Muay Thai & Acha que lembrete teria ajudado \\ \hline
+    E4 & Roberto, 48 & Ex-aluno & 45+ & Jiu-Jitsu & Resistente, prefere contato humano \\ \hline
+    P1 & Felipe, 27 & Professor & 25--34 & Muay Thai & Quer alerta de ausência e relatório \\ \hline
+    P2 & Cláudio, 49 & Professor e dono de academia & 45+ & Boxe e Muay Thai & Teme \textit{ranking}, quer controle de graduação \\ \hline
+  \end{tabular}
+  \fonte{Elaborado pelo autor (2026).}
+\end{quadro}
+
+As fichas completas, com rotina, motivações, riscos de evasão e
+respostas-modelo de cada persona, estão no documento de personas do
+projeto.
+
+% ---------------------------------------------------------------------
+\chapter{Protocolo de geração das respostas sintéticas}
+\label{ap:prompt}
+
+\begin{quadro}[!htb]
+  \caption{Protocolo de geração e envio das respostas sintéticas}
+  \label{qua:protocolo}
+  \centering
+  \footnotesize
+  \begin{tabular}{|p{3.4cm}|p{9.8cm}|}
+    \hline
+    \textbf{Item} & \textbf{Descrição} \\ \hline
+    Ferramenta de IA & Claude (Anthropic); identificador do modelo configurado na sessão: \texttt{claude-opus-5-5} \\ \hline
+    Data da sessão & 26/10/2026 \\ \hline
+    Objetivo & Testar o formulário e a análise sem misturar dados sintéticos com a coleta real \\ \hline
+    Base de referência & Seis respostas reais coletadas em 18 e 19/09/2026, usadas para extrair o padrão de escrita \\ \hline
+    Personas & 12 fichas por perfil (aluno ativo, ex-aluno, professor) e faixa etária (\autoref{ap:personas}) \\ \hline
+    Método de geração & \textit{Script} em Python com bancos de respostas curtas por pergunta e regras por perfil e idade; combinações sorteadas pelo \textit{script}. Não houve um \textit{prompt} por resposta \\ \hline
+    Parâmetros & Semente \texttt{random.seed(26102026)} e distribuição da \autoref{tab:perfil-personas}; sem temperatura ou outro parâmetro do modelo, pois o sorteio foi feito pelo \textit{script} \\ \hline
+    Relação com as fichas & As 12 fichas orientaram as regras; as 65 linhas não correspondem uma a uma às fichas \\ \hline
+    Instruções ao modelo & Dadas em conversa; o registro reproduzível são os \textit{scripts} versionados no repositório (ver abaixo) \\ \hline
+    Ambiente de envio & Cópia do formulário (``RoundUp (Personas IA)''), sem planilha vinculada; nenhuma resposta sintética entrou na base da pesquisa \\ \hline
+    Método de envio & Google Apps Script no editor da cópia: validação contra as alternativas do formulário e registro via FormApp (\texttt{createResponse}), sem passar pelo link público \\ \hline
+    Janela de envio & 26/10/2026, de 13h12 a 13h14 \\ \hline
+    Identificação & Campo de contato com \texttt{sintetico-<ID>}: A01 a A32, E01 a E23, P01 a P10 \\ \hline
+    Total enviado & 65 respostas, todas com o marcador, conferidas na exportação \\ \hline
+  \end{tabular}
+  \fonte{Elaborado pelo autor (2026).}
+\end{quadro}
+
+Os \textit{scripts} de geração e de envio estão no repositório do projeto,
+em \texttt{docs/pesquisa/respostas-sinteticas/}
+(\url{https://github.com/andreccoelho/roundup_app/tree/dev/docs/pesquisa/respostas-sinteticas}):
+\texttt{gerar\_respostas.py}, que gera as respostas com a semente
+26102026, e \texttt{enviar\_respostas.gs}, que valida e envia as respostas
+pelo Google Apps Script. O diretório traz também um \texttt{README.md} com
+as instruções de reprodução.
+
+\end{apendicesenv}
