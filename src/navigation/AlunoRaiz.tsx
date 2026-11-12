@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 import { listarResponsaveisAtivosDoAluno } from '../services/vinculos';
+import { aoMudarVinculos } from '../utils/eventosVinculo';
 import LoadingScreen from '../components/LoadingScreen';
 import BloqueioVinculoScreen from '../screens/aluno/BloqueioVinculoScreen';
 import VincularAlunoScreen from '../screens/aluno/VincularAlunoScreen';
@@ -23,9 +24,11 @@ export function AlunoRaiz() {
   const opcoesHeader = useOpcoesHeader();
   const [status, setStatus] = useState<'verificando' | 'bloqueado' | 'liberado'>('verificando');
 
-  const verificar = useCallback(async () => {
+  // `silencioso`: reavaliação disparada por mudança de vínculo não pode trocar a tela por um
+  // loading (desmontaria as abas que o aluno está usando) — só troca de lado se o resultado mudar.
+  const verificar = useCallback(async (silencioso = false) => {
     if (!usuario) return;
-    setStatus('verificando');
+    if (!silencioso) setStatus('verificando');
     try {
       const responsaveis = await listarResponsaveisAtivosDoAluno(usuario.id);
       setStatus(responsaveis.length > 0 ? 'liberado' : 'bloqueado');
@@ -40,6 +43,8 @@ export function AlunoRaiz() {
     verificar();
   }, [verificar]);
 
+  useEffect(() => aoMudarVinculos(() => verificar(true)), [verificar]);
+
   if (status === 'verificando') return <LoadingScreen />;
   if (status === 'liberado') return <AlunoTabs />;
 
@@ -47,7 +52,7 @@ export function AlunoRaiz() {
     <Stack.Navigator screenOptions={{ ...opcoesHeader, headerShown: false }}>
       <Stack.Screen name="Bloqueio">
         {({ navigation }) => (
-          <BloqueioVinculoScreen onVincular={() => navigation.navigate('Vincular')} onAtualizar={verificar} />
+          <BloqueioVinculoScreen onVincular={() => navigation.navigate('Vincular')} onAtualizar={() => verificar()} />
         )}
       </Stack.Screen>
       <Stack.Screen name="Vincular" component={VincularAlunoScreen} options={{ headerShown: true, title: 'Vincular-se' }} />

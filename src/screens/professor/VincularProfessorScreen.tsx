@@ -5,7 +5,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { listarAcademiasDisponiveis, solicitarVinculo } from '../../services/vinculos';
+import { listarAcademiasDisponiveis, listarVinculosDoSolicitante, solicitarVinculo } from '../../services/vinculos';
+import MeusVinculos from '../../components/MeusVinculos';
 import { Usuario } from '../../types';
 import { mensagemErro } from '../../utils/mensagensErro';
 import Botao from '../../components/ui/Botao';
@@ -33,18 +34,26 @@ export default function VincularProfessorScreen() {
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
+  const [versaoVinculos, setVersaoVinculos] = useState(0);
 
   const carregarAcademias = useCallback(async () => {
     setCarregando(true);
     setErro(null);
     try {
-      setAcademias(await listarAcademiasDisponiveis());
+      const [lista, meusVinculos] = await Promise.all([
+        listarAcademiasDisponiveis(),
+        usuario ? listarVinculosDoSolicitante(usuario.id) : Promise.resolve([]),
+      ]);
+      setAcademias(lista);
+      setSolicitados(new Set(
+        meusVinculos.filter((v) => v.status === 'pendente' || v.status === 'aceito').map((v) => v.destinatarioId),
+      ));
     } catch (e) {
       setErro(mensagemErro(e, 'Não foi possível carregar as academias agora.'));
     } finally {
       setCarregando(false);
     }
-  }, []);
+  }, [usuario]);
 
   useEffect(() => {
     carregarAcademias();
@@ -57,6 +66,7 @@ export default function VincularProfessorScreen() {
     try {
       await solicitarVinculo(usuario.id, academia.id, 'professor', 'academia');
       setSolicitados((prev) => new Set(prev).add(academia.id));
+      setVersaoVinculos((v) => v + 1);
       setSucesso('Pedido enviado à academia.');
     } catch (e) {
       setErroSolicitacao(mensagemErro(e, 'Não foi possível enviar o pedido. Tente novamente.'));
@@ -97,6 +107,9 @@ export default function VincularProfessorScreen() {
       teclado
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} />}
     >
+      {usuario ? (
+        <MeusVinculos key={versaoVinculos} solicitanteId={usuario.id} onMudou={carregarAcademias} />
+      ) : null}
       <CampoTexto rotulo="Buscar" placeholder="Nome ou endereço da academia" valor={busca} onAlterar={setBusca} autoCorrect={false} />
       <MensagemErro mensagem={erroSolicitacao} />
       <GrupoLista titulo={`Academias: ${filtradas.length}`} semMargem>

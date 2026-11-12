@@ -3,7 +3,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { listarAcademiasDisponiveis, listarProfessoresAutonomos, solicitarVinculo } from '../../services/vinculos';
+import { listarAcademiasDisponiveis, listarProfessoresAutonomos, listarVinculosDoSolicitante, solicitarVinculo } from '../../services/vinculos';
+import MeusVinculos from '../../components/MeusVinculos';
 import { PerfilDestinatario, Usuario } from '../../types';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
@@ -37,23 +38,30 @@ export default function VincularAlunoScreen() {
   const [enviandoId, setEnviandoId] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [busca, setBusca] = useState('');
+  const [versaoVinculos, setVersaoVinculos] = useState(0);
 
   const carregarOpcoes = useCallback(async () => {
     setCarregando(true);
     setErro(null);
     try {
-      const [listaAcademias, listaProfessores] = await Promise.all([
+      const [listaAcademias, listaProfessores, meusVinculos] = await Promise.all([
         listarAcademiasDisponiveis(),
         listarProfessoresAutonomos(),
+        usuario ? listarVinculosDoSolicitante(usuario.id) : Promise.resolve([]),
       ]);
       setAcademias(listaAcademias);
       setProfessores(listaProfessores);
+      // Pedido pendente ou vínculo ativo aparece como "Enviado" mesmo depois de reabrir a tela;
+      // recusado/encerrado volta a poder ser solicitado.
+      setSolicitados(new Set(
+        meusVinculos.filter((v) => v.status === 'pendente' || v.status === 'aceito').map((v) => v.destinatarioId),
+      ));
     } catch (e) {
       setErro(mensagemErro(e, 'Não foi possível carregar as opções agora.'));
     } finally {
       setCarregando(false);
     }
-  }, []);
+  }, [usuario]);
 
   useEffect(() => {
     carregarOpcoes();
@@ -66,6 +74,7 @@ export default function VincularAlunoScreen() {
     try {
       await solicitarVinculo(usuario.id, destinatario.id, 'aluno', perfilDestinatario);
       setSolicitados((prev) => new Set(prev).add(destinatario.id));
+      setVersaoVinculos((v) => v + 1);
       setSucesso('Pedido enviado. Você será liberado assim que aceitarem.');
     } catch (e) {
       setErroSolicitacao(mensagemErro(e, 'Não foi possível enviar o pedido. Tente novamente.'));
@@ -138,6 +147,9 @@ export default function VincularAlunoScreen() {
       teclado
       sobreposicao={<Aviso visivel={sucesso !== null} tipo="sucesso" mensagem={sucesso ?? ''} onFechar={() => setSucesso(null)} />}
     >
+      {usuario ? (
+        <MeusVinculos key={versaoVinculos} solicitanteId={usuario.id} onMudou={carregarOpcoes} />
+      ) : null}
       <Texto variante="body" cor="texto2" style={styles.intro}>
         Peça vínculo com sua academia ou professor. Assim que aceitarem, suas turmas e o check-in são liberados.
       </Texto>

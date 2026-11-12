@@ -77,6 +77,14 @@ service cloud.firestore {
         && getAfter(/databases/$(database)/documents/vinculos/$(solicitanteId + '_' + meuId())).data.status == 'encerrado';
     }
 
+    // RF08, RN05: o dono do documento privado de vínculos só pode REMOVER responsáveis (o novo
+    // array é subconjunto do atual e não há outros campos) — é como o aluno/professor sai de um
+    // vínculo sem poder fabricar um.
+    function soEncolheMeusResponsaveis() {
+      return request.resource.data.keys().hasOnly(['responsaveisIds'])
+        && resource.data.get('responsaveisIds', []).hasAll(request.resource.data.get('responsaveisIds', []));
+    }
+
     // RF14, RNF04: prova que a mudança em leitoresIds é exatamente "adicionar/remover o
     // próprio uid" — usadas pelo aluno se (des)matriculando, sem permitir que ele manipule
     // o id de outra pessoa nesse array.
@@ -203,12 +211,14 @@ service cloud.firestore {
     // documento normalmente mesmo com leitura fechada para clientes.
     match /usuarios/{usuarioId}/privado/{doc} {
       allow read: if autenticado() && usuarioId == meuId();
-      // O dono nunca escreve isto diretamente; quem escreve é o DESTINATÁRIO de um vínculo
-      // que está aceitando (responderSolicitacao) ou encerrando (encerrarVinculo), gravando no
-      // documento do solicitante nos dois casos. "usuarioId == meuId()" fica como via de escape
-      // caso um fluxo futuro do próprio dono precise editar — hoje nenhum código faz isso.
+      // Quem ADICIONA um responsável é sempre o DESTINATÁRIO de um vínculo que está aceitando
+      // (responderSolicitacao), gravando no documento do solicitante; o destinatário também pode
+      // encerrar (encerrarVinculo). RF08/RN05: o próprio dono (aluno ou professor) pode SAIR de um
+      // vínculo, então ele grava no próprio documento — mas só para ENCOLHER responsaveisIds
+      // (nunca para acrescentar um id e se dar um vínculo que ninguém aceitou).
       allow write: if autenticado()
-                   && (usuarioId == meuId()
+                   && ((usuarioId == meuId()
+                        && (doc != 'vinculos' || soEncolheMeusResponsaveis()))
                        || (doc == 'vinculos'
                            && (souDestinatarioDeVinculoAceito(usuarioId) || souDestinatarioEncerrandoVinculo(usuarioId))));
     }
@@ -230,14 +240,22 @@ service cloud.firestore {
                     && vinculoId == request.resource.data.solicitanteId + '_' + request.resource.data.destinatarioId
                     && request.resource.data.status == 'pendente'
                     && tipoBateComPerfis();
-      // Só duas transições cabem ao destinatário: responder um pendente (vira aceito/recusado,
-      // responderSolicitacao()) ou encerrar um vínculo já aceito (vira encerrado,
-      // encerrarVinculo() — RF09). Qualquer outra transição (ex.: reabrir um recusado, ou pular
-      // direto de pendente para encerrado) fica de fora.
+      // Destinatário: responder um pendente (vira aceito/recusado, responderSolicitacao()) ou
+      // encerrar um vínculo já aceito (vira encerrado, encerrarVinculo() — RF09).
+      // Solicitante (RF07, RF08): sair de um vínculo aceito (vira encerrado, mesma função) ou pedir
+      // de novo depois de recusado/encerrado (volta a pendente — o ID é determinístico, então o
+      // pedido reaproveita o documento). Qualquer outra transição (reabrir um recusado como
+      // aceito, pular de pendente direto para encerrado) fica de fora, e o solicitante só mexe nos
+      // campos de estado, nunca em quem é quem.
       allow update: if autenticado()
-                    && resource.data.destinatarioId == meuId()
-                    && ((resource.data.status == 'pendente' && request.resource.data.status in ['aceito', 'recusado'])
-                        || (resource.data.status == 'aceito' && request.resource.data.status == 'encerrado'));
+                    && ((resource.data.destinatarioId == meuId()
+                         && ((resource.data.status == 'pendente' && request.resource.data.status in ['aceito', 'recusado'])
+                             || (resource.data.status == 'aceito' && request.resource.data.status == 'encerrado')))
+                        || (resource.data.solicitanteId == meuId()
+                            && ((resource.data.status == 'aceito' && request.resource.data.status == 'encerrado'
+                                 && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondidoEm']))
+                                || (resource.data.status in ['recusado', 'encerrado'] && request.resource.data.status == 'pendente'
+                                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'criadoEm', 'respondidoEm'])))));
       allow delete: if false;
     }
 

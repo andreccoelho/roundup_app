@@ -1,7 +1,7 @@
 // RF07, RF08, RN05, RN06: vínculos entre aluno, professor e academia
 // (RF09, gestão do vínculo pela academia, é Ciclo 3)
 import {
-  doc, setDoc, updateDoc, runTransaction, arrayUnion, arrayRemove,
+  doc, setDoc, updateDoc, runTransaction, arrayUnion, arrayRemove, deleteField,
   collection, query, where, getDocs,
 } from 'firebase/firestore';
 import { db } from './firebase';
@@ -57,7 +57,28 @@ export async function solicitarVinculo(
     status: 'pendente',
     criadoEm: agoraTimestamp(),
   };
-  await setDoc(doc(db, COLECAO_VINCULOS, vinculo.id), vinculo);
+  const ref = doc(db, COLECAO_VINCULOS, vinculo.id);
+
+  // O ID é determinístico, então um pedido antigo (recusado ou encerrado) ocupa o mesmo
+  // documento: pedir de novo é reabrir esse documento como 'pendente' (firestore.rules permite
+  // só essa transição ao solicitante). Sem isso, quem saiu de uma academia nunca conseguiria voltar.
+  const existente = await getDocSeguro<Vinculo>(ref);
+  if (existente) {
+    if (existente.status === 'pendente') throw new Error('Você já enviou um pedido para este destino. Aguarde a resposta.');
+    if (existente.status === 'aceito') throw new Error('Você já tem vínculo ativo com este destino.');
+    await updateDoc(ref, { status: 'pendente', criadoEm: vinculo.criadoEm, respondidoEm: deleteField() });
+    return;
+  }
+  await setDoc(ref, vinculo);
+}
+
+// RF07, RF08: todos os vínculos que o usuário pediu (aluno ou professor são sempre os
+// solicitantes), em qualquer estado — base da tela "Meus vínculos". A regra de leitura de
+// `vinculos` já permite (solicitanteId == meuId()).
+export async function listarVinculosDoSolicitante(solicitanteId: string): Promise<Vinculo[]> {
+  const q = query(collection(db, COLECAO_VINCULOS), where('solicitanteId', '==', solicitanteId));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => d.data() as Vinculo);
 }
 
 // RF07, RF09: `perfilSolicitante` é opcional — o professor só recebe solicitação de aluno
@@ -120,16 +141,16 @@ export async function responderSolicitacao(
   });
 }
 
-// RF09: inverso de responderSolicitacao() (ramo aceito) — só o destinatário encerra, e só a
-// partir de 'aceito' (firestore.rules trava as duas coisas). NÃO cascateia: matrículas,
-// check-ins e graduações já existentes ficam como histórico; só as checagens futuras de vínculo
-// ativo (tenhoVinculoAtivoCom/souResponsavelDoAluno) deixam de enxergar este vínculo — mesma
-// decisão de escopo mínimo tomada para RF29 (ver docs/DECISOES_PENDENTES.md). Encerrar um
-// vínculo professor-academia devolve `autonomo: true` ao professor.
+// RF08, RF09: inverso de responderSolicitacao() (ramo aceito) — qualquer das duas pontas encerra
+// (o destinatário gerindo, RF09; o solicitante saindo, RF08), e só a partir de 'aceito'
+// (firestore.rules trava as duas coisas). Check-ins e graduações já existentes ficam como
+// histórico, mas as MATRÍCULAS ativas do aluno com este responsável são canceladas — senão quem
+// saiu da academia continuaria na turma e nas sessões dela. Encerrar um vínculo
+// professor-academia devolve `autonomo: true` ao professor.
 export async function encerrarVinculo(vinculoId: string): Promise<void> {
   const vinculoRef = doc(db, COLECAO_VINCULOS, vinculoId);
 
-  await runTransaction(db, async (transacao) => {
+  const vinculoEncerrado = await runTransaction(db, async (transacao) => {
     const vinculoSnap = await transacao.get(vinculoRef);
     if (!vinculoSnap.exists()) {
       throw new Error('Vínculo não encontrado.');
@@ -152,7 +173,26 @@ export async function encerrarVinculo(vinculoId: string): Promise<void> {
         atualizadoEm: agora,
       });
     }
+    return vinculo;
   });
+
+  if (vinculoEncerrado.perfilSolicitante === 'aluno') {
+    await cancelarMatriculasDoAlunoCom(vinculoEncerrado.solicitanteId, vinculoEncerrado.destinatarioId);
+  }
+}
+
+// Fora da transação (o client SDK não faz consulta dentro dela) e sem importar matriculas.ts
+// (que já importa este arquivo). A Cloud Function sincronizarLeitorNaAtualizacaoDeMatricula tira
+// o aluno das sessões futuras de cada turma quando o status vira 'inativa' (RF14).
+async function cancelarMatriculasDoAlunoCom(alunoId: string, responsavelId: string): Promise<void> {
+  const q = query(
+    collection(db, 'matriculas'),
+    where('alunoId', '==', alunoId),
+    where('responsavelId', '==', responsavelId),
+    where('status', '==', 'ativa'),
+  );
+  const snap = await getDocs(q);
+  await Promise.all(snap.docs.map(d => updateDoc(d.ref, { status: 'inativa', atualizadoEm: agoraTimestamp() })));
 }
 
 // getDocSeguro(), não getDoc() direto: ver decisão técnica em services/firestoreSeguro.ts — só
