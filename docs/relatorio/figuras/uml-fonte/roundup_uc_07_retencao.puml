@@ -1,0 +1,20 @@
+@startuml RoundUp_UC_07_Retencao
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Aluno
+actor Professor
+actor Academia
+Academia --|> Professor
+
+package "Retenção" {
+  usecase "UC29 Receber\nNotificações (RF31)" as UC29
+  usecase "UC30 Consultar Alertas de\nQueda de Frequência (RF32)" as UC30
+}
+
+Aluno -- UC29
+' UC30 pertence ao Professor; Academia herda.
+Professor -- UC30
+
+@enduml

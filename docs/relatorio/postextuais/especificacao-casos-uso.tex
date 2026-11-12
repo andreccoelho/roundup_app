@@ -1,0 +1,449 @@
+% Gerado de RoundUp_Especificacao_Casos_de_Uso.docx
+\section*{Contas}
+
+\noindent\textbf{UC01 -- Cadastrar Conta}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno, Professor, Academia
+  \item \textbf{Requisitos relacionados:} RF01
+  \item \textbf{Pré-condições:} O usuário não possui conta cadastrada no sistema.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O usuário acessa a tela de cadastro.
+    \item O usuário seleciona o perfil desejado (Aluno, Professor ou Academia).
+    \item O sistema exibe os campos obrigatórios correspondentes ao perfil escolhido.
+    \item O usuário preenche os dados e confirma o cadastro.
+    \item O sistema cria a conta e associa o perfil escolhido.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Dados inválidos ou incompletos: o sistema exibe mensagem de erro e mantém os dados já preenchidos.
+  \item \textbf{Pós-condições:} Conta criada e usuário autenticado no perfil escolhido.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC02 -- Autenticar-se e Recuperar Senha}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno, Professor, Academia
+  \item \textbf{Requisitos relacionados:} RF02, RNF03
+  \item \textbf{Pré-condições:} O usuário possui conta cadastrada.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O usuário informa e-mail e senha.
+    \item O sistema delega a validação das credenciais ao serviço de autenticação do Firebase.
+    \item O sistema autentica o usuário e o redireciona à tela inicial do seu perfil.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Senha esquecida: o usuário solicita recuperação por e-mail; o sistema envia link de redefinição via Firebase. A2. Credenciais inválidas: o sistema exibe mensagem de erro.
+  \item \textbf{Pós-condições:} Sessão iniciada.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC03 -- Gerenciar Perfil da Academia}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Academia
+  \item \textbf{Requisitos relacionados:} RF04
+  \item \textbf{Pré-condições:} Academia autenticada.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item A Academia acessa a tela de perfil institucional.
+    \item A Academia edita nome, endereço, modalidades oferecidas e identidade visual.
+    \item O sistema salva as alterações.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Dados inválidos: o sistema exibe mensagem de erro.
+  \item \textbf{Pós-condições:} Perfil institucional atualizado.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC04 -- Gerenciar Perfil do Professor}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor
+  \item \textbf{Requisitos relacionados:} RF05
+  \item \textbf{Pré-condições:} Professor autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Professor acessa seu perfil.
+    \item Edita nome, modalidades que leciona, graduação e indicação de atuação autônoma ou vinculada a academia.
+    \item O sistema salva as alterações.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Dados inválidos: o sistema exibe mensagem de erro.
+  \item \textbf{Pós-condições:} Perfil do professor atualizado.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC05 -- Gerenciar Perfil do Aluno}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF06
+  \item \textbf{Pré-condições:} Aluno autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno acessa seu perfil.
+    \item Visualiza e edita nome, modalidade praticada, faixa/grau atual e foto.
+    \item O sistema salva as alterações.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Dados inválidos: o sistema exibe mensagem de erro.
+  \item \textbf{Pós-condições:} Perfil do aluno atualizado.
+\end{itemize}
+\medskip
+
+\section*{Vínculos}
+
+\noindent\textbf{UC06 -- Solicitar Vínculo com Academia}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor
+  \item \textbf{Requisitos relacionados:} RF07 , RN06
+  \item \textbf{Pré-condições:} Professor autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Professor busca e seleciona a academia desejada.
+    \item O Professor envia a solicitação de vínculo.
+    \item O sistema registra a solicitação com status Pendente e notifica a academia.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. O Professor cancela a solicitação antes da resposta da academia.
+  \item \textbf{Pós-condições:} Solicitação registrada, aguardando aceite da academia.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC07 -- Gerenciar Vínculos de Professores}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Academia
+  \item \textbf{Requisitos relacionados:} RF09 , RN06
+  \item \textbf{Pré-condições:} Existem solicitações pendentes ou vínculos ativos com professores.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item A Academia consulta a lista de solicitações de vínculo pendentes e vínculos ativos.
+    \item A Academia aceita ou recusa uma solicitação, ou encerra um vínculo ativo.
+    \item Ao aceitar, a Academia atribui as turmas sob responsabilidade do professor.
+    \item O sistema atualiza o status do vínculo e notifica o professor.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Academia recusa a solicitação: sistema notifica o professor e encerra o fluxo.
+  \item \textbf{Pós-condições:} Vínculo atualizado (ativo, recusado ou encerrado).
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC08 -- Vincular-se a Academia ou Professor}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF08 , RN05
+  \item \textbf{Pré-condições:} Aluno autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno busca uma academia ou um professor autônomo.
+    \item O Aluno solicita o vínculo.
+    \item O sistema registra o vínculo e define o escopo de turmas, missões, classificação e relatórios aplicáveis a esse aluno.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Aluno sem nenhum vínculo ativo: sistema bloqueia o acesso a turmas, sessões, missões e classificação (RN05).
+  \item \textbf{Pós-condições:} Aluno vinculado, com escopo de uso definido.
+\end{itemize}
+\medskip
+
+\section*{Treinos}
+
+\noindent\textbf{UC09 -- Gerenciar Turmas}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF10 , RN07
+  \item \textbf{Pré-condições:} Responsável autenticado (professor autônomo ou academia).
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O responsável cria uma turma informando nome, modalidade, nível e professor responsável.
+    \item O responsável edita ou encerra turmas existentes.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Tentativa de definir mais de um responsável para a mesma turma: sistema impede, pois toda turma tem responsável único (RN07).
+  \item \textbf{Pós-condições:} Turma criada, atualizada ou encerrada.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC10 -- Matricular-se em Turma}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF11
+  \item \textbf{Pré-condições:} Aluno possui vínculo ativo que dá acesso à turma.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno consulta as turmas disponíveis no escopo do seu vínculo.
+    \item O Aluno se matricula em uma ou mais turmas.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Turma fora do escopo do vínculo do aluno: sistema não a exibe como disponível.
+  \item \textbf{Pós-condições:} Matrícula registrada.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC11 -- Criar Sessão de Treino}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF12
+  \item \textbf{Pré-condições:} Existe turma cadastrada sob responsabilidade do solicitante.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O responsável seleciona a turma.
+    \item Informa data, horário de início e término e o professor responsável pela sessão.
+    \item Opcionalmente, gera sessões recorrentes a partir de uma grade semanal.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Conflito de horário com outra sessão da mesma turma: sistema alerta o responsável.
+  \item \textbf{Pós-condições:} Sessão(ões) de treino criada(s).
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC12 -- Realizar Check-in}
+\par\noindent Especificação apresentada no \autoref{qua:uc12-uc15}, de acordo com o comportamento implementado.
+
+\medskip
+
+\noindent\textbf{UC13 -- Consultar Agenda de Treinos}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF14
+  \item \textbf{Pré-condições:} Aluno matriculado em ao menos uma turma.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno acessa a agenda.
+    \item O sistema exibe as próximas sessões das turmas em que está matriculado, com data, horário e professor responsável.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Agenda exibida.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC14 -- Consultar Histórico de Presenças}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF15
+  \item \textbf{Pré-condições:} Aluno possui ao menos um \textit{check-in} validado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno acessa o histórico de presenças.
+    \item O sistema exibe os \textit{check-ins} validados ao longo do tempo.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Histórico exibido.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC15 -- Validar Check-in}
+\par\noindent Especificação apresentada no \autoref{qua:uc12-uc15}, de acordo com o comportamento implementado.
+
+\medskip
+
+\section*{Gamificação}
+
+\noindent\textbf{UC16 -- Visualizar Nível e Progresso}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF16 , RF17
+  \item \textbf{Pré-condições:} Aluno autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno acessa seu painel.
+    \item O sistema exibe o nível atual, o total de pontos acumulados (creditados a partir de \textit{check-ins} validados e missões concluídas) e quanto falta para o próximo nível.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Nível e progresso exibidos.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC17 -- Consultar Missões}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF18
+  \item \textbf{Pré-condições:} Aluno vinculado a uma academia ou professor com missões ativas no seu escopo.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno acessa a lista de missões ativas no escopo do seu vínculo.
+    \item O sistema exibe o progresso parcial de cada missão e sinaliza conclusão com a respectiva recompensa.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Missões e progresso exibidos.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC18 -- Consultar Classificação}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF20 , RN04 , RN09 , RNF11
+  \item \textbf{Pré-condições:} Aluno optou por participar da classificação (adesão é opcional, conforme RNF11).
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno acessa a tela de classificação.
+    \item O sistema exibe o ranking por pontos obtidos na janela de tempo vigente (RN04), respeitando o escopo do vínculo do aluno -- academia, turma ou conjunto de alunos de um professor autônomo (RN09).
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Aluno não participante: a tela informa que a classificação está desativada e oferece a opção de habilitar a adesão.
+  \item \textbf{Pós-condições:} Classificação exibida, ou aviso de não adesão.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC19 -- Consultar Sequência de Treinos}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF21
+  \item \textbf{Pré-condições:} Aluno autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O Aluno acessa seu painel.
+    \item O sistema exibe a sequência de treinos consecutivos do aluno.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Sequência exibida.
+\end{itemize}
+\medskip
+
+\section*{Gestão}
+
+\noindent\textbf{UC20 -- Criar Missão Personalizada}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF23
+  \item \textbf{Pré-condições:} Responsável autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O responsável acessa a criação de missões.
+    \item Define título, critério de conclusão, recompensa em pontos, público-alvo e período de vigência.
+    \item O sistema publica a missão e notifica os alunos do público-alvo (RF31).
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Período de vigência inválido: sistema exibe erro e não publica a missão.
+  \item \textbf{Pós-condições:} Missão publicada e visível aos alunos do público-alvo (UC17).
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC21 -- Consultar Alunos e Frequência}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF24
+  \item \textbf{Pré-condições:} Responsável possui ao menos um aluno vinculado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O responsável acessa a lista de alunos sob sua responsabilidade.
+    \item O sistema exibe a frequência recente de cada aluno.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Lista e frequência exibidas.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC22 -- Registrar Graduação de Faixa}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF25 , RN03
+  \item \textbf{Pré-condições:} Aluno vinculado ao responsável.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O responsável seleciona o aluno.
+    \item Registra a nova faixa/grau concedida.
+    \item O sistema atualiza o perfil do aluno e o histórico de progressão.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Graduação registrada. A concessão é sempre uma decisão humana do responsável, nunca automática por acúmulo de pontos (RN03).
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC23 -- Gerar Relatório de Frequência}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF26
+  \item \textbf{Pré-condições:} Existem sessões e \textit{check-ins} registrados no período selecionado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O responsável seleciona a turma e o período desejado.
+    \item O sistema gera o relatório de frequência.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Relatório gerado, disponível também como fonte de dados para a avaliação do TCC.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC24 -- Consultar Visão Consolidada}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Academia (uso exclusivo)
+  \item \textbf{Requisitos relacionados:} RF27
+  \item \textbf{Pré-condições:} Academia autenticada, com turmas, professores e alunos cadastrados.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item A Academia acessa o painel consolidado.
+    \item O sistema exibe todas as turmas, professores e alunos da academia, com indicadores agregados de frequência.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Visão consolidada exibida.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC25 -- Personalizar Pontuação e Graduação}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF33
+  \item \textbf{Pré-condições:} Responsável autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O responsável acessa as configurações de gamificação do seu perfil.
+    \item Personaliza a quantidade de pontos por presença, os critérios de subida de nível e a estrutura de faixas da modalidade.
+    \item O sistema salva a configuração (ConfiguracaoGamificacao) associada ao perfil.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Responsável não personaliza: o sistema aplica a configuração padrão pré-definida.
+  \item \textbf{Pós-condições:} Configuração de gamificação salva e aplicada aos alunos do escopo do responsável.
+\end{itemize}
+\medskip
+
+\section*{Conformidade}
+
+\noindent\textbf{UC26 -- Registrar Consentimento LGPD}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno, Professor, Academia
+  \item \textbf{Requisitos relacionados:} RF28 , RNF10
+  \item \textbf{Pré-condições:} Usuário está realizando o cadastro (UC01).
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O sistema apresenta a política de privacidade durante o cadastro.
+    \item O usuário registra o consentimento quanto ao tratamento de dados pessoais.
+  \end{enumerate}
+  \item \textbf{Fluxos alternativos:} A1. Usuário não consente: cadastro não é concluído.
+  \item \textbf{Pós-condições:} Consentimento registrado, associado à conta.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC27 -- Solicitar Exclusão de Conta e Dados}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno, Professor, Academia
+  \item \textbf{Requisitos relacionados:} RF29
+  \item \textbf{Pré-condições:} Usuário autenticado.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O usuário acessa as configurações da conta.
+    \item Solicita a exclusão da conta e dos dados pessoais associados.
+    \item O sistema processa a exclusão conforme a LGPD (Lei 13.709/2018).
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Conta e dados pessoais eliminados, conforme direito de eliminação previsto na LGPD.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC28 -- Registrar Responsável Legal}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno menor de 18 anos
+  \item \textbf{Requisitos relacionados:} RF30
+  \item \textbf{Pré-condições:} Aluno identificado como menor de idade no cadastro.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O sistema solicita a identificação do responsável legal.
+    \item O responsável legal fornece o consentimento necessário.
+    \item O sistema registra o vínculo de responsabilidade.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Responsável legal registrado e vinculado à conta do aluno menor.
+\end{itemize}
+\medskip
+
+\section*{Retenção}
+
+\noindent\textbf{UC29 -- Receber Notificações}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Aluno
+  \item \textbf{Requisitos relacionados:} RF31
+  \item \textbf{Pré-condições:} Aluno com conta ativa e notificações habilitadas.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O sistema envia notificação de lembrete de sessão de treino, publicação de nova missão ou conquista obtida.
+    \item O Aluno visualiza a notificação no aplicativo.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Notificação entregue e marcada como lida ao ser aberta.
+\end{itemize}
+\medskip
+
+\noindent\textbf{UC30 -- Consultar Alertas de Queda de Frequência}
+\begin{itemize}[leftmargin=*, itemsep=0pt, topsep=2pt]
+  \item \textbf{Atores:} Professor (Academia herda por generalização de ator)
+  \item \textbf{Requisitos relacionados:} RF32
+  \item \textbf{Pré-condições:} Existe aluno sob responsabilidade do solicitante com queda relevante de frequência no período.
+  \item \textbf{Fluxo principal:}
+  \begin{enumerate}[label=\arabic*., itemsep=0pt, topsep=0pt]
+    \item O sistema sinaliza, no painel do responsável, os alunos com queda relevante de frequência.
+    \item O responsável consulta o alerta e pode tomar uma ação, como contatar o aluno.
+  \end{enumerate}
+  \item \textbf{Pós-condições:} Alerta consultado. É o requisito que mais dialoga diretamente com a hipótese de redução da evasão.
+\end{itemize}
+\medskip
+

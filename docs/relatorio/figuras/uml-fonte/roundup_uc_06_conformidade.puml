@@ -1,0 +1,25 @@
+@startuml RoundUp_UC_06_Conformidade
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Aluno
+actor Professor
+actor Academia
+Academia --|> Professor
+
+package "Conformidade" {
+  usecase "UC26 Registrar Consentimento\nLGPD (RF28)" as UC26
+  usecase "UC27 Solicitar Exclusão\nde Conta e Dados (RF29)" as UC27
+  usecase "UC28 Registrar Responsável\nLegal (RF30)" as UC28
+}
+
+Aluno -- UC26
+Professor -- UC26
+Academia -- UC26
+Aluno -- UC27
+Professor -- UC27
+Academia -- UC27
+Aluno -- UC28
+
+@enduml
