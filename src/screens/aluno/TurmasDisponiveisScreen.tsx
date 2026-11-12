@@ -4,7 +4,8 @@ import { View } from 'react-native';
 import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { listarTurmasDisponiveisParaAluno, listarTurmasDoAluno } from '../../services/turmas';
-import { matricularAluno } from '../../services/matriculas';
+import { cancelarMatricula, matricularAluno } from '../../services/matriculas';
+import Dialogo from '../../components/ui/Dialogo';
 import { Turma } from '../../types';
 import Tela from '../../components/ui/Tela';
 import Texto from '../../components/ui/Texto';
@@ -32,6 +33,8 @@ export default function TurmasDisponiveisScreen() {
   const [matriculando, setMatriculando] = useState<string | null>(null);
   const [erroMatricula, setErroMatricula] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState<string | null>(null);
+  const [saindo, setSaindo] = useState<string | null>(null);
+  const [turmaParaSair, setTurmaParaSair] = useState<Turma | null>(null);
 
   const carregar = useCallback(async () => {
     if (!usuario) return;
@@ -67,6 +70,29 @@ export default function TurmasDisponiveisScreen() {
       setErroMatricula(mensagemErro(e, 'Não foi possível fazer a matrícula. Tente novamente.'));
     } finally {
       setMatriculando(null);
+    }
+  }
+
+  // RF11: o aluno sai da turma (matrícula vira 'inativa'; a Cloud Function tira ele das sessões
+  // futuras). O histórico de check-ins fica, e dá para se matricular de novo depois.
+  async function handleSair() {
+    if (!usuario || !turmaParaSair) return;
+    const turma = turmaParaSair;
+    setTurmaParaSair(null);
+    setSaindo(turma.id);
+    setErroMatricula(null);
+    try {
+      await cancelarMatricula(turma.id, usuario.id);
+      setMatriculadasIds((prev) => {
+        const proximo = new Set(prev);
+        proximo.delete(turma.id);
+        return proximo;
+      });
+      setSucesso(`Você saiu da turma ${turma.nome}.`);
+    } catch (e) {
+      setErroMatricula(mensagemErro(e, 'Não foi possível sair da turma. Tente novamente.'));
+    } finally {
+      setSaindo(null);
     }
   }
 
@@ -115,11 +141,21 @@ export default function TurmasDisponiveisScreen() {
                 </View>
               </View>
               {jaMatriculado ? (
-                <View style={styles.matriculado} accessible accessibilityLabel="Matriculado">
-                  <IconeCheckCirculo tamanho={22} cor={cores.sucesso} preenchido />
-                  <Texto variante="subheadline" cor="sucesso">
-                    Matriculado
-                  </Texto>
+                <View style={styles.matriculado}>
+                  <View style={styles.matriculado} accessible accessibilityLabel="Matriculado">
+                    <IconeCheckCirculo tamanho={22} cor={cores.sucesso} preenchido />
+                    <Texto variante="subheadline" cor="sucesso">
+                      Matriculado
+                    </Texto>
+                  </View>
+                  <Botao
+                    titulo="Sair"
+                    variante="fantasma"
+                    compacto
+                    carregando={saindo === turma.id}
+                    onPress={() => setTurmaParaSair(turma)}
+                    accessibilityLabel={`Sair da turma ${turma.nome}`}
+                  />
                 </View>
               ) : (
                 <Botao
@@ -135,6 +171,16 @@ export default function TurmasDisponiveisScreen() {
         );
       })}
       </GrupoLista>
+      <Dialogo
+        visivel={turmaParaSair !== null}
+        titulo={`Sair da turma ${turmaParaSair?.nome ?? ''}?`}
+        mensagem="Você deixa de ver as sessões dessa turma na agenda. Seu histórico de treinos continua guardado e você pode se matricular de novo."
+        tituloConfirmar="Sair da turma"
+        onConfirmar={handleSair}
+        tituloCancelar="Cancelar"
+        onCancelar={() => setTurmaParaSair(null)}
+        destrutivo
+      />
     </Tela>
   );
 }

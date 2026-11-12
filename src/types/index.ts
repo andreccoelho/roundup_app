@@ -67,10 +67,10 @@ export interface VinculosPrivado {
 }
 
 // RF07, RF08, RN05, RN06: vínculo entre atores — tipo derivado do par de perfis
-// status 'aceito' é o vínculo ativo em produção. 'encerrado' é RF09 (gestão do vínculo pela
-// academia): só alcançável a partir de 'aceito', só pelo destinatário — ver encerrarVinculo()
-// em services/vinculos.ts. Não cascata para matrículas/histórico já existentes (mesma decisão
-// de escopo mínimo de RF29 — ver docs/DECISOES_PENDENTES.md).
+// status 'aceito' é o vínculo ativo em produção. 'encerrado' (RF08, RF09): só alcançável a partir
+// de 'aceito', por qualquer das duas pontas (a academia gerindo, o aluno/professor saindo) — ver
+// encerrarVinculo() em services/vinculos.ts. Cancela as matrículas ativas do aluno com aquele
+// responsável; check-ins e graduações já existentes ficam como histórico.
 export type StatusVinculo = 'pendente' | 'aceito' | 'recusado' | 'encerrado';
 export type TipoVinculo = 'aluno-academia' | 'aluno-professor' | 'professor-academia';
 export type PerfilSolicitante = 'aluno' | 'professor';
