@@ -24,9 +24,9 @@ const PROJETO = process.env.GCLOUD_PROJECT || 'roundup-app-a5a82';
 
 // example.com é domínio reservado (RFC 2606): nenhum e-mail real recebe nada
 const CONTAS = {
-  academia: { email: 'demo.academia@example.com', nome: 'Carla Mendes' },
-  professor: { email: 'demo.professor@example.com', nome: 'Rafael Souza' },
-  aluno: { email: 'demo.aluno@example.com', nome: 'Lucas Andrade' },
+  academia: { email: 'academia@example.com', nome: 'Carla Mendes' },
+  professor: { email: 'professor@example.com', nome: 'Rafael Souza' },
+  aluno: { email: 'aluno@example.com', nome: 'Lucas Andrade' },
 };
 
 const MODALIDADE = 'Jiu-Jitsu';
