@@ -1,7 +1,8 @@
 // RF10, RN07: turmas pertencem a uma academia ou a um professor autônomo (responsável único)
 import {
   doc, setDoc, updateDoc,
-  collection, query, where, getDocs, documentId,
+  collection, query, where, getDocs,
+  type Firestore,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { Matricula, NivelTurma, Perfil, Turma } from '../types';
@@ -90,22 +91,24 @@ export async function listarTurmasDoProfessor(professorId: string): Promise<Turm
   return Array.from(porId.values());
 }
 
-// RF11: turmas em que o aluno está efetivamente matriculado
-export async function listarTurmasDoAluno(alunoId: string): Promise<Turma[]> {
+// RF11: turmas em que o aluno está efetivamente matriculado e que continuam ativas.
+// Cada turma é lida por conta própria (e não numa consulta `documentId() in [...]`): se a academia
+// exclui (desativa) uma turma em que o aluno ainda tem matrícula ativa, a regra de leitura nega a
+// consulta INTEIRA por causa dessa única turma — o aluno via "Você não tem permissão" em vez da
+// lista. Lendo uma a uma, a turma inativa (negada) é só pulada. `dbInstancia` é injetável para a
+// suíte de regras rodar esta mesma função sob um contexto autenticado de teste.
+export async function listarTurmasDoAluno(alunoId: string, dbInstancia: Firestore = db): Promise<Turma[]> {
   const qMatriculas = query(
-    collection(db, COLECAO_MATRICULAS),
+    collection(dbInstancia, COLECAO_MATRICULAS),
     where('alunoId', '==', alunoId),
     where('status', '==', 'ativa'),
   );
   const snapMatriculas = await getDocs(qMatriculas);
-  const turmaIds = snapMatriculas.docs.map(d => (d.data() as Matricula).turmaId);
+  const turmaIds = [...new Set(snapMatriculas.docs.map(d => (d.data() as Matricula).turmaId))];
   if (turmaIds.length === 0) return [];
 
-  const lotes = emLotes(turmaIds, LIMITE_CLAUSULA_IN);
-  const resultados = await Promise.all(
-    lotes.map(lote => getDocs(query(collection(db, COLECAO), where(documentId(), 'in', lote)))),
-  );
-  return resultados.flatMap(snap => snap.docs.map(d => d.data() as Turma));
+  const turmas = await Promise.all(turmaIds.map(id => getDocSeguro<Turma>(doc(dbInstancia, COLECAO, id))));
+  return turmas.filter((t): t is Turma => t !== null && t.ativa === true);
 }
 
 // RF11: origem da lista de matrícula — turmas ativas dos responsáveis com quem o aluno tem vínculo ativo

@@ -1,9 +1,14 @@
+// O banco do app (src/services/firebase.ts, que carrega React Native) é trocado por um vazio: os testes
+// que rodam funções reais do app passam o banco de teste por parâmetro.
+jest.mock('../../src/services/firebase', () => ({ db: {} }));
+
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, doc, documentId, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
 import {
   iniciarAmbiente, encerrarAmbiente, limparDados,
-  comoUsuario, semear, usuarioBase, turmaBase,
+  comoUsuario, semear, usuarioBase, turmaBase, matriculaBase,
 } from './helpers';
+import { listarTurmasDoAluno } from '../../src/services/turmas';
 
 beforeAll(iniciarAmbiente);
 afterAll(encerrarAmbiente);
@@ -69,5 +74,36 @@ describe('turmas', () => {
 
     const dbAcademia = comoUsuario('academia1');
     await assertSucceeds(getDoc(doc(dbAcademia, 'turmas', 'turma1')));
+  });
+});
+
+// RF11: turma excluída (inativa) com matrícula do aluno ainda ativa não pode derrubar a lista do aluno.
+// Roda a função real listarTurmasDoAluno() sob as regras reais.
+describe('listarTurmasDoAluno com turma excluída (RF11)', () => {
+  async function semearTurmas() {
+    await semear(async (db) => {
+      await setDoc(doc(db, 'usuarios', 'academia1'), usuarioBase({ perfil: 'academia' }));
+      await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+      await setDoc(doc(db, 'turmas', 'ativa1'), turmaBase('academia1', 'academia', { nome: 'Ativa' }));
+      await setDoc(doc(db, 'turmas', 'excluida1'), turmaBase('academia1', 'academia', { nome: 'Excluída', ativa: false }));
+      await setDoc(doc(db, 'matriculas', 'ativa1_aluno1'), matriculaBase('ativa1', 'aluno1', 'academia1'));
+      await setDoc(doc(db, 'matriculas', 'excluida1_aluno1'), matriculaBase('excluida1', 'aluno1', 'academia1'));
+    });
+  }
+
+  test('a consulta em lote por documentId é negada por causa da turma inativa (causa do erro)', async () => {
+    await semearTurmas();
+    await assertFails(getDocs(query(collection(comoUsuario('aluno1'), 'turmas'), where(documentId(), 'in', ['ativa1', 'excluida1']))));
+  });
+
+  test('a função devolve só a turma ativa, sem erro de permissão', async () => {
+    await semearTurmas();
+    const turmas = await listarTurmasDoAluno('aluno1', comoUsuario('aluno1') as any);
+    expect(turmas.map((t) => t.nome)).toEqual(['Ativa']);
+  });
+
+  test('sem matrícula ativa, lista vazia', async () => {
+    await semearTurmas();
+    expect(await listarTurmasDoAluno('aluno2', comoUsuario('aluno2') as any)).toEqual([]);
   });
 });
