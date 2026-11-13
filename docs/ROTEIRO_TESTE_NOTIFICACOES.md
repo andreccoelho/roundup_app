@@ -14,7 +14,7 @@ Um workflow do GitHub Actions (`.github/workflows/preparar-teste-notificacoes.ym
 - publica a versão web;
 - publica o app para abrir no **Expo Go** do iPhone (EAS Update).
 
-**Por que o iPhone serve sem conta Apple Developer:** no SDK 57, o push remoto saiu do Expo Go **só no Android** (o código do `expo-notifications` 57.0.17 lança erro no Android e só um aviso no iOS). No iPhone, o Expo Go recebe push usando as credenciais da própria Expo, e o app abre pelo link do update, sem build e sem computador.
+**Por que o iPhone serve sem conta Apple Developer:** no SDK 58, o push remoto continua fora do Expo Go **só no Android** (o código do `expo-notifications` 58.1.9 lança erro no Android e só um aviso no iOS). No iPhone, o Expo Go recebe push usando as credenciais da própria Expo, e o app abre pelo link do update, sem build e sem computador.
 
 O workflow ainda gera um APK de Android, se um dia você tiver um aparelho à mão (opção `build_android`, desligada por padrão).
 
@@ -49,7 +49,7 @@ No repositório: **Settings → Secrets and variables → Actions → New reposi
 **Limitações desse caminho (registrar no relatório):**
 - O teste valida o caminho do RoundUp até o iPhone (Cloud Function → serviço da Expo → APNs → aparelho), mas **dentro do Expo Go**, não num app próprio publicado. A notificação aparece com o ícone do Expo Go.
 - Para o app com ícone e credenciais próprias, ainda vale o caminho manual (Apple Developer no iOS, ou o APK no Android).
-- Se o Expo Go da App Store já estiver numa versão de SDK acima da 57, ele não abre o update. Nesse caso, fale comigo.
+- O Expo Go da App Store só abre projetos do **SDK mais recente** (o app está no SDK 58). Se a Expo lançar um SDK novo, o link deixa de abrir até o projeto ser atualizado de novo.
 
 Se algum passo do workflow falhar, copie o log do passo (Actions → execução → passo vermelho) e mande para o chat.
 

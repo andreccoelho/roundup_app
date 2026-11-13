@@ -6,6 +6,7 @@
 #   EXPO_TOKEN                token de acesso da sua conta Expo
 # Opcional: DEMO_SENHA (senha das contas demo; padrão em scripts/seed-demo.cjs).
 #
+# O app está no Expo SDK 58: o Expo Go da App Store só abre o SDK mais recente.
 # iPhone (padrão): publica o app como EAS Update, que o Expo Go abre pelo link. No iOS, o push
 # remoto continua funcionando no Expo Go com as credenciais da própria Expo — não precisa de conta
 # Apple Developer. (No Android, o Expo Go não recebe push desde o SDK 53: use o APK, opcional.)

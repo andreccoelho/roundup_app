@@ -33,7 +33,7 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 ### RF31 — notificações: ✅ IMPLEMENTADO e pronto para build; falta a validação em aparelho (passos do autor)
 
 **O que está pronto:**
-- **App** (`src/services/notificacoes.ts`): no login, cria o canal Android `padrao`, pede permissão, obtém o token Expo (o `projectId` é lido sozinho de `extra.eas.projectId`, conforme o `getExpoPushTokenAsync` do SDK 57.0.17 instalado) e grava em `usuarios/{uid}/privado/notificacoes.tokens`. No logout, remove o token. Na web não faz nada.
+- **App** (`src/services/notificacoes.ts`): no login, cria o canal Android `padrao`, pede permissão, obtém o token Expo (o `projectId` é lido sozinho de `extra.eas.projectId`, conforme o `getExpoPushTokenAsync` do `expo-notifications` instalado) e grava em `usuarios/{uid}/privado/notificacoes.tokens`. No logout, remove o token. Na web não faz nada.
 - **Configuração de build (rodada de 2026-11-13):**
   - `app.json` com `android.package` e `ios.bundleIdentifier` = `br.com.roundup.app` (decisão do autor);
   - plugin `expo-notifications` com `defaultChannel: "padrao"`, o mesmo canal das functions;
@@ -57,7 +57,7 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
   - roda as 3 migrações e as contas demo, e publica a web;
   - cadastra o app Android no Firebase e gera o `google-services.json`;
   - leva para o EAS a configuração `EXPO_PUBLIC_FIREBASE_*` (antes só existia no `.env` local) e a chave FCM V1 (`scripts/configurar-fcm-eas.cjs`, mesma API do `eas-cli`);
-  - publica o app como **EAS Update** para abrir no **Expo Go do iPhone** (padrão; `expo-updates` ~57.0.28 instalado, `runtimeVersion: appVersion`). No SDK 57, o push remoto saiu do Expo Go só no Android: no iOS ele usa as credenciais da Expo, sem conta Apple Developer. Limitação: valida o caminho até o aparelho dentro do Expo Go, não num app próprio publicado;
+  - publica o app como **EAS Update** para abrir no **Expo Go do iPhone** (padrão; `expo-updates` ~58.0.22 instalado, `runtimeVersion: appVersion`). No SDK 58, o push remoto continua fora do Expo Go só no Android: no iOS ele usa as credenciais da Expo, sem conta Apple Developer. Limitação: valida o caminho até o aparelho dentro do Expo Go, não num app próprio publicado;
   - opcionalmente, gera o APK do perfil `preview`, que abre sem Metro.
 - **Botões "Testar neste aparelho"** na tela Notificações: a callable `enviarNotificacaoDeTeste` manda um exemplo de cada tipo só para o próprio usuário, pelo caminho real, e devolve o status (`enviado`, `semDispositivo`, `desligado`…). Um teste a cada 15 s por usuário.
 - **Risco aceito:** a mesma chave de conta de serviço publica no Firebase (guardada como secret do GitHub) e serve de chave FCM V1 no EAS. Retirar o papel extra depois dos testes, e revogar a chave se não for mais usar.
@@ -250,6 +250,19 @@ Confirmado no plano anterior (`docs/PLANO_REGRAS_CICLO2_3.md`): essas duas não 
 - A vigência pode durar no máximo um ano (366 dias, regra e app).
 
 **Migração:** as missões antigas (sem os campos) valem como `todos`, desde `criadoEm`, sem fim. `scripts/migrar-missoes-publico.cjs` (dry-run por padrão) grava esses valores, e o agendamento diário também as recalcula sozinho na primeira execução. **Até uma das duas coisas acontecer, o aluno não vê as missões antigas**, porque o app passou a consultar por `leitoresIds`. Rodar o script logo depois do deploy.
+
+---
+
+## 11. Atualização para o Expo SDK 58 (2026-11-13)
+
+**Motivo:** o Expo Go da App Store só abre projetos do SDK mais recente; o do iPhone do autor era SDK 58 e o app estava no SDK 57 ("Project is incompatible with this version of Expo Go"). Sem isso, o teste de notificações no iPhone sem conta Apple Developer não era possível.
+
+**O que mudou:**
+- `expo` ~58.0.25 e as demais dependências do app alinhadas à tabela `bundledNativeModules.json` do próprio pacote `expo` (React Native 0.86.3 → 0.88.1, React 19.2.3 → 19.3.0, `expo-notifications` ~58.1.9, `expo-updates` ~58.0.22, `react-native-screens`, `safe-area-context`, `svg`, entre outras). O `npx expo install --fix` não pôde ser usado porque a API da Expo está bloqueada nesta sessão.
+- Dois ajustes de tipo, nenhum de comportamento: `criarEstilos` (o React Native 0.88 removeu `StyleSheet.NamedStyles`) e a referência de `TextInput` (agora `TextInputInstance`) em `CampoTexto` e `LoginScreen`.
+- `AGENTS.md` aponta para a documentação do SDK 58.
+
+**Verificado:** typecheck sem erros; exportação para iOS e web; unit 62, rules 144 e functions 60, os mesmos números de antes. **Não verificado:** o app rodando (nenhuma tela foi aberta num aparelho nesta sessão) e a leitura da documentação oficial do SDK 58, porque `docs.expo.dev` está bloqueado aqui. Ler as notas de migração de 57 para 58 antes de uma entrega é prudente.
 
 ---
 

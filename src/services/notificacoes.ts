@@ -1,9 +1,9 @@
-// RF31: registro do aparelho para notificações push (expo-notifications, SDK 57). O token Expo
+// RF31: registro do aparelho para notificações push (expo-notifications, SDK 58). O token Expo
 // fica em usuarios/{uid}/privado/notificacoes — documento fechado a outros usuários (mesmo motivo
 // de privado/vinculos: `usuarios/{uid}` raiz é legível por qualquer autenticado). O envio é das
 // Cloud Functions em functions/src/notificacoes.ts, que respeitam usuarios.preferenciasNotificacao.
 //
-// Limites (docs.expo.dev, SDK 57): push remoto não funciona no Expo Go no Android nem na web —
+// Limites (docs.expo.dev, SDK 58): push remoto não funciona no Expo Go no Android nem na web —
 // precisa de development build (perfil `development` do eas.json, com expo-dev-client). Sem
 // `extra.eas.projectId` no app.json (`eas init`), getExpoPushTokenAsync rejeita — ele lê o projectId
 // sozinho de Constants.easConfig / expoConfig.extra.eas. Nos dois casos o registro falha em silêncio
@@ -18,8 +18,8 @@ import type { PreferenciasNotificacao } from '../types';
 
 const CANAL_ANDROID = 'padrao';
 
-// Sem handler, notificação que chega com o app aberto não aparece (docs do SDK 57). Na web não há
-// push (a doc do SDK 57 só lista Android e iOS), então nem registra.
+// Sem handler, notificação que chega com o app aberto não aparece (docs do SDK 58). Na web não há
+// push (a doc do SDK 58 só lista Android e iOS), então nem registra.
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
