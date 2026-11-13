@@ -142,12 +142,22 @@ jobs:
           " "$RUNNER_TEMP/web.json" > "$RUNNER_TEMP/firebase.env"
           cat "$RUNNER_TEMP/firebase.env" >> "$GITHUB_ENV"
 
+      # Não bloqueia o resto: uma falha do Hosting (ex.: 503 momentâneo) não impede o teste no celular
       - name: Publicar a versão web (Firebase Hosting)
         if: env.FAZER_WEB == 'true'
+        continue-on-error: true
         run: |
           npx expo export -p web
-          npx firebase deploy --only hosting --project "$PROJETO" --non-interactive
-          echo "Web: https://$PROJETO.web.app" >> "$GITHUB_STEP_SUMMARY"
+          for tentativa in 1 2 3; do
+            if npx firebase deploy --only hosting --project "$PROJETO" --non-interactive; then
+              echo "Web: https://$PROJETO.web.app" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Hosting falhou (tentativa $tentativa); tentando de novo em 20 s"
+            sleep 20
+          done
+          echo "Web: não publicada nesta execução (o Hosting falhou 3 vezes)." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
 
       - name: Projeto no EAS
         if: env.FAZER_IPHONE == 'true' || env.FAZER_ANDROID == 'true'
