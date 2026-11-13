@@ -30,7 +30,7 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 **A validar:** nesses documentos preservados fica o uid do responsável excluído (`responsavelId`, `professorId` de sessões passadas, `validadoPor`). Tratei como pseudonimizado, porque depois da exclusão de `usuarios/{uid}` e da conta no Auth o uid não identifica mais ninguém. Também apago `consentimentosLGPD`, como pedido; se a orientação jurídica for guardar o registro de consentimento como prova, basta tirar essa coleção da função.
 
-### RF31 — notificações: ✅ IMPLEMENTADO e pronto para build; falta a validação em aparelho (passos do autor)
+### RF31 — notificações: ✅ IMPLEMENTADO (validado em iPhone, exceto o lembrete agendado)
 
 **O que está pronto:**
 - **App** (`src/services/notificacoes.ts`): no login, cria o canal Android `padrao`, pede permissão, obtém o token Expo (o `projectId` é lido sozinho de `extra.eas.projectId`, conforme o `getExpoPushTokenAsync` do `expo-notifications` instalado) e grava em `usuarios/{uid}/privado/notificacoes.tokens`. No logout, remove o token. Na web não faz nada.
@@ -65,7 +65,8 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 **Validação em aparelho (2026-11-13, iPhone, Expo Go, SDK 58):** o autor recebeu, pelos botões "Testar neste aparelho", as três notificações de exemplo: "Treino hoje (teste)", "Conquista (teste)" e "Nova missão (teste)", com o app em segundo plano. Isso confirma o caminho completo Cloud Function → serviço da Expo → APNs → aparelho, e que a configuração do projeto e das credenciais está correta.
 - **Ainda não validado em aparelho:** os gatilhos reais (missão criada pela academia para o público-alvo, graduação registrada, medalha por check-in validado e o lembrete agendado das 7h), o comportamento com o app aberto e com o app fechado, e o push num app próprio publicado (não dentro do Expo Go). A notificação aparece com o ícone do Expo Go.
-- **Situação do RF31:** implementado e com o envio confirmado em aparelho por notificações de exemplo; os gatilhos reais seguem testados só no emulador (status `simulado`) até o autor disparar os três pelo roteiro.
+- **Gatilhos reais validados em aparelho (2026-11-13, 15:22 e 15:24):** nova missão criada pela academia na web ("Treinar a semana toda — vale 30 pts") e graduação registrada pela academia ("Parabéns: Faixa azul em Jiu-Jitsu", que também abriu a comemoração "Nova faixa" no app).
+- **Situação do RF31:** implementado. Confirmado em aparelho: o envio de ponta a ponta, os 3 tipos de exemplo, a nova missão real e a conquista real (graduação). **Não testado em aparelho:** o lembrete agendado das 7h (só no emulador, via `enviarLembretesDoDia`), o comportamento com o app aberto e com o app fechado, a missão que exclui o aluno do público e a medalha por check-in. Se a banca exigir o lembrete em aparelho, é um clique em "Forçar execução" no Cloud Scheduler (roteiro, seção 6C).
 
 **O que depende do autor** (passo a passo em **`docs/ROTEIRO_TESTE_NOTIFICACOES.md`**, "Caminho fácil"):
 - plano Blaze e deploy;
@@ -84,6 +85,19 @@ Não foi possível consultar docs.expo.dev desta sessão (host fora da rede libe
 - `firebase-functions` atualizado de 7.3.2 para 7.4.0 (versão menor; o aviso de "outdated" do emulador sumiu). `firebase-admin` continua fixo em 13.10.0 pelo motivo registrado em `docs/decisoes-tecnicas.md` (o 14.x quebra o emulador com `ERR_REQUIRE_ESM`).
 - **Node:** `functions/package.json` continua declarando Node 22, que é o runtime certo para o deploy (o Cloud Functions não suporta versões ímpares como a 21). A máquina de desenvolvimento tem Node 21, e o emulador avisa e usa a 21. Os testes passam assim. Para alinhar de vez é preciso instalar o Node 22 na máquina (ex.: pelo instalador oficial ou `nvm-windows`) — mudança de sistema, não foi feita.
 - **Java:** o `firebase-tools` 15 exige Java 21+, e o Java padrão da máquina é o 20. Os testes desta rodada rodaram com o OpenJDK 22 de `~/.jdks`, só na execução.
+
+---
+
+## Situação final dos 4 requisitos (2026-11-13)
+
+| Requisito | Situação | Verificado em aparelho (iPhone) | Só em teste automático (emulador) |
+|---|---|---|---|
+| RF19 — medalhas com data | Implementado | — | concessão pela Cloud Function, sem duplicar, estorno não retira, migração com data do histórico, regras (client não escreve) |
+| RF23 — público-alvo e vigência | Implementado | missão "Todos os alunos" criada e recebida (push) | públicos turma e alunos escolhidos, vigência fora do período, conclusão fora da vigência negada, agendamento 00:05 |
+| RF31 — notificações | Implementado (ver ressalva) | 3 pushes de exemplo, nova missão real, graduação real | lembrete agendado, medalha por check-in, missão fora do público |
+| RF33 — pontos, níveis e faixas | Implementado | lista de faixas do Jiu-Jitsu no registro, editor de estrutura, barra de progresso no Perfil | migração do texto livre, regras da estrutura |
+
+Nenhum dos quatro depende mais de decisão de produto pendente do autor. As decisões marcadas "a validar" nos itens 5, 8, 10 e 11 seguem para a orientadora.
 
 ---
 
