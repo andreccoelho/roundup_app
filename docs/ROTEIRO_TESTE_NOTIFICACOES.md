@@ -2,20 +2,21 @@
 
 Objetivo: ver chegar no aparelho os 3 tipos de push (lembrete de sessão, nova missão, conquista). No emulador o envio já foi testado (status `simulado`); falta o caminho real: Cloud Function → serviço de push da Expo → FCM/APNs → celular.
 
-Comece pelo **Android**: não exige conta paga da Apple. O iOS exige o Apple Developer Program e o caminho manual.
+Sem Android à mão, use o **iPhone com o Expo Go** (caminho fácil abaixo): não exige conta paga da Apple.
 
 ---
 
-## Caminho fácil: só pelo navegador (recomendado)
+## Caminho fácil: só pelo navegador e um iPhone (recomendado)
 
 Um workflow do GitHub Actions (`.github/workflows/preparar-teste-notificacoes.yml`) faz o resto. Numa execução, ele:
 - publica as functions, as regras e os índices, e apaga as functions antigas;
 - roda as 3 migrações e cria as contas demo;
 - publica a versão web;
-- cadastra o app Android no Firebase e configura o projeto e a chave FCM no Expo;
-- gera o APK de teste.
+- publica o app para abrir no **Expo Go** do iPhone (EAS Update).
 
-Você só faz cliques no navegador (dá para fazer pelo celular).
+**Por que o iPhone serve sem conta Apple Developer:** no SDK 57, o push remoto saiu do Expo Go **só no Android** (o código do `expo-notifications` 57.0.17 lança erro no Android e só um aviso no iOS). No iPhone, o Expo Go recebe push usando as credenciais da própria Expo, e o app abre pelo link do update, sem build e sem computador.
+
+O workflow ainda gera um APK de Android, se um dia você tiver um aparelho à mão (opção `build_android`, desligada por padrão).
 
 ### Passo 1 — Chave da conta de serviço do Firebase
 1. [Console do Firebase](https://console.firebase.google.com/project/roundup-app-a5a82/settings/serviceaccounts/adminsdk) → **Configurações do projeto → Contas de serviço → Gerar nova chave privada**. Um arquivo `.json` é baixado.
@@ -33,17 +34,22 @@ No repositório: **Settings → Secrets and variables → Actions → New reposi
 - (opcional) `DEMO_SENHA`: senha das contas demo. Sem ele, vale `Demo@2026`.
 
 ### Passo 4 — Rodar
-**Actions → "Preparar teste de notificações (RF31)"** → abra a execução que falhou por falta de secrets → **Re-run all jobs**.
+**Actions → "Preparar teste de notificações (RF31)"** → abra a execução **mais recente** (ela falhou por falta de secrets) → **Re-run all jobs**.
 - O botão "Run workflow" só aparece quando o workflow existe na branch `main`. Enquanto ele estiver só na `dev`, use o "Re-run".
-- Leva uns 10 minutos. No resumo da execução aparecem o link da web e o **link do build** no expo.dev. O build em si leva mais 10 a 30 min na fila da Expo.
+- Leva uns 10 minutos. No **resumo** da execução aparecem o link da web e o **link do update** para o iPhone.
 
-### Passo 5 — Testar no celular (Android)
-1. Abra o link do build no celular → **Install** (permita instalar de fonte desconhecida).
-2. Abra o RoundUp, entre com **aluno@example.com** (senha `Demo@2026` ou a sua `DEMO_SENHA`) e **permita notificações**.
-3. **Perfil → Notificações → Testar neste aparelho**: toque nos 3 botões, um de cada vez (há 15 s de espera entre testes). Cada um mostra o resultado embaixo ("Enviado…", "Este aparelho não está registrado…" etc.).
-4. Para os disparos **reais** (a seção 6 abaixo), use a web (`https://roundup-app-a5a82.web.app`) com **academia@example.com** como responsável.
+### Passo 5 — Testar no iPhone
+1. Instale o **Expo Go** pela App Store e entre nele com a mesma conta Expo do passo 2.
+2. No iPhone, abra o link do update que está no resumo da execução e toque em **Preview / Open in Expo Go**. Se a página não abrir o Expo Go, cole no Safari o endereço `exp://u.expo.dev/…` que também está no resumo.
+3. No RoundUp, entre com **aluno@example.com** (senha `Demo@2026` ou a sua `DEMO_SENHA`) e **permita notificações**.
+4. **Perfil → Notificações → Testar neste aparelho**: toque nos 3 botões, um de cada vez (há 15 s de espera entre testes). Cada um mostra o resultado embaixo ("Enviado…", "Este aparelho não está registrado…" etc.). Teste com o Expo Go aberto e depois em segundo plano.
+5. Para os disparos **reais** (a seção 6 abaixo), use a web (`https://roundup-app-a5a82.web.app`) com **academia@example.com** como responsável, no navegador do próprio iPhone ou de outro aparelho.
+   - Lembrete de sessão: o Cloud Scheduler pode ser executado pelo navegador (seção 6C, "Forçar execução").
 
-O APK é do perfil `preview`: tem o JavaScript embutido e abre sem computador. O perfil `development` precisa do Metro rodando numa máquina, por isso não é usado aqui.
+**Limitações desse caminho (registrar no relatório):**
+- O teste valida o caminho do RoundUp até o iPhone (Cloud Function → serviço da Expo → APNs → aparelho), mas **dentro do Expo Go**, não num app próprio publicado. A notificação aparece com o ícone do Expo Go.
+- Para o app com ícone e credenciais próprias, ainda vale o caminho manual (Apple Developer no iOS, ou o APK no Android).
+- Se o Expo Go da App Store já estiver numa versão de SDK acima da 57, ele não abre o update. Nesse caso, fale comigo.
 
 Se algum passo do workflow falhar, copie o log do passo (Actions → execução → passo vermelho) e mande para o chat.
 

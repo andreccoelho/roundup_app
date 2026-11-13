@@ -57,7 +57,8 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
   - roda as 3 migrações e as contas demo, e publica a web;
   - cadastra o app Android no Firebase e gera o `google-services.json`;
   - leva para o EAS a configuração `EXPO_PUBLIC_FIREBASE_*` (antes só existia no `.env` local) e a chave FCM V1 (`scripts/configurar-fcm-eas.cjs`, mesma API do `eas-cli`);
-  - gera o APK do perfil `preview`, que abre sem Metro.
+  - publica o app como **EAS Update** para abrir no **Expo Go do iPhone** (padrão; `expo-updates` ~57.0.28 instalado, `runtimeVersion: appVersion`). No SDK 57, o push remoto saiu do Expo Go só no Android: no iOS ele usa as credenciais da Expo, sem conta Apple Developer. Limitação: valida o caminho até o aparelho dentro do Expo Go, não num app próprio publicado;
+  - opcionalmente, gera o APK do perfil `preview`, que abre sem Metro.
 - **Botões "Testar neste aparelho"** na tela Notificações: a callable `enviarNotificacaoDeTeste` manda um exemplo de cada tipo só para o próprio usuário, pelo caminho real, e devolve o status (`enviado`, `semDispositivo`, `desligado`…). Um teste a cada 15 s por usuário.
 - **Risco aceito:** a mesma chave de conta de serviço publica no Firebase (guardada como secret do GitHub) e serve de chave FCM V1 no EAS. Retirar o papel extra depois dos testes, e revogar a chave se não for mais usar.
 - **Não testado contra as contas reais:** a primeira execução do workflow pode precisar de ajuste.

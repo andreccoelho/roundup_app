@@ -35,7 +35,7 @@ const TIPOS: { chave: keyof PreferenciasNotificacao; titulo: string; descricao: 
 const RESULTADO_TESTE: Record<StatusTeste, string> = {
   enviado: 'Enviado. Deve chegar em alguns segundos (com o app aberto ou fechado).',
   simulado: 'Simulado: o servidor está em modo de teste (emulador), nada sai para o celular.',
-  semDispositivo: 'Este aparelho não está registrado. Confira se permitiu notificações e se está no app instalado (não no Expo Go nem na web).',
+  semDispositivo: 'Este aparelho não está registrado. Confira se permitiu notificações. Na web não há push; no Android, use o app instalado (o Expo Go do Android não recebe push).',
   desligado: 'Este tipo de aviso está desligado acima. Ligue e teste de novo.',
   erro: 'O serviço de push recusou o envio. Veja a coleção "notificacoes" e o log das functions.',
 };

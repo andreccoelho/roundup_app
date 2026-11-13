@@ -3,6 +3,9 @@
     "name": "roundup_app",
     "slug": "roundup_app",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
