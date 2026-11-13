@@ -1,0 +1,88 @@
+# Publica o backend do Firebase (regras do Firestore, índices e Cloud Functions) e roda a migração do
+# professorId nos registros que já existiam (RF22, RF10). Uso único e controlado:
+#   - roda quando ESTE arquivo é enviado ao dev (autorizado pelo autor em 2026-11-13);
+#   - depois só roda de novo se o autor clicar em "Re-run all jobs" na execução (funciona pelo celular);
+#   - NÃO dispara a cada push, NÃO cria contas demo, NÃO apaga dados e NÃO publica app nem web.
+# Usa o secret FIREBASE_SERVICE_ACCOUNT, o mesmo dos outros workflows.
+name: Publicar backend (regras e functions)
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Nunca cancela uma execução em andamento: um deploy interrompido no meio deixaria o projeto pela metade
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+env:
+  PROJETO: roundup-app-a5a82
+  GCLOUD_PROJECT: roundup-app-a5a82
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      - name: Conferir secret
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then echo "::error::Falta o secret FIREBASE_SERVICE_ACCOUNT."; exit 1; fi
+
+      - name: Instalar dependências e compilar as functions
+        run: |
+          npm ci --no-audit --no-fund
+          npm --prefix functions ci --no-audit --no-fund
+          npm --prefix functions run build
+
+      - name: Credencial do Firebase
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/conta-servico.json"
+          node -e "const k=require(process.argv[1]); if(k.project_id!==process.env.PROJETO){console.error('::error::A chave é do projeto '+k.project_id+', não de '+process.env.PROJETO);process.exit(1)}; console.log('Conta de serviço: '+k.client_email)" "$RUNNER_TEMP/conta-servico.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/conta-servico.json" >> "$GITHUB_ENV"
+
+      # Sem --force: não apaga functions nem índices (o que sair do código fica para o autor decidir)
+      - name: Deploy (regras, índices e functions)
+        run: npx firebase deploy --only functions,firestore:rules,firestore:indexes --project "$PROJETO" --non-interactive
+
+      # Primeiro só mostra o que seria alterado (fica no log), depois aplica. Só acrescenta `professorId`
+      # em matrículas e check-ins de turmas com professor atribuído pela academia.
+      - name: Migração do professorId (simulação)
+        run: node scripts/migrar-professor-nos-registros.cjs
+
+      - name: Migração do professorId (aplicar)
+        run: node scripts/migrar-professor-nos-registros.cjs --aplicar
+
+      - name: Resumo
+        run: |
+          {
+            echo "## Backend publicado"
+            echo ""
+            echo "- Regras do Firestore, índices e Cloud Functions publicados em \`$PROJETO\`."
+            echo "- Migração do \`professorId\` aplicada nos registros existentes."
+            echo ""
+            echo "As telas do professor e da academia já podem ser conferidas."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Limpar a chave
+        if: always()
+        run: rm -f "$RUNNER_TEMP/conta-servico.json"
