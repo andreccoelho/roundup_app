@@ -78,10 +78,11 @@ export async function listarTurmasPorResponsavel(responsavelId: string): Promise
 // (responsavelId) MAIS as que uma academia atribuiu a ele (professorId). Duas consultas de
 // campo único (sem índice composto) e deduplicação por id, em vez de uma consulta OR que o
 // Firestore não suporta nativamente.
-export async function listarTurmasDoProfessor(professorId: string): Promise<Turma[]> {
+// `dbInstancia` é injetável para a suíte de regras rodar esta mesma função sob um contexto de teste.
+export async function listarTurmasDoProfessor(professorId: string, dbInstancia: Firestore = db): Promise<Turma[]> {
   const [comoResponsavel, comoAtribuido] = await Promise.all([
-    getDocs(query(collection(db, COLECAO), where('responsavelId', '==', professorId))),
-    getDocs(query(collection(db, COLECAO), where('professorId', '==', professorId))),
+    getDocs(query(collection(dbInstancia, COLECAO), where('responsavelId', '==', professorId))),
+    getDocs(query(collection(dbInstancia, COLECAO), where('professorId', '==', professorId))),
   ]);
   const porId = new Map<string, Turma>();
   [...comoResponsavel.docs, ...comoAtribuido.docs].forEach((d) => {

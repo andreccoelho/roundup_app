@@ -8,7 +8,7 @@ import {
   iniciarAmbiente, encerrarAmbiente, limparDados,
   comoUsuario, semear, usuarioBase, turmaBase, matriculaBase,
 } from './helpers';
-import { listarTurmasDoAluno } from '../../src/services/turmas';
+import { listarTurmasDoAluno, listarTurmasDoProfessor } from '../../src/services/turmas';
 
 beforeAll(iniciarAmbiente);
 afterAll(encerrarAmbiente);
@@ -105,5 +105,22 @@ describe('listarTurmasDoAluno com turma excluída (RF11)', () => {
   test('sem matrícula ativa, lista vazia', async () => {
     await semearTurmas();
     expect(await listarTurmasDoAluno('aluno2', comoUsuario('aluno2') as any)).toEqual([]);
+  });
+});
+
+// RF10: o professor vê, na lista de turmas, as que criou E as que uma academia atribuiu a ele.
+describe('listarTurmasDoProfessor (RF10)', () => {
+  test('junta as turmas próprias e as atribuídas, sem as de outros', async () => {
+    await semear(async (db) => {
+      await setDoc(doc(db, 'usuarios', 'academia1'), usuarioBase({ perfil: 'academia' }));
+      await setDoc(doc(db, 'usuarios', 'prof1'), usuarioBase({ perfil: 'professor' }));
+      await setDoc(doc(db, 'usuarios', 'prof2'), usuarioBase({ perfil: 'professor' }));
+      await setDoc(doc(db, 'turmas', 'propria'), turmaBase('prof1', 'professor', { id: 'propria', nome: 'Própria' }));
+      await setDoc(doc(db, 'turmas', 'atribuida'), turmaBase('academia1', 'academia', { id: 'atribuida', nome: 'Atribuída', professorId: 'prof1' }));
+      await setDoc(doc(db, 'turmas', 'semprofessor'), turmaBase('academia1', 'academia', { id: 'semprofessor', nome: 'Sem professor' }));
+      await setDoc(doc(db, 'turmas', 'deoutro'), turmaBase('academia1', 'academia', { id: 'deoutro', nome: 'De outro', professorId: 'prof2' }));
+    });
+    const turmas = await listarTurmasDoProfessor('prof1', comoUsuario('prof1') as any);
+    expect(turmas.map((t) => t.nome).sort()).toEqual(['Atribuída', 'Própria']);
   });
 });

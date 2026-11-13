@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { criarEstilos, Espacamento, useTema } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { criarTurma, listarTurmasPorResponsavel } from '../../services/turmas';
+import { criarTurma, listarTurmasDoProfessor, listarTurmasPorResponsavel } from '../../services/turmas';
 import { criarSessao } from '../../services/sessoes';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
 import { buscarUsuario } from '../../services/usuarios';
@@ -70,7 +70,11 @@ export default function TurmasScreen() {
     setCarregando(true);
     setErro(null);
     try {
-      setTurmas(await listarTurmasPorResponsavel(usuario.id));
+      // RF10: o professor vê as turmas que criou como autônomo E as que uma academia atribuiu a ele
+      // (o painel Hoje já fazia isso); a academia vê as dela.
+      setTurmas(usuario.perfil === 'professor'
+        ? await listarTurmasDoProfessor(usuario.id)
+        : await listarTurmasPorResponsavel(usuario.id));
     } catch (e) {
       setErro(mensagemErro(e, 'Não foi possível carregar suas turmas agora.'));
     } finally {
@@ -184,7 +188,7 @@ export default function TurmasScreen() {
       ) : erro ? (
         <EstadoErro mensagem={erro} onTentarNovamente={carregarTurmas} />
       ) : turmas.length === 0 ? (
-        <EstadoVazio icone={IconeTatame} titulo="Nenhuma turma criada ainda" descricao="Toque em Nova turma para criar a primeira." />
+        <EstadoVazio icone={IconeTatame} titulo="Nenhuma turma ainda" descricao="Toque em Nova turma para criar a primeira. Turmas que uma academia atribuir a você também aparecem aqui." />
       ) : (
         <>
           <GrupoLista titulo={`Minhas turmas: ${ativas} de ${turmas.length} ativas`}>
@@ -201,6 +205,7 @@ export default function TurmasScreen() {
                   <View style={styles.meta}>
                     <Etiqueta texto={turma.modalidade} />
                     <Etiqueta texto={rotuloNivel(turma.nivel)} />
+                    {turma.responsavelId !== usuario?.id ? <Etiqueta texto="Atribuída pela academia" /> : null}
                     {!turma.ativa ? (
                       <Texto variante="footnote">
                         Inativa
