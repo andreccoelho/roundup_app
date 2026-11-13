@@ -7,9 +7,9 @@
 // com o status: 'enviado', 'erro', 'semDispositivo' ou 'simulado' — no emulador nada sai para a
 // internet, o registro é a prova do que teria sido enviado.
 //
-// Para funcionar de verdade (ver docs/DECISOES_PENDENTES.md, RF31): plano Blaze (deploy de
-// functions e Cloud Scheduler), `npx eas init` (projectId), credenciais FCM no EAS e um
-// development build. Opcional: a variável EXPO_ACCESS_TOKEN, se o "enhanced security" de push
+// Para funcionar de verdade (passo a passo em docs/ROTEIRO_TESTE_NOTIFICACOES.md): plano Blaze
+// (deploy de functions e Cloud Scheduler), `eas init` (projectId), google-services.json e chave FCM V1
+// no EAS (Android) ou chave APNs (iOS), e um development build. Opcional: a variável EXPO_ACCESS_TOKEN, se o "enhanced security" de push
 // estiver ligado no projeto Expo.
 import { onDocumentCreated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';

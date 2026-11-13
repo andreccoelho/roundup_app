@@ -4,9 +4,11 @@
 // Cloud Functions em functions/src/notificacoes.ts, que respeitam usuarios.preferenciasNotificacao.
 //
 // Limites (docs.expo.dev, SDK 57): push remoto não funciona no Expo Go no Android nem na web —
-// precisa de development build. Sem `extra.eas.projectId` no app.json (`npx eas init`),
-// getExpoPushTokenAsync rejeita. Nos dois casos o registro falha em silêncio (só console): o app
-// funciona igual, só não recebe push. Passo a passo em docs/DECISOES_PENDENTES.md, RF31.
+// precisa de development build (perfil `development` do eas.json, com expo-dev-client). Sem
+// `extra.eas.projectId` no app.json (`eas init`), getExpoPushTokenAsync rejeita — ele lê o projectId
+// sozinho de Constants.easConfig / expoConfig.extra.eas. Nos dois casos o registro falha em silêncio
+// (só console): o app funciona igual, só não recebe push. Passo a passo para validar no aparelho:
+// docs/ROTEIRO_TESTE_NOTIFICACOES.md.
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { arrayRemove, arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore';

@@ -8,9 +8,11 @@
     "userInterfaceStyle": "automatic",
     "backgroundColor": "#0B0B0C",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "br.com.roundup.app"
     },
     "android": {
+      "package": "br.com.roundup.app",
       "adaptiveIcon": {
         "backgroundColor": "#0B0B0C",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -36,7 +38,8 @@
       [
         "expo-notifications",
         {
-          "color": "#0B0B0C"
+          "color": "#0B0B0C",
+          "defaultChannel": "padrao"
         }
       ]
     ]

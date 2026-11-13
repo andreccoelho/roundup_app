@@ -30,23 +30,36 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 **A validar:** nesses documentos preservados fica o uid do responsável excluído (`responsavelId`, `professorId` de sessões passadas, `validadoPor`). Tratei como pseudonimizado, porque depois da exclusão de `usuarios/{uid}` e da conta no Auth o uid não identifica mais ninguém. Também apago `consentimentosLGPD`, como pedido; se a orientação jurídica for guardar o registro de consentimento como prova, basta tirar essa coleção da função.
 
-### RF31 — notificações: ✅ IMPLEMENTADO, envio real depende de configuração externa
+### RF31 — notificações: ✅ IMPLEMENTADO e pronto para build; falta a validação em aparelho (passos do autor)
 
 **O que está pronto:**
-- **App** (`src/services/notificacoes.ts`): no login, cria o canal Android, pede permissão, obtém o token Expo e grava em `usuarios/{uid}/privado/notificacoes.tokens`; no logout, remove o token. Na web não faz nada (o SDK 57 só tem push em Android e iOS). Plugin `expo-notifications` adicionado ao `app.json`.
-- **Cloud Functions** (`functions/src/notificacoes.ts`), sempre respeitando `preferenciasNotificacao` por tipo:
-  - **Nova missão:** quando uma missão é criada ativa ou reativada, avisa os alunos com vínculo aceito.
-  - **Conquista obtida:** missão concluída, graduação registrada e marcos de medalha de treinos (10/30/100) e de sequência (7/30 dias). Cada conquista é avisada uma vez só por aluno (`conquistasNotificadas`), mesmo com estorno e revalidação.
-  - **Lembrete de sessão:** função agendada todo dia às 7h (horário de Brasília). Manda **um lembrete por aluno por dia de treino**, com o horário da primeira sessão agendada ou aberta do dia; `ultimoLembrete` impede um segundo envio se o agendamento rodar de novo.
-- Cada envio fica registrado na coleção `notificacoes` (sem acesso de client), com status `enviado`, `erro`, `semDispositivo` ou `simulado`. No emulador nada sai para a internet: o status é `simulado`. Tokens que a Expo recusa (`DeviceNotRegistered`) são removidos.
-- A exclusão de conta (RF29) apaga o token e o histórico de notificações.
+- **App** (`src/services/notificacoes.ts`): no login, cria o canal Android `padrao`, pede permissão, obtém o token Expo (o `projectId` é lido sozinho de `extra.eas.projectId`, conforme o `getExpoPushTokenAsync` do SDK 57.0.17 instalado) e grava em `usuarios/{uid}/privado/notificacoes.tokens`. No logout, remove o token. Na web não faz nada.
+- **Configuração de build (rodada de 2026-11-13):**
+  - `app.json` com `android.package` e `ios.bundleIdentifier` = `br.com.roundup.app` (decisão do autor);
+  - plugin `expo-notifications` com `defaultChannel: "padrao"`, o mesmo canal das functions;
+  - `eas.json` com os perfis `development` (dev client, APK, distribuição interna), `preview` e `production`;
+  - `expo-dev-client` instalado;
+  - `app.config.js`, que liga o `google-services.json` só se o arquivo existir (ou pela variável de arquivo `GOOGLE_SERVICES_JSON` no EAS).
+- **Cloud Functions** (sempre respeitando `preferenciasNotificacao` por tipo):
+  - **Nova missão** (`missoesPublico.ts`, RF23): só para o **público-alvo**, quando a missão fica vigente para o aluno, uma vez por aluno (`alunosNotificadosIds`). Antes avisava todos os vinculados.
+  - **Conquista:** missão concluída, graduação registrada e medalha nova de treinos ou de sequência (`medalhas.ts`, RF19). Cada conquista é avisada uma vez por aluno (`conquistasNotificadas`).
+  - **Lembrete de sessão:** agendado todo dia às 7h (Brasília), um por aluno por dia de treino (`ultimoLembrete`).
+- Cada envio fica registrado em `notificacoes` com status `enviado`, `erro`, `semDispositivo` ou `simulado` (emulador). Tokens recusados pela Expo (`DeviceNotRegistered`) são removidos.
 
-**Passos que dependem do autor (não dá para fazer daqui):**
-1. **Plano Blaze** no projeto Firebase: necessário para fazer deploy de qualquer Cloud Function (isso já valia para as funções anteriores) e para o Cloud Scheduler do lembrete diário. Depois: `npx firebase deploy --only functions,firestore`.
-2. **`npx eas init`** na raiz do app: grava `extra.eas.projectId` no `app.json`. Sem isso, `getExpoPushTokenAsync` falha e o app só registra um aviso no console.
-3. **Credenciais de push no EAS:** para Android, criar o app no Firebase Console, baixar a chave da conta de serviço do FCM V1 e enviar com `npx eas credentials`; para iOS, a chave APNs (exige conta Apple Developer).
-4. **Development build** (`npx eas build --profile development`): push remoto não funciona no Expo Go no Android desde o SDK 53.
-5. Opcional: se ligar o "enhanced security for push" no projeto Expo, configurar a variável `EXPO_ACCESS_TOKEN` nas functions.
+**Revisão de código (2026-11-13):** nada bloqueante. Limitações conhecidas:
+- o envio confere só o "ticket" da Expo, não o "receipt" (confirmação da entrega pelo FCM/APNs). `enviado` quer dizer aceito pela Expo, não exibido no aparelho;
+- tocar na notificação abre o app, mas não navega para a tela de `dados.tela` (não há listener de resposta);
+- o plugin usa `mode: development` no iOS (padrão). Um build de App Store precisa de `mode: "production"`.
+
+**O que depende do autor** (passo a passo em **`docs/ROTEIRO_TESTE_NOTIFICACOES.md`**):
+- plano Blaze e deploy;
+- `eas init` (`projectId`);
+- `google-services.json` e chave FCM V1 no EAS;
+- chave APNs (iOS, Apple Developer);
+- `eas build --profile development`;
+- disparar os 3 tipos no celular e registrar o resultado.
+
+Não foi possível consultar docs.expo.dev desta sessão (host fora da rede liberada). A configuração foi conferida no código e na documentação empacotados do `expo-notifications` 57.0.17 instalado.
 
 **Divergência de código de requisito:** o pedido citava "RNF03 do relatório" para o limite de um lembrete por dia de treino. Na lista oficial (`docs/requisitos/requisitos-v1-2026-09.csv`), o RNF03 é "Armazenamento seguro de credenciais", e nenhum requisito fala desse limite. O código implementa o limite, mas o rastreia só como RF31. **A validar:** qual código o relatório deve usar para essa regra.
 
