@@ -76,3 +76,35 @@ describe('graduação aplicada ao perfil do aluno (RF25, RN03)', () => {
     expect(Object.keys((await perfilDe('aluno1'))?.graduacoes)).toEqual(['Luta Livre 2.0']);
   });
 });
+
+describe('graduação estruturada no perfil do aluno (RF33)', () => {
+  test('graduação com faixa da estrutura grava faixasEstruturadas com quem registrou', async () => {
+    await semearAluno({ faixaOuGrau: 'Faixa branca', graduacoes: { 'Jiu-Jitsu': 'Faixa branca' } });
+    await semear(async (db) => {
+      await setDoc(doc(db, 'graduacoes', 'grad1'), graduacaoBase('aluno1', 'academia1', {
+        modalidade: 'Jiu-Jitsu', grau: 'Faixa azul, 1º grau', faixaId: 'azul', faixaNome: 'Azul', faixaCor: 'azul', grauNumero: 1,
+      }));
+    });
+    await aguardar(async () => (await perfilDe('aluno1'))?.faixasEstruturadas?.['Jiu-Jitsu'] !== undefined);
+    expect((await perfilDe('aluno1'))?.faixasEstruturadas).toEqual({
+      'Jiu-Jitsu': { faixaId: 'azul', faixa: 'Azul', cor: 'azul', grau: 1, responsavelId: 'academia1' },
+    });
+  });
+
+  test('graduação em texto livre (modalidade "Outra") apaga a estruturada daquela modalidade', async () => {
+    await semearAluno({
+      graduacoes: { Capoeira: 'Corda azul', 'Jiu-Jitsu': 'Faixa azul' },
+      faixasEstruturadas: {
+        Capoeira: { faixaId: 'azul', faixa: 'Azul', cor: 'azul', grau: 0, responsavelId: 'academia1' },
+        'Jiu-Jitsu': { faixaId: 'azul', faixa: 'Azul', cor: 'azul', grau: 0, responsavelId: 'academia1' },
+      },
+    });
+    await semear(async (db) => {
+      await setDoc(doc(db, 'graduacoes', 'grad1'), graduacaoBase('aluno1', 'academia1', { modalidade: 'Capoeira', grau: 'Corda verde' }));
+    });
+    await aguardar(async () => (await perfilDe('aluno1'))?.graduacoes?.Capoeira === 'Corda verde');
+    const perfil = await perfilDe('aluno1');
+    expect(perfil?.faixasEstruturadas?.Capoeira).toBeUndefined();
+    expect(perfil?.faixasEstruturadas?.['Jiu-Jitsu']?.faixaId).toBe('azul');
+  });
+});

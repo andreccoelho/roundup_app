@@ -14,6 +14,7 @@ import VisaoConsolidadaScreen from '../screens/academia/VisaoConsolidadaScreen';
 import SolicitacoesScreen from '../screens/gestor/SolicitacoesScreen';
 import PreferenciasNotificacaoScreen from '../screens/compartilhado/PreferenciasNotificacaoScreen';
 import ConfiguracaoGamificacaoScreen from '../screens/gestor/ConfiguracaoGamificacaoScreen';
+import EstruturaFaixasScreen from '../screens/gestor/EstruturaFaixasScreen';
 import EditarPerfilScreen from '../screens/compartilhado/EditarPerfilScreen';
 import ContaPrivacidadeScreen from '../screens/compartilhado/ContaPrivacidadeScreen';
 import { TurmasNavigator, AlunosNavigator, MissoesGestorNavigator } from './GestorTabsCompartilhado';
@@ -33,6 +34,7 @@ export type PerfilAcademiaStackParamList = {
   VisaoConsolidada: undefined;
   PreferenciasNotificacao: undefined;
   ConfiguracaoGamificacao: undefined; // RF33
+  EstruturaFaixas: undefined; // RF33
   ContaPrivacidade: undefined;
 };
 
@@ -90,6 +92,7 @@ function PerfilNavigator() {
         component={ConfiguracaoGamificacaoScreen}
         options={opcoesFolha('Pontuação e níveis')}
       />
+      <PerfilStack.Screen name="EstruturaFaixas" component={EstruturaFaixasScreen} options={{ title: 'Faixas da modalidade' }} />
       <PerfilStack.Screen name="ContaPrivacidade" component={ContaPrivacidadeScreen} options={{ title: 'Conta e privacidade' }} />
     </PerfilStack.Navigator>
   );

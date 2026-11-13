@@ -30,6 +30,10 @@ export interface Usuario {
   // Declarada pelo aluno no cadastro; depois só muda pelo registro do professor/academia (Cloud Function
   // aplicarGraduacaoNoPerfil, a partir de `graduacoes/{id}`).
   graduacoes?: Record<string, string>;
+  // RF33, RF25: só perfil 'aluno' — a mesma graduação por modalidade, estruturada (faixa da estrutura
+  // do responsável que registrou + grau). Escrita pela Cloud Function aplicarGraduacaoNoPerfil (ou pela
+  // migração scripts/migrar-faixas.cjs); ausente para quem só tem o texto livre antigo.
+  faixasEstruturadas?: Record<string, GraduacaoEstruturada>;
   graduacao?: string;     // RF05: só perfil 'professor'
   nomeAcademia?: string;  // RF04: só perfil 'academia' — nome institucional, distinto de `nome` (contato)
   endereco?: string;      // RF04: só perfil 'academia'
@@ -247,10 +251,46 @@ export interface Graduacao {
   alunoId: string;
   responsavelId: string;
   modalidade: string;
-  grau: string;
+  grau: string;           // texto exibido: "Faixa roxa, 2º grau"
+  // RF33: faixa da estrutura do responsável (ausente em graduação de modalidade "Outra", em texto livre)
+  faixaId?: string;
+  faixaNome?: string;
+  faixaCor?: CorFaixa;
+  grauNumero?: number;
   dataGraduacao: Date;
   observacoes?: string;
   criadoEm: Date;
+}
+
+// RF33: cores de faixa disponíveis (paleta fixa, a mesma que o SeloFaixa desenha)
+export type CorFaixa =
+  | 'branca' | 'cinza' | 'amarela' | 'laranja' | 'verde' | 'azul' | 'roxa' | 'marrom' | 'vermelha' | 'preta';
+
+// RF33: uma faixa da estrutura de uma modalidade, na ordem de progressão
+export interface FaixaConfig {
+  id: string;     // estável: renomear a faixa não perde quem já está nela
+  nome: string;   // "Roxa"
+  cor: CorFaixa;
+  graus: number;  // graus (tarjas) dentro da faixa, 0 a 10
+}
+
+// RF33: estrutura de faixas personalizada do responsável, um documento por responsável (id ==
+// responsavelId). Só as modalidades personalizadas aparecem em `modalidades`; as demais usam a
+// estrutura padrão (src/utils/faixas.ts).
+export interface EstruturaFaixas {
+  id: string;
+  responsavelId: string;
+  modalidades: Record<string, FaixaConfig[]>;
+  atualizadoEm: Date;
+}
+
+// RF33: graduação atual estruturada do aluno numa modalidade
+export interface GraduacaoEstruturada {
+  faixaId: string;
+  faixa: string;        // nome da faixa no momento do registro
+  cor: CorFaixa;
+  grau: number;
+  responsavelId?: string; // de quem é a estrutura (quem registrou); ausente = estrutura padrão
 }
 
 // RF33: personalização da pontuação e dos níveis por academia ou professor autônomo. Um documento

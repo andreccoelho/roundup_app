@@ -2,12 +2,17 @@
 // Dialogo de confirmação existe por isso: a tela nunca submete sozinha a partir de um cálculo
 // de pontos, e a confirmação é o ponto onde a decisão humana fica explícita na interface.
 // Histórico é imutável depois de criado (ver firestore.rules) — sem tela de edição.
-import { useLayoutEffect, useState } from 'react';
+// RF33: as faixas oferecidas são as da estrutura do responsável (estruturasFaixas, ou a padrão), e o
+// registro grava também a faixa estruturada (faixaId + grau), além do texto.
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
 import { criarGraduacao } from '../../services/graduacoes';
+import { buscarEstruturaFaixas } from '../../services/estruturasFaixas';
+import { estruturaDaModalidade, textoDaFaixa } from '../../utils/faixas';
+import type { EstruturaFaixas } from '../../types';
 import { AlunosStackParamList } from '../../navigation/GestorTabsCompartilhado';
 import BotaoCabecalho from '../../components/ui/BotaoCabecalho';
 import GrupoLista from '../../components/ui/GrupoLista';
@@ -22,7 +27,7 @@ import Texto from '../../components/ui/Texto';
 import GraduacaoSelector from '../../components/ui/GraduacaoSelector';
 import Etiqueta from '../../components/ui/Etiqueta';
 import { MODALIDADES, MODALIDADE_OUTRA } from '../../constants/modalidades';
-import { ESCOLHA_VAZIA, EscolhaGraduacao, SEM_GRADUACAO, modalidadeSemGraduacao, textoGraduacao } from '../../constants/graduacoes';
+import { ESCOLHA_VAZIA, EscolhaGraduacao, SEM_GRADUACAO } from '../../constants/graduacoes';
 import { mensagemErro } from '../../utils/mensagensErro';
 
 type Rota = RouteProp<AlunosStackParamList, 'RegistrarGraduacao'>;
@@ -37,9 +42,22 @@ export default function RegistrarGraduacaoScreen() {
   const [outraModalidade, setOutraModalidade] = useState('');
   const [escolha, setEscolha] = useState<EscolhaGraduacao>(ESCOLHA_VAZIA);
   const [grauOutra, setGrauOutra] = useState('');
+  const [estrutura, setEstrutura] = useState<EstruturaFaixas | null>(null);
+  useEffect(() => {
+    if (!usuario) return;
+    // Falha ao ler a personalização não impede o registro: vale a estrutura padrão
+    buscarEstruturaFaixas(usuario.id).then(setEstrutura, () => setEstrutura(null));
+  }, [usuario]);
   const ehOutra = escolhida === MODALIDADE_OUTRA;
   const modalidade = ehOutra ? outraModalidade : escolhida;
-  const grau = ehOutra ? grauOutra : textoGraduacao(escolhida, escolha);
+  const faixas = useMemo(() => (escolhida && !ehOutra ? estruturaDaModalidade(estrutura?.modalidades, escolhida) : []), [estrutura, escolhida, ehOutra]);
+  const faixaEscolhida = faixas.find((f) => f.nome === escolha.faixa);
+  const grau = ehOutra ? grauOutra : faixaEscolhida ? textoDaFaixa(faixaEscolhida, escolha.grau) : '';
+  // Modalidades com faixas: as da lista padrão que têm faixas, mais as que o responsável personalizou
+  const modalidadesComFaixas = [
+    ...MODALIDADES.filter((m) => estruturaDaModalidade(estrutura?.modalidades, m).length > 0),
+    ...Object.keys(estrutura?.modalidades ?? {}).filter((m) => !(MODALIDADES as readonly string[]).includes(m)),
+  ];
   const [observacoes, setObservacoes] = useState('');
   const [erro, setErro] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
@@ -67,6 +85,9 @@ export default function RegistrarGraduacaoScreen() {
         modalidade: modalidadeConfirmada,
         grau: grauConfirmado,
         dataGraduacao: new Date(),
+        ...(faixaEscolhida && !ehOutra
+          ? { faixaId: faixaEscolhida.id, faixaNome: faixaEscolhida.nome, faixaCor: faixaEscolhida.cor, grauNumero: escolha.grau }
+          : {}),
         ...(observacoes.trim() ? { observacoes: observacoes.trim() } : {}),
       });
       setConfirmando(false);
@@ -104,7 +125,7 @@ export default function RegistrarGraduacaoScreen() {
         Modalidade
       </Texto>
       <View style={styles.grade} role="radiogroup" aria-label="Modalidade">
-        {[...MODALIDADES.filter((m) => !modalidadeSemGraduacao(m)), MODALIDADE_OUTRA].map((m) => (
+        {[...modalidadesComFaixas, MODALIDADE_OUTRA].map((m) => (
           <Etiqueta
             key={m}
             texto={m}
@@ -122,7 +143,7 @@ export default function RegistrarGraduacaoScreen() {
           <CampoTexto rotulo="Grau" valor={grauOutra} onAlterar={setGrauOutra} placeholder="Ex.: Faixa azul, 2º grau" />
         </>
       ) : escolhida ? (
-        <GraduacaoSelector modalidade={escolhida} escolha={escolha} onAlterar={setEscolha} />
+        <GraduacaoSelector modalidade={escolhida} escolha={escolha} onAlterar={setEscolha} faixas={faixas} semOpcaoSemGraduacao />
       ) : null}
       <CampoTexto
         rotulo="Observações (opcional)"

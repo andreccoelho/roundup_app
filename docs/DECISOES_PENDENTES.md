@@ -155,7 +155,7 @@ Os textos mudaram de "dias seguidos" para "treinos seguidos" (indicador da Home 
 
 ---
 
-## 8. `configuracoesGamificacao` (RF33) — ✅ RESOLVIDO (pontuação e níveis), faixas pendente
+## 8. `configuracoesGamificacao` e `estruturasFaixas` (RF33) — ✅ RESOLVIDO (pontuação, níveis e faixas)
 
 Tela "Pontuação e níveis" no Perfil do professor e da academia (`ConfiguracaoGamificacaoScreen`). Ela grava `configuracoesGamificacao/{uid}` com pontos por check-in (1 a 100), pontos sugeridos por missão (0 a 1000) e a tabela de níveis (1 a 30 valores crescentes). "Restaurar padrão" apaga o documento; sem documento valem os padrões de `src/config/gamificacao.ts`.
 
@@ -171,7 +171,32 @@ O estorno devolve o que o check-in recebeu, mesmo que a configuração tenha mud
 - **Nível do aluno com mais de um vínculo:** o XP exibido continua sendo o total de todos os escopos, e a tabela de níveis usada é a do responsável em que o aluno mais pontuou.
 - A ordem crescente da tabela de níveis é validada no app, não na regra (Rules não tem laço para percorrer listas). Um responsável que gravasse direto pela API uma tabela fora de ordem só bagunçaria o nível dos próprios alunos.
 
-**Fora desta rodada:** o RF33 também cita "a estrutura de faixas da modalidade". Hoje a faixa é texto livre (`faixaOuGrau`, interpretado pelo `SeloFaixa`, ver R-05). Personalizar a estrutura de faixas exige um campo estruturado de faixa por modalidade e mudança no cadastro, na graduação (RF25) e no modelo de dados — é decisão de produto, não foi feita.
+**Estrutura de faixas (rodada de 2026-11-13):**
+- **Modelo:**
+  - nova coleção `estruturasFaixas/{responsavelId}` com `modalidades: { [modalidade]: [{ id, nome, cor, graus }] }`, na ordem de progressão. Só as modalidades personalizadas aparecem ali; as demais usam a **estrutura padrão**, gerada da lista fixa de antes (`src/utils/faixas.ts`, 4 graus por faixa no Jiu-Jitsu, 0 nas demais);
+  - `graduacoes` ganhou `faixaId`, `faixaNome`, `faixaCor` e `grauNumero` (opcionais: a modalidade "Outra" continua em texto livre);
+  - `usuarios` ganhou `faixasEstruturadas[modalidade] = { faixaId, faixa, cor, grau, responsavelId }`, escrito pela Cloud Function `aplicarGraduacaoNoPerfil`.
+- **Regras:**
+  - escrita da estrutura só pelo próprio responsável, com campos fixos e até 20 modalidades. O conteúdo de cada faixa (nome único, cor da paleta, graus de 0 a 10, 1 a 20 faixas) é validado no app, porque Rules não percorre listas (mesmo caso da tabela de níveis);
+  - na graduação, os campos novos têm tipo conferido;
+  - o aluno não altera `faixasEstruturadas` depois do cadastro (como `faixaOuGrau` e `graduacoes`).
+- **Telas:**
+  - "Estrutura de faixas" (`EstruturaFaixasScreen`, aberta por "Pontuação e níveis"): por modalidade, ordem (subir e descer), nome, cor (paleta fixa de 10 cores de faixa) e graus. Também permite adicionar, remover e restaurar o padrão;
+  - o registro de graduação (RF25) oferece as faixas e os graus da estrutura do responsável. Uma modalidade sem faixas no padrão (ex.: Kickboxing) passa a aceitar graduação se o responsável criar faixas para ela;
+  - o Perfil do aluno ganhou a **barra de progresso até a próxima graduação**.
+
+**Decisões tomadas:**
+- **(produto, validada pelo autor)** A barra mede os **graus da faixa atual** ("2º grau de 4 · próxima: Roxa · faixa 2 de 5"). Faixa sem graus mostra a barra vazia e a próxima faixa; a última faixa completa fica cheia. É só leitura do que o responsável registrou (RN03), nunca previsão.
+- A cor é escolhida numa paleta fixa (as cores que o `SeloFaixa` já desenha), não em hex livre: mantém o contraste nos dois temas.
+- O id da faixa é fixo depois de criado. Renomear a faixa não tira o aluno dela; removê-la deixa o aluno só com o texto (sem barra) até a próxima graduação.
+- A estrutura usada para o aluno é a de quem registrou a graduação naquela modalidade. Sem graduação registrada, vale a do primeiro responsável com vínculo aceito; sem personalização, a padrão.
+- O texto da graduação (`graduacoes`, `faixaOuGrau`) continua sendo gravado e exibido como antes. As outras telas e o `SeloFaixa` não mudaram de fonte.
+
+**Migração do texto livre:** o app casa o texto antigo com a estrutura na hora de mostrar (`resolverGraduacao`: nome da faixa sem acento e sem diferença de maiúscula, o mais longo primeiro, mais o grau escrito no texto). Por isso a barra aparece mesmo sem migrar. `scripts/migrar-faixas.cjs` (dry-run por padrão) grava `faixasEstruturadas` pelo id, para resistir a renomeações, e lista os textos que não casam (ex.: "Kruang 5"). Esses continuam aparecendo só como texto. **Ainda não foi rodado em produção.**
+
+**A validar:**
+- o cadastro do aluno continua oferecendo só a estrutura padrão (o aluno ainda não tem responsável nesse momento);
+- o aluno com dois responsáveis na mesma modalidade vê a estrutura de quem o graduou por último.
 
 ---
 
@@ -219,8 +244,8 @@ No redesign Apple, `expo-system-ui` foi instalado e o app passou a `userInterfac
 ### R-04 — Texto da Classificação deixa de dizer "Ranking mensal" — ✅ DESFEITO
 Com RN04 implementada (item 4), a tela voltou a dizer "Ranking mensal de {mês}: pontos dos treinos validados neste mês na sua academia ou professor".
 
-### R-05 — Faixa interpretada a partir do texto livre
-O `SeloFaixa` deduz cor e graus de `faixaOuGrau`/`graduacao` (texto livre) sem mudar o modelo. Termos fora da lista (ex.: "Kruang 5", "prajied rosa") caem no visual neutro com o texto original. **A validar:** se o produto quer um campo estruturado de faixa no futuro (mudança de modelo e de Firestore, fora deste redesign).
+### R-05 — Faixa interpretada a partir do texto livre — ✅ RESOLVIDO (RF33)
+O `SeloFaixa` deduz cor e graus de `faixaOuGrau`/`graduacao` (texto livre). Desde o RF33 (item 8), ele também recebe `cor` e `graus` da estrutura de faixas do responsável quando a graduação é estruturada (Perfil do aluno, registro de graduação, editor de faixas), e a faixa personalizada (ex.: "Kruang 5" em vermelho) aparece com a cor certa nessas telas. As demais telas que só têm o texto continuam interpretando o texto.
 
 ### R-06 — "Meus vínculos" virou "Vincular-se"
 A tela aberta por "Meus vínculos" só lista academias/professores para pedir vínculo; não mostra os vínculos existentes (RELATORIO_UI_UX.md, UX-03). Mostrar os existentes exigiria uma consulta nova ao Firestore, fora do escopo (redesign só de apresentação). **Decisão:** renomear o item e o título da tela para "Vincular-se". O estado "Enviado" continua local à tela. **A validar:** criar uma tela real de "Meus vínculos" (com pendentes e aceitos) numa rodada de funcionalidade.

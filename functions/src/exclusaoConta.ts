@@ -159,6 +159,8 @@ async function tratarTurmasDoGestor(db: Firestore, uid: string): Promise<void> {
 
   // RF33: a personalização de pontos e níveis é só dele
   escritas.push({ tipo: 'apagar', ref: db.doc(`configuracoesGamificacao/${uid}`) });
+  // RF33: e a estrutura de faixas personalizada também
+  escritas.push({ tipo: 'apagar', ref: db.doc(`estruturasFaixas/${uid}`) });
 
   await gravarEmLotes(db, escritas);
 }

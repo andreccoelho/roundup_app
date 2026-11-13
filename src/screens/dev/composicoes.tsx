@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import HomeAlunoVisao, { type SessaoHome } from '../aluno/HomeAlunoVisao';
 import PerfilAlunoVisao, { type MedalhaPerfil } from '../aluno/PerfilAlunoVisao';
+import { faixasDoAluno } from '../../utils/faixas';
 import ClassificacaoVisao, { type LinhaRanking } from '../aluno/ClassificacaoVisao';
 import HojeProfessorVisao, { type ItemChamadaVisao } from '../professor/HojeProfessorVisao';
 import PerfilProfessorVisao from '../professor/PerfilProfessorVisao';
@@ -123,6 +124,8 @@ export function ComposicaoPerfil() {
     <PerfilAlunoVisao
       nome="Rafael Souza"
       faixa="Faixa azul, 2º grau"
+      graduacoes={{ 'Jiu-Jitsu': 'Faixa azul, 2º grau' }}
+      faixasEstruturadas={faixasDoAluno({ 'Jiu-Jitsu': 'Faixa azul, 2º grau' }, undefined, () => null, undefined)}
       email="rafael@exemplo.com"
       membroDesde="setembro de 2026"
       nivel={calcularProgressoNivel(640).nivel}

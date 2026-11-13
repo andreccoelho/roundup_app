@@ -1,17 +1,12 @@
-// RF06: seletor de graduação de UMA modalidade (faixas em chips + graus no Jiu-Jitsu).
+// RF06: seletor de graduação de UMA modalidade (faixas em chips + graus da faixa escolhida).
 // Modalidade sem graduação (Boxe, MMA...) mostra só "Não se aplica", sem escolha.
+// RF33, RF25: `faixas` é a estrutura do responsável (registro de graduação); sem ela, a estrutura
+// padrão (cadastro do aluno). A escolha continua guardando o NOME da faixa e o grau.
 import { StyleSheet, View } from 'react-native';
 import { Espacamento, useTema } from '../../theme';
-import {
-  EscolhaGraduacao,
-  GRAUS,
-  MODALIDADES_COM_GRAU,
-  FAIXAS_POR_MODALIDADE,
-  NAO_SE_APLICA,
-  SEM_GRADUACAO,
-  modalidadeSemGraduacao,
-  textoGraduacao,
-} from '../../constants/graduacoes';
+import { EscolhaGraduacao, NAO_SE_APLICA, SEM_GRADUACAO } from '../../constants/graduacoes';
+import { estruturaPadrao, textoDaFaixa } from '../../utils/faixas';
+import type { FaixaConfig } from '../../types';
 import { IconeFaixa } from '../icones';
 import Etiqueta from './Etiqueta';
 import SeloFaixa from './SeloFaixa';
@@ -22,15 +17,17 @@ interface GraduacaoSelectorProps {
   escolha: EscolhaGraduacao;
   onAlterar: (escolha: EscolhaGraduacao) => void;
   erro?: string;
+  faixas?: FaixaConfig[];
+  // Esconde a opção "Sem graduação" (no registro de graduação ela não faz sentido)
+  semOpcaoSemGraduacao?: boolean;
 }
 
-export default function GraduacaoSelector({ modalidade, escolha, onAlterar, erro }: GraduacaoSelectorProps) {
+export default function GraduacaoSelector({ modalidade, escolha, onAlterar, erro, faixas: faixasDoResponsavel, semOpcaoSemGraduacao }: GraduacaoSelectorProps) {
   const { cores } = useTema();
-  const semGraduacao = modalidadeSemGraduacao(modalidade);
-  const faixas = FAIXAS_POR_MODALIDADE[modalidade] ?? [];
-  const temGrau = MODALIDADES_COM_GRAU.includes(modalidade);
-  const faixaComGrau = escolha.faixa !== '' && escolha.faixa !== SEM_GRADUACAO;
-  const texto = textoGraduacao(modalidade, escolha);
+  const faixas = faixasDoResponsavel ?? estruturaPadrao(modalidade);
+  const semGraduacao = faixas.length === 0;
+  const selecionada = faixas.find((f) => f.nome === escolha.faixa);
+  const texto = escolha.faixa === SEM_GRADUACAO ? SEM_GRADUACAO : selecionada ? textoDaFaixa(selecionada, escolha.grau) : '';
 
   return (
     <View style={styles.container} role="group" aria-label={`Graduação em ${modalidade}`}>
@@ -46,24 +43,26 @@ export default function GraduacaoSelector({ modalidade, escolha, onAlterar, erro
       ) : (
         <>
           <View style={styles.grade}>
-            <Etiqueta
-              texto={SEM_GRADUACAO}
-              selecionada={escolha.faixa === SEM_GRADUACAO}
-              onPress={() => onAlterar({ faixa: SEM_GRADUACAO, grau: 0 })}
-            />
+            {semOpcaoSemGraduacao ? null : (
+              <Etiqueta
+                texto={SEM_GRADUACAO}
+                selecionada={escolha.faixa === SEM_GRADUACAO}
+                onPress={() => onAlterar({ faixa: SEM_GRADUACAO, grau: 0 })}
+              />
+            )}
             {faixas.map((faixa) => (
               <Etiqueta
-                key={faixa}
-                texto={faixa}
-                selecionada={escolha.faixa === faixa}
-                onPress={() => onAlterar({ faixa, grau: escolha.faixa === faixa ? escolha.grau : 0 })}
+                key={faixa.id}
+                texto={faixa.nome}
+                selecionada={escolha.faixa === faixa.nome}
+                onPress={() => onAlterar({ faixa: faixa.nome, grau: escolha.faixa === faixa.nome ? escolha.grau : 0 })}
               />
             ))}
           </View>
-          {temGrau && faixaComGrau ? (
+          {selecionada && selecionada.graus > 0 ? (
             <View style={styles.grade}>
               <Etiqueta texto="Sem grau" selecionada={escolha.grau === 0} onPress={() => onAlterar({ ...escolha, grau: 0 })} />
-              {GRAUS.map((g) => (
+              {Array.from({ length: selecionada.graus }, (_, i) => i + 1).map((g) => (
                 <Etiqueta key={g} texto={`${g}º grau`} selecionada={escolha.grau === g} onPress={() => onAlterar({ ...escolha, grau: g })} />
               ))}
             </View>
@@ -73,7 +72,7 @@ export default function GraduacaoSelector({ modalidade, escolha, onAlterar, erro
 
       {texto && !semGraduacao ? (
         <View style={styles.previa}>
-          <SeloFaixa faixaOuGrau={texto} />
+          <SeloFaixa faixaOuGrau={texto} cor={selecionada?.cor} graus={selecionada ? escolha.grau : undefined} />
         </View>
       ) : null}
       {erro ? (

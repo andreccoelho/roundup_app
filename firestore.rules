@@ -231,7 +231,7 @@ service cloud.firestore {
                          // decisão do professor/academia e entra pela Cloud Function
                          // aplicarGraduacaoNoPerfil (Admin SDK, ignora estas regras).
                          && !(resource.data.perfil == 'aluno'
-                              && request.resource.data.diff(resource.data).affectedKeys().hasAny(['faixaOuGrau', 'graduacoes'])))
+                              && request.resource.data.diff(resource.data).affectedKeys().hasAny(['faixaOuGrau', 'graduacoes', 'faixasEstruturadas'])))
                         // RN06: o destinatário de um vínculo professor-academia aceito ou recém
                         // encerrado grava só autonomo/atualizadoEm do professor — contraparte de
                         // responderSolicitacao() (vira false) e encerrarVinculo() (volta a true).
@@ -514,10 +514,19 @@ service cloud.firestore {
       // escrita existe (sem Cloud Function, sem trigger algorítmico). souResponsavelDoAluno()
       // garante que o aluno graduado é de fato alguém vinculado a este responsável, não
       // qualquer uid.
+      // RF33: faixaId/faixaCor/grauNumero (faixa da estrutura do responsável) são opcionais — a
+      // modalidade "Outra" continua em texto livre —, mas quando vêm têm o tipo certo.
       allow create: if autenticado()
                     && souGestor()
                     && request.resource.data.responsavelId == meuId()
-                    && souResponsavelDoAluno(request.resource.data.alunoId);
+                    && souResponsavelDoAluno(request.resource.data.alunoId)
+                    && (!('faixaId' in request.resource.data) || request.resource.data.faixaId is string)
+                    && (!('grauNumero' in request.resource.data)
+                        || (request.resource.data.grauNumero is int
+                            && request.resource.data.grauNumero >= 0 && request.resource.data.grauNumero <= 10))
+                    && (!('faixaCor' in request.resource.data)
+                        || request.resource.data.faixaCor in ['branca', 'cinza', 'amarela', 'laranja', 'verde', 'azul',
+                                                              'roxa', 'marrom', 'vermelha', 'preta']);
       // PROVISÓRIO: decidido pela opção mais simples — histórico imutável após criado, mesmo
       // padrão de consentimentosLGPD, em vez de permitir correção de um lançamento errado. Ver
       // docs/DECISOES_PENDENTES.md.
@@ -588,6 +597,24 @@ service cloud.firestore {
                             && request.resource.data.niveisXp is list
                             && request.resource.data.niveisXp.size() >= 1
                             && request.resource.data.niveisXp.size() <= 30;
+      allow delete: if autenticado() && responsavelId == meuId();
+    }
+
+    // ---------- estruturasFaixas (RF33) ----------
+    // Estrutura de faixas personalizada do responsável, id == uid dele: mapa modalidade → lista de
+    // faixas {id, nome, cor, graus}. Leitura por qualquer autenticado (o aluno precisa dela para a
+    // barra de progresso até a próxima faixa; não é dado pessoal). Os limites de tamanho são os de
+    // LIMITES_ESTRUTURA em src/utils/faixas.ts; o conteúdo de cada faixa (nome, cor, graus de 0 a
+    // 10) é validado no app — Rules não tem laço para percorrer a lista, mesmo caso da tabela de níveis.
+    match /estruturasFaixas/{responsavelId} {
+      allow read: if autenticado();
+      allow create, update: if autenticado()
+                            && responsavelId == meuId()
+                            && souGestor()
+                            && request.resource.data.responsavelId == meuId()
+                            && request.resource.data.keys().hasOnly(['id', 'responsavelId', 'modalidades', 'atualizadoEm'])
+                            && request.resource.data.modalidades is map
+                            && request.resource.data.modalidades.size() <= 20;
       allow delete: if autenticado() && responsavelId == meuId();
     }
 

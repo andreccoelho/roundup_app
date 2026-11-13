@@ -1,8 +1,7 @@
 // RF33: personalização da pontuação e dos níveis pelo responsável (professor autônomo ou
 // academia), aberta a partir do Perfil. Grava em configuracoesGamificacao/{uid}; sem documento,
 // valem os padrões de src/config/gamificacao.ts e a tela diz isso. A estrutura de faixas da
-// modalidade, também citada no RF33, não entra aqui: a faixa ainda é texto livre (ver
-// docs/DECISOES_PENDENTES.md, R-05 e item 8).
+// modalidade, também do RF33, fica numa tela própria (EstruturaFaixasScreen), aberta por aqui.
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { StyleSheet, View } from 'react-native';
@@ -24,6 +23,9 @@ import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import MensagemErro from '../../components/ui/MensagemErro';
 import Esqueleto from '../../components/ui/Esqueleto';
 import EstadoErro from '../../components/ui/EstadoErro';
+import GrupoLista from '../../components/ui/GrupoLista';
+import LinhaLista from '../../components/ui/LinhaLista';
+import { IconeFaixa } from '../../components/icones';
 
 function paraTexto(valores: ValoresGamificacao) {
   return {
@@ -43,7 +45,8 @@ export default function ConfiguracaoGamificacaoScreen() {
   const [salvando, setSalvando] = useState(false);
   const [restaurando, setRestaurando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const navigation = useNavigation();
+  // A rota EstruturaFaixas existe nas duas pilhas de Perfil (academia e professor)
+  const navigation = useNavigation<any>();
 
   const carregar = useCallback(async () => {
     if (!usuario) return;
@@ -170,6 +173,11 @@ export default function ConfiguracaoGamificacaoScreen() {
         multiline
         ajuda={`Números crescentes separados por vírgula, de ${limNiveis.minimo} a ${limNiveis.maximo} níveis. O primeiro valor completa o nível 1.`}
       />
+
+      <CabecalhoSecao titulo="Faixas" formulario />
+      <GrupoLista semMargem rodape="Ordem, nomes, cores e graus das faixas de cada modalidade.">
+        <LinhaLista rotulo="Estrutura de faixas" icone={IconeFaixa} onPress={() => navigation.navigate('EstruturaFaixas')} />
+      </GrupoLista>
 
       <View style={styles.acoes}>
         {personalizada ? (

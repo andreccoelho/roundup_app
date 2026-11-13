@@ -12,6 +12,8 @@ import Cartao from '../../components/ui/Cartao';
 import SeloFaixa from '../../components/ui/SeloFaixa';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Medalha, { type TipoMedalha } from '../../components/ui/Medalha';
+import ProgressoFaixa from '../../components/ui/ProgressoFaixa';
+import type { FaixaDoAluno } from '../../utils/faixas';
 import CabecalhoSecao from '../../components/ui/CabecalhoSecao';
 import GrupoLista from '../../components/ui/GrupoLista';
 import ItemMenu from '../../components/ui/ItemMenu';
@@ -42,6 +44,8 @@ interface PerfilAlunoVisaoProps {
   treinos: number;
   modalidades: string[];
   medalhas: MedalhaPerfil[];
+  // RF33: faixa da estrutura do responsável e o progresso até a próxima, por modalidade
+  faixasEstruturadas?: Record<string, FaixaDoAluno>;
   onEditar: () => void;
   onVinculos: () => void;
   onNotificacoes: () => void;
@@ -64,6 +68,7 @@ export default function PerfilAlunoVisao({
   treinos,
   modalidades,
   medalhas,
+  faixasEstruturadas,
   onEditar,
   onVinculos,
   onNotificacoes,
@@ -98,7 +103,12 @@ export default function PerfilAlunoVisao({
                 <Texto variante="caption" cor="texto2">
                   {modalidade}
                 </Texto>
-                <SeloFaixa faixaOuGrau={grau || 'Não informada'} />
+                <SeloFaixa
+                  faixaOuGrau={grau || 'Não informada'}
+                  cor={faixasEstruturadas?.[modalidade]?.cor}
+                  graus={faixasEstruturadas?.[modalidade]?.graus}
+                />
+                {faixasEstruturadas?.[modalidade] ? <ProgressoFaixa progresso={faixasEstruturadas[modalidade].progresso} /> : null}
               </View>
             </LinhaLista>
           ))
@@ -159,7 +169,7 @@ export default function PerfilAlunoVisao({
 }
 
 const useEstilos = criarEstilos((c) => ({
-  graduacaoModalidade: { gap: Espacamento.minimo },
+  graduacaoModalidade: { gap: Espacamento.minimo, flex: 1 },
   stats: { flexDirection: 'row', alignItems: 'center' },
   divisor: { width: 0.5, alignSelf: 'stretch', backgroundColor: c.separador },
   modalidades: { flexDirection: 'row', flexWrap: 'wrap', gap: Espacamento.pequeno, padding: Espacamento.padrao },
