@@ -92,7 +92,7 @@ Não foi possível consultar docs.expo.dev desta sessão (host fora da rede libe
 
 | Requisito | Situação | Verificado em aparelho (iPhone) | Só em teste automático (emulador) |
 |---|---|---|---|
-| RF19 — medalhas com data | Implementado | — | concessão pela Cloud Function, sem duplicar, estorno não retira, migração com data do histórico, regras (client não escreve) |
+| RF19 — medalhas com data | Implementado | medalha "Primeira graduação" com a data da conquista (13/11/2026) e contador "1 de 6" no Perfil | medalhas de treinos e de sequência, sem duplicar, estorno não retira, migração com data do histórico, regras (client não escreve) |
 | RF23 — público-alvo e vigência | Implementado | missão "Todos os alunos" criada e recebida (push) | públicos turma e alunos escolhidos, vigência fora do período, conclusão fora da vigência negada, agendamento 00:05 |
 | RF31 — notificações | Implementado (ver ressalva) | 3 pushes de exemplo, nova missão real, graduação real | lembrete agendado, medalha por check-in, missão fora do público |
 | RF33 — pontos, níveis e faixas | Implementado | lista de faixas do Jiu-Jitsu no registro, editor de estrutura, barra de progresso no Perfil | migração do texto livre, regras da estrutura |
