@@ -63,6 +63,10 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 - **Risco aceito:** a mesma chave de conta de serviço publica no Firebase (guardada como secret do GitHub) e serve de chave FCM V1 no EAS. Retirar o papel extra depois dos testes, e revogar a chave se não for mais usar.
 - **Não testado contra as contas reais:** a primeira execução do workflow pode precisar de ajuste.
 
+**Validação em aparelho (2026-11-13, iPhone, Expo Go, SDK 58):** o autor recebeu, pelos botões "Testar neste aparelho", as três notificações de exemplo: "Treino hoje (teste)", "Conquista (teste)" e "Nova missão (teste)", com o app em segundo plano. Isso confirma o caminho completo Cloud Function → serviço da Expo → APNs → aparelho, e que a configuração do projeto e das credenciais está correta.
+- **Ainda não validado em aparelho:** os gatilhos reais (missão criada pela academia para o público-alvo, graduação registrada, medalha por check-in validado e o lembrete agendado das 7h), o comportamento com o app aberto e com o app fechado, e o push num app próprio publicado (não dentro do Expo Go). A notificação aparece com o ícone do Expo Go.
+- **Situação do RF31:** implementado e com o envio confirmado em aparelho por notificações de exemplo; os gatilhos reais seguem testados só no emulador (status `simulado`) até o autor disparar os três pelo roteiro.
+
 **O que depende do autor** (passo a passo em **`docs/ROTEIRO_TESTE_NOTIFICACOES.md`**, "Caminho fácil"):
 - plano Blaze e deploy;
 - `eas init` (`projectId`);
