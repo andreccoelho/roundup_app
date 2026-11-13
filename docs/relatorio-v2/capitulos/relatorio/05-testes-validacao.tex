@@ -400,7 +400,8 @@ requisitos.
     CT18 & RF19 & Aluno grava ou altera a própria medalha & Negado \\
     CT19 & RF19 & Estorno de \textit{check-in} depois de a medalha ser concedida & Medalha mantida \\
     CT20 & RF33 & Gestor grava a estrutura de faixas de outro responsável & Negado \\
-    CT21 & RF22 & Professor atribuído pela academia valida \textit{check-in} da própria turma & Aceito \\
+        CT21 & RF22 & Professor atribuído pela academia valida \textit{check-in} da própria turma & Aceito \\
+    CT22 & RNF02 & Carregamento da tela inicial em rede 4G (medição manual) & $\leq$ 3 s \\
     \bottomrule
   \end{tabular}
   \fonte{Elaborado pelo autor (2026), a partir de \texttt{tests/} e
@@ -409,9 +410,13 @@ requisitos.
 
 Os casos CT01 a CT09, CT11, CT13, CT14, CT16 a CT18, CT20 e CT21
 correspondem a testes da suíte de regras; o CT10, o CT12 e o CT19, à
-suíte de Cloud Functions; e o CT15, ao roteiro manual, segundo o
-qual o \textit{check-in} exige dois toques na agenda e um toque na tela
-inicial da versão final da interface.
+suíte de Cloud Functions; e o CT15 e o CT22, a verificações manuais.
+Segundo o roteiro de teste, o \textit{check-in} exige dois toques na
+agenda e um toque na tela inicial da versão final da interface (CT15).
+No CT22, o tempo de carregamento da tela inicial foi cronometrado três
+vezes em um iPhone conectado à rede 4G, com o aplicativo acessando o
+Firebase de produção: 2,25~s, 2,22~s e 1,92~s, com média de 2,13~s,
+dentro do limite de 3~s do RNF02.
 
 \subsection{Verificações de qualidade da interface}
 

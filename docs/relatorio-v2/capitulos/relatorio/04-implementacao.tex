@@ -32,7 +32,7 @@ justificativa de cada escolha.
   \begin{tabular}{|p{3.2cm}|p{4.0cm}|p{6.0cm}|}
     \hline
     \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
-    Aplicativo móvel & React Native com Expo (SDK 58) e TypeScript & Base de código única para Android, iOS e web (RNF05); tipagem estática reduz erros entre telas e serviços. \\ \hline
+    Aplicativo móvel & React Native com Expo (SDK 58) e TypeScript & Base de código única para Android 7.0+, iOS 16.4+ e web (RNF05); tipagem estática reduz erros entre telas e serviços. \\ \hline
     Navegação & React Navigation & Abas e pilhas de telas separadas por perfil. \\ \hline
     Autenticação & Firebase Authentication & Senhas tratadas pelo provedor, sem armazenamento próprio (RNF03). \\ \hline
     Banco de dados & Cloud Firestore & Banco de documentos gerenciado, com regras de segurança declarativas (RNF04). \\ \hline
@@ -179,7 +179,8 @@ pendentes, para que fiquem explícitas, e não escondidas na interface.
   \begin{tabular}{|p{2.2cm}|p{4.2cm}|p{7.0cm}|}
     \hline
     \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
-        Implementado & RF01--RF33; RN01--RN09; RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. RF19, RF23, RF31 e RF33 também foram verificados em um iPhone. \\ \hline
+            Implementado & RF01--RF33; RN01--RN09; RNF01--RNF05, RNF07--RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. RF19, RF23, RF31 e RF33 também foram verificados em um iPhone, e o tempo de carregamento (RNF02) foi medido em 4G (\autoref{sec:testes-prototipo}). \\ \hline
+    Não implementado & RNF06 & Decisão de projeto: o \textit{check-in} e a validação de presença são gravados em transações que exigem conexão, porque o servidor precisa garantir a janela de horário (RN08) e o limite de um \textit{check-in} por sessão (RN02). Um registro feito sem conexão poderia ser recusado depois, quando o aluno já acreditasse ter treinado com pontos garantidos. \\ \hline
   \end{tabular}
   \fonte{Elaborado pelo autor (2026), a partir do repositório do projeto.}
 \end{quadro}
