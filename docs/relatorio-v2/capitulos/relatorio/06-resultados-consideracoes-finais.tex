@@ -50,14 +50,14 @@ atingidos da seguinte forma:
         dados reais e não entraram nas notas que definiram a situação de
         cada requisito.
   \item \textbf{Modelagem e implementação do protótipo.} Atingido. O
-        protótipo é um aplicativo funcional com três perfis de usuário. Dos
-        33 requisitos funcionais, 29 foram implementados e 4 ficaram
-        parciais: a data de conquista das medalhas, o público-alvo e a
-        vigência das missões, a validação do envio de notificações em
-        aparelho e a personalização das faixas. As regras de negócio que protegem a gamificação,
+        protótipo é um aplicativo funcional com três perfis de usuário. Os 33
+        requisitos funcionais foram implementados, incluindo a data de
+        conquista das medalhas, o público-alvo e a vigência das missões, a
+        personalização das faixas e o envio de notificações, verificados
+        em um iPhone. As regras de negócio que protegem a gamificação,
         como a validação humana antes do crédito de pontos, foram
         implementadas nas regras de segurança do banco de dados e
-        cobertas por testes automatizados.
+        cobertas por 288 testes automatizados.
   \item \textbf{Conformidade com a LGPD.} Atingido. O consentimento no
         cadastro, o registro do responsável legal de alunos menores de
         idade, a guarda dos dados pessoais em documento visível só ao
@@ -91,8 +91,8 @@ usuários dependa delas.
         gestão não foram avaliados; as respostas sintéticas de professor
         servem apenas como dados de teste.
   \item Os valores-padrão de gamificação (pontos por presença, níveis e
-        marcos de medalha) não foram calibrados com uso real, e a interface
-        foi verificada apenas na versão web, sem teste em aparelho.
+        marcos de medalha) não foram calibrados com uso real, e o lembrete
+        diário agendado das notificações foi testado apenas em emulador.
   \item O efeito do aplicativo sobre a evasão não pôde ser medido no prazo
         do TCC, e parte da evasão tem causas externas, como falta de tempo
         e lesões, que estão fora do alcance de um aplicativo.
@@ -101,9 +101,8 @@ usuários dependa delas.
 \section{Trabalhos futuros}
 
 \begin{itemize}
-  \item Concluir os requisitos parciais: registro da data de conquista
-        das medalhas, público-alvo e vigência das missões, validação das
-        notificações em aparelho e faixas configuráveis pelo gestor.
+    \item Validar em aparelho o lembrete diário agendado e fazer o toque
+        na notificação levar à tela correspondente (RF31).
   \item Reaplicar o questionário com uma amostra maior, incluindo
         outras modalidades, concentrando a investigação nas ideias marcadas
         como ``a revisar''.

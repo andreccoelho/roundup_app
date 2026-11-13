@@ -32,7 +32,7 @@ justificativa de cada escolha.
   \begin{tabular}{|p{3.2cm}|p{4.0cm}|p{6.0cm}|}
     \hline
     \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
-    Aplicativo móvel & React Native com Expo (SDK 57) e TypeScript & Base de código única para Android, iOS e web (RNF05); tipagem estática reduz erros entre telas e serviços. \\ \hline
+    Aplicativo móvel & React Native com Expo (SDK 58) e TypeScript & Base de código única para Android, iOS e web (RNF05); tipagem estática reduz erros entre telas e serviços. \\ \hline
     Navegação & React Navigation & Abas e pilhas de telas separadas por perfil. \\ \hline
     Autenticação & Firebase Authentication & Senhas tratadas pelo provedor, sem armazenamento próprio (RNF03). \\ \hline
     Banco de dados & Cloud Firestore & Banco de documentos gerenciado, com regras de segurança declarativas (RNF04). \\ \hline
@@ -112,6 +112,15 @@ núcleo para os recursos complementares:
         RN03), o gestor passou a alterar o horário e excluir turmas
         (RF10, RF12), e aluno e professor passaram a encerrar vínculos e
         o aluno a sair de turmas (RF07, RF08, RF11);
+  \item \textbf{Conclusão dos requisitos parciais} (meados de novembro):
+        medalhas persistidas com data de conquista (RF19), público-alvo e
+        vigência das missões (RF23), estrutura de faixas personalizável
+        por modalidade, com barra de progresso até a próxima graduação
+        (RF33 e RF25), e preparação do envio de notificações para teste em
+        aparelho (RF31). Nessa etapa, o Expo SDK foi atualizado da versão
+        57 para a 58, e a execução do aplicativo em um iPhone revelou
+        defeitos que foram corrigidos
+        (\autoref{sec:defeitos-testes});
   \item \textbf{Refinamento de interface} (outubro e novembro): três
         rodadas de \textit{redesign}. A última seguiu as diretrizes de
         interface da Apple (\textit{Human Interface Guidelines}), com temas
@@ -150,9 +159,9 @@ toque no círculo.
 \section{Situação de implementação dos requisitos}
 \label{sec:situacao-implementacao}
 
-O \autoref{qua:implementacao} resume o que foi implementado. Os itens
-parciais foram registrados no repositório como decisões pendentes, para
-que a limitação fique explícita, e não escondida na interface.
+O \autoref{qua:implementacao} resume o que foi implementado. As
+limitações remanescentes foram registradas no repositório como decisões
+pendentes, para que fiquem explícitas, e não escondidas na interface.
 
 \begin{quadro}[!htb]
   \caption{Situação de implementação dos requisitos}
@@ -162,11 +171,8 @@ que a limitação fique explícita, e não escondida na interface.
   \begin{tabular}{|p{2.2cm}|p{4.2cm}|p{7.0cm}|}
     \hline
     \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
-    Implementado & RF01--RF18, RF20--RF22, RF24--RF30, RF32; RN01--RN09; RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. \\ \hline
-    Parcial & RF19 & As medalhas são calculadas a cada acesso, sem registro da data de conquista. \\ \hline
-    Parcial & RF23 & As missões não têm público-alvo nem período de vigência. \\ \hline
-    Parcial & RF31 & O envio está implementado e testado em emulador, mas não foi validado em aparelho, porque depende de credenciais e de uma versão de desenvolvimento do aplicativo. \\ \hline
-    Parcial & RF33 & Pontos e níveis são configuráveis; as faixas, não: as graduações vêm de uma lista fixa por modalidade, igual para todos os gestores. \\ \hline
+        Implementado & RF01--RF30, RF32, RF33; RN01--RN09; RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. RF19, RF23 e RF33 também foram verificados em um iPhone. \\ \hline
+    Implementado, com ressalva & RF31 & Notificação de nova missão, de conquista e de teste verificadas em um iPhone. O lembrete diário agendado foi testado apenas em emulador. O envio confirma o aceite pelo serviço de \textit{push} da Expo, não a entrega no aparelho, e tocar na notificação abre o aplicativo sem levar à tela correspondente. \\ \hline
   \end{tabular}
   \fonte{Elaborado pelo autor (2026), a partir do repositório do projeto.}
 \end{quadro}
@@ -177,6 +183,39 @@ níveis com limiares crescentes (100, 250, 450\ldots{} até 3.250 pontos) e
 medalhas para 10, 30 e 100 treinos, para sequências de 7 e 30 sessões e
 para a primeira graduação. Esses valores permitiram construir e testar a
 interface, mas ainda precisam ser calibrados com uso real.
+
+Na conclusão dos requisitos que estavam parciais, quatro decisões
+merecem registro:
+
+\begin{itemize}
+  \item \textbf{Medalhas (RF19).} Cada medalha é gravada em
+        \texttt{usuarios/\{aluno\}/medalhas}, com a data de conquista,
+        somente por Cloud Function; o aplicativo não consegue escrevê-la.
+        O estorno de um \textit{check-in} não retira uma medalha já
+        conquistada, e um \textit{script} de migração reconstruiu, a partir
+        do histórico, a data das medalhas dos alunos existentes.
+  \item \textbf{Missões (RF23).} O gestor define o público (todos os alunos
+        vinculados, uma turma ou alunos escolhidos) e a vigência. A regra
+        vale no banco de dados, não só na tela: só o público lê a missão,
+        a conclusão manual só é aceita dentro da vigência, o progresso
+        automático só conta treinos do período e o aviso de nova missão
+        (RF31) vai só para o público, uma vez por aluno. Depois do fim da
+        vigência, a missão continua no histórico de quem a concluiu.
+  \item \textbf{Faixas (RF33).} O gestor personaliza, por modalidade, a
+        ordem, o nome, a cor e o número de graus de cada faixa; sem
+        personalização, vale a lista anterior como padrão. O registro de
+        graduação (RF25) passou a gravar a faixa de forma estruturada, e o
+        perfil do aluno ganhou a barra de progresso até a próxima
+        graduação, medida pelos graus da faixa atual (por exemplo, ``2º
+        grau de 4 · próxima: Roxa''). Graduações antigas, registradas como
+        texto livre, foram convertidas por um \textit{script} que reconhece
+        o nome da faixa; os textos sem correspondência permanecem como
+        texto.
+  \item \textbf{Notificações (RF31).} O projeto foi preparado para gerar
+        versões instaláveis pelo EAS, e a tela de preferências de
+        notificação ganhou botões para enviar uma notificação de teste ao
+        próprio aparelho, o que permitiu validar o envio em um iPhone.
+\end{itemize}
 
 \section{Detalhes de implementação}
 

@@ -344,15 +344,21 @@ isolamento de dados (RNF04).
     \toprule
     \textbf{Suíte} & \textbf{O que verifica} & \textbf{Casos} & \textbf{Aprovados} \\
     \midrule
-    Unidade (\texttt{src/utils}) & Datas e janelas de sessão, sequência, níveis e validação da configuração & 37 & 37 \\
-    Regras do Firestore (\texttt{tests/rules}) & Usuários, vínculos, turmas, matrículas, sessões, \textit{check-ins}, classificação, missões, configuração, notificações e coleções bloqueadas & 124 & 124 \\
-    Cloud Functions (\texttt{tests/functions}) & Leitores de sessões e classificações, progresso e pontos de missões, exclusão de conta, graduações e notificações & 33 & 33 \\
+    Unidade (\texttt{src/utils}) & Datas e janelas de sessão, sequência, níveis, validação da configuração, estrutura de faixas e vigência de missões & 62 & 62 \\
+    Regras do Firestore (\texttt{tests/rules}) & Usuários, vínculos, turmas, matrículas, sessões, \textit{check-ins}, classificação, missões com público e vigência, medalhas, estrutura de faixas, professor atribuído, configuração, notificações e coleções bloqueadas & 163 & 163 \\
+    Cloud Functions (\texttt{tests/functions}) & Leitores de sessões, classificações e missões, progresso e pontos de missões, medalhas e sua migração, exclusão de conta, graduações, professor atribuído e notificações & 63 & 63 \\
+    \midrule
+    \textbf{Total} & & \textbf{288} & \textbf{288} \\
     \bottomrule
   \end{tabular}
-  \fonte{Elaborado pelo autor (2026). Todas as suítes executadas em 12 nov. 2026.}
+  \fonte{Elaborado pelo autor (2026). Todas as suítes executadas em 13 nov. 2026.}
 \end{table}
 
-As três suítes foram executadas em 12 de novembro de 2026, sobre a versão entregue do código. Os testes de
+As três suítes foram executadas em 13 de novembro de 2026, sobre a versão entregue do código,
+depois da conclusão dos requisitos que estavam parciais, que acrescentou
+94 casos de teste aos 194 da versão anterior. Dois testes de datas
+dependem do fuso horário de Brasília, e por isso as suítes são executadas
+com a variável \texttt{TZ=America/Sao\_Paulo}. Os testes de
 regras e de Cloud Functions rodaram nos emuladores do Firebase
 (\texttt{firebase-tools} 15.29.0), que exigem Java 21 ou superior; foi
 usado o OpenJDK 22, e as funções rodaram no Node 21, embora o projeto
@@ -388,16 +394,22 @@ requisitos.
     CT12 & RF29 & Exclusão de conta apaga os dados do usuário e preserva os de outros & Aceito \\
     CT13 & RN09, RNF11 & Aluno lê a classificação de outro escopo ou de quem não participa & Negado \\
     CT14 & RF18 & Aluno grava o próprio progresso de missão & Negado \\
-    CT15 & RNF01 & \textit{Check-in} a partir da tela inicial (roteiro manual) & $\leq$ 3 toques \\
+        CT15 & RNF01 & \textit{Check-in} a partir da tela inicial (roteiro manual) & $\leq$ 3 toques \\
+    CT16 & RF23 & Aluno conclui missão antes do início ou depois do fim da vigência & Negado \\
+    CT17 & RF23 & Aluno fora do público-alvo conclui a missão & Negado \\
+    CT18 & RF19 & Aluno grava ou altera a própria medalha & Negado \\
+    CT19 & RF19 & Estorno de \textit{check-in} depois de a medalha ser concedida & Medalha mantida \\
+    CT20 & RF33 & Gestor grava a estrutura de faixas de outro responsável & Negado \\
+    CT21 & RF22 & Professor atribuído pela academia valida \textit{check-in} da própria turma & Aceito \\
     \bottomrule
   \end{tabular}
   \fonte{Elaborado pelo autor (2026), a partir de \texttt{tests/} e
          \texttt{docs/roteiro-teste-ciclo1.md}.}
 \end{table}
 
-Os casos CT01 a CT09, CT11, CT13 e CT14 correspondem a testes da suíte
-de regras; o CT10 e o CT12, à suíte de Cloud Functions; e o CT15, ao
-roteiro manual, segundo o
+Os casos CT01 a CT09, CT11, CT13, CT14, CT16 a CT18, CT20 e CT21
+correspondem a testes da suíte de regras; o CT10, o CT12 e o CT19, à
+suíte de Cloud Functions; e o CT15, ao roteiro manual, segundo o
 qual o \textit{check-in} exige dois toques na agenda e um toque na tela
 inicial da versão final da interface.
 
@@ -410,10 +422,10 @@ acessibilidade axe-core (critérios WCAG 2.1, níveis A e AA), sem violações
 registradas. As cores de texto foram ajustadas para atingir a razão
 mínima de contraste de 4,5:1 nos dois temas; por isso, o vermelho de
 destaque e os cinzas de texto ficaram um pouco mais escuros que os
-padrões do iOS no tema claro. A interface foi conferida na versão web; o
-comportamento exclusivo dos aparelhos, como as barras translúcidas, os
-gestos das folhas e o retorno tátil, ainda precisa ser verificado em
-dispositivo.
+padrões do iOS no tema claro. A interface foi conferida na versão web e, na etapa final, o
+aplicativo foi executado em um iPhone, pelo Expo Go, para validar as
+notificações e os requisitos concluídos nessa etapa (RF19, RF23, RF31 e
+RF33).
 
 \subsection{Defeitos encontrados pelos testes}
 \label{sec:defeitos-testes}
@@ -440,3 +452,22 @@ que os gatilhos das funções escutavam o projeto errado. A correção
 o emulador de acessar o projeto de produção, e aumentou o limite de tempo
 da suíte de 5 para 20 segundos, já que a espera dentro do teste pode
 chegar a 10 segundos. Depois da correção, as quatro passaram.
+
+A execução em aparelho revelou outros defeitos, todos corrigidos e
+cobertos por novos testes:
+
+\begin{itemize}
+  \item a exclusão de uma turma com matrícula ativa fazia a lista de
+        turmas do aluno falhar por permissão negada (RF11);
+  \item a aba de turmas do professor mostrava só as turmas criadas por
+        ele, e não as atribuídas pela academia (RF10);
+  \item o professor atribuído pela academia não via os alunos e os
+        \textit{check-ins} da turma nem validava presença (RF22); as
+        matrículas e os \textit{check-ins} passaram a guardar o
+        \texttt{professorId}, mantido por Cloud Functions, e os pontos
+        validados por ele são creditados no escopo da academia;
+  \item a primeira validação de presença do mês de cada aluno falhava,
+        qualquer que fosse o validador;
+  \item o \textit{check-in} aceitava qualquer academia como escopo, e
+        passou a exigir o escopo da própria turma (RNF04).
+\end{itemize}
