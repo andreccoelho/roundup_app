@@ -37,7 +37,7 @@ justificativa de cada escolha.
     Autenticação & Firebase Authentication & Senhas tratadas pelo provedor, sem armazenamento próprio (RNF03). \\ \hline
     Banco de dados & Cloud Firestore & Banco de documentos gerenciado, com regras de segurança declarativas (RNF04). \\ \hline
     Arquivos & Cloud Storage & Fotos de perfil (RF06), com regras próprias. \\ \hline
-    Lógica no servidor & Cloud Functions & Tarefas que o cliente não pode fazer com segurança: listas de leitores, progresso de missões, exclusão de conta e envio de notificações. \\ \hline
+    Lógica no servidor & Cloud Functions & Tarefas que o cliente não pode fazer com segurança: listas de leitores, público e progresso de missões, registro de medalhas, exclusão de conta e envio de notificações. \\ \hline
     Notificações & Expo Notifications & Registro do aparelho e envio de notificações \textit{push} (RF31). \\ \hline
     Interface & Expo Blur e Expo System UI & Barras translúcidas e acompanhamento do tema claro ou escuro do aparelho. \\ \hline
     Testes & Jest e Firebase Emulator Suite & Testes unitários e testes das regras de segurança e das funções em emulador local. \\ \hline
@@ -61,8 +61,9 @@ banco, concentram o acesso ao Firestore e as transações. As
 por presença e tabela de níveis, podem ser configurados por cada professor
 ou academia (RF33); quando não há configuração, valem os valores-padrão
 de \texttt{src/config/gamificacao.ts}. As tarefas que dependem de dados de
-vários usuários, como manter as listas de leitores, atualizar o progresso
-das missões, excluir uma conta em cascata e enviar notificações, ficam em
+vários usuários, como manter as listas de leitores, atualizar o público e o
+progresso das missões, registrar medalhas, excluir uma conta em cascata e
+enviar notificações, ficam em
 \textbf{Cloud Functions} (\texttt{functions/src}). O código-fonte
 completo, com as regras de segurança, as suítes de testes e a
 documentação das decisões técnicas, está no repositório público
@@ -169,7 +170,10 @@ toque no círculo.
 
 O \autoref{qua:implementacao} resume o que foi implementado. As
 limitações remanescentes foram registradas no repositório como decisões
-pendentes, para que fiquem explícitas, e não escondidas na interface.
+pendentes, para que fiquem explícitas, e não escondidas na interface. O
+critério de compatibilidade do RNF05 foi revisado de iOS 14 para iOS
+16.4, versão mínima exigida pelo Expo SDK 58, adotado na etapa final; no
+Android, o mínimo do SDK (Android 7.0) já atende ao critério original.
 
 \begin{quadro}[!htb]
   \caption{Situação de implementação dos requisitos}
