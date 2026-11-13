@@ -1,10 +1,11 @@
-# Publica só o app (EAS Update) para abrir no Expo Go do iPhone. Não faz deploy do Firebase, não roda
-# migração e não cria contas demo — para isso existe o workflow "Preparar teste de notificações (RF31)".
+# Publica só o app: o EAS Update para abrir no Expo Go do iPhone e a versão web (Firebase Hosting).
+# Não faz deploy de functions nem de regras, não roda migração e não cria contas demo — para isso
+# existe o workflow "Preparar teste de notificações (RF31)".
 # Dispara quando o código do app muda no dev, e republica no mesmo branch de update
 # (teste-notificacoes), então o iPhone pega a versão nova ao reabrir o app no Expo Go.
 # Precisa dos mesmos 2 secrets do outro workflow: FIREBASE_SERVICE_ACCOUNT e EXPO_TOKEN.
 # O Expo Go só abre o SDK mais recente (hoje, o 58, que é o do app).
-name: Publicar atualização para o iPhone
+name: Publicar atualização (iPhone e web)
 
 on:
   push:
@@ -63,6 +64,7 @@ jobs:
           SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           printf '%s' "$SA" > "$RUNNER_TEMP/conta-servico.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/conta-servico.json" >> "$GITHUB_ENV"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/conta-servico.json"
           WEB_ID=$(npx firebase apps:list WEB --project "$PROJETO" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const a=(JSON.parse(s).result||[])[0];process.stdout.write(a?a.appId:'')})")
           if [ -z "$WEB_ID" ]; then echo "::error::O projeto não tem app web no Firebase."; exit 1; fi
@@ -72,7 +74,6 @@ jobs:
             const m={API_KEY:c.apiKey,AUTH_DOMAIN:c.authDomain,PROJECT_ID:c.projectId,STORAGE_BUCKET:c.storageBucket,MESSAGING_SENDER_ID:c.messagingSenderId,APP_ID:c.appId};
             for (const [k,v] of Object.entries(m)) console.log('EXPO_PUBLIC_FIREBASE_'+k+'='+v);
           " "$RUNNER_TEMP/web.json" >> "$GITHUB_ENV"
-          rm -f "$RUNNER_TEMP/conta-servico.json"
 
       - name: Publicar o update (iOS)
         env:
@@ -95,3 +96,23 @@ jobs:
             echo "Feche o Expo Go deslizando e abra o RoundUp de novo para carregar a versão nova."
           } >> "$GITHUB_STEP_SUMMARY"
           echo "Update: $PAGINA"
+
+      # Não bloqueia o resto: uma falha momentânea do Hosting não deve impedir o resumo do iPhone
+      - name: Publicar a versão web (Firebase Hosting)
+        continue-on-error: true
+        run: |
+          npx expo export -p web
+          for tentativa in 1 2 3; do
+            if npx firebase deploy --only hosting --project "$PROJETO" --non-interactive; then
+              echo "- Web: https://$PROJETO.web.app (recarregue a página com Ctrl+F5)" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            echo "Hosting falhou (tentativa $tentativa); tentando de novo em 20 s"
+            sleep 20
+          done
+          echo "- Web: NÃO publicada nesta execução (o Hosting falhou 3 vezes)." >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: Limpar a chave
+        if: always()
+        run: rm -f "$RUNNER_TEMP/conta-servico.json"
