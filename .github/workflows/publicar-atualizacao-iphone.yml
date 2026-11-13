@@ -1,0 +1,97 @@
+# Publica só o app (EAS Update) para abrir no Expo Go do iPhone. Não faz deploy do Firebase, não roda
+# migração e não cria contas demo — para isso existe o workflow "Preparar teste de notificações (RF31)".
+# Dispara quando o código do app muda no dev, e republica no mesmo branch de update
+# (teste-notificacoes), então o iPhone pega a versão nova ao reabrir o app no Expo Go.
+# Precisa dos mesmos 2 secrets do outro workflow: FIREBASE_SERVICE_ACCOUNT e EXPO_TOKEN.
+# O Expo Go só abre o SDK mais recente (hoje, o 58, que é o do app).
+name: Publicar atualização para o iPhone
+
+on:
+  push:
+    branches: [dev]
+    paths:
+      - 'src/**'
+      - 'App.tsx'
+      - 'index.ts'
+      - 'assets/**'
+      - 'app.json'
+      - 'app.config.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/publicar-atualizacao-iphone.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publicar-atualizacao-iphone
+  cancel-in-progress: true
+
+env:
+  PROJETO: roundup-app-a5a82
+  EAS: npx --yes eas-cli@27.9.0
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Conferir secrets
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          falta=0
+          if [ -z "$SA" ]; then echo "::error::Falta o secret FIREBASE_SERVICE_ACCOUNT."; falta=1; fi
+          if [ -z "$EXPO_TOKEN" ]; then echo "::error::Falta o secret EXPO_TOKEN."; falta=1; fi
+          exit $falta
+
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+
+      # A configuração web do Firebase (EXPO_PUBLIC_FIREBASE_*) vem do próprio projeto; só leitura
+      - name: Configuração do Firebase para o app
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/conta-servico.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/conta-servico.json"
+          WEB_ID=$(npx firebase apps:list WEB --project "$PROJETO" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const a=(JSON.parse(s).result||[])[0];process.stdout.write(a?a.appId:'')})")
+          if [ -z "$WEB_ID" ]; then echo "::error::O projeto não tem app web no Firebase."; exit 1; fi
+          npx firebase apps:sdkconfig WEB "$WEB_ID" --project "$PROJETO" --out "$RUNNER_TEMP/web.json"
+          node -e "
+            const c=require(process.argv[1]);
+            const m={API_KEY:c.apiKey,AUTH_DOMAIN:c.authDomain,PROJECT_ID:c.projectId,STORAGE_BUCKET:c.storageBucket,MESSAGING_SENDER_ID:c.messagingSenderId,APP_ID:c.appId};
+            for (const [k,v] of Object.entries(m)) console.log('EXPO_PUBLIC_FIREBASE_'+k+'='+v);
+          " "$RUNNER_TEMP/web.json" >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/conta-servico.json"
+
+      - name: Publicar o update (iOS)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          $EAS init --non-interactive --force
+          DONO=$(node -p "require('./app.json').expo.owner || ''")
+          if [ -z "$DONO" ]; then DONO=$($EAS whoami < /dev/null | head -1); fi
+          $EAS update --branch teste-notificacoes --platform ios --message "App atualizado — ${GITHUB_SHA::7}" \
+            --non-interactive --json > "$RUNNER_TEMP/update.json"
+          GRUPO=$(node -p "const u=require(process.argv[1]);(Array.isArray(u)?u[0]:u).group" "$RUNNER_TEMP/update.json")
+          PROJECT_ID=$(node -p "require('./app.json').expo.extra.eas.projectId")
+          PAGINA="https://expo.dev/accounts/$DONO/projects/roundup_app/updates/$GRUPO"
+          {
+            echo "## Atualização publicada (iPhone, Expo Go)"
+            echo ""
+            echo "- Página do update: $PAGINA"
+            echo "- Endereço direto: \`exp://u.expo.dev/$PROJECT_ID/group/$GRUPO\`"
+            echo ""
+            echo "Feche o Expo Go deslizando e abra o RoundUp de novo para carregar a versão nova."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Update: $PAGINA"
