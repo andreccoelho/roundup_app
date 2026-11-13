@@ -12,6 +12,7 @@
 // no EAS (Android) ou chave APNs (iOS), e um development build. Opcional: a variável EXPO_ACCESS_TOKEN, se o "enhanced security" de push
 // estiver ligado no projeto Expo.
 import { onDocumentCreated, onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getFirestore, FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore';
@@ -76,15 +77,20 @@ async function enviarExpo(tokens: string[], mensagem: Mensagem): Promise<{ inval
   return { invalidos, falhou };
 }
 
-// Envia para cada uid que quer este tipo de notificação e registra o resultado em `notificacoes`
-export async function notificar(db: Firestore, uids: string[], tipo: TipoNotificacao, mensagem: Mensagem): Promise<void> {
+// Envia para cada uid que quer este tipo de notificação e registra o resultado em `notificacoes`.
+// Devolve o status de cada uid ('desligado' = o usuário desligou este tipo; esse não é registrado).
+export async function notificar(
+  db: Firestore, uids: string[], tipo: TipoNotificacao, mensagem: Mensagem,
+): Promise<Record<string, string>> {
+  const resultado: Record<string, string> = {};
   const unicos = [...new Set(uids)];
-  if (unicos.length === 0) return;
+  if (unicos.length === 0) return resultado;
   const usuarios = await db.getAll(...unicos.map((uid) => db.doc(`usuarios/${uid}`)));
   const querem = usuarios
     .filter((u) => u.exists && u.data()?.preferenciasNotificacao?.[tipo] !== false)
     .map((u) => u.id);
-  if (querem.length === 0) return;
+  unicos.filter((uid) => !querem.includes(uid)).forEach((uid) => { resultado[uid] = 'desligado'; });
+  if (querem.length === 0) return resultado;
   const privados = await db.getAll(...querem.map((uid) => refPrivado(db, uid)));
 
   await Promise.all(privados.map(async (privado, i) => {
@@ -105,10 +111,12 @@ export async function notificar(db: Firestore, uids: string[], tipo: TipoNotific
         status = 'erro';
       }
     }
+    resultado[uid] = status;
     await db.collection('notificacoes').add({
       destinatarioId: uid, tipo, titulo: mensagem.titulo, corpo: mensagem.corpo, status, criadoEm: Timestamp.now(),
     });
   }));
+  return resultado;
 }
 
 // Conquista notificada uma vez só por aluno: a chave entra em conquistasNotificadas numa transação
@@ -211,3 +219,36 @@ export const enviarLembretesDeSessao = onSchedule(
     await enviarLembretesDoDia(new Date());
   },
 );
+
+// ---------- teste no aparelho ----------
+// RF31: botão "Enviar teste" da tela Notificações (docs/ROTEIRO_TESTE_NOTIFICACOES.md). Manda uma
+// notificação de exemplo do tipo pedido SÓ para quem chamou, pelo mesmo caminho real (preferência,
+// token, Expo, registro em `notificacoes`), e devolve o status para a tela explicar o resultado.
+// Não toca em missão, conquista nem lembrete de verdade. Limite: um teste a cada 15 s por usuário.
+const TIPOS_TESTE: TipoNotificacao[] = ['lembreteSessao', 'novaMissao', 'conquista'];
+const MENSAGENS_TESTE: Record<TipoNotificacao, Mensagem> = {
+  lembreteSessao: { titulo: 'Treino hoje (teste)', corpo: 'Assim chega o lembrete do dia de treino.', dados: { tela: 'Agenda' } },
+  novaMissao: { titulo: 'Nova missão (teste)', corpo: 'Assim chega o aviso de uma missão nova.', dados: { tela: 'Missoes' } },
+  conquista: { titulo: 'Conquista (teste)', corpo: 'Assim chega o aviso de uma conquista.', dados: { tela: 'Perfil' } },
+};
+export const INTERVALO_TESTE_MS = 15_000;
+
+export const enviarNotificacaoDeTeste = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'É preciso estar autenticado.');
+  const tipo = request.data?.tipo as TipoNotificacao;
+  if (!TIPOS_TESTE.includes(tipo)) throw new HttpsError('invalid-argument', 'Tipo de notificação desconhecido.');
+
+  const db = getFirestore();
+  const liberado = await db.runTransaction(async (t) => {
+    const ref = refPrivado(db, uid);
+    const ultimo: number = (await t.get(ref)).data()?.ultimoTesteMs ?? 0;
+    if (Date.now() - ultimo < INTERVALO_TESTE_MS) return false;
+    t.set(ref, { ultimoTesteMs: Date.now() }, { merge: true });
+    return true;
+  });
+  if (!liberado) throw new HttpsError('resource-exhausted', 'Espere alguns segundos antes de outro teste.');
+
+  const status = (await notificar(db, [uid], tipo, MENSAGENS_TESTE[tipo]))[uid] ?? 'desligado';
+  return { status };
+});

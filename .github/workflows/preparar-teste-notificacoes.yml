@@ -1,0 +1,191 @@
+# RF31: prepara tudo para testar as notificações no celular, sem instalar nada na sua máquina.
+# Rodar em: GitHub → Actions → "Preparar teste de notificações (RF31)" → Run workflow.
+# Precisa de 2 secrets do repositório (Settings → Secrets and variables → Actions):
+#   FIREBASE_SERVICE_ACCOUNT  JSON da chave da conta de serviço do Firebase (com os papéis de
+#                             docs/ROTEIRO_TESTE_NOTIFICACOES.md); também vira a chave FCM V1 do EAS
+#   EXPO_TOKEN                token de acesso da sua conta Expo
+# Opcional: DEMO_SENHA (senha das contas demo; padrão em scripts/seed-demo.cjs).
+# Gera o perfil `preview` (APK com o JavaScript embutido): instala e abre sem computador por perto.
+# O perfil `development` exige o Metro (`npx expo start`) rodando numa máquina.
+name: Preparar teste de notificações (RF31)
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Publicar functions, regras e índices
+        type: boolean
+        default: true
+      migracoes:
+        description: Rodar as 3 migrações (missões, medalhas, faixas)
+        type: boolean
+        default: true
+      demo:
+        description: Criar/atualizar as contas demo (academia, professor, aluno)
+        type: boolean
+        default: true
+      web:
+        description: Publicar a versão web (telas de gestor para o teste real)
+        type: boolean
+        default: true
+      build_android:
+        description: Gerar o APK de teste (EAS, perfil preview)
+        type: boolean
+        default: true
+  # Roda também quando este arquivo muda na branch dev: o botão "Run workflow" só aparece para
+  # workflows da branch padrão (main). Na dev, use "Re-run all jobs" numa execução existente.
+  push:
+    branches: [dev]
+    paths: ['.github/workflows/preparar-teste-notificacoes.yml']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preparar-teste-notificacoes
+  cancel-in-progress: false
+
+env:
+  PROJETO: roundup-app-a5a82
+  GCLOUD_PROJECT: roundup-app-a5a82
+  PACOTE: br.com.roundup.app
+  # Com push (sem inputs), tudo liga
+  FAZER_DEPLOY: ${{ github.event_name == 'push' || inputs.deploy }}
+  FAZER_MIGRACOES: ${{ github.event_name == 'push' || inputs.migracoes }}
+  FAZER_DEMO: ${{ github.event_name == 'push' || inputs.demo }}
+  FAZER_WEB: ${{ github.event_name == 'push' || inputs.web }}
+  FAZER_BUILD: ${{ github.event_name == 'push' || inputs.build_android }}
+
+jobs:
+  preparar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            functions/package-lock.json
+
+      - name: Conferir secrets
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          falta=0
+          if [ -z "$SA" ]; then echo "::error::Falta o secret FIREBASE_SERVICE_ACCOUNT (passo 2 do roteiro)."; falta=1; fi
+          if [ "$FAZER_BUILD" = "true" ] && [ -z "$EXPO_TOKEN" ]; then echo "::error::Falta o secret EXPO_TOKEN (passo 3 do roteiro)."; falta=1; fi
+          exit $falta
+
+      - name: Instalar dependências
+        run: |
+          npm ci --no-audit --no-fund
+          npm --prefix functions ci --no-audit --no-fund
+          npm --prefix functions run build
+
+      - name: Credencial do Firebase
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$SA" > "$RUNNER_TEMP/conta-servico.json"
+          node -e "const k=require(process.argv[1]); if(k.project_id!==process.env.PROJETO){console.error('::error::A chave é do projeto '+k.project_id+', não de '+process.env.PROJETO);process.exit(1)}; console.log('Conta de serviço: '+k.client_email)" "$RUNNER_TEMP/conta-servico.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/conta-servico.json" >> "$GITHUB_ENV"
+
+      # --force: apaga as functions que saíram do código (notificarNovaMissao e notificarMarcoDeTreino,
+      # senão a missão nova seria avisada duas vezes) e configura a política de limpeza de imagens
+      # (o erro de "cleanup policy" do deploy de 08/11)
+      - name: Deploy (functions, regras e índices)
+        if: env.FAZER_DEPLOY == 'true'
+        run: npx firebase deploy --only functions,firestore:rules,firestore:indexes --project "$PROJETO" --non-interactive --force
+
+      - name: Migrações (RF23, RF19, RF33)
+        if: env.FAZER_MIGRACOES == 'true'
+        run: |
+          node scripts/migrar-missoes-publico.cjs --aplicar
+          node scripts/migrar-medalhas.cjs --aplicar
+          node scripts/migrar-faixas.cjs --aplicar
+
+      - name: Contas demo
+        if: env.FAZER_DEMO == 'true'
+        env:
+          DEMO_SENHA: ${{ secrets.DEMO_SENHA }}
+        run: |
+          if [ -z "$DEMO_SENHA" ]; then unset DEMO_SENHA; fi
+          node scripts/seed-demo.cjs --aplicar
+
+      # Cadastra o app Android no Firebase (se ainda não existir) e baixa o google-services.json;
+      # pega a configuração web, que o app usa (EXPO_PUBLIC_FIREBASE_*), sem precisar do .env
+      - name: Configuração do Firebase para o app
+        if: env.FAZER_BUILD == 'true' || env.FAZER_WEB == 'true'
+        run: |
+          ANDROID_ID=$(npx firebase apps:list ANDROID --project "$PROJETO" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const a=(JSON.parse(s).result||[]).find(x=>x.packageName===process.env.PACOTE);process.stdout.write(a?a.appId:'')})")
+          if [ -z "$ANDROID_ID" ]; then
+            echo "Criando o app Android $PACOTE no Firebase"
+            ANDROID_ID=$(npx firebase apps:create ANDROID RoundUp --package-name "$PACOTE" --project "$PROJETO" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>process.stdout.write(JSON.parse(s).result.appId))")
+          fi
+          npx firebase apps:sdkconfig ANDROID "$ANDROID_ID" --project "$PROJETO" --out google-services.json
+          WEB_ID=$(npx firebase apps:list WEB --project "$PROJETO" --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const a=(JSON.parse(s).result||[])[0];process.stdout.write(a?a.appId:'')})")
+          if [ -z "$WEB_ID" ]; then echo "::error::O projeto não tem app web no Firebase (é dele que vem a configuração do app)."; exit 1; fi
+          npx firebase apps:sdkconfig WEB "$WEB_ID" --project "$PROJETO" --out "$RUNNER_TEMP/web.json"
+          node -e "
+            const c=require(process.argv[1]);
+            const m={API_KEY:c.apiKey,AUTH_DOMAIN:c.authDomain,PROJECT_ID:c.projectId,STORAGE_BUCKET:c.storageBucket,MESSAGING_SENDER_ID:c.messagingSenderId,APP_ID:c.appId};
+            for (const [k,v] of Object.entries(m)) console.log('EXPO_PUBLIC_FIREBASE_'+k+'='+v);
+          " "$RUNNER_TEMP/web.json" > "$RUNNER_TEMP/firebase.env"
+          cat "$RUNNER_TEMP/firebase.env" >> "$GITHUB_ENV"
+
+      - name: Publicar a versão web (Firebase Hosting)
+        if: env.FAZER_WEB == 'true'
+        run: |
+          npx expo export -p web
+          npx firebase deploy --only hosting --project "$PROJETO" --non-interactive
+          echo "Web: https://$PROJETO.web.app" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Projeto e variáveis no EAS
+        if: env.FAZER_BUILD == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli@27.9.0 init --non-interactive --force
+          echo "projectId: $(node -p "require('./app.json').expo.extra.eas.projectId")"
+          npx eas-cli@27.9.0 env:create --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json \
+            --environment preview --visibility secret --non-interactive --force
+          while IFS='=' read -r nome valor; do
+            npx eas-cli@27.9.0 env:create --name "$nome" --value "$valor" --type string \
+              --environment preview --visibility plaintext --non-interactive --force < /dev/null
+          done < "$RUNNER_TEMP/firebase.env"
+
+      - name: Chave FCM V1 no EAS
+        if: env.FAZER_BUILD == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: node scripts/configurar-fcm-eas.cjs "$RUNNER_TEMP/conta-servico.json"
+
+      - name: Build Android de teste (EAS, perfil preview)
+        if: env.FAZER_BUILD == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          npx eas-cli@27.9.0 build --platform android --profile preview --non-interactive --no-wait --json > "$RUNNER_TEMP/build.json"
+          ID=$(node -p "const b=require(process.argv[1]);(Array.isArray(b)?b[0]:b).id" "$RUNNER_TEMP/build.json")
+          DONO=$(node -p "require('./app.json').expo.owner || ''")
+          if [ -z "$DONO" ]; then DONO=$(npx eas-cli@27.9.0 whoami | head -1); fi
+          URL="https://expo.dev/accounts/$DONO/projects/roundup_app/builds/$ID"
+          {
+            echo "## APK de teste"
+            echo ""
+            echo "O build roda nos servidores da Expo (10 a 30 min). Abra este link no celular e instale quando terminar:"
+            echo ""
+            echo "$URL"
+            echo ""
+            echo "Depois: abra o app, entre com **aluno@example.com** e vá em Perfil → Notificações → Testar neste aparelho."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Build: $URL"
+
+      - name: Limpar a chave
+        if: always()
+        run: rm -f "$RUNNER_TEMP/conta-servico.json" google-services.json

@@ -12,7 +12,9 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { arrayRemove, arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from './firebase';
+import type { PreferenciasNotificacao } from '../types';
 
 const CANAL_ANDROID = 'padrao';
 
@@ -71,4 +73,15 @@ export async function desregistrarDispositivo(): Promise<void> {
   } catch (e) {
     console.warn('Não foi possível remover o token de notificações:', e);
   }
+}
+
+export type StatusTeste = 'enviado' | 'erro' | 'semDispositivo' | 'simulado' | 'desligado';
+
+// RF31: pede ao servidor uma notificação de exemplo deste tipo, só para o próprio usuário, pelo
+// caminho real (Cloud Function enviarNotificacaoDeTeste → Expo → FCM/APNs). Antes, tenta registrar
+// o aparelho de novo (se a permissão foi dada depois do login, o token entra agora).
+export async function enviarNotificacaoDeTeste(usuarioId: string, tipo: keyof PreferenciasNotificacao): Promise<StatusTeste> {
+  await registrarDispositivo(usuarioId);
+  const resposta = await httpsCallable<{ tipo: string }, { status: StatusTeste }>(functions, 'enviarNotificacaoDeTeste')({ tipo });
+  return resposta.data.status;
 }

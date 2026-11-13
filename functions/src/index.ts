@@ -128,7 +128,7 @@ export { aplicarGraduacaoNoPerfil } from './graduacoes';
 
 // RF31: notificações push — ver notificacoes.ts
 export {
-  notificarMissaoConcluida, notificarGraduacao, enviarLembretesDeSessao,
+  notificarMissaoConcluida, notificarGraduacao, enviarLembretesDeSessao, enviarNotificacaoDeTeste,
 } from './notificacoes';
 // Núcleo do lembrete diário, exportado para o teste chamar direto (o emulador não dispara agendamentos)
 export { enviarLembretesDoDia } from './notificacoes';

@@ -51,7 +51,18 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 - tocar na notificação abre o app, mas não navega para a tela de `dados.tela` (não há listener de resposta);
 - o plugin usa `mode: development` no iOS (padrão). Um build de App Store precisa de `mode: "production"`.
 
-**O que depende do autor** (passo a passo em **`docs/ROTEIRO_TESTE_NOTIFICACOES.md`**):
+**Automação para testar sem terminal (2026-11-13):**
+- **Workflow** `.github/workflows/preparar-teste-notificacoes.yml`. Com os secrets `FIREBASE_SERVICE_ACCOUNT` e `EXPO_TOKEN`, ele:
+  - faz o deploy com `--force` (apaga `notificarNovaMissao` e `notificarMarcoDeTreino`, que saíram do código, e configura a política de limpeza que falhou no deploy de 08/11);
+  - roda as 3 migrações e as contas demo, e publica a web;
+  - cadastra o app Android no Firebase e gera o `google-services.json`;
+  - leva para o EAS a configuração `EXPO_PUBLIC_FIREBASE_*` (antes só existia no `.env` local) e a chave FCM V1 (`scripts/configurar-fcm-eas.cjs`, mesma API do `eas-cli`);
+  - gera o APK do perfil `preview`, que abre sem Metro.
+- **Botões "Testar neste aparelho"** na tela Notificações: a callable `enviarNotificacaoDeTeste` manda um exemplo de cada tipo só para o próprio usuário, pelo caminho real, e devolve o status (`enviado`, `semDispositivo`, `desligado`…). Um teste a cada 15 s por usuário.
+- **Risco aceito:** a mesma chave de conta de serviço publica no Firebase (guardada como secret do GitHub) e serve de chave FCM V1 no EAS. Retirar o papel extra depois dos testes, e revogar a chave se não for mais usar.
+- **Não testado contra as contas reais:** a primeira execução do workflow pode precisar de ajuste.
+
+**O que depende do autor** (passo a passo em **`docs/ROTEIRO_TESTE_NOTIFICACOES.md`**, "Caminho fácil"):
 - plano Blaze e deploy;
 - `eas init` (`projectId`);
 - `google-services.json` e chave FCM V1 no EAS;

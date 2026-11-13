@@ -2,15 +2,60 @@
 
 Objetivo: ver chegar no aparelho os 3 tipos de push (lembrete de sessão, nova missão, conquista). No emulador o envio já foi testado (status `simulado`); falta o caminho real: Cloud Function → serviço de push da Expo → FCM/APNs → celular.
 
-Tempo estimado: ~1h na primeira vez (a maior parte é esperar o build). Comece pelo **Android**: não exige conta paga da Apple.
+Comece pelo **Android**: não exige conta paga da Apple. O iOS exige o Apple Developer Program e o caminho manual.
 
 ---
+
+## Caminho fácil: só pelo navegador (recomendado)
+
+Um workflow do GitHub Actions (`.github/workflows/preparar-teste-notificacoes.yml`) faz o resto. Numa execução, ele:
+- publica as functions, as regras e os índices, e apaga as functions antigas;
+- roda as 3 migrações e cria as contas demo;
+- publica a versão web;
+- cadastra o app Android no Firebase e configura o projeto e a chave FCM no Expo;
+- gera o APK de teste.
+
+Você só faz cliques no navegador (dá para fazer pelo celular).
+
+### Passo 1 — Chave da conta de serviço do Firebase
+1. [Console do Firebase](https://console.firebase.google.com/project/roundup-app-a5a82/settings/serviceaccounts/adminsdk) → **Configurações do projeto → Contas de serviço → Gerar nova chave privada**. Um arquivo `.json` é baixado.
+2. Dê à conta da chave (`firebase-adminsdk-…@roundup-app-a5a82.iam.gserviceaccount.com`) permissão para publicar. No [IAM do Google Cloud](https://console.cloud.google.com/iam-admin/iam?project=roundup-app-a5a82), edite essa conta e adicione o papel **Proprietário**. É o caminho mais simples; **retire o papel depois dos testes**.
+   Alternativa mais restrita: os papéis Editor, Administrador do Cloud Functions, Usuário da conta de serviço e Administrador do Firebase. Se o deploy reclamar de permissão, o log diz qual papel falta.
+
+### Passo 2 — Token do Expo
+1. Crie uma conta grátis em [expo.dev](https://expo.dev/signup), se ainda não tiver.
+2. [Access tokens](https://expo.dev/settings/access-tokens) → **Create token** → copie o valor.
+
+### Passo 3 — Secrets no GitHub
+No repositório: **Settings → Secrets and variables → Actions → New repository secret**:
+- `FIREBASE_SERVICE_ACCOUNT`: o **conteúdo inteiro** do `.json` do passo 1;
+- `EXPO_TOKEN`: o token do passo 2;
+- (opcional) `DEMO_SENHA`: senha das contas demo. Sem ele, vale `Demo@2026`.
+
+### Passo 4 — Rodar
+**Actions → "Preparar teste de notificações (RF31)"** → abra a execução que falhou por falta de secrets → **Re-run all jobs**.
+- O botão "Run workflow" só aparece quando o workflow existe na branch `main`. Enquanto ele estiver só na `dev`, use o "Re-run".
+- Leva uns 10 minutos. No resumo da execução aparecem o link da web e o **link do build** no expo.dev. O build em si leva mais 10 a 30 min na fila da Expo.
+
+### Passo 5 — Testar no celular (Android)
+1. Abra o link do build no celular → **Install** (permita instalar de fonte desconhecida).
+2. Abra o RoundUp, entre com **aluno@example.com** (senha `Demo@2026` ou a sua `DEMO_SENHA`) e **permita notificações**.
+3. **Perfil → Notificações → Testar neste aparelho**: toque nos 3 botões, um de cada vez (há 15 s de espera entre testes). Cada um mostra o resultado embaixo ("Enviado…", "Este aparelho não está registrado…" etc.).
+4. Para os disparos **reais** (a seção 6 abaixo), use a web (`https://roundup-app-a5a82.web.app`) com **academia@example.com** como responsável.
+
+O APK é do perfil `preview`: tem o JavaScript embutido e abre sem computador. O perfil `development` precisa do Metro rodando numa máquina, por isso não é usado aqui.
+
+Se algum passo do workflow falhar, copie o log do passo (Actions → execução → passo vermelho) e mande para o chat.
+
+---
+
+## Caminho manual (com o terminal na sua máquina)
 
 ## O que só você pode fazer
 
 | Item | Por quê | Custo |
 |---|---|---|
-| Plano **Blaze** no projeto Firebase `roundup-app-a5a82` | Deploy de Cloud Functions e Cloud Scheduler (lembrete diário) | Pago por uso; o volume do TCC fica na cota gratuita |
+| Plano **Blaze** no projeto Firebase `roundup-app-a5a82` (já ativo) | Deploy de Cloud Functions e Cloud Scheduler (lembrete diário) | Pago por uso; o volume do TCC fica na cota gratuita |
 | Conta Expo + `npx eas init` | Gera o `projectId`, sem o qual o app não obtém token de push | Grátis |
 | `google-services.json` + chave **FCM V1** no EAS | Credenciais do Android | Grátis |
 | Chave **APNs** (só iOS) | Credencial do iPhone; exige Apple Developer Program | US$ 99/ano |
@@ -23,15 +68,15 @@ Já está pronto no repositório: `eas.json` (perfis `development`, `preview` e 
 
 ## 1. Backend (uma vez)
 
-1. No [Console do Firebase](https://console.firebase.google.com/), em **Uso e faturamento**, mude para o plano **Blaze**.
-2. Na raiz do projeto:
+1. O plano **Blaze** já está ativo. Na raiz do projeto:
    ```bash
    npx firebase login
    ```
    ```bash
-   npx firebase deploy --only functions,firestore:rules,firestore:indexes --project roundup-app-a5a82
+   npx firebase deploy --only functions,firestore:rules,firestore:indexes --project roundup-app-a5a82 --force
    ```
-3. Rode as migrações desta rodada (cada uma faz dry-run sem `--aplicar`; confira a saída antes):
+   O `--force` apaga as functions que saíram do código (`notificarNovaMissao` e `notificarMarcoDeTreino`; sem isso, a missão nova seria avisada duas vezes) e configura a política de limpeza de imagens.
+2. Rode as migrações desta rodada (cada uma faz dry-run sem `--aplicar`; confira a saída antes):
    ```bash
    gcloud auth application-default login
    ```
