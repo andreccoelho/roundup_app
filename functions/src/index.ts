@@ -132,3 +132,8 @@ export {
 } from './notificacoes';
 // Núcleo do lembrete diário, exportado para o teste chamar direto (o emulador não dispara agendamentos)
 export { enviarLembretesDoDia } from './notificacoes';
+
+// RF22, RF10: professor atribuído pela academia vê matrículas e check-ins da turma — ver professorNosRegistros.ts
+export { definirProfessorNaMatricula, definirProfessorNoCheckin, atualizarProfessorNaTurma } from './professorNosRegistros';
+// Usada pelo script de migração (scripts/migrar-professor-nos-registros.cjs) e pelos testes
+export { reconciliarProfessorDaTurma } from './professorNosRegistros';

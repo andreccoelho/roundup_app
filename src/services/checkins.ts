@@ -2,6 +2,7 @@
 import {
   doc, updateDoc, runTransaction,
   collection, query, where, orderBy, getDocs,
+  type Firestore,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { CheckIn, Sessao, Matricula, Classificacao, ConfiguracaoGamificacao } from '../types';
@@ -73,19 +74,29 @@ export async function realizarCheckIn(sessaoId: string, alunoId: string): Promis
 // (`responsavelId`, já gravado em cada checkin) e reduz por sessaoId em memória — usada pelo
 // responsável da sessão (gestor), nunca por um professor apenas atribuído (mesma limitação já
 // existente para matrículas: só o responsavelId raiz da turma tem acesso).
-export async function listarCheckInsPorSessao(sessaoId: string, responsavelId: string): Promise<CheckIn[]> {
-  const q = query(collection(db, COLECAO), where('responsavelId', '==', responsavelId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as CheckIn).filter(c => c.sessaoId === sessaoId);
+// RF22: `usuarioId` é o responsável da turma OU o professor atribuído a ela pela academia (campo
+// `professorId`, escrito só pelo servidor) — as duas consultas rodam juntas.
+export async function listarCheckInsPorSessao(sessaoId: string, usuarioId: string, dbInstancia: Firestore = db): Promise<CheckIn[]> {
+  const todos = await listarCheckInsDoUsuario(usuarioId, dbInstancia);
+  return todos.filter(c => c.sessaoId === sessaoId);
+}
+
+async function listarCheckInsDoUsuario(usuarioId: string, dbInstancia: Firestore): Promise<CheckIn[]> {
+  const colecao = collection(dbInstancia, COLECAO);
+  const [comoResponsavel, comoProfessor] = await Promise.all([
+    getDocs(query(colecao, where('responsavelId', '==', usuarioId))),
+    getDocs(query(colecao, where('professorId', '==', usuarioId))),
+  ]);
+  const porId = new Map<string, CheckIn>();
+  [...comoResponsavel.docs, ...comoProfessor.docs].forEach((d) => porId.set(d.id, d.data() as CheckIn));
+  return [...porId.values()];
 }
 
 // RF24, RF26: todos os check-ins do responsável, sem filtrar por sessão — base para as
 // agregações de frequência em src/services/frequencia.ts. Mesma consulta de
 // listarCheckInsPorSessao, só sem o filtro em memória por sessaoId.
 export async function listarCheckInsPorResponsavel(responsavelId: string): Promise<CheckIn[]> {
-  const q = query(collection(db, COLECAO), where('responsavelId', '==', responsavelId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as CheckIn);
+  return listarCheckInsDoUsuario(responsavelId, db);
 }
 
 // RF15
@@ -124,14 +135,18 @@ export async function buscarCheckInDaSessao(sessaoId: string, alunoId: string): 
 // cada lado confere que o outro mudou na MESMA transação com o mesmo delta (ver firestore.rules).
 // Por isso os pontos vão como valor literal já somado, não `increment()`: lemos o valor atual
 // dentro da transação. Todos os `transacao.get()` vêm antes de qualquer escrita, como o SDK exige.
+// RF22: `validadorId` é quem valida — o responsável da turma ou o professor que a academia atribuiu a
+// ela. A pontuação sempre vai para o escopo do check-in (`checkin.responsavelId`, a academia).
+// `dbInstancia` é injetável para a suíte de regras rodar esta mesma função sob um contexto de teste.
 export async function validarCheckIn(
   checkinId: string,
-  responsavelId: string,
+  validadorId: string,
   novoStatus: 'validado' | 'pendente',
+  dbInstancia: Firestore = db,
 ): Promise<void> {
-  const checkinRef = doc(db, COLECAO, checkinId);
+  const checkinRef = doc(dbInstancia, COLECAO, checkinId);
 
-  await runTransaction(db, async (transacao) => {
+  await runTransaction(dbInstancia, async (transacao) => {
     const checkinSnap = await transacao.get(checkinRef);
     if (!checkinSnap.exists()) {
       throw new Error('Check-in não encontrado.');
@@ -145,7 +160,7 @@ export async function validarCheckIn(
     const classificacaoId = vaiEstornar && checkin.classificacaoId
       ? checkin.classificacaoId
       : `${checkin.alunoId}_${checkin.responsavelId}_${periodo}`;
-    const classificacaoRef = doc(db, COLECAO_CLASSIFICACOES, classificacaoId);
+    const classificacaoRef = doc(dbInstancia, COLECAO_CLASSIFICACOES, classificacaoId);
 
     let pontosAtuais = 0;
     let pontosDoCheckin = 0;
@@ -154,7 +169,7 @@ export async function validarCheckIn(
       pontosAtuais = classificacaoSnap.exists() ? (classificacaoSnap.data() as Classificacao).pontos : 0;
     }
     if (vaiCreditar) {
-      const configSnap = await transacao.get(doc(db, COLECAO_CONFIGURACOES, checkin.responsavelId));
+      const configSnap = await transacao.get(doc(dbInstancia, COLECAO_CONFIGURACOES, checkin.responsavelId));
       pontosDoCheckin = configSnap.exists()
         ? (configSnap.data() as ConfiguracaoGamificacao).pontosPorCheckin
         : XP_POR_CHECKIN_VALIDADO;
@@ -163,7 +178,7 @@ export async function validarCheckIn(
     transacao.update(checkinRef, {
       status: novoStatus,
       pontos: vaiCreditar ? pontosDoCheckin : vaiEstornar ? 0 : checkin.pontos,
-      validadoPor: responsavelId,
+      validadoPor: validadorId,
       validadoEm: agoraTimestamp(),
       ...(vaiCreditar || vaiEstornar ? { classificacaoId } : {}),
     });

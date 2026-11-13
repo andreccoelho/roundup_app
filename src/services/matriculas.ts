@@ -1,5 +1,5 @@
 // RF11: matrícula do aluno em turma, condicionada a vínculo ativo com o responsável (RN05)
-import { doc, setDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, collection, query, where, getDocs, type Firestore } from 'firebase/firestore';
 import { db } from './firebase';
 import { Matricula } from '../types';
 import { agoraTimestamp } from '../utils/datas';
@@ -44,6 +44,12 @@ export async function matricularAluno(turmaId: string, alunoId: string): Promise
     criadoEm: existente?.criadoEm ?? agora,
     atualizadoEm: agora,
   };
+  if (existente) {
+    // Reativação: só muda o status. setDoc substituiria o documento inteiro e apagaria `professorId`,
+    // que é do servidor (a regra exige que ele não mude pelo aluno).
+    await updateDoc(ref, { status: 'ativa', atualizadoEm: agora });
+    return { ...existente, status: 'ativa', atualizadoEm: agora };
+  }
   await setDoc(ref, matricula);
   return matricula;
 }
@@ -73,10 +79,20 @@ export async function listarMatriculasPorAluno(alunoId: string): Promise<Matricu
 // realmente verifica (`responsavelId`, já desnormalizado da turma em cada matrícula) e reduzir
 // por `turmaId` em memória — o quem-chama já É o responsável (só TurmaDetalheScreen e o painel
 // do professor chamam isso, ambos como o dono da turma).
-export async function listarMatriculasPorTurma(turmaId: string, responsavelId: string): Promise<Matricula[]> {
-  const q = query(collection(db, COLECAO), where('responsavelId', '==', responsavelId));
-  const snap = await getDocs(q);
-  return snap.docs.map(d => d.data() as Matricula).filter(m => m.turmaId === turmaId);
+//
+// RF22, RF10: `usuarioId` é o responsável da turma OU o professor que a academia atribuiu a ela. As duas
+// consultas rodam juntas: por `responsavelId` (dono da turma) e por `professorId` (campo do servidor, que
+// é o que a regra de leitura confere para o professor atribuído). Quem não é professor atribuído de nada
+// recebe a segunda consulta vazia.
+export async function listarMatriculasPorTurma(turmaId: string, usuarioId: string, dbInstancia: Firestore = db): Promise<Matricula[]> {
+  const colecao = collection(dbInstancia, COLECAO);
+  const [comoResponsavel, comoProfessor] = await Promise.all([
+    getDocs(query(colecao, where('responsavelId', '==', usuarioId))),
+    getDocs(query(colecao, where('professorId', '==', usuarioId))),
+  ]);
+  const porId = new Map<string, Matricula>();
+  [...comoResponsavel.docs, ...comoProfessor.docs].forEach((d) => porId.set(d.id, d.data() as Matricula));
+  return [...porId.values()].filter(m => m.turmaId === turmaId);
 }
 
 // RF09: ids de aluno com matrícula ativa em alguma turma deste responsável — usado na Gestão de

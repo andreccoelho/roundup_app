@@ -284,6 +284,24 @@ Confirmado no plano anterior (`docs/PLANO_REGRAS_CICLO2_3.md`): essas duas não 
 
 ---
 
+## 12. Professor atribuído pela academia (RF22, RF10) — correção de 2026-11-13
+
+**Sintoma relatado pelo autor:** no perfil professor, a aba Turmas só mostrava as turmas que ele mesmo criou; a turma criada pela academia não aparecia, e (no painel Hoje) não apareciam os alunos matriculados nem os check-ins da sessão.
+
+**Corrigido:**
+- A aba Turmas do professor lista as turmas próprias e as atribuídas, com a etiqueta "Atribuída pela academia" (já em produção no app e na web).
+- Alunos matriculados, check-ins e validação de presença para o professor atribuído: `professorId` nos registros (Cloud Function), regras de leitura e de validação, e consultas do app (detalhes em `docs/decisoes-tecnicas.md`).
+- **Bug anterior achado no caminho:** a primeira validação de check-in do mês falhava para qualquer validador (leitura de `classificacoes` sem a guarda de documento inexistente).
+- Brecha fechada: o check-in só aceita o escopo (`responsavelId`) da própria turma.
+
+**Estado:** código e testes prontos no repositório (rules 163, functions 63, unit 62), **mas as regras e as functions ainda precisam ser publicadas em produção** antes de o app novo. A ordem importa: o app novo consulta `professorId`, que as regras antigas negam. Depois do deploy, rodar `node scripts/migrar-professor-nos-registros.cjs --aplicar` (só os registros que já existiam; hoje, só os de demonstração).
+
+**Decisões a validar:**
+- Um professor com vínculo aceito com a academia lê, por id, as classificações mensais dela (não lista o ranking). Trade-off descrito em `docs/decisoes-tecnicas.md`.
+- Excluir uma turma com alunos matriculados não encerra as matrículas (a lista do aluno já não quebra, item corrigido em RF11); decisão de produto pendente.
+
+---
+
 ## Redesign "Noite de luta" — decisões tomadas pela opção conservadora
 
 Revisadas no redesign Apple (`docs/REDESIGN_APPLE_RESULTADO.md`): R-02, R-03 e R-08 mudaram; as demais continuam valendo.

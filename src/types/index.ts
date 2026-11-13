@@ -123,6 +123,10 @@ export interface Matricula {
   turmaId: string;
   alunoId: string;
   responsavelId: string;            // desnormalizado da turma, habilita consulta pelo gestor
+  // RF22, RF10: professor que a ACADEMIA atribuiu à turma. Escrito só pela Cloud Function
+  // (functions/src/professorNosRegistros.ts) — habilita a consulta do professor atribuído. Ausente
+  // quando o responsável é o próprio professor (autônomo) ou a turma não tem professor.
+  professorId?: string;
   status: StatusMatricula;
   criadoEm: Timestamp;
   atualizadoEm: Timestamp;
@@ -162,6 +166,7 @@ export interface CheckIn {
   validadoPor?: string;
   validadoEm?: Timestamp;
   classificacaoId?: string;         // RN01: classificação que recebeu o crédito — a regra confere que ela mudou junto
+  professorId?: string;             // RF22: professor atribuído à turma pela academia (só a Cloud Function escreve)
 }
 
 // RF23 (Ciclo 3): criação e gerenciamento de missões de gamificação

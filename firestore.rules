@@ -138,6 +138,20 @@ service cloud.firestore {
         : 10;
     }
 
+    // RF22, RF10: o usuário autenticado é o professor que a ACADEMIA atribuiu a esta turma
+    // (turmas.professorId). Só em escrita de documento único (get() na turma). O professor autônomo
+    // não passa por aqui: ele é o próprio responsável da turma e já tem acesso por responsavelId.
+    function souProfessorAtribuidoDaTurma(turmaId) {
+      return dadosTurma(turmaId).get('professorId', '') == meuId();
+    }
+
+    // RF22, RN01: quem escreve na classificação é o professor atribuído à turma do check-in de origem
+    // (o escopo da classificação continua sendo o da academia). A regra de creditoAcompanhaCheckIn
+    // continua exigindo que o delta seja exatamente o dos pontos desse check-in.
+    function souProfessorDoCheckin(checkinId) {
+      return souProfessorAtribuidoDaTurma(get(/databases/$(database)/documents/checkins/$(checkinId)).data.turmaId);
+    }
+
     // RN01, lado da classificação: o check-in de origem é deste aluno neste escopo, e os pontos
     // dele mudaram NESTA transação exatamente pelo `delta` que a classificação está recebendo.
     function creditoAcompanhaCheckIn(checkinId, alunoId, responsavelId, delta) {
@@ -340,20 +354,27 @@ service cloud.firestore {
     }
 
     // ---------- matriculas (RF11) ----------
+    // RF22, RF10: `professorId` é o professor que a ACADEMIA atribuiu à turma. Quem escreve esse campo é
+    // só a Cloud Function (functions/src/professorNosRegistros.ts): o aluno não cria a matrícula com
+    // ele nem o altera, senão daria acesso a quem quisesse. É o que libera ao professor atribuído a
+    // leitura das matrículas da turma dele (consulta por `professorId == meuId()`, provável pela regra).
     match /matriculas/{matriculaId} {
       allow read: if autenticado()
                   && (resource.data.get('alunoId', '') == meuId()
-                      || resource.data.get('responsavelId', '') == meuId());
+                      || resource.data.get('responsavelId', '') == meuId()
+                      || resource.data.get('professorId', '') == meuId());
       allow create: if autenticado()
                     && souAluno()
                     && request.resource.data.alunoId == meuId()
                     && matriculaId == request.resource.data.turmaId + '_' + meuId()
                     && request.resource.data.status == 'ativa'
+                    && !('professorId' in request.resource.data)
                     && request.resource.data.responsavelId == dadosTurma(request.resource.data.turmaId).responsavelId
                     && tenhoVinculoAtivoCom(request.resource.data.responsavelId);
       allow update: if autenticado()
                     && (resource.data.alunoId == meuId()
-                        || resource.data.responsavelId == meuId());
+                        || resource.data.responsavelId == meuId())
+                    && request.resource.data.get('professorId', null) == resource.data.get('professorId', null);
       allow delete: if false;
     }
 
@@ -407,7 +428,8 @@ service cloud.firestore {
       allow read: if autenticado()
                   && (resource == null
                       || resource.data.get('alunoId', '') == meuId()
-                      || resource.data.get('responsavelId', '') == meuId());
+                      || resource.data.get('responsavelId', '') == meuId()
+                      || resource.data.get('professorId', '') == meuId());
       // RN02: o ID determinístico impede o segundo check-in, o create falha por documento existente.
       allow create: if autenticado()
                     && souAluno()
@@ -416,12 +438,17 @@ service cloud.firestore {
                     && matriculadoEm(request.resource.data.turmaId)
                     && request.resource.data.status == 'pendente'
                     && request.resource.data.pontos == 0
+                    // RF22: o escopo do check-in é o da turma (senão um professor atribuído poderia validar
+                    // um check-in e jogar os pontos no escopo de outra academia), e `professorId` é só do servidor
+                    && request.resource.data.responsavelId == dadosTurma(request.resource.data.turmaId).responsavelId
+                    && !('professorId' in request.resource.data)
                     && janelaCheckInValida(request.resource.data.sessaoId);
-      // RF22: só o responsável valida. RN01, RF33: os pontos só mudam de 0 para os pontos por
-      // check-in do responsável (validar) ou para 0 (desfazer), e sempre com a classificação
-      // acompanhando na mesma transação (classificacaoAcompanhaCheckIn).
+      // RF22: valida o responsável da turma OU o professor que a academia atribuiu a ela. RN01, RF33: os
+      // pontos só mudam de 0 para os pontos por check-in do responsável (validar) ou para 0 (desfazer),
+      // e sempre com a classificação acompanhando na mesma transação (classificacaoAcompanhaCheckIn).
       allow update: if autenticado()
-                    && resource.data.responsavelId == meuId()
+                    && (resource.data.responsavelId == meuId()
+                        || souProfessorAtribuidoDaTurma(resource.data.turmaId))
                     && request.resource.data.diff(resource.data).affectedKeys()
                          .hasOnly(['status', 'pontos', 'validadoPor', 'validadoEm', 'classificacaoId'])
                     && (request.resource.data.pontos == resource.data.pontos
@@ -545,15 +572,32 @@ service cloud.firestore {
     // de ranking (que filtra `leitoresIds array-contains meuId()`). `leitoresIds` é escrito só pela
     // Cloud Function (functions/src/classificacao.ts): o client não cria nem altera esse campo.
     match /classificacoes/{classificacaoId} {
-      allow read: if autenticado()
+      // Leitura em LISTA (ranking, pontos do aluno, painel do responsável): só resource.data, provável
+      // para as consultas do app (nenhuma lista consegue consultar vínculo — docs/decisoes-tecnicas.md).
+      allow list: if autenticado()
                   && (resource.data.get('alunoId', '') == meuId()
                       || resource.data.get('responsavelId', '') == meuId()
                       || meuId() in resource.data.get('leitoresIds', []));
+      // Leitura de UM documento (`get`), usada por validarCheckIn dentro da transação:
+      // - `resource == null ||`: no 1º check-in validado do aluno no mês a classificação ainda não
+      //   existe; sem a guarda, ler um documento inexistente era negado e a validação inteira falhava
+      //   (mesmo padrão de `checkins`);
+      // - RF22: o professor com vínculo aceito com a academia do escopo também lê — é ele quem valida e
+      //   estorna os check-ins das turmas que a academia atribuiu a ele, e para estornar precisa do valor
+      //   atual. Só `get` por id (não lista), então não vira uma consulta aberta ao ranking.
+      allow get: if autenticado()
+                 && (resource == null
+                     || resource.data.get('alunoId', '') == meuId()
+                     || resource.data.get('responsavelId', '') == meuId()
+                     || meuId() in resource.data.get('leitoresIds', [])
+                     || (souGestor() && tenhoVinculoAtivoCom(resource.data.get('responsavelId', ''))));
       // Só existe um caminho de create: o primeiro crédito deste aluno neste escopo e mês.
       allow create: if autenticado()
                     && souGestor()
-                    && request.resource.data.responsavelId == meuId()
-                    && souResponsavelDoAluno(request.resource.data.alunoId)
+                    && request.resource.data.origemCheckinId is string
+                    && ((request.resource.data.responsavelId == meuId()
+                         && souResponsavelDoAluno(request.resource.data.alunoId))
+                        || souProfessorDoCheckin(request.resource.data.origemCheckinId))
                     && request.resource.data.periodo is string
                     && request.resource.data.periodo.matches('^[0-9]{4}-(0[1-9]|1[0-2])$')
                     && classificacaoId == request.resource.data.alunoId + '_' + request.resource.data.responsavelId
@@ -565,7 +609,9 @@ service cloud.firestore {
                                                request.resource.data.alunoId, request.resource.data.responsavelId,
                                                request.resource.data.pontos);
       allow update: if autenticado()
-                    && resource.data.responsavelId == meuId()
+                    && request.resource.data.origemCheckinId is string
+                    && (resource.data.responsavelId == meuId()
+                        || souProfessorDoCheckin(request.resource.data.origemCheckinId))
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pontos', 'atualizadoEm', 'origemCheckinId'])
                     && request.resource.data.pontos >= 0
                     && request.resource.data.origemCheckinId is string
