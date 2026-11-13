@@ -164,6 +164,28 @@ Confirmado no plano anterior (`docs/PLANO_REGRAS_CICLO2_3.md`): essas duas não 
 
 ---
 
+## 10. RF23 — público-alvo e vigência das missões — ✅ RESOLVIDO
+
+**Modelo:** `missoes` ganhou `publicoAlvo` (`todos` | `turma` | `alunos`), `turmaId` ou `alunosAlvoIds`, e `vigenciaInicio`/`vigenciaFim` (00:00 do primeiro dia até 00:00 do dia seguinte ao último). Campos só da Cloud Function: `leitoresIds`, `situacao` e `alunosNotificadosIds`. O público é sempre restrito a quem tem vínculo aceito com o responsável.
+
+**Onde a regra vale (não só na tela):**
+- **Leitura:** `responsavelId == eu || eu in leitoresIds`. A Cloud Function `missoesPublico.ts` põe em `leitoresIds` o público inteiro na vigência e, fora dela, só quem concluiu. A regra de lista não consegue usar `request.time` (testado, ver `docs/decisoes-tecnicas.md`), por isso o agendamento diário às 00:05 vira a situação das missões.
+- **Conclusão manual (personalizada):** a regra de `missoesProgresso` só deixa marcar dentro da vigência e para aluno do público. Desmarcar continua livre.
+- **Conclusão automática:** a função de progresso só conta treinos (pelo horário do treino) dentro da vigência e só para alunos do público.
+- **RF31:** o aviso de nova missão vai só para o público, quando a missão fica vigente para cada aluno, uma vez por aluno.
+
+**Decisões tomadas:**
+- **(produto, validada pelo autor)** Depois do fim da vigência, a missão some da aba "Em curso" e de quem não concluiu, mas quem concluiu continua vendo em "Concluídas".
+- Turma = matrícula ativa **agora**: quem se matricula durante a vigência entra no público (e recebe o aviso); quem cancela sai.
+- O treino conta pelo horário em que aconteceu: um check-in feito no último dia e validado depois do fim ainda conclui a missão.
+- Missão desligada some para quem não concluiu (como antes).
+- Público e vigência só são escolhidos na criação; a tela não tem edição de missão (o modelo e a regra já aceitam a edição).
+- A vigência pode durar no máximo um ano (366 dias, regra e app).
+
+**Migração:** as missões antigas (sem os campos) valem como `todos`, desde `criadoEm`, sem fim. `scripts/migrar-missoes-publico.cjs` (dry-run por padrão) grava esses valores, e o agendamento diário também as recalcula sozinho na primeira execução. **Até uma das duas coisas acontecer, o aluno não vê as missões antigas**, porque o app passou a consultar por `leitoresIds`. Rodar o script logo depois do deploy.
+
+---
+
 ## Redesign "Noite de luta" — decisões tomadas pela opção conservadora
 
 Revisadas no redesign Apple (`docs/REDESIGN_APPLE_RESULTADO.md`): R-02, R-03 e R-08 mudaram; as demais continuam valendo.

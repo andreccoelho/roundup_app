@@ -194,6 +194,11 @@ async function main() {
     id: 'demo-missao-presenca', titulo: 'Maratona do tatame',
     descricao: 'Valide 12 treinos para ganhar pontos extras.', tipo: 'presenca', meta: 12, pontos: 50,
     responsavelId: uid.academia, ativa: true, criadoEm: agoraTs, atualizadoEm: agoraTs,
+    // RF23: todos os alunos, vigente de 30 dias atrás a 30 dias à frente. leitoresIds e situacao
+    // são calculados pela Cloud Function sincronizarMissaoNaEscrita ao gravar.
+    publicoAlvo: 'todos',
+    vigenciaInicio: ts(new Date(agora.getTime() - 30 * 86_400_000)),
+    vigenciaFim: ts(new Date(agora.getTime() + 30 * 86_400_000)),
   });
 
   // ---------- gravação ----------

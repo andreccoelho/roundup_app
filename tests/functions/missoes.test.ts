@@ -4,7 +4,7 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { Timestamp } from 'firebase/firestore';
 import {
   iniciarAmbiente, encerrarAmbiente, limparDados, semear,
-  usuarioBase, missaoBase, checkinBase, sessaoBase, AGORA,
+  usuarioBase, missaoBase, checkinBase, sessaoBase, vinculosPrivadoBase, AGORA,
 } from '../rules/helpers';
 import { aguardar } from './emuladores';
 
@@ -37,6 +37,7 @@ async function semearMissao(id: string, overrides: Record<string, unknown>): Pro
   await semear(async (db) => {
     await setDoc(doc(db, 'usuarios', 'academia1'), usuarioBase({ perfil: 'academia' }));
     await setDoc(doc(db, 'usuarios', 'aluno1'), usuarioBase({ perfil: 'aluno' }));
+    await setDoc(doc(db, 'usuarios', 'aluno1', 'privado', 'vinculos'), vinculosPrivadoBase(['academia1']));
     await setDoc(doc(db, 'missoes', id), missaoBase('academia1', {
       criadoEm: Timestamp.fromMillis(Date.now() - 10 * UM_DIA),
       ...overrides,
@@ -77,8 +78,8 @@ describe('progresso automático e pontos de missão (RF18)', () => {
     expect((await ler('missoesProgresso/presenca1_aluno1'))?.concluida).toBe(false);
   });
 
-  test('check-in anterior à criação da missão não conta', async () => {
-    await semearMissao('presenca1', { tipo: 'presenca', meta: 1, pontos: 30, criadoEm: AGORA });
+  test('RF23: check-in anterior ao início da vigência não conta', async () => {
+    await semearMissao('presenca1', { tipo: 'presenca', meta: 1, pontos: 30, vigenciaInicio: AGORA });
     await semearCheckin('antigo', Timestamp.fromMillis(Date.now() - 5 * UM_DIA));
     await semearCheckin('novo', Timestamp.fromMillis(Date.now() + 60_000));
 
@@ -143,5 +144,37 @@ describe('progresso automático e pontos de missão (RF18)', () => {
       await updateDoc(doc(db, 'missoesProgresso', 'pers1_aluno1'), { concluida: false, progressoAtual: 0 });
     });
     await aguardar(async () => (await ler(`classificacoes/${CLASSIFICACAO()}`))?.pontos === 10);
+  });
+});
+
+describe('progresso automático respeita vigência e público-alvo (RF23)', () => {
+  test('check-in depois do fim da vigência não conta', async () => {
+    await semearMissao('presenca1', {
+      tipo: 'presenca', meta: 1, pontos: 30,
+      vigenciaInicio: Timestamp.fromMillis(Date.now() - 10 * UM_DIA),
+      vigenciaFim: Timestamp.fromMillis(Date.now() - 2 * UM_DIA),
+    });
+    await semearCheckin('depois', Timestamp.fromMillis(Date.now() - UM_DIA));
+    await semearCheckin('dentro', Timestamp.fromMillis(Date.now() - 5 * UM_DIA));
+
+    await validar('depois');
+    await new Promise((r) => setTimeout(r, 2000));
+    expect(await ler('missoesProgresso/presenca1_aluno1')).toBeUndefined();
+
+    // treino dentro da vigência, validado depois do fim: conta (vale o horário do treino)
+    await validar('dentro');
+    await aguardar(async () => (await ler('missoesProgresso/presenca1_aluno1'))?.concluida === true);
+  });
+
+  test('aluno fora do público-alvo não ganha progresso', async () => {
+    await semearMissao('soOutro', { tipo: 'presenca', meta: 1, pontos: 30, publicoAlvo: 'alunos', alunosAlvoIds: ['aluno2'] });
+    await semearMissao('turma', { tipo: 'presenca', meta: 1, pontos: 30, publicoAlvo: 'turma', turmaId: 'turma9' });
+    await semearMissao('todos', { tipo: 'presenca', meta: 1, pontos: 30 });
+    await semearCheckin('s1');
+
+    await validar('s1');
+    await aguardar(async () => (await ler('missoesProgresso/todos_aluno1'))?.concluida === true);
+    expect(await ler('missoesProgresso/soOutro_aluno1')).toBeUndefined();
+    expect(await ler('missoesProgresso/turma_aluno1')).toBeUndefined();
   });
 });

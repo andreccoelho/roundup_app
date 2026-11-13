@@ -110,12 +110,20 @@ export {
 // RF18: progresso automático e pontos de missão — ver missoes.ts
 export { atualizarMissoesNoCheckIn, creditarPontosDaMissao } from './missoes';
 
+// RF23, RF31: público-alvo, vigência e aviso de nova missão — ver missoesPublico.ts
+export {
+  sincronizarMissaoNaEscrita, atualizarMissoesNoVinculo, atualizarMissoesNaMatricula, atualizarMissaoNaConclusao,
+  virarSituacaoDasMissoes,
+} from './missoesPublico';
+// Núcleo do agendamento diário, exportado para o teste chamar direto
+export { atualizarSituacaoDasMissoes } from './missoesPublico';
+
 // RF25, RN03: projeta a graduação registrada no perfil do aluno — ver graduacoes.ts
 export { aplicarGraduacaoNoPerfil } from './graduacoes';
 
 // RF31: notificações push — ver notificacoes.ts
 export {
-  notificarNovaMissao, notificarMissaoConcluida, notificarGraduacao, notificarMarcoDeTreino, enviarLembretesDeSessao,
+  notificarMissaoConcluida, notificarGraduacao, notificarMarcoDeTreino, enviarLembretesDeSessao,
 } from './notificacoes';
 // Núcleo do lembrete diário, exportado para o teste chamar direto (o emulador não dispara agendamentos)
 export { enviarLembretesDoDia } from './notificacoes';

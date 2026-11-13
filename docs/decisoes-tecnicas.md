@@ -228,3 +228,37 @@ do documento privado) fica documentada como trabalho do Ciclo 3, junto de RF09.
 - **Em massa:** `node scripts/migrar-dados-pessoais.cjs --aplicar` (dry-run por padrão; exige credenciais Admin) cobre todo mundo de uma vez. Ainda não foi rodado em produção.
 
 **Não coberto:** `participaClassificacao` e `preferenciasNotificacao` continuam no raiz — baixa sensibilidade e há gatilho (`classificacao.ts`) escutando o documento raiz.
+
+## 2026-11-13 — Missões com público-alvo e vigência (RF23): `leitoresIds` mantido por Cloud Function
+
+**Problema:** a leitura de `missoes` era aberta a qualquer autenticado quando `ativa == true`
+(provisório). Com público-alvo e vigência, o aluno só deveria ver a missão se estiver no público e
+dentro do período. Nenhuma das duas condições cabe numa regra de lista:
+- vínculo e matrícula exigem `get()` cruzado (primeira entrada deste documento);
+- **`request.time` comparado com `resource.data` também não é provável numa consulta de lista.**
+  Testado no emulador (2026-11-13): com a regra
+  `meuId() in resource.data.leitoresIds && resource.data.vigenciaInicio <= request.time && resource.data.vigenciaFim > request.time`,
+  tanto a consulta `leitoresIds array-contains uid` quanto a mesma consulta com
+  `where('vigenciaFim', '>', agora)` foram negadas. O valor de "agora" do client não prova nada
+  sobre o `request.time` do servidor.
+
+**Decisão:** mesmo padrão de `sessoes` e `classificacoes`. A Cloud Function
+(`functions/src/missoesPublico.ts`) mantém na missão:
+- `leitoresIds`: o público-alvo (sempre restrito a vínculo aceito) enquanto a missão está vigente;
+  fora da vigência ou desligada, só quem já concluiu, para a missão ficar no histórico dele;
+- `situacao` e `alunosNotificadosIds` (aviso de nova missão uma vez por aluno, RF31).
+
+A regra de leitura virou `responsavelId == meuId() || meuId() in leitoresIds`, e o client nunca
+escreve esses três campos. Como `leitoresIds` precisa mudar com o relógio (início e fim da vigência),
+um agendamento diário (`virarSituacaoDasMissoes`, 00:05 de Brasília) recalcula as missões cuja
+situação mudou. Com vigência em dias inteiros, ele vira as missões 5 minutos depois da meia-noite. O app
+também esconde da aba "Em curso" a missão que já passou do fim pelo relógio do aparelho.
+
+**Onde a vigência é garantida de verdade:** na conclusão. `missoesProgresso` (marcação manual de
+missão personalizada) é escrita de documento único, então a regra pode usar `get()` e
+`request.time`: marcar como concluída exige estar dentro da vigência e o aluno no público
+(`missaoAbertaParaAluno`). O progresso automático (Cloud Function) só conta treinos dentro da
+vigência e só de alunos do público.
+
+**Alternativa descartada:** manter a leitura aberta e filtrar por público e data no app. É o que
+existia antes e não atende ao pedido de aplicar a regra fora da tela.

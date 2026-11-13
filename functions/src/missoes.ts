@@ -2,8 +2,10 @@
 //
 // 1. atualizarMissoesNoCheckIn — quando um check-in entra ou sai de 'validado', recalcula do zero
 //    o progresso do aluno em todas as missões AUTOMÁTICAS ativas do responsável (presença,
-//    pontuação e sequência por sessão agendada, RF21), contando só o que aconteceu a partir da
-//    criação da missão. Por recalcular do zero, um estorno de validação também desfaz a conclusão.
+//    pontuação e sequência por sessão agendada, RF21). RF23: só para alunos do público-alvo da
+//    missão, e contando só os treinos DENTRO da vigência (missão antiga, sem vigência: desde a
+//    criação). Vale o horário do treino, não o da validação: um check-in feito no último dia e
+//    validado depois do fim ainda conta. Por recalcular do zero, um estorno também desfaz a conclusão.
 // 2. creditarPontosDaMissao — quando um documento de missoesProgresso muda (pela função acima ou
 //    pelo responsável marcando uma missão personalizada), credita os pontos da missão ao concluir
 //    e estorna ao desconcluir. `pontosCreditados` guarda o que já foi creditado, então o gatilho
@@ -17,6 +19,8 @@ import {
 } from 'firebase-admin/firestore';
 import { periodoDe } from './datas';
 import { maiorSequenciaDeSessoes, type SessaoDaSequencia } from './sequencia';
+import { dentroDaVigencia, type MissaoParaRegras } from './missoesRegras';
+import { paraRegras } from './missoesPublico';
 
 const TIPOS_AUTOMATICOS = ['presenca', 'pontuacao', 'sequencia'];
 
@@ -26,13 +30,25 @@ interface DadosDoAluno {
   sessoes: (SessaoDaSequencia & { inicioMs: number })[];
 }
 
-// Tudo conta só a partir da criação da missão (`desde`)
-function valorDaMissao(tipo: string, dados: DadosDoAluno, desde: number, agoraMs: number): number {
-  const validados = dados.validados.filter((c) => (c.dataHora as Timestamp).toMillis() >= desde);
+// RF23: tudo conta só dentro da vigência da missão
+function valorDaMissao(tipo: string, dados: DadosDoAluno, missao: MissaoParaRegras, agoraMs: number): number {
+  const validados = dados.validados.filter((c) => dentroDaVigencia(missao, (c.dataHora as Timestamp).toMillis()));
   if (tipo === 'presenca') return validados.length;
   if (tipo === 'pontuacao') return validados.reduce((soma, c) => soma + (c.pontos ?? 0), 0);
   // RF21: sequência por sessão agendada do aluno neste escopo (functions/src/sequencia.ts)
-  return maiorSequenciaDeSessoes(dados.sessoes.filter((s) => s.inicioMs >= desde), dados.statusPorSessao, agoraMs);
+  return maiorSequenciaDeSessoes(dados.sessoes.filter((s) => dentroDaVigencia(missao, s.inicioMs)), dados.statusPorSessao, agoraMs);
+}
+
+// RF23: o aluno está no público-alvo da missão? Lido direto dos vínculos e da matrícula (e não de
+// `leitoresIds`, que fica vazio fora da vigência e pode chegar uns instantes depois).
+async function alunoNoPublico(db: Firestore, alunoId: string, missao: DocumentData, responsaveisIds: string[]): Promise<boolean> {
+  if (!responsaveisIds.includes(missao.responsavelId)) return false;
+  const tipo = missao.publicoAlvo ?? 'todos';
+  if (tipo === 'todos') return true;
+  if (tipo === 'alunos') return ((missao.alunosAlvoIds ?? []) as string[]).includes(alunoId);
+  if (!missao.turmaId) return false;
+  const matricula = (await db.doc(`matriculas/${missao.turmaId}_${alunoId}`).get()).data();
+  return matricula?.status === 'ativa';
 }
 
 async function recalcularMissoesDoAluno(db: Firestore, alunoId: string, responsavelId: string): Promise<void> {
@@ -43,7 +59,11 @@ async function recalcularMissoesDoAluno(db: Firestore, alunoId: string, responsa
       .where('responsavelId', '==', responsavelId)
       .get(),
   ]);
-  const missoes = missoesSnap.docs.filter((m) => TIPOS_AUTOMATICOS.includes(m.data().tipo));
+  const automaticas = missoesSnap.docs.filter((m) => TIPOS_AUTOMATICOS.includes(m.data().tipo));
+  if (automaticas.length === 0) return;
+  const responsaveisIds: string[] = (await db.doc(`usuarios/${alunoId}/privado/vinculos`).get()).data()?.responsaveisIds ?? [];
+  const noPublico = await Promise.all(automaticas.map((m) => alunoNoPublico(db, alunoId, m.data(), responsaveisIds)));
+  const missoes = automaticas.filter((_, i) => noPublico[i]);
   if (missoes.length === 0) return;
   const checkins = checkinsSnap.docs.map((c) => c.data());
   const agora = Timestamp.now();
@@ -72,8 +92,7 @@ async function recalcularMissoesDoAluno(db: Firestore, alunoId: string, responsa
 
   await Promise.all(missoes.map(async (missaoDoc) => {
     const missao = missaoDoc.data();
-    const desde = (missao.criadoEm as Timestamp | undefined)?.toMillis() ?? 0;
-    const valor = valorDaMissao(missao.tipo, dados, desde, agora.toMillis());
+    const valor = valorDaMissao(missao.tipo, dados, paraRegras(missao), agora.toMillis());
     const progressoAtual = Math.min(valor, missao.meta);
     const concluida = valor >= missao.meta;
 

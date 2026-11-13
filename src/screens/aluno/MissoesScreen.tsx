@@ -1,4 +1,6 @@
-// RF18: missões ativas de todos os responsáveis com quem o aluno tem vínculo, com progresso.
+// RF18, RF23: missões de todos os responsáveis com quem o aluno tem vínculo, com progresso. A
+// consulta já vem filtrada pelo servidor (leitoresIds): só missões vigentes do público-alvo do
+// aluno e, depois do fim da vigência, só as que ele concluiu (ficam na aba "Concluídas").
 // O progresso de presença/pontuação/sequência é atualizado por Cloud Function quando um check-in
 // é validado; o de missão personalizada, quando o responsável marca a conclusão. Missão sem
 // documento de progresso ainda aparece com progresso zero.
@@ -6,8 +8,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Espacamento } from '../../theme';
 import { useAuth } from '../../contexts/AuthContext';
-import { listarResponsaveisAtivosDoAluno } from '../../services/vinculos';
-import { listarMissoesAtivasDoResponsavel, listarProgressoPorAluno } from '../../services/missoes';
+import { listarMissoesDoAluno, listarProgressoPorAluno } from '../../services/missoes';
+import { situacaoDaMissao, textoVigencia } from '../../utils/missoes';
 import { Missao, MissaoProgresso } from '../../types';
 import CartaoMissao from '../../components/ui/CartaoMissao';
 import Esqueleto from '../../components/ui/Esqueleto';
@@ -36,17 +38,7 @@ export default function MissoesScreen() {
     setCarregando(true);
     setErro(null);
     try {
-      const responsaveis = await listarResponsaveisAtivosDoAluno(usuario.id);
-      if (responsaveis.length === 0) {
-        setItens([]);
-        return;
-      }
-
-      const [missoesPorResponsavel, progresso] = await Promise.all([
-        Promise.all(responsaveis.map((id) => listarMissoesAtivasDoResponsavel(id))),
-        listarProgressoPorAluno(usuario.id),
-      ]);
-      const missoes = missoesPorResponsavel.flat();
+      const [missoes, progresso] = await Promise.all([listarMissoesDoAluno(usuario.id), listarProgressoPorAluno(usuario.id)]);
       const progressoPorMissao = new Map(progresso.map((p) => [p.missaoId, p]));
       setItens(missoes.map((missao) => ({ missao, progresso: progressoPorMissao.get(missao.id) ?? null })));
     } catch (e) {
@@ -60,7 +52,9 @@ export default function MissoesScreen() {
     carregar();
   }, [carregar]);
 
-  const emCurso = itens.filter((i) => !i.progresso?.concluida);
+  // Entre o fim da vigência e o recálculo diário do servidor (00:05), a missão ainda pode vir na
+  // consulta: o relógio do aparelho já a tira de "Em curso".
+  const emCurso = itens.filter((i) => !i.progresso?.concluida && situacaoDaMissao(i.missao) === 'vigente');
   const concluidas = itens.filter((i) => i.progresso?.concluida);
   const visiveis = aba === 'curso' ? emCurso : concluidas;
 
@@ -82,7 +76,7 @@ export default function MissoesScreen() {
         </View>
       ) : erro ? (
         <EstadoErro mensagem={erro} onTentarNovamente={carregar} />
-      ) : itens.length === 0 ? (
+      ) : emCurso.length + concluidas.length === 0 ? (
         <EstadoVazio
           icone={IconeBandeira}
           titulo="Nenhuma missão ativa"
@@ -105,6 +99,7 @@ export default function MissoesScreen() {
               meta={missao.meta}
               pontos={missao.pontos}
               concluida={progresso?.concluida ?? false}
+              vigencia={textoVigencia(missao)}
             />
           ))}
         </GrupoLista>

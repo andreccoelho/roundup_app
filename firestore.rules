@@ -176,6 +176,45 @@ service cloud.firestore {
       return missao.responsavelId == meuId() && missao.tipo == 'personalizada';
     }
 
+    // RF23: público-alvo de uma missão nova ou alterada. 'turma' só aceita turma do próprio
+    // responsável; 'alunos' aceita de 1 a 100 uids (quem não tem vínculo aceito é descartado pela
+    // Cloud Function ao calcular os leitores, então um uid solto não ganha acesso a nada).
+    function publicoAlvoValido(d) {
+      return (d.publicoAlvo == 'todos' && !d.keys().hasAny(['turmaId', 'alunosAlvoIds']))
+        || (d.publicoAlvo == 'turma' && !('alunosAlvoIds' in d) && d.turmaId is string
+            && exists(/databases/$(database)/documents/turmas/$(d.turmaId))
+            && get(/databases/$(database)/documents/turmas/$(d.turmaId)).data.responsavelId == meuId())
+        || (d.publicoAlvo == 'alunos' && !('turmaId' in d) && d.alunosAlvoIds is list
+            && d.alunosAlvoIds.size() >= 1 && d.alunosAlvoIds.size() <= 100);
+    }
+
+    // RF23: vigência [início, fim), com fim depois do início e no máximo ~1 ano de duração
+    function vigenciaValida(d) {
+      return d.vigenciaInicio is timestamp && d.vigenciaFim is timestamp
+        && d.vigenciaFim > d.vigenciaInicio
+        && d.vigenciaFim < d.vigenciaInicio + duration.value(367, 'd');
+    }
+
+    // RF23, RF31: campos mantidos só pela Cloud Function (functions/src/missoesPublico.ts)
+    function camposDeServidorDaMissao() {
+      return ['leitoresIds', 'situacao', 'alunosNotificadosIds'];
+    }
+
+    // RF23: a missão pode ser concluída AGORA por este aluno — dentro da vigência e com o aluno
+    // no público-alvo. Escrita de documento único (missoesProgresso), então get() e request.time
+    // funcionam aqui. Missão anterior ao RF23 completo (sem os campos) vale para todos, sem fim.
+    function missaoAbertaParaAluno(missaoId, alunoId) {
+      let missao = get(/databases/$(database)/documents/missoes/$(missaoId)).data;
+      let tipo = missao.get('publicoAlvo', 'todos');
+      return (missao.get('vigenciaInicio', null) == null || request.time >= missao.vigenciaInicio)
+        && (missao.get('vigenciaFim', null) == null || request.time < missao.vigenciaFim)
+        && (tipo == 'todos'
+            || (tipo == 'alunos' && alunoId in missao.get('alunosAlvoIds', []))
+            || (tipo == 'turma'
+                && exists(/databases/$(database)/documents/matriculas/$(missao.turmaId + '_' + alunoId))
+                && get(/databases/$(database)/documents/matriculas/$(missao.turmaId + '_' + alunoId)).data.status == 'ativa'));
+    }
+
     // ---------- usuarios (RF01 a RF06) ----------
     match /usuarios/{usuarioId} {
       // leitura ampla é necessária para as consultas de descoberta de academias e professores
@@ -386,25 +425,36 @@ service cloud.firestore {
     }
 
     // ---------- missoes (RF18, RF23) ----------
-    // PROVISÓRIO: leitura de missão ativa aberta a qualquer autenticado, mesmo padrão já aceito
-    // para turmas ativas (checagem cruzada "aluno tem vínculo com este responsavelId" é
-    // impossível numa regra de list — ver nota em tenhoVinculoAtivoCom() e
-    // docs/decisoes-tecnicas.md). Dado não sensível (título, descrição, meta, pontos,
-    // responsável), mesmo raciocínio de turmas. Ver docs/DECISOES_PENDENTES.md.
+    // RF23: público-alvo e vigência. A leitura é do responsável (dono) e de quem estiver em
+    // `leitoresIds` — mesmo padrão de `sessoes` e `classificacoes`, puramente resource.data, provável
+    // para a consulta do aluno (`leitoresIds array-contains meuId()`). Checar vínculo, matrícula ou
+    // `request.time` numa regra de lista é impossível (docs/decisoes-tecnicas.md), então a Cloud
+    // Function (functions/src/missoesPublico.ts) mantém em `leitoresIds` o público-alvo enquanto a
+    // missão está vigente e, fora disso, só quem já a concluiu. O client nunca escreve esse campo.
     match /missoes/{missaoId} {
       allow read: if autenticado()
-                  && (resource.data.get('ativa', false) == true
-                      || resource.data.get('responsavelId', '') == meuId());
+                  && (resource.data.get('responsavelId', '') == meuId()
+                      || meuId() in resource.data.get('leitoresIds', []));
       // RF33: pontos da missão inteiros de 0 a 1000, mesmo limite de pontosPorMissao — sem isso
       // uma missão poderia valer qualquer número quando a Cloud Function creditar a conclusão
       allow create: if autenticado()
                     && souGestor()
                     && request.resource.data.responsavelId == meuId()
-                    && pontosDeMissaoValidos();
+                    && pontosDeMissaoValidos()
+                    && publicoAlvoValido(request.resource.data)
+                    && vigenciaValida(request.resource.data)
+                    && !request.resource.data.keys().hasAny(camposDeServidorDaMissao());
+      // Missão antiga (sem público/vigência) continua podendo ser ligada e desligada; público e
+      // vigência só são conferidos quando a escrita mexe neles.
       allow update: if autenticado()
                     && resource.data.responsavelId == meuId()
                     && request.resource.data.responsavelId == resource.data.responsavelId
-                    && pontosDeMissaoValidos();
+                    && pontosDeMissaoValidos()
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(camposDeServidorDaMissao())
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['publicoAlvo', 'turmaId', 'alunosAlvoIds'])
+                        || publicoAlvoValido(request.resource.data))
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['vigenciaInicio', 'vigenciaFim'])
+                        || vigenciaValida(request.resource.data));
       allow delete: if autenticado() && resource.data.responsavelId == meuId();
     }
 
@@ -412,7 +462,9 @@ service cloud.firestore {
     // Decisão de produto: o aluno nunca escreve o próprio progresso (mesmo espírito de RN01,
     // progresso autodeclarado seria "driblável"). Missões presença/pontuação/sequência têm progresso
     // automático, escrito só pela Cloud Function atualizarMissoesNoCheckIn (Admin SDK); o
-    // responsável só escreve progresso de missão PERSONALIZADA dele, marcando a conclusão à mão.
+    // responsável só escreve progresso de missão PERSONALIZADA dele, marcando a conclusão à mão —
+    // RF23: e só marca como concluída dentro da vigência e para aluno do público-alvo (desmarcar
+    // continua livre, para corrigir um engano mesmo depois do fim).
     // Os pontos da missão são creditados pela Cloud Function creditarPontosDaMissao, que guarda
     // `pontosCreditados`/`periodoCredito` aqui — campos que o client não toca. Sem delete: apagar
     // um progresso concluído deixaria os pontos creditados sem estorno.
@@ -427,11 +479,16 @@ service cloud.firestore {
                     && progressoId == request.resource.data.missaoId + '_' + request.resource.data.alunoId
                     && souResponsavelDoAluno(request.resource.data.alunoId)
                     && souDonoDeMissaoPersonalizada(request.resource.data.missaoId)
+                    // RF23: só conclui dentro da vigência e para aluno do público-alvo
+                    && (request.resource.data.concluida != true
+                        || missaoAbertaParaAluno(request.resource.data.missaoId, request.resource.data.alunoId))
                     && request.resource.data.keys().hasOnly(['id', 'missaoId', 'alunoId', 'responsavelId',
                                                              'progressoAtual', 'concluida', 'dataConclusao', 'atualizadoEm']);
       allow update: if autenticado()
                     && resource.data.responsavelId == meuId()
                     && souDonoDeMissaoPersonalizada(resource.data.missaoId)
+                    && (request.resource.data.concluida != true
+                        || missaoAbertaParaAluno(resource.data.missaoId, resource.data.alunoId))
                     && request.resource.data.diff(resource.data).affectedKeys()
                          .hasOnly(['progressoAtual', 'concluida', 'dataConclusao', 'atualizadoEm']);
       allow delete: if false;

@@ -131,26 +131,7 @@ async function notificarConquista(db: Firestore, uid: string, chave: string, men
 }
 
 // ---------- nova missão ----------
-// Missão criada ativa ou reativada: avisa os alunos com vínculo aceito com o responsável
-export const notificarNovaMissao = onDocumentWritten(
-  'missoes/{missaoId}',
-  async (event) => {
-    const antes = event.data?.before.data();
-    const depois = event.data?.after.data();
-    if (!depois?.ativa || antes?.ativa) return;
-    const db = getFirestore();
-    const vinculos = await db.collection('vinculos')
-      .where('destinatarioId', '==', depois.responsavelId)
-      .where('status', '==', 'aceito')
-      .where('perfilSolicitante', '==', 'aluno')
-      .get();
-    await notificar(db, vinculos.docs.map((v) => v.data().solicitanteId), 'novaMissao', {
-      titulo: 'Nova missão',
-      corpo: `${depois.titulo} — vale ${depois.pontos} pts.`,
-      dados: { tela: 'Missoes' },
-    });
-  },
-);
+// RF23, RF31: o aviso de nova missão respeita o público-alvo e a vigência — ver missoesPublico.ts.
 
 // ---------- conquistas ----------
 export const notificarMissaoConcluida = onDocumentWritten(

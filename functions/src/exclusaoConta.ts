@@ -57,6 +57,16 @@ async function apagarDadosDoAluno(db: Firestore, uid: string): Promise<void> {
   ];
   const todas = (await Promise.all(consultas.map(refs))).flat();
   await gravarEmLotes(db, todas.map((ref) => ({ tipo: 'apagar', ref })));
+
+  // RF23: o uid sai das listas das missões (público escolhido, leitores e avisos de nova missão)
+  const campos = ['alunosAlvoIds', 'leitoresIds', 'alunosNotificadosIds'];
+  const missoes = (await Promise.all(campos.map((campo) => refs(db.collection('missoes').where(campo, 'array-contains', uid))))).flat();
+  const unicas = [...new Map(missoes.map((ref) => [ref.path, ref])).values()];
+  await gravarEmLotes(db, unicas.map((ref) => ({
+    tipo: 'atualizar',
+    ref,
+    dados: Object.fromEntries(campos.map((campo) => [campo, FieldValue.arrayRemove(uid)])),
+  })));
 }
 
 // RF14, RN09, RNF04: o uid sai de leitoresIds de todas as sessões e classificações (aluno,

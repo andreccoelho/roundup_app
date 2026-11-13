@@ -1,6 +1,7 @@
 // RF23: criação e gestão de missões personalizadas pelo responsável (professor autônomo ou
-// academia). Campos usados são só os que existem em types/index.ts (Missao) — "público-alvo" e
-// "período de vigência" do RF23 original não têm campo modelado ainda, ficam de fora.
+// academia): título, critério (descrição + tipo + meta), recompensa em pontos, público-alvo (todos
+// os alunos vinculados, uma turma ou alunos escolhidos) e período de vigência (datas de início e
+// fim). Quem vê a missão e quando é decidido no servidor (Cloud Function + firestore.rules), não aqui.
 // RF18: missões presença/pontuação/sequência têm progresso automático (Cloud Function); só as
 // personalizadas ganham o botão "Marcar conclusões", que abre a lista de alunos vinculados.
 import { useCallback, useEffect, useState } from 'react';
@@ -11,10 +12,14 @@ import {
   criarMissao, listarMissoesPorResponsavel, atualizarMissao, listarProgressoDaMissao, marcarConclusaoPersonalizada,
 } from '../../services/missoes';
 import { listarVinculosAceitosDaAcademia } from '../../services/vinculos';
+import { listarTurmasPorResponsavel } from '../../services/turmas';
+import { listarMatriculasPorTurma } from '../../services/matriculas';
+import { Timestamp } from 'firebase/firestore';
+import { ROTULOS_PUBLICO, situacaoDaMissao, textoDataBr, textoVigencia, vigenciaDeDatas } from '../../utils/missoes';
 import { buscarUsuario } from '../../services/usuarios';
 import { buscarConfiguracao, valoresEfetivos } from '../../services/configuracoesGamificacao';
 import { LIMITES_CONFIGURACAO } from '../../config/gamificacao';
-import { Missao, TipoMissao } from '../../types';
+import { Missao, PublicoAlvo, SituacaoMissao, TipoMissao, Turma } from '../../types';
 import Botao from '../../components/ui/Botao';
 import Etiqueta from '../../components/ui/Etiqueta';
 import Folha from '../../components/ui/Folha';
@@ -37,6 +42,25 @@ interface AlunoConclusao {
   concluida: boolean;
 }
 
+interface AlunoVinculado {
+  id: string;
+  nome: string;
+}
+
+const PUBLICOS: PublicoAlvo[] = ['todos', 'turma', 'alunos'];
+
+const ROTULO_SITUACAO: Record<SituacaoMissao, string> = {
+  agendada: 'começa em breve',
+  vigente: 'vigente',
+  encerrada: 'encerrada',
+  inativa: 'desligada',
+};
+
+function hojeMaisDias(dias: number): string {
+  const d = new Date();
+  return textoDataBr(new Date(d.getFullYear(), d.getMonth(), d.getDate() + dias));
+}
+
 const TIPOS: { valor: TipoMissao; rotulo: string }[] = [
   { valor: 'presenca', rotulo: 'Presença' },
   { valor: 'pontuacao', rotulo: 'Pontuação' },
@@ -57,6 +81,14 @@ export default function MissoesGestorScreen() {
   const [tipo, setTipo] = useState<TipoMissao>('presenca');
   const [meta, setMeta] = useState('');
   const [pontos, setPontos] = useState('');
+  // RF23: público-alvo e vigência (padrão: todos os alunos, de hoje até 30 dias)
+  const [publico, setPublico] = useState<PublicoAlvo>('todos');
+  const [turmaId, setTurmaId] = useState('');
+  const [alunosAlvo, setAlunosAlvo] = useState<string[]>([]);
+  const [inicio, setInicio] = useState(hojeMaisDias(0));
+  const [fim, setFim] = useState(hojeMaisDias(29));
+  const [turmas, setTurmas] = useState<Turma[]>([]);
+  const [alunosVinculados, setAlunosVinculados] = useState<AlunoVinculado[]>([]);
   const [erroForm, setErroForm] = useState<string | null>(null);
   const [criando, setCriando] = useState(false);
   // RF33: valor sugerido de pontos ao criar uma missão (configuração do responsável ou padrão)
@@ -73,8 +105,18 @@ export default function MissoesGestorScreen() {
     setCarregando(true);
     setErro(null);
     try {
-      const [lista, config] = await Promise.all([listarMissoesPorResponsavel(usuario.id), buscarConfiguracao(usuario.id)]);
+      const [lista, config, listaTurmas, vinculos] = await Promise.all([
+        listarMissoesPorResponsavel(usuario.id),
+        buscarConfiguracao(usuario.id),
+        listarTurmasPorResponsavel(usuario.id),
+        listarVinculosAceitosDaAcademia(usuario.id, 'aluno'),
+      ]);
       setMissoes(lista);
+      setTurmas(listaTurmas.filter((t) => t.ativa));
+      const alunos = await Promise.all(
+        vinculos.map(async (v) => ({ id: v.solicitanteId, nome: (await buscarUsuario(v.solicitanteId))?.nome ?? 'Aluno' })),
+      );
+      setAlunosVinculados(alunos.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')));
       setPontosSugeridos(String(valoresEfetivos(config).pontosPorMissao));
     } catch (e: any) {
       setErro(mensagemErro(e));
@@ -93,6 +135,11 @@ export default function MissoesGestorScreen() {
     setTipo('presenca');
     setMeta('');
     setPontos(pontosSugeridos);
+    setPublico('todos');
+    setTurmaId('');
+    setAlunosAlvo([]);
+    setInicio(hojeMaisDias(0));
+    setFim(hojeMaisDias(29));
     setErroForm(null);
   }
 
@@ -114,6 +161,20 @@ export default function MissoesGestorScreen() {
       return;
     }
 
+    const vigencia = vigenciaDeDatas(inicio, fim);
+    if (typeof vigencia === 'string') {
+      setErroForm(vigencia);
+      return;
+    }
+    if (publico === 'turma' && !turmaId) {
+      setErroForm('Escolha a turma da missão.');
+      return;
+    }
+    if (publico === 'alunos' && alunosAlvo.length === 0) {
+      setErroForm('Escolha pelo menos um aluno.');
+      return;
+    }
+
     setCriando(true);
     setErroForm(null);
     try {
@@ -125,6 +186,11 @@ export default function MissoesGestorScreen() {
         pontos: pontosNumero,
         responsavelId: usuario.id,
         ativa: true,
+        publicoAlvo: publico,
+        ...(publico === 'turma' ? { turmaId } : {}),
+        ...(publico === 'alunos' ? { alunosAlvoIds: alunosAlvo } : {}),
+        vigenciaInicio: Timestamp.fromDate(vigencia.inicio),
+        vigenciaFim: Timestamp.fromDate(vigencia.fim),
       });
       limparFormulario();
       setFolhaAberta(false);
@@ -156,13 +222,20 @@ export default function MissoesGestorScreen() {
     setCarregandoConclusoes(true);
     setErroConclusoes(null);
     try {
-      const [vinculos, progresso] = await Promise.all([
+      const [vinculos, progresso, matriculas] = await Promise.all([
         listarVinculosAceitosDaAcademia(usuario.id, 'aluno'),
         listarProgressoDaMissao(missao.id, usuario.id),
+        missao.publicoAlvo === 'turma' && missao.turmaId ? listarMatriculasPorTurma(missao.turmaId, usuario.id) : Promise.resolve([]),
       ]);
       const concluidos = new Set(progresso.filter((p) => p.concluida).map((p) => p.alunoId));
+      // RF23: só alunos do público-alvo (a regra do Firestore confere de novo ao marcar)
+      const matriculados = new Set(matriculas.filter((m) => m.status === 'ativa').map((m) => m.alunoId));
+      const doPublico = vinculos.filter((v) =>
+        missao.publicoAlvo === 'turma' ? matriculados.has(v.solicitanteId)
+          : missao.publicoAlvo === 'alunos' ? (missao.alunosAlvoIds ?? []).includes(v.solicitanteId)
+            : true);
       const alunos = await Promise.all(
-        vinculos.map(async (v) => {
+        doPublico.map(async (v) => {
           const aluno = await buscarUsuario(v.solicitanteId);
           return { alunoId: v.solicitanteId, nome: aluno?.nome ?? 'Aluno', concluida: concluidos.has(v.solicitanteId) };
         }),
@@ -190,6 +263,20 @@ export default function MissoesGestorScreen() {
   }
 
   const ativas = missoes.filter((m) => m.ativa).length;
+  // RF23: fora da vigência só dá para desmarcar (a regra recusa marcar)
+  const conclusoesAbertas = missaoConclusoes ? situacaoDaMissao(missaoConclusoes) === 'vigente' : false;
+
+  function descricaoMissao(missao: Missao): string {
+    const tipoRotulo = TIPOS.find((t) => t.valor === missao.tipo)?.rotulo ?? missao.tipo;
+    const alvo = missao.publicoAlvo === 'turma'
+      ? `turma ${turmas.find((t) => t.id === missao.turmaId)?.nome ?? ''}`.trim()
+      : missao.publicoAlvo === 'alunos'
+        ? `${missao.alunosAlvoIds?.length ?? 0} aluno(s)`
+        : 'todos os alunos';
+    const vigencia = textoVigencia(missao);
+    return `${tipoRotulo}: meta ${missao.meta}, vale ${missao.pontos} pts. Para ${alvo}. `
+      + `${vigencia ? `${vigencia}, ` : ''}${ROTULO_SITUACAO[situacaoDaMissao(missao)]}.`;
+  }
 
   return (
     <Tela largura="lista" agrupada tituloGrande="Missões">
@@ -219,13 +306,13 @@ export default function MissoesGestorScreen() {
         <>
           <GrupoLista
             titulo={`Missões: ${ativas} de ${missoes.length} ativas`}
-            rodape="Desligue uma missão para tirá-la da lista dos alunos. Missões personalizadas são concluídas à mão."
+            rodape="Os alunos só veem a missão durante a vigência e se estiverem no público-alvo; depois do fim, ela fica no histórico de quem concluiu. Desligue para tirá-la de circulação. Missões personalizadas são concluídas à mão."
           >
             {missoes.flatMap((missao) => [
               <Toggle
                 key={missao.id}
                 rotulo={missao.titulo}
-                descricao={`${TIPOS.find((t) => t.valor === missao.tipo)?.rotulo ?? missao.tipo}: meta ${missao.meta}, vale ${missao.pontos} pts`}
+                descricao={descricaoMissao(missao)}
                 valor={missao.ativa}
                 desabilitado={processandoId === missao.id}
                 onAlterar={() => handleAlternarAtiva(missao)}
@@ -274,6 +361,52 @@ export default function MissoesGestorScreen() {
             <CampoTexto rotulo="Pontos" valor={pontos} onAlterar={setPontos} placeholder="Ex.: 30" keyboardType="number-pad" />
           </View>
         </View>
+
+        <Texto variante="subheadline" style={styles.rotuloCampo}>
+          Público-alvo
+        </Texto>
+        <View style={styles.linhaTipos} accessibilityRole="radiogroup" accessibilityLabel="Público-alvo da missão">
+          {PUBLICOS.map((opcao) => (
+            <Etiqueta key={opcao} texto={ROTULOS_PUBLICO[opcao]} selecionada={publico === opcao} onPress={() => setPublico(opcao)} />
+          ))}
+        </View>
+        {publico === 'turma' ? (
+          turmas.length === 0 ? (
+            <Texto variante="footnote" cor="texto2" style={styles.rotuloCampo}>Você ainda não tem turma ativa.</Texto>
+          ) : (
+            <View style={styles.linhaTipos} accessibilityRole="radiogroup" accessibilityLabel="Turma">
+              {turmas.map((t) => (
+                <Etiqueta key={t.id} texto={t.nome} selecionada={turmaId === t.id} onPress={() => setTurmaId(t.id)} />
+              ))}
+            </View>
+          )
+        ) : null}
+        {publico === 'alunos' ? (
+          alunosVinculados.length === 0 ? (
+            <Texto variante="footnote" cor="texto2" style={styles.rotuloCampo}>Nenhum aluno vinculado ainda.</Texto>
+          ) : (
+            <View style={styles.linhaTipos} accessibilityLabel="Alunos da missão">
+              {alunosVinculados.map((a) => (
+                <Etiqueta
+                  key={a.id}
+                  texto={a.nome}
+                  modo="multiplo"
+                  selecionada={alunosAlvo.includes(a.id)}
+                  onPress={() => setAlunosAlvo((atual) => (atual.includes(a.id) ? atual.filter((id) => id !== a.id) : [...atual, a.id]))}
+                />
+              ))}
+            </View>
+          )
+        ) : null}
+
+        <View style={styles.linhaNumeros}>
+          <View style={styles.campoNumero}>
+            <CampoTexto rotulo="Início" valor={inicio} onAlterar={setInicio} mascara="data" keyboardType="number-pad" />
+          </View>
+          <View style={styles.campoNumero}>
+            <CampoTexto rotulo="Fim" valor={fim} onAlterar={setFim} mascara="data" keyboardType="number-pad" />
+          </View>
+        </View>
       </Folha>
 
       <Folha
@@ -283,14 +416,16 @@ export default function MissoesGestorScreen() {
         tituloCancelar="Fechar"
       >
         <Texto variante="subheadline" style={styles.rotuloCampo}>
-          {`Marque quem cumpriu a missão. Cada conclusão vale ${missaoConclusoes?.pontos ?? 0} pts na classificação do mês.`}
+          {conclusoesAbertas
+            ? `Marque quem cumpriu a missão. Cada conclusão vale ${missaoConclusoes?.pontos ?? 0} pts na classificação do mês.`
+            : 'A missão está fora da vigência (ou desligada): dá para desmarcar uma conclusão, mas não marcar novas.'}
         </Texto>
         <MensagemErro mensagem={erroConclusoes} />
         {carregandoConclusoes ? (
           <Esqueleto forma="linha" repeticoes={3} />
         ) : alunosConclusao.length === 0 && !erroConclusoes ? (
           <Texto variante="body" cor="texto2">
-            Nenhum aluno vinculado ainda.
+            Nenhum aluno do público-alvo ainda.
           </Texto>
         ) : (
           <GrupoLista semMargem>
@@ -300,7 +435,7 @@ export default function MissoesGestorScreen() {
                 rotulo={aluno.nome}
                 descricao={aluno.concluida ? 'Concluída' : 'Em curso'}
                 valor={aluno.concluida}
-                desabilitado={salvandoAlunoId === aluno.alunoId}
+                desabilitado={salvandoAlunoId === aluno.alunoId || (!conclusoesAbertas && !aluno.concluida)}
                 onAlterar={() => handleAlternarConclusao(aluno)}
               />
             ))}

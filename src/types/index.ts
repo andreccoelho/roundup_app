@@ -163,6 +163,11 @@ export interface CheckIn {
 // RF23 (Ciclo 3): criação e gerenciamento de missões de gamificação
 export type TipoMissao = 'presenca' | 'pontuacao' | 'sequencia' | 'personalizada';
 
+// RF23: público-alvo — todos os alunos com vínculo aceito, os matriculados numa turma, ou alunos
+// escolhidos. Sempre restrito a quem tem vínculo aceito com o responsável.
+export type PublicoAlvo = 'todos' | 'turma' | 'alunos';
+export type SituacaoMissao = 'agendada' | 'vigente' | 'encerrada' | 'inativa';
+
 export interface Missao {
   id: string;
   titulo: string;
@@ -172,6 +177,18 @@ export interface Missao {
   pontos: number;
   responsavelId: string;
   ativa: boolean;
+  // RF23: público-alvo. Ausente nas missões criadas antes desta mudança, que valem para 'todos'.
+  publicoAlvo?: PublicoAlvo;
+  turmaId?: string;          // só com publicoAlvo 'turma'
+  alunosAlvoIds?: string[];  // só com publicoAlvo 'alunos'
+  // RF23: vigência [início, fim) — 00:00 do primeiro dia até 00:00 do dia seguinte ao último.
+  // Ausente nas missões antigas: valem desde criadoEm, sem fim.
+  vigenciaInicio?: Timestamp;
+  vigenciaFim?: Timestamp;
+  // Escritos só pela Cloud Function (functions/src/missoesPublico.ts), nunca pelo client:
+  leitoresIds?: string[];          // quem lê: o público na vigência; fora dela, só quem concluiu
+  situacao?: SituacaoMissao;
+  alunosNotificadosIds?: string[]; // RF31: quem já recebeu o aviso de nova missão
   criadoEm: Date;
   atualizadoEm: Date;
 }
