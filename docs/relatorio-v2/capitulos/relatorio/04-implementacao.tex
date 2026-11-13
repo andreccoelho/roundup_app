@@ -130,30 +130,38 @@ núcleo para os recursos complementares:
         discreto de lona de ringue nos cartões principais.
 \end{enumerate}
 
-A \autoref{fig:telas} mostra quatro telas do protótipo na versão final
+A \autoref{fig:telas} mostra seis telas do protótipo na versão final
 da interface.
 
 \begin{figure}[!htb]
   \centering
-  \caption{Telas do protótipo: (a) acesso; (b) início do aluno; (c) classificação; (d) chamada do professor}
+  \caption{Telas do protótipo: (a) acesso; (b) início do aluno; (c) classificação; (d) perfil do aluno; (e) missões; (f) chamada do professor}
   \label{fig:telas}
-  \begin{tabular}{cccc}
-    \includegraphics[width=0.225\textwidth]{figuras/tela-login.png} &
-    \includegraphics[width=0.225\textwidth]{figuras/tela-aluno-inicio.png} &
-    \includegraphics[width=0.225\textwidth]{figuras/tela-aluno-classificacao.png} &
-    \includegraphics[width=0.225\textwidth]{figuras/tela-professor-chamada.png} \\
-    \footnotesize (a) & \footnotesize (b) & \footnotesize (c) & \footnotesize (d)
+  \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.3pt}
+  \begin{tabular}{ccc}
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-login.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-inicio.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-classificacao.png}} \\
+    \footnotesize (a) & \footnotesize (b) & \footnotesize (c) \\[6pt]
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-perfil.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-missoes.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-professor-chamada.png}} \\
+    \footnotesize (d) & \footnotesize (e) & \footnotesize (f)
   \end{tabular}
-  \fonte{Elaborado pelo autor (2026). Tema claro; as telas (b) a (d) foram
-         capturadas com dados fictícios.}
+  \fonte{Elaborado pelo autor (2026). Tema claro; as telas (b) a (f) foram
+         capturadas na versão web, com dados fictícios.}
 \end{figure}
 
 Na tela inicial do aluno (b), o cartão do próximo treino traz o botão de
 \textit{check-in} a um toque de distância, o que atende ao RNF01; logo
 abaixo aparecem o anel de progresso, com o nível e o XP que falta para o
 próximo, e a sequência de treinos. Na classificação (c), o aluno vê a sua
-posição no mês e a linha dele aparece destacada. Na chamada do professor
-(d), cada aluno que fez \textit{check-in} tem a presença confirmada com um
+posição no mês e a linha dele aparece destacada. No perfil (d), a barra
+de graduação mostra o grau atual dentro da faixa e a próxima faixa da
+estrutura do responsável (RF33), e as medalhas conquistadas exibem a data
+da conquista (RF19). Nas missões (e), cada missão mostra o progresso, a
+recompensa e o período de vigência (RF23). Na chamada do professor (f),
+cada aluno que fez \textit{check-in} tem a presença confirmada com um
 toque no círculo.
 
 \section{Situação de implementação dos requisitos}
