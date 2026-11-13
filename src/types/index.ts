@@ -228,6 +228,19 @@ export interface Classificacao {
   atualizadoEm: Date;
 }
 
+// RF19: medalha conquistada, em usuarios/{alunoId}/medalhas/{marcoId} (id == id do marco em
+// MARCOS_MEDALHAS). Escrita só pela Cloud Function (functions/src/medalhas.ts), nunca pelo client.
+// Não é apagada se a contagem cair depois (estorno, sequência quebrada).
+export interface MedalhaConquistada {
+  id: string;
+  tipo: 'treinos' | 'sequencia' | 'graduacoes';
+  quantidade: number;
+  rotulo: string;
+  conquistadaEm: Timestamp;
+  origem: 'checkin' | 'graduacao' | 'migracao'; // 'migracao': data reconstruída do histórico
+  registradaEm: Timestamp;
+}
+
 // RF25, RN03 (Ciclo 3): registro de graduações (faixas/belts)
 export interface Graduacao {
   id: string;

@@ -11,13 +11,12 @@
 // functions e Cloud Scheduler), `npx eas init` (projectId), credenciais FCM no EAS e um
 // development build. Opcional: a variável EXPO_ACCESS_TOKEN, se o "enhanced security" de push
 // estiver ligado no projeto Expo.
-import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getFirestore, FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore';
 import { FUSO, diaLocal, limitesDoDia } from './datas';
-import { maiorSequenciaDeSessoes } from './sequencia';
-import { marcosAlcancados, selecionarLembretes, textoLembrete } from './notificacoesRegras';
+import { selecionarLembretes, textoLembrete } from './notificacoesRegras';
 
 type TipoNotificacao = 'lembreteSessao' | 'novaMissao' | 'conquista';
 
@@ -124,7 +123,7 @@ async function marcarConquistaNova(db: Firestore, uid: string, chave: string): P
   });
 }
 
-async function notificarConquista(db: Firestore, uid: string, chave: string, mensagem: Mensagem): Promise<void> {
+export async function notificarConquista(db: Firestore, uid: string, chave: string, mensagem: Mensagem): Promise<void> {
   if (await marcarConquistaNova(db, uid, chave)) {
     await notificar(db, [uid], 'conquista', mensagem);
   }
@@ -163,38 +162,7 @@ export const notificarGraduacao = onDocumentCreated(
   },
 );
 
-// RF19: marcos de treinos e de sequência, contados em todos os escopos do aluno
-export const notificarMarcoDeTreino = onDocumentUpdated(
-  'checkins/{checkinId}',
-  async (event) => {
-    const antes = event.data?.before.data();
-    const depois = event.data?.after.data();
-    if (!depois || depois.status !== 'validado' || antes?.status === 'validado') return;
-    const db = getFirestore();
-    const [checkins, sessoes] = await Promise.all([
-      db.collection('checkins').where('alunoId', '==', depois.alunoId).get(),
-      db.collection('sessoes').where('leitoresIds', 'array-contains', depois.alunoId).get(),
-    ]);
-    const validados = checkins.docs.filter((c) => c.data().status === 'validado').length;
-    const agora = Date.now();
-    // RF21: sequência por sessão agendada (functions/src/sequencia.ts), em todos os escopos
-    const sequencia = maiorSequenciaDeSessoes(
-      sessoes.docs
-        .map((s) => ({ id: s.id, status: s.data().status, janelaFimMs: (s.data().janelaCheckInFim as Timestamp).toMillis(), inicioMs: (s.data().inicio as Timestamp).toMillis() }))
-        .filter((s) => s.inicioMs <= agora),
-      new Map(checkins.docs.map((c) => [c.data().sessaoId as string, c.data().status as string])),
-      agora,
-    );
-    for (const marco of marcosAlcancados(validados, sequencia)) {
-      // eslint-disable-next-line no-await-in-loop
-      await notificarConquista(db, depois.alunoId, `medalha:${marco.id}`, {
-        titulo: 'Medalha conquistada',
-        corpo: `Você chegou a ${marco.rotulo}.`,
-        dados: { tela: 'Perfil' },
-      });
-    }
-  },
-);
+// RF19: as medalhas (marcos de treinos e de sequência) são concedidas e avisadas em medalhas.ts.
 
 // ---------- lembrete de sessão ----------
 // Uma vez por dia, às 7h: um lembrete por aluno com sessão agendada ou aberta hoje, com o horário

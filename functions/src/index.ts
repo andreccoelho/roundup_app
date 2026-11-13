@@ -110,6 +110,11 @@ export {
 // RF18: progresso automático e pontos de missão — ver missoes.ts
 export { atualizarMissoesNoCheckIn, creditarPontosDaMissao } from './missoes';
 
+// RF19: medalhas persistidas com data de conquista — ver medalhas.ts
+export { concederMedalhasNoCheckIn, concederMedalhasNaGraduacao } from './medalhas';
+// Usada pelo script de migração (scripts/migrar-medalhas.cjs)
+export { avaliarMedalhas } from './medalhas';
+
 // RF23, RF31: público-alvo, vigência e aviso de nova missão — ver missoesPublico.ts
 export {
   sincronizarMissaoNaEscrita, atualizarMissoesNoVinculo, atualizarMissoesNaMatricula, atualizarMissaoNaConclusao,
@@ -123,7 +128,7 @@ export { aplicarGraduacaoNoPerfil } from './graduacoes';
 
 // RF31: notificações push — ver notificacoes.ts
 export {
-  notificarMissaoConcluida, notificarGraduacao, notificarMarcoDeTreino, enviarLembretesDeSessao,
+  notificarMissaoConcluida, notificarGraduacao, enviarLembretesDeSessao,
 } from './notificacoes';
 // Núcleo do lembrete diário, exportado para o teste chamar direto (o emulador não dispara agendamentos)
 export { enviarLembretesDoDia } from './notificacoes';

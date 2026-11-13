@@ -27,6 +27,7 @@ export interface MedalhaPerfil {
   quantidade: number;
   conquistada: boolean;
   maxima?: boolean;
+  conquistadaEm?: string; // RF19: data já formatada
 }
 
 interface PerfilAlunoVisaoProps {
@@ -124,7 +125,7 @@ export default function PerfilAlunoVisao({
           <Cartao>
             <View style={styles.medalhas}>
               {medalhas.map((m) => (
-                <Medalha key={m.id} rotulo={m.rotulo} tipo={m.tipo} numero={m.quantidade} conquistada={m.conquistada} maxima={m.maxima} />
+                <Medalha key={m.id} rotulo={m.rotulo} tipo={m.tipo} numero={m.quantidade} conquistada={m.conquistada} maxima={m.maxima} conquistadaEm={m.conquistadaEm} />
               ))}
             </View>
           </Cartao>

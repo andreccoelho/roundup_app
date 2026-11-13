@@ -262,6 +262,17 @@ service cloud.firestore {
                            && (souDestinatarioDeVinculoAceito(usuarioId) || souDestinatarioEncerrandoVinculo(usuarioId))));
     }
 
+    // ---------- medalhas (RF19) ----------
+    // Medalhas conquistadas, com data. Escritas só pela Cloud Function (functions/src/medalhas.ts,
+    // Admin SDK); o client nunca cria, altera nem apaga — senão o aluno se daria a medalha. Leitura
+    // pelo próprio aluno e pelos responsáveis com vínculo aceito com ele. souResponsavelDoAluno()
+    // usa get() num caminho montado pelo `usuarioId` da URL, não por resource.data, então serve
+    // também para a consulta da coleção inteira (list).
+    match /usuarios/{usuarioId}/medalhas/{marcoId} {
+      allow read: if autenticado() && (usuarioId == meuId() || souResponsavelDoAluno(usuarioId));
+      allow write: if false;
+    }
+
     // ---------- vinculos (RF07, RF08, RN05, RN06) ----------
     // RNF04: a exceção de leitura ampla para vínculos professor-academia aceitos foi removida
     // — listarProfessoresAutonomos() agora lê a propriedade `autonomo` direto em `usuarios`

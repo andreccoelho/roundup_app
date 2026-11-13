@@ -1,9 +1,10 @@
-// RF17, RF19, RF21: nível/progresso, medalhas e sequência — todos calculados a partir de dados
-// que o aluno já pode ler (checkins próprios, graduações próprias), sem coleção nova. Valores
-// de configuração em src/config/gamificacao.ts são PROVISÓRIOS — ver docs/DECISOES_PENDENTES.md.
+// RF17, RF19, RF21: nível/progresso, medalhas e sequência. Nível e sequência são calculados a
+// partir de dados que o aluno já pode ler; as medalhas conquistadas vêm da coleção persistida
+// usuarios/{uid}/medalhas (Cloud Function), e o cálculo ao vivo só cobre o que ainda falta.
+// Valores de configuração em src/config/gamificacao.ts são PROVISÓRIOS — ver docs/DECISOES_PENDENTES.md.
 import { CheckIn } from '../types';
 import { LIMITES_CONFIGURACAO, MARCOS_MEDALHAS, MarcoMedalha, NIVEIS_XP } from '../config/gamificacao';
-import type { Sessao } from '../types';
+import type { MedalhaConquistada, Sessao } from '../types';
 
 export interface ProgressoNivel {
   nivel: number;
@@ -62,10 +63,12 @@ export function calcularSequencia(
 
 export interface MedalhaComEstado extends MarcoMedalha {
   conquistada: boolean;
+  conquistadaEm?: Date; // RF19: só nas medalhas já registradas pelo servidor
 }
 
-// RF19: marcos calculados ao vivo, sem coleção de medalhas persistida (ver
-// src/config/gamificacao.ts)
+// RF19: estado de cada marco pela contagem atual. Serve para as medalhas ainda não conquistadas
+// (e como reserva enquanto a Cloud Function não registrou uma recém-atingida).
+
 export function calcularMedalhas(
   checkinsValidados: number,
   sequenciaAtual: number,
@@ -109,4 +112,20 @@ export function validarConfiguracao(valores: ValoresGamificacao): string | null 
     return 'Os valores da tabela de níveis precisam ser inteiros positivos e crescentes.';
   }
   return null;
+}
+
+// RF19: junta o registro do servidor (fonte da verdade, com a data) ao cálculo ao vivo. Medalha
+// registrada continua conquistada mesmo que a contagem tenha caído depois (estorno, sequência
+// quebrada) — decisão em docs/DECISOES_PENDENTES.md, item 5.
+export function combinarMedalhas(aoVivo: MedalhaComEstado[], registradas: Pick<MedalhaConquistada, 'id' | 'conquistadaEm'>[]): MedalhaComEstado[] {
+  const porId = new Map(registradas.map((m) => [m.id, m]));
+  return aoVivo.map((m) => {
+    const registro = porId.get(m.id);
+    return registro ? { ...m, conquistada: true, conquistadaEm: registro.conquistadaEm.toDate() } : m;
+  });
+}
+
+// "12/10/2026"
+export function formatarDataConquista(data: Date): string {
+  return `${String(data.getDate()).padStart(2, '0')}/${String(data.getMonth() + 1).padStart(2, '0')}/${data.getFullYear()}`;
 }

@@ -32,9 +32,10 @@ export const LIMITES_CONFIGURACAO = {
 // virada do mês. O nível (RF17) continua somando todos os meses.
 export const JANELA_RANKING = 'mensal' as const;
 
-// RF19: marcos provisórios para concessão de medalhas. Calculados ao vivo a partir do
-// histórico do aluno a cada carregamento de tela — não há coleção de medalhas persistida
-// (sem registro de "quando" a medalha foi conquistada, sem notificação de nova conquista).
+// RF19: marcos provisórios para concessão de medalhas. A concessão é da Cloud Function
+// (functions/src/medalhas.ts), que grava usuarios/{uid}/medalhas/{id} com a data de conquista.
+// Cópia em functions/src/medalhasRegras.ts (MARCOS) — as functions não importam código do app,
+// mantenha as duas listas iguais.
 export interface MarcoMedalha {
   id: string;
   rotulo: string;

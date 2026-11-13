@@ -62,7 +62,7 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 - **RF16** — `XP_POR_CHECKIN_VALIDADO = 10`: quantidade arbitrária, sem nenhuma pesquisa de balanceamento por trás.
 - **RF17** — tabela de níveis `NIVEIS_XP`: progressão provisória em +50 por degrau (100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250), 10 níveis. Sem base em literatura de gamificação nem teste com usuário.
-- **RF19** — marcos de medalha (`MARCOS_MEDALHAS`): 6 marcos (10/30/100 treinos, 7/30 dias de sequência, 1ª graduação), números escolhidos sem validação.
+- **RF19** — marcos de medalha (`MARCOS_MEDALHAS`, copiados em `functions/src/medalhasRegras.ts`): 6 marcos (10/30/100 treinos, 7/30 treinos seguidos, 1ª graduação), números escolhidos sem validação.
 - **RF20/RN04** — ✅ **RESOLVIDO**: a classificação é mensal de verdade. Cada mês tem o próprio documento (`classificacoes/{alunoId}_{responsavelId}_{AAAA-MM}`), creditado na mesma transação de `validarCheckIn`, no mês (fuso local) em que o treino aconteceu. O ranking mostra só o mês corrente; o nível (RF17) continua somando todos os meses. Ver item 4.
 
 **✅ Resolvido (RF33):** os números de pontos por check-in, pontos por missão e tabela de níveis viraram configuração real por responsável (item 8). Os valores acima continuam como **padrão** de quem não personalizou e continuam sem validação de balanceamento.
@@ -109,11 +109,28 @@ O aluno continua sem permissão para escrever o próprio progresso (testado em `
 
 ---
 
-## 5. RF19 — medalhas sem coleção persistida
+## 5. RF19 — medalhas persistidas com data de conquista — ✅ RESOLVIDO
 
-Medalhas são calculadas ao vivo (`src/utils/gamificacao.ts`, `calcularMedalhas()`) a partir de contagens que o aluno já pode ler (check-ins validados, sequência atual, total de graduações) — **não há registro de quando uma medalha foi conquistada**. A notificação de nova conquista agora existe (RF31, acima); a chave de cada conquista avisada fica em `usuarios/{uid}/privado/notificacoes.conquistasNotificadas`, mas isso não é um histórico com data.
+**Modelo:** subcoleção `usuarios/{alunoId}/medalhas/{marcoId}` (id = id do marco), com `tipo`, `quantidade`, `rotulo`, `conquistadaEm`, `origem` (`checkin` | `graduacao` | `migracao`) e `registradaEm`.
 
-**Decisão a validar:** isso é suficiente para o Ciclo 2, ou medalha precisa de um registro persistido (data de conquista, e futuramente notificação)?
+**Quem escreve:** só a Cloud Function (`functions/src/medalhas.ts`):
+- `concederMedalhasNoCheckIn` roda quando um check-in vira `validado` (marcos de treinos e de sequência, em todos os escopos do aluno);
+- `concederMedalhasNaGraduacao` roda quando uma graduação é registrada.
+
+A cada disparo, o histórico é recalculado (`medalhasRegras.ts`) e cada marco atingido sem documento vira medalha, numa transação (sem duplicar). A regra do Firestore libera leitura ao aluno e aos responsáveis com vínculo aceito, e nega qualquer escrita do client.
+
+**RF31:** a medalha nova de treinos ou de sequência é avisada uma vez (mesma chave `medalha:{id}` de `conquistasNotificadas`, então quem já foi avisado antes desta mudança não é avisado de novo). A medalha de graduação não gera aviso próprio, porque a graduação já é avisada. A função antiga `notificarMarcoDeTreino` saiu.
+
+**Interface:** a medalha conquistada mostra a data embaixo do rótulo (componente `Medalha`, Perfil do aluno). As bloqueadas continuam vindo do cálculo ao vivo (`combinarMedalhas`).
+
+**Decisões tomadas:**
+- **Estorno não retira a medalha.** Validação desfeita, sequência quebrada ou contagem que caiu depois não apagam o documento; o recálculo só cria o que falta. É a recomendação do pedido; **a validar com a orientadora.**
+- **Data numa conquista nova:** o instante em que o servidor registrou a medalha (logo após a validação).
+- **Data na migração:** reconstruída do histórico. Treinos: o `validadoEm` do N-ésimo check-in validado (sem ele, o horário do treino). Sequência: a validação da sessão que completou N seguidos. Graduação: a primeira registrada. Se as sessões forem validadas fora de ordem, a data da sequência é aproximada.
+
+**Migração:** `npm --prefix functions run build` e depois `node scripts/migrar-medalhas.cjs --aplicar` (dry-run sem `--aplicar`). Usa a mesma função da Cloud Function, com `origem: 'migracao'` e sem avisar ninguém, e pode rodar de novo sem efeito. **Ainda não foi rodado em produção.** Até rodar, o Perfil continua mostrando as medalhas já atingidas (cálculo ao vivo), só que sem data.
+
+**Ainda fora:** a Home (`useConquistas`, R-09 e R-10) continua celebrando a partir do cálculo ao vivo e do estado salvo no aparelho. Com o registro persistido, dá para trocar essa detecção por "medalha com `registradaEm` mais nova que a última vista", sem AsyncStorage (fica para outra rodada).
 
 ---
 

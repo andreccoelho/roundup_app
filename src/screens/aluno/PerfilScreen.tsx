@@ -1,8 +1,8 @@
 // RF06: perfil do aluno — leitura, edição (EditarPerfilScreen: nome, foto, faixa, modalidades),
 // vínculos, notificações, participação na classificação (RNF11), conta e privacidade, e sair.
-// RF17, RF19, RF21: nível/XP, sequência e medalhas calculados ao vivo a partir de check-ins,
-// graduações e classificações do aluno — sem coleção persistida, valores PROVISÓRIOS (ver
-// docs/DECISOES_PENDENTES.md). Mesma fonte de dados que aluno/DashboardScreen.tsx já usa.
+// RF17, RF19, RF21: nível/XP e sequência calculados ao vivo a partir de check-ins, graduações e
+// classificações do aluno; medalhas conquistadas lidas do registro do servidor
+// (usuarios/{uid}/medalhas, com a data), valores PROVISÓRIOS (ver docs/DECISOES_PENDENTES.md). Mesma fonte de dados que aluno/DashboardScreen.tsx já usa.
 // Apresentação em PerfilAlunoVisao.tsx (a mesma da Galeria).
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
@@ -13,7 +13,11 @@ import { listarSessoesPassadasDoAluno } from '../../services/sessoes';
 import { listarGraduacoesPorAluno } from '../../services/graduacoes';
 import { listarClassificacoesDoAluno } from '../../services/classificacoes';
 import { buscarNiveisDoAluno } from '../../services/configuracoesGamificacao';
-import { calcularMedalhas, calcularProgressoNivel, calcularSequencia, MedalhaComEstado, ProgressoNivel } from '../../utils/gamificacao';
+import { listarMedalhasDoAluno } from '../../services/medalhas';
+import {
+  calcularMedalhas, calcularProgressoNivel, calcularSequencia, combinarMedalhas, formatarDataConquista,
+  MedalhaComEstado, ProgressoNivel,
+} from '../../utils/gamificacao';
 import { formatarMesAno } from '../../utils/datas';
 import Tela from '../../components/ui/Tela';
 import PerfilAlunoVisao from './PerfilAlunoVisao';
@@ -47,11 +51,13 @@ export default function PerfilScreen() {
   const carregarDetalhes = useCallback(async () => {
     if (!usuario) return;
     try {
-      const [historico, graduacoes, classificacoes, sessoesPassadas] = await Promise.all([
+      const [historico, graduacoes, classificacoes, sessoesPassadas, registradas] = await Promise.all([
         listarHistoricoDoAluno(usuario.id),
         listarGraduacoesPorAluno(usuario.id),
         listarClassificacoesDoAluno(usuario.id),
         listarSessoesPassadasDoAluno(usuario.id),
+        // RF19: falha ao ler o registro não esconde as medalhas — cai no cálculo ao vivo, sem data
+        listarMedalhasDoAluno(usuario.id).catch(() => []),
       ]);
       const validados = historico.filter((c) => c.status === 'validado').length;
       const sequenciaAtual = calcularSequencia(sessoesPassadas, historico);
@@ -62,7 +68,7 @@ export default function PerfilScreen() {
       setTreinosValidados(validados);
       setSequencia(sequenciaAtual);
       setProgresso(calcularProgressoNivel(pontosTotais, niveis));
-      setMedalhas(calcularMedalhas(validados, sequenciaAtual, graduacoes.length));
+      setMedalhas(combinarMedalhas(calcularMedalhas(validados, sequenciaAtual, graduacoes.length), registradas));
     } catch {
       // Seção secundária — falha aqui não impede o resto do perfil (ex.: Sair).
       setMedalhas([]);
@@ -89,7 +95,11 @@ export default function PerfilScreen() {
         sequencia={sequencia}
         treinos={treinosValidados}
         modalidades={usuario?.modalidades ?? []}
-        medalhas={medalhas.map((m) => ({ ...m, maxima: m.id === ID_MEDALHA_MAXIMA }))}
+        medalhas={medalhas.map((m) => ({
+          ...m,
+          maxima: m.id === ID_MEDALHA_MAXIMA,
+          conquistadaEm: m.conquistadaEm ? formatarDataConquista(m.conquistadaEm) : undefined,
+        }))}
         onEditar={() => navigation.navigate('EditarPerfil')}
         onVinculos={() => navigation.navigate('VincularAluno')}
         onNotificacoes={() => navigation.navigate('PreferenciasNotificacao')}

@@ -60,7 +60,7 @@ function sessoesFicticias(estadoHero: EstadoCheckIn): SessaoHome[] {
 }
 
 const MEDALHAS: MedalhaPerfil[] = [
-  { id: 'treinos-10', rotulo: '10 treinos', tipo: 'treinos', quantidade: 10, conquistada: true },
+  { id: 'treinos-10', rotulo: '10 treinos', tipo: 'treinos', quantidade: 10, conquistada: true, conquistadaEm: '12/10/2026' },
   { id: 'treinos-30', rotulo: '30 treinos', tipo: 'treinos', quantidade: 30, conquistada: true },
   { id: 'treinos-100', rotulo: '100 treinos', tipo: 'treinos', quantidade: 100, conquistada: true, maxima: true },
   { id: 'sequencia-7', rotulo: '7 treinos seguidos', tipo: 'sequencia', quantidade: 7, conquistada: true },
