@@ -1,0 +1,48 @@
+% Fonte da ficha catalográfica (verso da folha de rosto).
+% Compile com: pdflatex ficha-catalografica.tex  ->  ficha-catalografica.pdf
+% ATENÇÃO: confira a classificação (CDD) e o código de autor (Cutter)
+% com a biblioteca do Ibmec, e atualize o número de folhas se mudar.
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[margin=2cm,bottom=3cm]{geometry}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\begin{document}
+\vspace*{\fill}
+\begin{center}
+\fbox{\begin{minipage}[c][7.5cm][c]{12.5cm}
+\small
+\hspace*{0.3cm}\begin{minipage}[t]{1.6cm}
+C672r
+\end{minipage}%
+\begin{minipage}[t]{10.2cm}
+\setlength{\parindent}{1em}
+\noindent Coelho, André Costa.
+
+RoundUp: aplicativo gamificado para engajamento e retenção de
+praticantes de artes marciais / André Costa Coelho. -- Rio de Janeiro,
+2026.
+
+59 f. : il. color.
+
+\medskip
+Orientadora: Profa. Dra. Talita Vieira Ribeiro.
+
+Trabalho de Conclusão de Curso (graduação) -- Centro Universitário
+Ibmec, Curso de Engenharia de Computação, Rio de Janeiro, 2026.
+
+\medskip
+1. Gamificação. 2. Artes marciais. 3. Retenção. 4. Engenharia de
+requisitos. 5. Personas. I. Ribeiro, Talita Vieira. II. Centro
+Universitário Ibmec. III. Título.
+
+\vspace{0.6cm}
+\hfill CDD 005.1\hspace*{0.3cm}
+\end{minipage}
+\end{minipage}}
+\end{center}
+\end{document}
