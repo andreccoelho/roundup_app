@@ -21,17 +21,22 @@ usuários reais foram usados para revisar a situação dos requisitos
 
 \section{Tecnologias e ferramentas}
 
-O \autoref{qua:tecnologias} apresenta as tecnologias adotadas e a
+O \quadroref{qua:tecnologias} apresenta as tecnologias adotadas e a
 justificativa de cada escolha.
 
-\begin{quadro}[H]
-  \caption{Tecnologias e ferramentas}
-  \label{qua:tecnologias}
-  \centering
-  \footnotesize
-  \begin{tabular}{|p{3.2cm}|p{4.0cm}|p{6.0cm}|}
-    \hline
-    \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|p{3.2cm}|p{4.0cm}|p{6.0cm}|}
+  \caption{Tecnologias e ferramentas}\label{qua:tecnologias}\\
+  \hline
+  \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
+\endfirsthead
+  \multicolumn{3}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
+\endhead
+  \multicolumn{3}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
     Aplicativo móvel & React Native com Expo (SDK 58) e TypeScript & Base de código única para Android 7.0+, iOS 16.4+ e web (RNF05); tipagem estática reduz erros entre telas e serviços. \\ \hline
     Navegação & React Navigation & Abas e pilhas de telas separadas por perfil. \\ \hline
     Autenticação & Firebase Authentication & Senhas tratadas pelo provedor, sem armazenamento próprio (RNF03). \\ \hline
@@ -45,9 +50,9 @@ justificativa de cada escolha.
     Modelagem & PlantUML & Diagramas UML versionáveis como texto. \\ \hline
     Gestão do projeto & Notion e Git/GitHub & Base de requisitos e \textit{backlog}; histórico de alterações por ciclo (RNF08). \\ \hline
     Respostas sintéticas & Claude (\texttt{claude-opus-5-5}), Python e Google Apps Script & Apoio à criação das personas e do gerador de respostas; envio das respostas de teste a uma cópia do formulário (\autoref{sec:val-personas}). \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 
 \section{Arquitetura do aplicativo}
 
@@ -168,26 +173,31 @@ toque no círculo.
 \section{Situação de implementação dos requisitos}
 \label{sec:situacao-implementacao}
 
-O \autoref{qua:implementacao} resume o que foi implementado. As
+O \quadroref{qua:implementacao} resume o que foi implementado. As
 limitações remanescentes foram registradas no repositório como decisões
 pendentes, para que fiquem explícitas, e não escondidas na interface. O
 critério de compatibilidade do RNF05 foi revisado de iOS 14 para iOS
 16.4, versão mínima exigida pelo Expo SDK 58, adotado na etapa final; no
 Android, o mínimo do SDK (Android 7.0) já atende ao critério original.
 
-\begin{quadro}[H]
-  \caption{Situação de implementação dos requisitos}
-  \label{qua:implementacao}
-  \centering
-  \footnotesize
-  \begin{tabular}{|p{2.2cm}|p{4.2cm}|p{7.0cm}|}
-    \hline
-    \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
-            Implementado & RF01--RF33; RN01--RN09; RNF01--RNF05, RNF07--RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. RF19, RF23, RF31 e RF33 também foram verificados em um iPhone, e o tempo de carregamento (RNF02) foi medido em 4G (\autoref{sec:testes-prototipo}). \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|p{2.2cm}|p{4.2cm}|p{7.0cm}|}
+  \caption{Situação de implementação dos requisitos}\label{qua:implementacao}\\
+  \hline
+  \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
+\endfirsthead
+  \multicolumn{3}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
+\endhead
+  \multicolumn{3}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    Implementado & RF01--RF33; RN01--RN09; RNF01--RNF05, RNF07--RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. RF19, RF23, RF31 e RF33 também foram verificados em um iPhone, e o tempo de carregamento (RNF02) foi medido em 4G (\autoref{sec:testes-prototipo}). \\ \hline
     Não implementado & RNF06 & Decisão de projeto: o \textit{check-in} e a validação de presença são gravados em transações que exigem conexão, porque o servidor precisa garantir a janela de horário (RN08) e o limite de um \textit{check-in} por sessão (RN02). Um registro feito sem conexão poderia ser recusado depois, quando o aluno já acreditasse ter treinado com pontos garantidos. \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026), a partir do repositório do projeto.}
-\end{quadro}
+\end{quadrolongo}
 
 Os valores de gamificação têm um padrão, usado quando o professor ou a
 academia não configuram os seus: 10 pontos por presença validada, dez

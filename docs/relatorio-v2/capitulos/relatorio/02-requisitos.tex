@@ -140,19 +140,24 @@ para que as ideias funcionem nos dois arranjos encontrados na prática.
 \section{Ideias iniciais}
 \label{sec:ideias}
 
-O \autoref{qua:ideias} apresenta as ideias iniciais, o perfil a que se
+O \quadroref{qua:ideias} apresenta as ideias iniciais, o perfil a que se
 destinam, o impulso motivacional do Octalysis \cite{chou2015} a que cada
 uma se relaciona e os requisitos funcionais que ela originou
 (\autoref{sec:rf}).
 
-\begin{quadro}[H]
-  \caption{Ideias iniciais de funcionalidades}
-  \label{qua:ideias}
-  \centering
-  \footnotesize
-  \begin{tabular}{|c|p{4.6cm}|c|p{3.9cm}|p{2.0cm}|}
-    \hline
-    \textbf{ID} & \textbf{Ideia} & \textbf{Perfil} & \textbf{Impulso (Octalysis)} & \textbf{Requisitos} \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|c|p{4.6cm}|c|p{3.9cm}|p{2.0cm}|}
+  \caption{Ideias iniciais de funcionalidades}\label{qua:ideias}\\
+  \hline
+  \textbf{ID} & \textbf{Ideia} & \textbf{Perfil} & \textbf{Impulso (Octalysis)} & \textbf{Requisitos} \\ \hline
+\endfirsthead
+  \multicolumn{5}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Ideia} & \textbf{Perfil} & \textbf{Impulso (Octalysis)} & \textbf{Requisitos} \\ \hline
+\endhead
+  \multicolumn{5}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
     I01 & Pontos de experiência (XP) a cada treino & Aluno & Desenvolvimento e realização & RF16 \\ \hline
     I02 & Registro rápido de presença (\textit{check-in}) & Ambos & -- (base do sistema) & RF13, RF22 \\ \hline
     I03 & Contador de dias treinados e frequência semanal & Ambos & Desenvolvimento e realização & RF15, RF24 \\ \hline
@@ -166,9 +171,9 @@ uma se relaciona e os requisitos funcionais que ela originou
     I11 & Lembretes nos dias habituais de treino & Aluno & -- (gatilho externo) & RF31 \\ \hline
     I12 & Alerta ao professor e mensagem após ausência & Ambos & Influência social e pertencimento & RF32 \\ \hline
     I13 & Relatório de frequência e evolução da turma & Professor & -- (gestão) & RF26, RF27 \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 
 A ideia I10 (mural da turma) foi a única que não originou requisito: ela
 ficou fora do escopo definido para esta versão e, na avaliação
@@ -202,14 +207,19 @@ sintéticas (\autoref{sec:val-personas}) ajudaram a repensar os
 requisitos, mas não entraram no cálculo das notas que definem essa
 situação.
 
-\begin{quadro}[H]
-  \caption{Requisitos funcionais dos Ciclos 1 e 2}
-  \label{qua:rf}
-  \centering
-  \footnotesize
-  \begin{tabular}{|c|p{7.3cm}|c|c|c|p{1.6cm}|}
-    \hline
-    \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Situação} \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|c|p{7.3cm}|c|c|c|p{1.6cm}|}
+  \caption{Requisitos funcionais dos Ciclos 1 e 2}\label{qua:rf}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Situação} \\ \hline
+\endfirsthead
+  \multicolumn{6}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Situação} \\ \hline
+\endhead
+  \multicolumn{6}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
     RF01 & O sistema deve permitir o cadastro escolhendo o perfil Aluno, Professor ou Academia. & -- & 1 & M & Base \\ \hline
     RF02 & O sistema deve permitir login, encerramento de sessão e recuperação de senha. & -- & 1 & M & Base \\ \hline
     RF03 & O sistema deve liberar a cada perfil apenas as funcionalidades correspondentes. & -- & 1 & M & Base \\ \hline
@@ -230,18 +240,23 @@ situação.
     RF19 & O sistema deve conceder medalhas ao atingir marcos predefinidos. & I07 & 2 & M & Mantido \\ \hline
     RF20 & O sistema deve exibir a classificação por pontos, no escopo do vínculo do aluno. & I06 & 2 & M & Ajustado \\ \hline
     RF21 & O sistema deve contabilizar e exibir a sequência de treinos consecutivos. & I04 & 2 & S & Mantido \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026). Prior.: M = \textit{Must}; S = \textit{Should}.}
-\end{quadro}
+\end{quadrolongo}
 
-\begin{quadro}[H]
-  \caption{Requisitos funcionais dos Ciclos 3 e 4}
-  \label{qua:rf2}
-  \centering
-  \footnotesize
-  \begin{tabular}{|c|p{7.3cm}|c|c|c|p{1.6cm}|}
-    \hline
-    \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Situação} \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|c|p{7.3cm}|c|c|c|p{1.6cm}|}
+  \caption{Requisitos funcionais dos Ciclos 3 e 4}\label{qua:rf2}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Situação} \\ \hline
+\endfirsthead
+  \multicolumn{6}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Situação} \\ \hline
+\endhead
+  \multicolumn{6}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
     RF09 & O sistema deve permitir que a academia aceite e encerre vínculos com professores. & -- & 3 & S & Base \\ \hline
     RF22 & O sistema deve permitir que o responsável valide ou rejeite os \textit{check-ins}. & I02 & 3 & M & Sem dados \\ \hline
     RF23 & O sistema deve permitir criar missões personalizadas (critério, recompensa, vigência). & I05 & 3 & M & A revisar \\ \hline
@@ -255,9 +270,9 @@ situação.
     RF30 & O sistema deve registrar o responsável legal de alunos menores de 18 anos. & -- & 4 & M & Base \\ \hline
     RF31 & O sistema deve enviar notificações de sessão, nova missão e conquista. & I11 & 4 & S & Ajustado \\ \hline
     RF32 & O sistema deve sinalizar ao gestor os alunos com queda relevante de frequência. & I12 & 4 & S & Ajustado \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026). Prior.: M = \textit{Must}; S = \textit{Should}.}
-\end{quadro}
+\end{quadrolongo}
 
 Os ajustes indicados nos quadros foram os seguintes. Em RF13, o
 \textit{check-in} teve média de 3,2, e um respondente citou ``inserir muitos
@@ -288,18 +303,23 @@ nenhum professor real respondeu ao questionário.
 \section{Regras de negócio}
 \label{sec:rn}
 
-As regras de negócio (\autoref{qua:rn}) restringem o comportamento dos
+As regras de negócio (\quadroref{qua:rn}) restringem o comportamento dos
 requisitos funcionais. Várias delas protegem a credibilidade da
 gamificação, impedindo que o aluno acumule pontos sem ter treinado.
 
-\begin{quadro}[H]
-  \caption{Regras de negócio}
-  \label{qua:rn}
-  \centering
-  \footnotesize
-  \begin{tabular}{|c|p{11.6cm}|c|}
-    \hline
-    \textbf{ID} & \textbf{Regra} & \textbf{Ciclo} \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|c|p{11.6cm}|c|}
+  \caption{Regras de negócio}\label{qua:rn}\\
+  \hline
+  \textbf{ID} & \textbf{Regra} & \textbf{Ciclo} \\ \hline
+\endfirsthead
+  \multicolumn{3}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Regra} & \textbf{Ciclo} \\ \hline
+\endhead
+  \multicolumn{3}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
     RN01 & Pontos só são creditados após o \textit{check-in} ser validado pelo responsável da sessão. & 2 \\ \hline
     RN02 & É permitido no máximo um \textit{check-in} por aluno por sessão de treino. & 1 \\ \hline
     RN03 & A graduação de faixa é sempre decisão do professor ou da academia, nunca automática por pontos. & 3 \\ \hline
@@ -309,28 +329,33 @@ gamificação, impedindo que o aluno acumule pontos sem ter treinado.
     RN07 & Toda turma tem um único responsável, e toda sessão pertence a uma turma. & 1 \\ \hline
     RN08 & O \textit{check-in} só é permitido dentro da janela de tempo da sessão. & 1 \\ \hline
     RN09 & A classificação segue o escopo do vínculo: academia, turma ou alunos do professor autônomo. & 2 \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 
 \section{Requisitos não funcionais}
 \label{sec:rnf}
 
-O \autoref{qua:rnf} apresenta os requisitos não funcionais, classificados
+O \quadroref{qua:rnf} apresenta os requisitos não funcionais, classificados
 segundo as características de qualidade da ISO/IEC 25010 e os requisitos
 organizacionais e legais do projeto. Os comentários dos respondentes do
 questionário reforçaram três deles: RNF01 (esforço de registro), RNF11
 (adesão opcional à classificação) e, indiretamente, o controle de
 notificações previsto em RF31.
 
-\begin{quadro}[H]
-  \caption{Requisitos não funcionais}
-  \label{qua:rnf}
-  \centering
-  \footnotesize
-  \begin{tabular}{|c|p{2.3cm}|p{7.0cm}|p{3.6cm}|}
-    \hline
-    \textbf{ID} & \textbf{Categoria} & \textbf{Descrição} & \textbf{Critério de aceitação} \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|c|p{2.3cm}|p{7.0cm}|p{3.6cm}|}
+  \caption{Requisitos não funcionais}\label{qua:rnf}\\
+  \hline
+  \textbf{ID} & \textbf{Categoria} & \textbf{Descrição} & \textbf{Critério de aceitação} \\ \hline
+\endfirsthead
+  \multicolumn{4}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Categoria} & \textbf{Descrição} & \textbf{Critério de aceitação} \\ \hline
+\endhead
+  \multicolumn{4}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
     RNF01 & Usabilidade & O \textit{check-in} deve exigir pouco esforço. & Até 3 toques a partir da tela inicial. \\ \hline
     RNF02 & Desempenho & As telas principais devem carregar rapidamente em rede móvel. & Até 3 s em conexão 4G. \\ \hline
     RNF03 & Segurança & Senhas armazenadas de forma criptografada, com gestão delegada ao Firebase Authentication. & Nenhuma senha gravada no banco do app. \\ \hline
@@ -342,7 +367,7 @@ notificações previsto em RF31.
     RNF09 & Organizacional & Modelagem UML e protótipo no Figma antes da codificação. & Diagramas e protótipo produzidos. \\ \hline
     RNF10 & Legal & Tratamento de dados conforme a LGPD, com coleta limitada à finalidade \cite{lgpd2018}. & Consentimento registrado; minimização de dados. \\ \hline
     RNF11 & Ético & Participação na classificação opcional para o aluno. & Aluno pode sair do \textit{ranking}. \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 

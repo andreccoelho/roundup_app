@@ -142,16 +142,20 @@ implementação de cada requisito está na
 
 O caso de uso central do aplicativo é o registro de presença (UC12),
 porque dele derivam pontos, sequência, medalhas, missões e relatórios. O
-\autoref{qua:uc12-uc15} descreve esse caso de uso e o que o completa, a
+\quadroref{qua:uc12-uc15} descreve esse caso de uso e o que o completa, a
 validação da presença (UC15), de acordo com o comportamento implementado.
 
-\begin{quadro}[H]
-  \caption{Descrição dos casos de uso UC12 e UC15}
-  \label{qua:uc12-uc15}
-  \centering
-  \footnotesize
-  \begin{tabular}{|p{2.7cm}|p{10.6cm}|}
-    \hline
+\begin{quadrolongo}
+\begin{longtable}{|p{2.7cm}|p{10.6cm}|}
+  \caption{Descrição dos casos de uso UC12 e UC15}\label{qua:uc12-uc15}\\
+\endfirsthead
+  \multicolumn{2}{r}{\textit{(continuação)}}\\
+  \hline
+\endhead
+  \multicolumn{2}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+  \hline
     \textbf{Caso de uso} & \textbf{UC12 -- Realizar \textit{check-in}} (ator: Aluno; RF13, RN02, RN08, RNF01) \\ \hline
     Pré-condições & Aluno autenticado, com vínculo ativo e matrícula ativa na turma da sessão. \\ \hline
     Fluxo principal & 1. O aluno abre a tela inicial, que destaca a próxima sessão. 2. O aluno toca em ``Fazer \textit{check-in}''. 3. O sistema verifica a sessão, a matrícula, a janela de tempo e a inexistência de \textit{check-in} anterior. 4. O sistema grava o \textit{check-in} com situação ``pendente'' e atualiza o botão. \\ \hline
@@ -162,9 +166,9 @@ validação da presença (UC15), de acordo com o comportamento implementado.
     Fluxo principal & 1. O gestor abre a chamada da sessão do dia. 2. O sistema lista os alunos matriculados e os \textit{check-ins} feitos. 3. O gestor confirma a presença de cada aluno que fez \textit{check-in}. 4. Ao confirmar, o sistema credita o XP no \textit{check-in} e na classificação do aluno, na mesma transação. \\ \hline
     Fluxos alternativos & 3a. O gestor desfaz uma confirmação: o \textit{check-in} volta a ``pendente'' e o sistema estorna os pontos. 3b. Aluno sem \textit{check-in}: aparece como ausente, e o gestor não pode registrar presença em nome dele. \\ \hline
     Pós-condição & Presença confirmada e pontuação atualizada, ou \textit{check-in} mantido como pendente. \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 
 \section{Modelagem estática}
 \label{sec:modelagem-estatica}

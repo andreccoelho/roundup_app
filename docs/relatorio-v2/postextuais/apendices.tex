@@ -59,17 +59,22 @@ O código-fonte e a documentação técnica do RoundUp estão no repositório
 público do projeto, na versão entregue com este relatório, marcada com a
 \textit{tag} \texttt{relatorio-v2}:
 \url{https://github.com/andreccoelho/roundup_app/tree/relatorio-v2}.
-O \autoref{qua:artefatos} indica onde está cada artefato; os caminhos são
+O \quadroref{qua:artefatos} indica onde está cada artefato; os caminhos são
 relativos à raiz do repositório.
 
-\begin{quadro}[H]
-  \caption{Artefatos técnicos do projeto no repositório}
-  \label{qua:artefatos}
-  \centering
-  \footnotesize
-  \begin{tabular}{|p{4.6cm}|p{5.2cm}|p{3.4cm}|}
-    \hline
-    \textbf{Artefato} & \textbf{Caminho} & \textbf{Relação com o texto} \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|p{4.6cm}|p{5.2cm}|p{3.4cm}|}
+  \caption{Artefatos técnicos do projeto no repositório}\label{qua:artefatos}\\
+  \hline
+  \textbf{Artefato} & \textbf{Caminho} & \textbf{Relação com o texto} \\ \hline
+\endfirsthead
+  \multicolumn{3}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{Artefato} & \textbf{Caminho} & \textbf{Relação com o texto} \\ \hline
+\endhead
+  \multicolumn{3}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
     Lista oficial de requisitos (RF, RN e RNF) & \path{docs/requisitos/requisitos-v1-2026-09.csv} & \autoref{cap:requisitos} \\ \hline
     Especificação dos 30 casos de uso & \path{docs/requisitos/especificacao-casos-uso.md} & \autoref{sec:modelagem-funcional} \\ \hline
     Fontes dos diagramas de casos de uso (PlantUML) & \path{docs/relatorio-v2/figuras/uml-fonte/} & \autoref{cap:modelagem} \\ \hline
@@ -85,8 +90,8 @@ relativos à raiz do repositório.
     Dados anonimizados e \textit{scripts} de análise do questionário & \path{docs/relatorio-v2/dados/}, \path{docs/relatorio-v2/scripts/} & \autoref{cap:testes} \\ \hline
     Fichas das personas sintéticas & \path{docs/pesquisa/personas-sinteticas.md} & \autoref{sec:val-personas} \\ \hline
     Geração e envio das respostas sintéticas & \path{docs/pesquisa/respostas-sinteticas/} & \autoref{sec:val-personas} \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 
 \end{apendicesenv}
