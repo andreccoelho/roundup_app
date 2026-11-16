@@ -1,0 +1,41 @@
+% =====================================================================
+%  FOLHA DE APROVAÇÃO (obrigatório) -- Manual, seção 2.1.4
+%  Os nomes da banca vêm de config/dados.tex.
+%  Leve esta folha impressa no dia da defesa para colher as assinaturas
+%  (Regulamento, Art. 15, III). Na versão final, você pode substituir
+%  esta página pela folha assinada e digitalizada (veja o LEIA-ME).
+% =====================================================================
+\IfFileExists{ficha/folha-aprovacao-assinada.pdf}{%
+  \includepdf[pages=1, pagecommand={\thispagestyle{empty}}]{ficha/folha-aprovacao-assinada.pdf}%
+}{%
+\begin{folhadeaprovacao}
+  \centering
+
+  {\bfseries\MakeTextUppercase{\imprimirautor}\par}
+  \vspace*{1.5cm}
+
+  {\bfseries\OnehalfSpacing\imprimirtitulocompleto\par}
+  \vspace*{1.5cm}
+
+  \hspace{.45\textwidth}%
+  \begin{minipage}{.55\textwidth}
+    \SingleSpacing\raggedright
+    \imprimirnatureza
+  \end{minipage}
+  \vspace*{1cm}
+
+  \begin{flushleft}
+    Aprovado em: \dataaprovacao
+  \end{flushleft}
+
+  \vspace*{0.5cm}
+  {\bfseries BANCA EXAMINADORA\par}
+
+  \membrobanca{\bancaorientador\ (\imprimirrotuloorientador)}{\bancaorientadorinst}
+  \membrobanca{\bancaexaminadorum}{\bancaexaminadoruminst}
+  \membrobanca{\bancaexaminadordois}{\bancaexaminadordoisinst}
+
+  \vfill
+  {\bfseries\MakeTextUppercase{\imprimirlocal}\par\imprimirdata\par}
+\end{folhadeaprovacao}
+}

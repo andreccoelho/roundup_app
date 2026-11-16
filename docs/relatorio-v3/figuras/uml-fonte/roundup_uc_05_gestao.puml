@@ -1,0 +1,27 @@
+@startuml RoundUp_UC_05_Gestao
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Professor
+actor Academia
+Academia --|> Professor
+
+package "Gestão" {
+  usecase "UC20 Criar Missão\nPersonalizada (RF23)" as UC20
+  usecase "UC21 Consultar Alunos\ne Frequência (RF24)" as UC21
+  usecase "UC22 Registrar Graduação\nde Faixa (RF25, RN03)" as UC22
+  usecase "UC23 Gerar Relatório\nde Frequência (RF26)" as UC23
+  usecase "UC24 Consultar Visão\nConsolidada (RF27)" as UC24
+  usecase "UC25 Personalizar Pontuação\ne Graduação (RF33)" as UC25
+}
+
+' UC20, UC21, UC22, UC23, UC25 pertencem ao Professor; Academia herda.
+Professor -- UC20
+Professor -- UC21
+Professor -- UC22
+Professor -- UC23
+Academia -- UC24
+Professor -- UC25
+
+@enduml

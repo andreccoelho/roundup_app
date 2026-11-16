@@ -1,0 +1,4 @@
+Coloque aqui, na versao final:
+- ficha-catalografica.pdf        (obrigatoria - Regulamento, Art. 21, II)
+- folha-aprovacao-assinada.pdf   (opcional)
+Os nomes dos arquivos devem ser exatamente estes.

@@ -1,0 +1,47 @@
+@startuml RoundUp_UC_00_VisaoGeral
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 40
+
+actor Aluno
+actor Professor
+actor Academia
+
+' A Academia acumula as permissões de gestão do Professor (RF03).
+Academia --|> Professor
+
+rectangle "Contas\n(UC01-UC05)" as Contas
+rectangle "Vínculos\n(UC06-UC08)" as Vinculos
+rectangle "Treinos\n(UC09-UC15)" as Treinos
+rectangle "Gamificação\n(UC16-UC19)" as Gamificacao
+rectangle "Gestão\n(UC20-UC25)" as Gestao
+rectangle "Conformidade\n(UC26-UC28)" as Conformidade
+rectangle "Retenção\n(UC29-UC30)" as Retencao
+
+Aluno -- Contas
+Professor -- Contas
+Academia -- Contas
+
+Aluno -- Vinculos
+Professor -- Vinculos
+Academia -- Vinculos
+
+Aluno -- Treinos
+Professor -- Treinos
+
+Aluno -- Gamificacao
+
+Professor -- Gestao
+Academia -- Gestao
+
+Aluno -- Conformidade
+Professor -- Conformidade
+Academia -- Conformidade
+
+Aluno -- Retencao
+Professor -- Retencao
+
+@enduml

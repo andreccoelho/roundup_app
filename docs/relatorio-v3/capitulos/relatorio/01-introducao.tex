@@ -1,0 +1,146 @@
+% =====================================================================
+%  CAPÍTULO 1 -- INTRODUÇÃO
+%  Formato: PROJETO APLICADO (relatório técnico + protótipo)
+%
+%  O Manual recomenda texto corrido, sem dividir a introdução em seções.
+% =====================================================================
+
+\chapter{Introdução e objetivos}
+\label{cap:introducao}
+
+% (a) Contexto e problema
+A prática regular de lutas e artes marciais está associada a benefícios
+que vão além do condicionamento físico. Em revisão sistemática com
+meta-análise, \citeonline{moore2020} encontraram efeitos positivos do
+treinamento em artes marciais sobre o bem-estar e a saúde mental dos
+praticantes, incluindo a redução de sintomas de ansiedade e depressão.
+Esses benefícios, porém, só aparecem com a continuidade do treino. Na
+vivência do autor como praticante, é comum que alunos abandonem a
+atividade antes de consolidar o hábito, seja pela percepção lenta da
+própria evolução, pela falta de metas claras, pelo distanciamento do
+professor ou por mudanças na rotina; o levantamento com praticantes e
+ex-praticantes descrito no \autoref{cap:testes} procurou, justamente,
+confirmar ou refutar essas impressões. Para o aluno, o abandono interrompe
+o ciclo em que os ganhos se tornariam perceptíveis; para a academia e o
+professor, representa perda de receita e de vínculo com a turma.
+
+% (b) Solução proposta
+Para enfrentar esse problema, este projeto propõe o \textbf{RoundUp}, um
+aplicativo móvel que aplica \textbf{gamificação} -- o uso de elementos de
+design de jogos em contextos que não são jogos \cite{deterding2011} -- ao
+acompanhamento dos treinos. Para o aluno, o aplicativo oferece mecânicas
+como pontos de experiência, sequências de treino, medalhas e uma barra de
+progresso rumo à próxima graduação. Para o professor, oferece apoio à
+gestão: registro de presença, criação de missões para a turma e alertas
+sobre alunos com queda de frequência. O sistema distingue três perfis de
+usuário: o \textbf{aluno}, o \textbf{professor}, que pode atuar de forma
+autônoma, e a \textbf{academia}, que reúne professores, turmas e alunos.
+O protótipo resultante é de natureza \textbf{digital} (Regulamento,
+Art.~10): um aplicativo funcional em React Native com \textit{back-end}
+no Firebase.
+
+% Natureza de ideação do projeto
+Por se tratar de um domínio em que o valor de cada mecânica de jogo para
+o público ainda é pouco conhecido, o projeto foi conduzido como um
+\textbf{projeto de ideação} do autor. A partir da própria vivência, da
+literatura e de aplicativos de referência, o autor elaborou ideias de
+funcionalidades e as converteu em \textbf{requisitos iniciais},
+consolidados em setembro de 2026 e usados desde então para construir o
+aplicativo. Essas ideias foram tratadas como \textbf{hipóteses}: em vez
+de serem tomadas como certas, foram submetidas a um questionário
+(\textit{survey}) que serviu para \textbf{confirmar ou refutar} cada
+uma e para \textbf{revelar ideias novas}, não pensadas no início. O
+questionário foi respondido por praticantes e ex-praticantes reais e,
+para cobrir os perfis ausentes dessa coleta, como o de professor, também
+por \textbf{personas sintéticas}: 12 personas, elaboradas com apoio de
+um modelo de linguagem de grande porte (LLM), orientaram um
+\textit{script} que gerou 65 \textbf{respostas sintéticas}. Essas
+respostas trouxeram ideias novas e um sinal complementar sobre cada
+requisito, mas a decisão sobre cada um se apoiou nos dados reais; elas
+serviram ainda para testar o instrumento e o procedimento de análise. A
+\autoref{fig:ciclo-ideacao}, no \autoref{cap:requisitos}, ilustra esse
+ciclo.
+
+A construção do aplicativo também usou inteligência artificial, desta vez
+como \textbf{ferramenta de desenvolvimento}: um agente de codificação
+executou boa parte da escrita do código a partir de instruções,
+requisitos e planos definidos pelo autor, que concentrou o seu trabalho no
+planejamento, no projeto da solução e no controle de qualidade, por meio
+de testes automatizados, de regras de segurança verificadas no servidor e
+de execução em aparelho (\autoref{sec:dev-ia}).
+
+% (c) Objetivos
+O objetivo geral deste projeto é \textbf{idear, desenvolver e verificar
+o RoundUp, um aplicativo gamificado para academias de lutas e artes
+marciais, voltado a aumentar o engajamento e a retenção dos alunos e a
+apoiar o professor na gestão da turma, avaliando com potenciais usuários
+as ideias que orientam os seus requisitos}. Os objetivos específicos são:
+
+\begin{enumerate}
+  \item identificar fatores de motivação e de evasão de praticantes de
+        lutas e artes marciais;
+  \item elaborar ideias de mecânicas de gamificação e de apoio ao
+        professor e convertê-las em requisitos iniciais rastreáveis;
+  \item confirmar ou refutar essas ideias com usuários reais, por meio
+        de um questionário, e identificar ideias novas a partir das
+        respostas;
+  \item construir personas sintéticas e usá-las para gerar ideias não
+        previstas, como sinal complementar sobre os requisitos e como
+        dados de teste do questionário e do procedimento de análise, sem
+        misturá-las aos dados reais;
+  \item modelar e implementar um protótipo do aplicativo com os
+        requisitos priorizados, empregando agentes de IA como ferramenta
+        de desenvolvimento sob o planejamento, o projeto e o controle de
+        qualidade do autor;
+  \item considerar, desde a concepção, a conformidade com a Lei Geral de
+        Proteção de Dados Pessoais (LGPD), inclusive no tratamento de dados
+        de menores de idade \cite{lgpd2018}.
+\end{enumerate}
+
+% (d) Justificativa
+O projeto tem relevância social, por contribuir para a permanência de
+alunos em uma atividade associada à saúde física e mental; relevância
+técnica, por articular engenharia de requisitos, gamificação,
+desenvolvimento móvel e proteção de dados pessoais em uma solução
+prática; e relevância metodológica em duas frentes. A primeira é
+documentar o uso de personas e respostas sintéticas como fonte de ideias,
+sinal complementar e dados de teste de um instrumento de pesquisa,
+deixando explícito o que elas podem e o que não podem mostrar. A segunda
+é registrar, em um projeto real, como o desenvolvimento com agentes de IA
+desloca o papel do desenvolvedor. O uso de IA já é a regra na profissão:
+cerca de 90\% dos profissionais de desenvolvimento entrevistados em 2025
+relatam usá-la no trabalho \cite{dora2025}, e 84\% dos respondentes de
+outra pesquisa internacional usam ou pretendem usar essas ferramentas
+\cite{stackoverflow2025}. Os ganhos, porém, não são automáticos:
+estudos controlados encontraram desde tarefas concluídas 55,8\% mais
+rápido \cite{peng2023} até desenvolvedores experientes 19\% mais
+lentos com IA, embora acreditassem estar mais rápidos \cite{becker2025}; e
+a confiança no código gerado segue baixa \cite{dora2025,stackoverflow2025}.
+Nesse cenário, o que diferencia o resultado é a capacidade do
+desenvolvedor de planejar, especificar, projetar e verificar o que o
+agente produz, e é essa prática que este relatório documenta. Soma-se a isso a vivência do autor
+com as artes marciais, que facilita o acesso a praticantes e professores.
+
+% (e) Escopo
+O escopo do projeto concentra-se em academias de lutas e artes marciais
+no Brasil e em duas perspectivas de uso: a do aluno (engajamento) e a do
+professor (gestão). Ficam fora do escopo: outras modalidades esportivas,
+prescrição de treinos ou orientação nutricional, integração com
+dispositivos vestíveis, análise de movimentos por visão computacional e
+aspectos comerciais, como monetização e escalabilidade em produção. A
+avaliação do impacto de longo prazo sobre a evasão também ultrapassa o
+prazo do TCC.
+
+O recorte abrange lutas e artes marciais em geral: o aplicativo não depende de
+uma modalidade específica, e o usuário escolhe a sua no cadastro.
+
+% (f) Estrutura do relatório
+Este relatório está organizado da seguinte forma: o
+\autoref{cap:requisitos} apresenta os fundamentos que orientaram a
+ideação, o processo de ideação e os requisitos do projeto; o
+\autoref{cap:modelagem}, as modelagens funcional, estática e dinâmica; o
+\autoref{cap:implementacao}, as estratégias de implementação do
+protótipo, incluindo o desenvolvimento assistido por agentes de IA; o \autoref{cap:testes}, a avaliação das
+ideias com usuários reais, o uso das respostas sintéticas na ideação e no
+teste do questionário, e os testes do protótipo; e o \autoref{cap:resultados}, os resultados e as
+considerações finais.

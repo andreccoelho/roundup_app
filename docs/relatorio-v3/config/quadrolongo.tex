@@ -1,0 +1,16 @@
+% Quadro que pode quebrar entre páginas (longtable), numerado e listado como Quadro.
+\makeatletter
+\newenvironment{quadrolongo}{%
+  \let\c@table\c@quadro
+  \def\thetable{\thequadro}%
+  \def\theHtable{quadro.\thequadro}%
+  \def\ext@table{loq}%
+  \def\fnum@table{\quadroname~\thequadro}%
+  \def\tablename{\quadroname}%
+  \setlength{\LTpre}{6pt}\setlength{\LTpost}{0pt}%
+  \let\QL@addcontentsline\addcontentsline
+  \def\addcontentsline##1##2{\QL@addcontentsline{##1}{quadro}}%
+  \footnotesize
+}{\par}
+\makeatother
+\newcommand{\quadroref}[1]{\hyperref[#1]{\quadroname~\ref*{#1}}}

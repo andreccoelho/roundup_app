@@ -1,0 +1,31 @@
+@startuml RoundUp_UC_03_Treinos
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Aluno
+actor Professor
+actor Academia
+Academia --|> Professor
+
+package "Treinos" {
+  usecase "UC09 Gerenciar Turmas\n(RF10)" as UC09
+  usecase "UC10 Matricular-se\nem Turma (RF11)" as UC10
+  usecase "UC11 Criar Sessão\nde Treino (RF12)" as UC11
+  usecase "UC12 Realizar Check-in\n(RF13, RN02, RN08)" as UC12
+  usecase "UC13 Consultar Agenda\nde Treinos (RF14)" as UC13
+  usecase "UC14 Consultar Histórico\nde Presenças (RF15)" as UC14
+  usecase "UC15 Validar Check-in\n(RF22, RN01, RN07)" as UC15
+}
+
+' UC09, UC11, UC15 pertencem originalmente ao Professor;
+' Academia os herda pela generalização de ator acima.
+Professor -- UC09
+Aluno -- UC10
+Professor -- UC11
+Aluno -- UC12
+Aluno -- UC13
+Aluno -- UC14
+Professor -- UC15
+
+@enduml
