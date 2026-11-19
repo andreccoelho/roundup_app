@@ -166,3 +166,16 @@ section.alt { background: var(--paper2); }
 .node.dark .nt { color: var(--red-on-dark); }
 .node.dark .nh { color: var(--paper); }
 .node.dark .nd { color: var(--muted-on-dark); }
+
+/* ===== comparação real × personas (avaliação das ideias) ===== */
+.cmp { position: relative; display: flex; flex-direction: column; gap: 6px; }
+.cmp-row { display: flex; flex-direction: row; align-items: center; gap: 20px; }
+.cmp-lbl { width: 440px; font-size: 26px; line-height: 1.2; margin: 0; text-align: right; }
+.cmp-track { position: relative; width: 640px; height: 36px; }
+.cmp-real { position: absolute; left: 0px; top: 2px; height: 14px; border-radius: 4px; background: var(--red); }
+.cmp-sint { position: absolute; left: 0px; top: 20px; height: 14px; border-radius: 4px; background: #9B968D; }
+.cmp-v { width: 70px; font-size: 26px; line-height: 1.2; font-weight: 600; margin: 0; text-align: right; }
+.cmp-v.r { color: var(--red); }
+.cmp-v.s { color: var(--muted); }
+.cmp-st { width: 200px; font-size: 24px; line-height: 1.2; margin: 0; color: var(--muted); }
+.cmp-st.ok { color: var(--ink); font-weight: 600; }

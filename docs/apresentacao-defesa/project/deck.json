@@ -5,13 +5,15 @@
   "format": { "v": 1, "shared": ["project/deck.css"] },
   "title": "Defesa TCC — RoundUp",
   "cover": "capa",
-  "order": ["capa", "gancho", "problema", "proposta", "metodo", "modelagem", "guardrails", "cenario-novato", "cenario-aluno", "cenario-professor", "testes", "avaliacao", "decisoes", "voz", "sinteticas", "conclusao", "encerramento"],
+  "order": ["capa", "gancho", "problema", "proposta", "metodo", "requisitos", "voz", "personas", "sinteticas", "avaliacao", "decisoes", "ideias-novas", "modelagem", "guardrails", "testes", "cenario-novato", "cenario-aluno", "cenario-professor", "conclusao", "encerramento"],
   "sections": {
     "s1": { "description": "Abertura: capa e a frase de Durant como gancho.", "start": "capa" },
     "s2": { "description": "Contexto: motivação e proposta.", "start": "problema" },
-    "s3": { "description": "Metodologia: processo de engenharia, modelagem e desenvolvimento com IA sob guardrails.", "start": "metodo" },
-    "s4": { "description": "Resultados: três cenários com personas e demonstração ao vivo, testes, avaliação das ideias e respostas sintéticas.", "start": "cenario-novato" },
-    "s5": { "description": "Conclusão, limites, próximos passos e encerramento.", "start": "conclusao" }
+    "s3": { "description": "Metodologia: o fluxograma do processo e os requisitos.", "start": "metodo" },
+    "s4": { "description": "Avaliação das ideias: respostas reais, personas e suas respostas, a comparação das notas, a volta aos requisitos e as ideias novas.", "start": "voz" },
+    "s5": { "description": "Construção: modelagem, desenvolvimento com IA sob guardrails e testes.", "start": "modelagem" },
+    "s6": { "description": "O app: três cenários com personas e demonstração ao vivo.", "start": "cenario-novato" },
+    "s7": { "description": "Conclusão, limites, próximos passos e encerramento.", "start": "conclusao" }
   },
   "faces": {
     "oswald": { "family": "Oswald", "href": "https://fonts.googleapis.com/css2?family=Oswald:wght@400..700&display=swap" },
