@@ -1,0 +1,18 @@
+<section id="testes" class="dark">
+<h2 class="title">Testes</h2>
+<div class="spacer"></div>
+<div class="row" style="justify-content:space-between">
+<div class="col rise" style="--i:1; width:360px; gap:12px"><p class="num">288</p><p class="body">testes automatizados, todos aprovados</p><p class="small muted">62 de unidade, 163 de regras e 63 de Cloud Functions</p></div>
+<div class="col rise" style="--i:2; width:360px; gap:12px"><p class="num">2,13 s</p><p class="body">carregamento da tela inicial em 4G</p><p class="small muted">Meta: até 3 s (RNF02)</p></div>
+<div class="col rise" style="--i:3; width:360px; gap:12px"><p class="num">1 toque</p><p class="body">para o check-in na tela inicial</p><p class="small muted">Meta: até 3 toques (RNF01)</p></div>
+<div class="col rise" style="--i:4; width:360px; gap:12px"><p class="num">0</p><p class="body">violações de acessibilidade</p><p class="small muted">WCAG 2.1, 9 telas</p></div>
+</div>
+<div class="spacer"></div>
+<div class="cards c3" style="gap:28px">
+<div class="card rise" style="--i:5; padding:32px"><p class="tag">Limitação do Firestore</p><p class="small">As regras não aceitam certas consultas de lista. Solução: listas de leitores mantidas por Cloud Functions</p></div>
+<div class="card rise" style="--i:6; padding:32px"><p class="tag">Execução no iPhone</p><p class="small">5 defeitos encontrados, todos corrigidos e cobertos por novos testes</p></div>
+<div class="card rise" style="--i:7; padding:32px"><p class="tag">LGPD</p><p class="small">Testados: consentimento imutável, exclusão de conta em cascata e isolamento entre academias</p></div>
+</div>
+<div class="footer"><p class="small">RoundUp</p><p class="small pn"></p></div>
+<aside>[cerca de 1 min e meio] Nos testes, foram 288 testes automatizados, todos aprovados na versão final. Os mais importantes são os 163 testes das regras de segurança, porque são eles que garantem, por exemplo, que o aluno só ganha pontos depois da validação. A tela inicial carregou em 2,13 segundos em 4G, dentro da meta de 3 segundos. O check-in precisa de um toque, e a meta era de até três. Nove telas passaram pela verificação de acessibilidade sem erros. Os testes também mostraram dificuldades técnicas. A principal foi uma limitação do Firestore: as regras de segurança não aceitam consultas de lista que dependem de outra coleção. Para resolver, cada sessão passou a guardar a lista de quem pode lê-la, mantida por Cloud Functions, o que mudou o modelo de dados. Quando rodei o app no iPhone, encontrei 5 defeitos que os testes não tinham pegado. Todos foram corrigidos e ganharam testes novos. Por fim, a LGPD: o consentimento registrado não pode ser alterado, a exclusão de conta apaga os dados do usuário em cascata, e uma academia não acessa os dados de outra. Tudo isso é coberto pelos testes.</aside>
+</section>

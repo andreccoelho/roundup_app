@@ -1,0 +1,16 @@
+<section id="modelagem" class="alt">
+<h2 class="title">Modelagem</h2>
+<p class="body muted" style="margin-top:16px">30 casos de uso em 7 pacotes. Caso principal: registro de presença</p>
+<div class="spacer"></div>
+<div class="row" style="gap:0px; align-items:stretch">
+<div class="card rise" style="--i:1; width:480px"><p class="tag">UC12, aluno</p><p class="h3">Faz check-in</p><p class="small muted">O sistema confere matrícula, horário e check-in repetido</p><p class="pill" style="align-self:flex-start; margin-top:8px">Status: pendente</p></div>
+<x-connector from="tl" style="width:72px; color:#CC2A1F; border-width:4px; align-self:center"></x-connector>
+<div class="card rise" style="--i:2; width:480px"><p class="tag">UC15, professor</p><p class="h3">Confirma na chamada</p><p class="small muted">Confirma apenas quem fez check-in</p><p class="pill" style="align-self:flex-start; margin-top:8px">Status: validado</p></div>
+<x-connector from="tl" style="width:72px; color:#CC2A1F; border-width:4px; align-self:center"></x-connector>
+<div class="card rise" style="--i:3; width:480px; background:#131316"><p class="tag" style="color:#FF5A4F">Sistema</p><p class="h3" style="color:#F4F1EC">Credita os pontos</p><p class="small" style="color:#B9B4AC">Soma o XP e atualiza a classificação</p><p class="pill red" style="align-self:flex-start; margin-top:8px">+10 XP</p></div>
+</div>
+<div class="spacer"></div>
+<p class="body">Pontos só são creditados depois da validação do professor (RN01).</p>
+<div class="footer"><p class="small">RoundUp</p><p class="small pn"></p></div>
+<aside>[cerca de 1 min] Os requisitos foram modelados em 30 casos de uso, divididos em sete pacotes. O caso principal é o registro de presença, porque pontos, sequência, medalhas e missões dependem dele. O aluno faz o check-in e o sistema confere a matrícula, o horário e se já existe check-in naquela aula. O check-in fica pendente. O professor confirma a presença na chamada, e só pode confirmar quem fez check-in. Depois da confirmação, o sistema soma o XP e atualiza a classificação. Essa é a regra RN01: o aluno só ganha pontos se o professor validar a presença.</aside>
+</section>
