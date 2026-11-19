@@ -3,6 +3,8 @@
 // componente interpreta esse texto para desenhar a cor e as tarjas de grau na ponteira. Texto que
 // não reconhece cai num fallback neutro (faixa cinza-escura, sem tarjas) e o texto original
 // continua sempre visível ao lado — nada se perde.
+// RF33: com a estrutura de faixas do responsável, quem chama passa `cor` e `graus` direto (faixa
+// personalizada, ex.: "Kruang 5" em vermelho), e a interpretação do texto fica só como reserva.
 import { StyleSheet, View } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
 import { CoresFaixa, Espacamento, useTema } from '../../theme';
@@ -47,10 +49,17 @@ interface SeloFaixaProps {
   tamanho?: 'normal' | 'grande';
   // Só a faixa, sem o texto ao lado (o texto vira apenas o rótulo acessível).
   semTexto?: boolean;
+  // RF33: cor e graus vindos da estrutura de faixas (sobrepõem a interpretação do texto)
+  cor?: CorFaixa;
+  graus?: number;
 }
 
-export default function SeloFaixa({ faixaOuGrau, tamanho = 'normal', semTexto }: SeloFaixaProps) {
-  const { cor, reconhecida, graus } = interpretarFaixa(faixaOuGrau);
+export default function SeloFaixa({ faixaOuGrau, tamanho = 'normal', semTexto, cor: corEstrutura, graus: grausEstrutura }: SeloFaixaProps) {
+  const interpretada = interpretarFaixa(faixaOuGrau);
+  const cor: CorFaixa = corEstrutura ?? interpretada.cor;
+  const reconhecida = corEstrutura !== undefined || interpretada.reconhecida;
+  // Até 6 tarjas cabem na ponteira
+  const graus = Math.min(6, grausEstrutura ?? interpretada.graus);
   const { cores } = useTema();
   const grande = tamanho === 'grande';
   const w = grande ? 168 : 56;

@@ -30,23 +30,53 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 **A validar:** nesses documentos preservados fica o uid do responsável excluído (`responsavelId`, `professorId` de sessões passadas, `validadoPor`). Tratei como pseudonimizado, porque depois da exclusão de `usuarios/{uid}` e da conta no Auth o uid não identifica mais ninguém. Também apago `consentimentosLGPD`, como pedido; se a orientação jurídica for guardar o registro de consentimento como prova, basta tirar essa coleção da função.
 
-### RF31 — notificações: ✅ IMPLEMENTADO, envio real depende de configuração externa
+### RF31 — notificações: ✅ IMPLEMENTADO (validado em iPhone, exceto o lembrete agendado)
 
 **O que está pronto:**
-- **App** (`src/services/notificacoes.ts`): no login, cria o canal Android, pede permissão, obtém o token Expo e grava em `usuarios/{uid}/privado/notificacoes.tokens`; no logout, remove o token. Na web não faz nada (o SDK 57 só tem push em Android e iOS). Plugin `expo-notifications` adicionado ao `app.json`.
-- **Cloud Functions** (`functions/src/notificacoes.ts`), sempre respeitando `preferenciasNotificacao` por tipo:
-  - **Nova missão:** quando uma missão é criada ativa ou reativada, avisa os alunos com vínculo aceito.
-  - **Conquista obtida:** missão concluída, graduação registrada e marcos de medalha de treinos (10/30/100) e de sequência (7/30 dias). Cada conquista é avisada uma vez só por aluno (`conquistasNotificadas`), mesmo com estorno e revalidação.
-  - **Lembrete de sessão:** função agendada todo dia às 7h (horário de Brasília). Manda **um lembrete por aluno por dia de treino**, com o horário da primeira sessão agendada ou aberta do dia; `ultimoLembrete` impede um segundo envio se o agendamento rodar de novo.
-- Cada envio fica registrado na coleção `notificacoes` (sem acesso de client), com status `enviado`, `erro`, `semDispositivo` ou `simulado`. No emulador nada sai para a internet: o status é `simulado`. Tokens que a Expo recusa (`DeviceNotRegistered`) são removidos.
-- A exclusão de conta (RF29) apaga o token e o histórico de notificações.
+- **App** (`src/services/notificacoes.ts`): no login, cria o canal Android `padrao`, pede permissão, obtém o token Expo (o `projectId` é lido sozinho de `extra.eas.projectId`, conforme o `getExpoPushTokenAsync` do `expo-notifications` instalado) e grava em `usuarios/{uid}/privado/notificacoes.tokens`. No logout, remove o token. Na web não faz nada.
+- **Configuração de build (rodada de 2026-11-13):**
+  - `app.json` com `android.package` e `ios.bundleIdentifier` = `br.com.roundup.app` (decisão do autor);
+  - plugin `expo-notifications` com `defaultChannel: "padrao"`, o mesmo canal das functions;
+  - `eas.json` com os perfis `development` (dev client, APK, distribuição interna), `preview` e `production`;
+  - `expo-dev-client` instalado;
+  - `app.config.js`, que liga o `google-services.json` só se o arquivo existir (ou pela variável de arquivo `GOOGLE_SERVICES_JSON` no EAS).
+- **Cloud Functions** (sempre respeitando `preferenciasNotificacao` por tipo):
+  - **Nova missão** (`missoesPublico.ts`, RF23): só para o **público-alvo**, quando a missão fica vigente para o aluno, uma vez por aluno (`alunosNotificadosIds`). Antes avisava todos os vinculados.
+  - **Conquista:** missão concluída, graduação registrada e medalha nova de treinos ou de sequência (`medalhas.ts`, RF19). Cada conquista é avisada uma vez por aluno (`conquistasNotificadas`).
+  - **Lembrete de sessão:** agendado todo dia às 7h (Brasília), um por aluno por dia de treino (`ultimoLembrete`).
+- Cada envio fica registrado em `notificacoes` com status `enviado`, `erro`, `semDispositivo` ou `simulado` (emulador). Tokens recusados pela Expo (`DeviceNotRegistered`) são removidos.
 
-**Passos que dependem do autor (não dá para fazer daqui):**
-1. **Plano Blaze** no projeto Firebase: necessário para fazer deploy de qualquer Cloud Function (isso já valia para as funções anteriores) e para o Cloud Scheduler do lembrete diário. Depois: `npx firebase deploy --only functions,firestore`.
-2. **`npx eas init`** na raiz do app: grava `extra.eas.projectId` no `app.json`. Sem isso, `getExpoPushTokenAsync` falha e o app só registra um aviso no console.
-3. **Credenciais de push no EAS:** para Android, criar o app no Firebase Console, baixar a chave da conta de serviço do FCM V1 e enviar com `npx eas credentials`; para iOS, a chave APNs (exige conta Apple Developer).
-4. **Development build** (`npx eas build --profile development`): push remoto não funciona no Expo Go no Android desde o SDK 53.
-5. Opcional: se ligar o "enhanced security for push" no projeto Expo, configurar a variável `EXPO_ACCESS_TOKEN` nas functions.
+**Revisão de código (2026-11-13):** nada bloqueante. Limitações conhecidas:
+- o envio confere só o "ticket" da Expo, não o "receipt" (confirmação da entrega pelo FCM/APNs). `enviado` quer dizer aceito pela Expo, não exibido no aparelho;
+- tocar na notificação abre o app, mas não navega para a tela de `dados.tela` (não há listener de resposta);
+- o plugin usa `mode: development` no iOS (padrão). Um build de App Store precisa de `mode: "production"`.
+
+**Automação para testar sem terminal (2026-11-13):**
+- **Workflow** `.github/workflows/preparar-teste-notificacoes.yml`. Com os secrets `FIREBASE_SERVICE_ACCOUNT` e `EXPO_TOKEN`, ele:
+  - faz o deploy com `--force` (apaga `notificarNovaMissao` e `notificarMarcoDeTreino`, que saíram do código, e configura a política de limpeza que falhou no deploy de 08/11);
+  - roda as 3 migrações e as contas demo, e publica a web;
+  - cadastra o app Android no Firebase e gera o `google-services.json`;
+  - leva para o EAS a configuração `EXPO_PUBLIC_FIREBASE_*` (antes só existia no `.env` local) e a chave FCM V1 (`scripts/configurar-fcm-eas.cjs`, mesma API do `eas-cli`);
+  - publica o app como **EAS Update** para abrir no **Expo Go do iPhone** (padrão; `expo-updates` ~58.0.22 instalado, `runtimeVersion: appVersion`). No SDK 58, o push remoto continua fora do Expo Go só no Android: no iOS ele usa as credenciais da Expo, sem conta Apple Developer. Limitação: valida o caminho até o aparelho dentro do Expo Go, não num app próprio publicado;
+  - opcionalmente, gera o APK do perfil `preview`, que abre sem Metro.
+- **Botões "Testar neste aparelho"** na tela Notificações: a callable `enviarNotificacaoDeTeste` manda um exemplo de cada tipo só para o próprio usuário, pelo caminho real, e devolve o status (`enviado`, `semDispositivo`, `desligado`…). Um teste a cada 15 s por usuário.
+- **Risco aceito:** a mesma chave de conta de serviço publica no Firebase (guardada como secret do GitHub) e serve de chave FCM V1 no EAS. Retirar o papel extra depois dos testes, e revogar a chave se não for mais usar.
+- **Não testado contra as contas reais:** a primeira execução do workflow pode precisar de ajuste.
+
+**Validação em aparelho (2026-11-13, iPhone, Expo Go, SDK 58):** o autor recebeu, pelos botões "Testar neste aparelho", as três notificações de exemplo: "Treino hoje (teste)", "Conquista (teste)" e "Nova missão (teste)", com o app em segundo plano. Isso confirma o caminho completo Cloud Function → serviço da Expo → APNs → aparelho, e que a configuração do projeto e das credenciais está correta.
+- **Ainda não validado em aparelho:** os gatilhos reais (missão criada pela academia para o público-alvo, graduação registrada, medalha por check-in validado e o lembrete agendado das 7h), o comportamento com o app aberto e com o app fechado, e o push num app próprio publicado (não dentro do Expo Go). A notificação aparece com o ícone do Expo Go.
+- **Gatilhos reais validados em aparelho (2026-11-13, 15:22 e 15:24):** nova missão criada pela academia na web ("Treinar a semana toda — vale 30 pts") e graduação registrada pela academia ("Parabéns: Faixa azul em Jiu-Jitsu", que também abriu a comemoração "Nova faixa" no app).
+- **Situação do RF31:** implementado. Confirmado em aparelho: o envio de ponta a ponta, os 3 tipos de exemplo, a nova missão real e a conquista real (graduação). **Não testado em aparelho:** o lembrete agendado das 7h (só no emulador, via `enviarLembretesDoDia`), o comportamento com o app aberto e com o app fechado, a missão que exclui o aluno do público e a medalha por check-in. Se a banca exigir o lembrete em aparelho, é um clique em "Forçar execução" no Cloud Scheduler (roteiro, seção 6C).
+
+**O que depende do autor** (passo a passo em **`docs/ROTEIRO_TESTE_NOTIFICACOES.md`**, "Caminho fácil"):
+- plano Blaze e deploy;
+- `eas init` (`projectId`);
+- `google-services.json` e chave FCM V1 no EAS;
+- chave APNs (iOS, Apple Developer);
+- `eas build --profile development`;
+- disparar os 3 tipos no celular e registrar o resultado.
+
+Não foi possível consultar docs.expo.dev desta sessão (host fora da rede liberada). A configuração foi conferida no código e na documentação empacotados do `expo-notifications` 57.0.17 instalado.
 
 **Divergência de código de requisito:** o pedido citava "RNF03 do relatório" para o limite de um lembrete por dia de treino. Na lista oficial (`docs/requisitos/requisitos-v1-2026-09.csv`), o RNF03 é "Armazenamento seguro de credenciais", e nenhum requisito fala desse limite. O código implementa o limite, mas o rastreia só como RF31. **A validar:** qual código o relatório deve usar para essa regra.
 
@@ -58,11 +88,24 @@ A exclusão agora roda na callable `excluirConta` (`functions/src/exclusaoConta.
 
 ---
 
+## Situação final dos 4 requisitos (2026-11-13)
+
+| Requisito | Situação | Verificado em aparelho (iPhone) | Só em teste automático (emulador) |
+|---|---|---|---|
+| RF19 — medalhas com data | Implementado | medalha "Primeira graduação" com a data da conquista (13/11/2026) e contador "1 de 6" no Perfil | medalhas de treinos e de sequência, sem duplicar, estorno não retira, migração com data do histórico, regras (client não escreve) |
+| RF23 — público-alvo e vigência | Implementado | missão "Todos os alunos" criada e recebida (push) | públicos turma e alunos escolhidos, vigência fora do período, conclusão fora da vigência negada, agendamento 00:05 |
+| RF31 — notificações | Implementado (ver ressalva) | 3 pushes de exemplo, nova missão real, graduação real | lembrete agendado, medalha por check-in, missão fora do público |
+| RF33 — pontos, níveis e faixas | Implementado | lista de faixas do Jiu-Jitsu no registro, editor de estrutura, barra de progresso no Perfil | migração do texto livre, regras da estrutura |
+
+Nenhum dos quatro depende mais de decisão de produto pendente do autor. As decisões marcadas "a validar" nos itens 5, 8, 10 e 11 seguem para a orientadora.
+
+---
+
 ## 1. Valores de gamificação (`src/config/gamificacao.ts`)
 
 - **RF16** — `XP_POR_CHECKIN_VALIDADO = 10`: quantidade arbitrária, sem nenhuma pesquisa de balanceamento por trás.
 - **RF17** — tabela de níveis `NIVEIS_XP`: progressão provisória em +50 por degrau (100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3250), 10 níveis. Sem base em literatura de gamificação nem teste com usuário.
-- **RF19** — marcos de medalha (`MARCOS_MEDALHAS`): 6 marcos (10/30/100 treinos, 7/30 dias de sequência, 1ª graduação), números escolhidos sem validação.
+- **RF19** — marcos de medalha (`MARCOS_MEDALHAS`, copiados em `functions/src/medalhasRegras.ts`): 6 marcos (10/30/100 treinos, 7/30 treinos seguidos, 1ª graduação), números escolhidos sem validação.
 - **RF20/RN04** — ✅ **RESOLVIDO**: a classificação é mensal de verdade. Cada mês tem o próprio documento (`classificacoes/{alunoId}_{responsavelId}_{AAAA-MM}`), creditado na mesma transação de `validarCheckIn`, no mês (fuso local) em que o treino aconteceu. O ranking mostra só o mês corrente; o nível (RF17) continua somando todos os meses. Ver item 4.
 
 **✅ Resolvido (RF33):** os números de pontos por check-in, pontos por missão e tabela de níveis viraram configuração real por responsável (item 8). Os valores acima continuam como **padrão** de quem não personalizou e continuam sem validação de balanceamento.
@@ -109,11 +152,28 @@ O aluno continua sem permissão para escrever o próprio progresso (testado em `
 
 ---
 
-## 5. RF19 — medalhas sem coleção persistida
+## 5. RF19 — medalhas persistidas com data de conquista — ✅ RESOLVIDO
 
-Medalhas são calculadas ao vivo (`src/utils/gamificacao.ts`, `calcularMedalhas()`) a partir de contagens que o aluno já pode ler (check-ins validados, sequência atual, total de graduações) — **não há registro de quando uma medalha foi conquistada**. A notificação de nova conquista agora existe (RF31, acima); a chave de cada conquista avisada fica em `usuarios/{uid}/privado/notificacoes.conquistasNotificadas`, mas isso não é um histórico com data.
+**Modelo:** subcoleção `usuarios/{alunoId}/medalhas/{marcoId}` (id = id do marco), com `tipo`, `quantidade`, `rotulo`, `conquistadaEm`, `origem` (`checkin` | `graduacao` | `migracao`) e `registradaEm`.
 
-**Decisão a validar:** isso é suficiente para o Ciclo 2, ou medalha precisa de um registro persistido (data de conquista, e futuramente notificação)?
+**Quem escreve:** só a Cloud Function (`functions/src/medalhas.ts`):
+- `concederMedalhasNoCheckIn` roda quando um check-in vira `validado` (marcos de treinos e de sequência, em todos os escopos do aluno);
+- `concederMedalhasNaGraduacao` roda quando uma graduação é registrada.
+
+A cada disparo, o histórico é recalculado (`medalhasRegras.ts`) e cada marco atingido sem documento vira medalha, numa transação (sem duplicar). A regra do Firestore libera leitura ao aluno e aos responsáveis com vínculo aceito, e nega qualquer escrita do client.
+
+**RF31:** a medalha nova de treinos ou de sequência é avisada uma vez (mesma chave `medalha:{id}` de `conquistasNotificadas`, então quem já foi avisado antes desta mudança não é avisado de novo). A medalha de graduação não gera aviso próprio, porque a graduação já é avisada. A função antiga `notificarMarcoDeTreino` saiu.
+
+**Interface:** a medalha conquistada mostra a data embaixo do rótulo (componente `Medalha`, Perfil do aluno). As bloqueadas continuam vindo do cálculo ao vivo (`combinarMedalhas`).
+
+**Decisões tomadas:**
+- **Estorno não retira a medalha.** Validação desfeita, sequência quebrada ou contagem que caiu depois não apagam o documento; o recálculo só cria o que falta. É a recomendação do pedido; **a validar com a orientadora.**
+- **Data numa conquista nova:** o instante em que o servidor registrou a medalha (logo após a validação).
+- **Data na migração:** reconstruída do histórico. Treinos: o `validadoEm` do N-ésimo check-in validado (sem ele, o horário do treino). Sequência: a validação da sessão que completou N seguidos. Graduação: a primeira registrada. Se as sessões forem validadas fora de ordem, a data da sequência é aproximada.
+
+**Migração:** `npm --prefix functions run build` e depois `node scripts/migrar-medalhas.cjs --aplicar` (dry-run sem `--aplicar`). Usa a mesma função da Cloud Function, com `origem: 'migracao'` e sem avisar ninguém, e pode rodar de novo sem efeito. **Ainda não foi rodado em produção.** Até rodar, o Perfil continua mostrando as medalhas já atingidas (cálculo ao vivo), só que sem data.
+
+**Ainda fora:** a Home (`useConquistas`, R-09 e R-10) continua celebrando a partir do cálculo ao vivo e do estado salvo no aparelho. Com o registro persistido, dá para trocar essa detecção por "medalha com `registradaEm` mais nova que a última vista", sem AsyncStorage (fica para outra rodada).
 
 ---
 
@@ -138,7 +198,7 @@ Os textos mudaram de "dias seguidos" para "treinos seguidos" (indicador da Home 
 
 ---
 
-## 8. `configuracoesGamificacao` (RF33) — ✅ RESOLVIDO (pontuação e níveis), faixas pendente
+## 8. `configuracoesGamificacao` e `estruturasFaixas` (RF33) — ✅ RESOLVIDO (pontuação, níveis e faixas)
 
 Tela "Pontuação e níveis" no Perfil do professor e da academia (`ConfiguracaoGamificacaoScreen`). Ela grava `configuracoesGamificacao/{uid}` com pontos por check-in (1 a 100), pontos sugeridos por missão (0 a 1000) e a tabela de níveis (1 a 30 valores crescentes). "Restaurar padrão" apaga o documento; sem documento valem os padrões de `src/config/gamificacao.ts`.
 
@@ -154,13 +214,91 @@ O estorno devolve o que o check-in recebeu, mesmo que a configuração tenha mud
 - **Nível do aluno com mais de um vínculo:** o XP exibido continua sendo o total de todos os escopos, e a tabela de níveis usada é a do responsável em que o aluno mais pontuou.
 - A ordem crescente da tabela de níveis é validada no app, não na regra (Rules não tem laço para percorrer listas). Um responsável que gravasse direto pela API uma tabela fora de ordem só bagunçaria o nível dos próprios alunos.
 
-**Fora desta rodada:** o RF33 também cita "a estrutura de faixas da modalidade". Hoje a faixa é texto livre (`faixaOuGrau`, interpretado pelo `SeloFaixa`, ver R-05). Personalizar a estrutura de faixas exige um campo estruturado de faixa por modalidade e mudança no cadastro, na graduação (RF25) e no modelo de dados — é decisão de produto, não foi feita.
+**Estrutura de faixas (rodada de 2026-11-13):**
+- **Modelo:**
+  - nova coleção `estruturasFaixas/{responsavelId}` com `modalidades: { [modalidade]: [{ id, nome, cor, graus }] }`, na ordem de progressão. Só as modalidades personalizadas aparecem ali; as demais usam a **estrutura padrão**, gerada da lista fixa de antes (`src/utils/faixas.ts`, 4 graus por faixa no Jiu-Jitsu, 0 nas demais);
+  - `graduacoes` ganhou `faixaId`, `faixaNome`, `faixaCor` e `grauNumero` (opcionais: a modalidade "Outra" continua em texto livre);
+  - `usuarios` ganhou `faixasEstruturadas[modalidade] = { faixaId, faixa, cor, grau, responsavelId }`, escrito pela Cloud Function `aplicarGraduacaoNoPerfil`.
+- **Regras:**
+  - escrita da estrutura só pelo próprio responsável, com campos fixos e até 20 modalidades. O conteúdo de cada faixa (nome único, cor da paleta, graus de 0 a 10, 1 a 20 faixas) é validado no app, porque Rules não percorre listas (mesmo caso da tabela de níveis);
+  - na graduação, os campos novos têm tipo conferido;
+  - o aluno não altera `faixasEstruturadas` depois do cadastro (como `faixaOuGrau` e `graduacoes`).
+- **Telas:**
+  - "Estrutura de faixas" (`EstruturaFaixasScreen`, aberta por "Pontuação e níveis"): por modalidade, ordem (subir e descer), nome, cor (paleta fixa de 10 cores de faixa) e graus. Também permite adicionar, remover e restaurar o padrão;
+  - o registro de graduação (RF25) oferece as faixas e os graus da estrutura do responsável. Uma modalidade sem faixas no padrão (ex.: Kickboxing) passa a aceitar graduação se o responsável criar faixas para ela;
+  - o Perfil do aluno ganhou a **barra de progresso até a próxima graduação**.
+
+**Decisões tomadas:**
+- **(produto, validada pelo autor)** A barra mede os **graus da faixa atual** ("2º grau de 4 · próxima: Roxa · faixa 2 de 5"). Faixa sem graus mostra a barra vazia e a próxima faixa; a última faixa completa fica cheia. É só leitura do que o responsável registrou (RN03), nunca previsão.
+- A cor é escolhida numa paleta fixa (as cores que o `SeloFaixa` já desenha), não em hex livre: mantém o contraste nos dois temas.
+- O id da faixa é fixo depois de criado. Renomear a faixa não tira o aluno dela; removê-la deixa o aluno só com o texto (sem barra) até a próxima graduação.
+- A estrutura usada para o aluno é a de quem registrou a graduação naquela modalidade. Sem graduação registrada, vale a do primeiro responsável com vínculo aceito; sem personalização, a padrão.
+- O texto da graduação (`graduacoes`, `faixaOuGrau`) continua sendo gravado e exibido como antes. As outras telas e o `SeloFaixa` não mudaram de fonte.
+
+**Migração do texto livre:** o app casa o texto antigo com a estrutura na hora de mostrar (`resolverGraduacao`: nome da faixa sem acento e sem diferença de maiúscula, o mais longo primeiro, mais o grau escrito no texto). Por isso a barra aparece mesmo sem migrar. `scripts/migrar-faixas.cjs` (dry-run por padrão) grava `faixasEstruturadas` pelo id, para resistir a renomeações, e lista os textos que não casam (ex.: "Kruang 5"). Esses continuam aparecendo só como texto. **Ainda não foi rodado em produção.**
+
+**A validar:**
+- o cadastro do aluno continua oferecendo só a estrutura padrão (o aluno ainda não tem responsável nesse momento);
+- o aluno com dois responsáveis na mesma modalidade vê a estrutura de quem o graduou por último.
 
 ---
 
 ## 9. `Alunos` e `Visão consolidada` (RF24, RF27) seguem em `TelaEmBreve`
 
 Confirmado no plano anterior (`docs/PLANO_REGRAS_CICLO2_3.md`): essas duas não precisam de regra nova (dado já desbloqueado), só de função de serviço que componha e da tela — não fizeram parte deste pacote, que ficou restrito a RF16–RF21.
+
+---
+
+## 10. RF23 — público-alvo e vigência das missões — ✅ RESOLVIDO
+
+**Modelo:** `missoes` ganhou `publicoAlvo` (`todos` | `turma` | `alunos`), `turmaId` ou `alunosAlvoIds`, e `vigenciaInicio`/`vigenciaFim` (00:00 do primeiro dia até 00:00 do dia seguinte ao último). Campos só da Cloud Function: `leitoresIds`, `situacao` e `alunosNotificadosIds`. O público é sempre restrito a quem tem vínculo aceito com o responsável.
+
+**Onde a regra vale (não só na tela):**
+- **Leitura:** `responsavelId == eu || eu in leitoresIds`. A Cloud Function `missoesPublico.ts` põe em `leitoresIds` o público inteiro na vigência e, fora dela, só quem concluiu. A regra de lista não consegue usar `request.time` (testado, ver `docs/decisoes-tecnicas.md`), por isso o agendamento diário às 00:05 vira a situação das missões.
+- **Conclusão manual (personalizada):** a regra de `missoesProgresso` só deixa marcar dentro da vigência e para aluno do público. Desmarcar continua livre.
+- **Conclusão automática:** a função de progresso só conta treinos (pelo horário do treino) dentro da vigência e só para alunos do público.
+- **RF31:** o aviso de nova missão vai só para o público, quando a missão fica vigente para cada aluno, uma vez por aluno.
+
+**Decisões tomadas:**
+- **(produto, validada pelo autor)** Depois do fim da vigência, a missão some da aba "Em curso" e de quem não concluiu, mas quem concluiu continua vendo em "Concluídas".
+- Turma = matrícula ativa **agora**: quem se matricula durante a vigência entra no público (e recebe o aviso); quem cancela sai.
+- O treino conta pelo horário em que aconteceu: um check-in feito no último dia e validado depois do fim ainda conclui a missão.
+- Missão desligada some para quem não concluiu (como antes).
+- Público e vigência só são escolhidos na criação; a tela não tem edição de missão (o modelo e a regra já aceitam a edição).
+- A vigência pode durar no máximo um ano (366 dias, regra e app).
+
+**Migração:** as missões antigas (sem os campos) valem como `todos`, desde `criadoEm`, sem fim. `scripts/migrar-missoes-publico.cjs` (dry-run por padrão) grava esses valores, e o agendamento diário também as recalcula sozinho na primeira execução. **Até uma das duas coisas acontecer, o aluno não vê as missões antigas**, porque o app passou a consultar por `leitoresIds`. Rodar o script logo depois do deploy.
+
+---
+
+## 11. Atualização para o Expo SDK 58 (2026-11-13)
+
+**Motivo:** o Expo Go da App Store só abre projetos do SDK mais recente; o do iPhone do autor era SDK 58 e o app estava no SDK 57 ("Project is incompatible with this version of Expo Go"). Sem isso, o teste de notificações no iPhone sem conta Apple Developer não era possível.
+
+**O que mudou:**
+- `expo` ~58.0.25 e as demais dependências do app alinhadas à tabela `bundledNativeModules.json` do próprio pacote `expo` (React Native 0.86.3 → 0.88.1, React 19.2.3 → 19.3.0, `expo-notifications` ~58.1.9, `expo-updates` ~58.0.22, `react-native-screens`, `safe-area-context`, `svg`, entre outras). O `npx expo install --fix` não pôde ser usado porque a API da Expo está bloqueada nesta sessão.
+- Dois ajustes de tipo, nenhum de comportamento: `criarEstilos` (o React Native 0.88 removeu `StyleSheet.NamedStyles`) e a referência de `TextInput` (agora `TextInputInstance`) em `CampoTexto` e `LoginScreen`.
+- `AGENTS.md` aponta para a documentação do SDK 58.
+
+**Verificado:** typecheck sem erros; exportação para iOS e web; unit 62, rules 144 e functions 60, os mesmos números de antes. **Não verificado:** o app rodando (nenhuma tela foi aberta num aparelho nesta sessão) e a leitura da documentação oficial do SDK 58, porque `docs.expo.dev` está bloqueado aqui. Ler as notas de migração de 57 para 58 antes de uma entrega é prudente.
+
+---
+
+## 12. Professor atribuído pela academia (RF22, RF10) — correção de 2026-11-13
+
+**Sintoma relatado pelo autor:** no perfil professor, a aba Turmas só mostrava as turmas que ele mesmo criou; a turma criada pela academia não aparecia, e (no painel Hoje) não apareciam os alunos matriculados nem os check-ins da sessão.
+
+**Corrigido:**
+- A aba Turmas do professor lista as turmas próprias e as atribuídas, com a etiqueta "Atribuída pela academia" (já em produção no app e na web).
+- Alunos matriculados, check-ins e validação de presença para o professor atribuído: `professorId` nos registros (Cloud Function), regras de leitura e de validação, e consultas do app (detalhes em `docs/decisoes-tecnicas.md`).
+- **Bug anterior achado no caminho:** a primeira validação de check-in do mês falhava para qualquer validador (leitura de `classificacoes` sem a guarda de documento inexistente).
+- Brecha fechada: o check-in só aceita o escopo (`responsavelId`) da própria turma.
+
+**Estado:** código e testes prontos no repositório (rules 163, functions 63, unit 62), **mas as regras e as functions ainda precisam ser publicadas em produção** antes de o app novo. A ordem importa: o app novo consulta `professorId`, que as regras antigas negam. Depois do deploy, rodar `node scripts/migrar-professor-nos-registros.cjs --aplicar` (só os registros que já existiam; hoje, só os de demonstração).
+
+**Decisões a validar:**
+- Um professor com vínculo aceito com a academia lê, por id, as classificações mensais dela (não lista o ranking). Trade-off descrito em `docs/decisoes-tecnicas.md`.
+- Excluir uma turma com alunos matriculados não encerra as matrículas (a lista do aluno já não quebra, item corrigido em RF11); decisão de produto pendente.
 
 ---
 
@@ -180,8 +318,8 @@ No redesign Apple, `expo-system-ui` foi instalado e o app passou a `userInterfac
 ### R-04 — Texto da Classificação deixa de dizer "Ranking mensal" — ✅ DESFEITO
 Com RN04 implementada (item 4), a tela voltou a dizer "Ranking mensal de {mês}: pontos dos treinos validados neste mês na sua academia ou professor".
 
-### R-05 — Faixa interpretada a partir do texto livre
-O `SeloFaixa` deduz cor e graus de `faixaOuGrau`/`graduacao` (texto livre) sem mudar o modelo. Termos fora da lista (ex.: "Kruang 5", "prajied rosa") caem no visual neutro com o texto original. **A validar:** se o produto quer um campo estruturado de faixa no futuro (mudança de modelo e de Firestore, fora deste redesign).
+### R-05 — Faixa interpretada a partir do texto livre — ✅ RESOLVIDO (RF33)
+O `SeloFaixa` deduz cor e graus de `faixaOuGrau`/`graduacao` (texto livre). Desde o RF33 (item 8), ele também recebe `cor` e `graus` da estrutura de faixas do responsável quando a graduação é estruturada (Perfil do aluno, registro de graduação, editor de faixas), e a faixa personalizada (ex.: "Kruang 5" em vermelho) aparece com a cor certa nessas telas. As demais telas que só têm o texto continuam interpretando o texto.
 
 ### R-06 — "Meus vínculos" virou "Vincular-se"
 A tela aberta por "Meus vínculos" só lista academias/professores para pedir vínculo; não mostra os vínculos existentes (RELATORIO_UI_UX.md, UX-03). Mostrar os existentes exigiria uma consulta nova ao Firestore, fora do escopo (redesign só de apresentação). **Decisão:** renomear o item e o título da tela para "Vincular-se". O estado "Enviado" continua local à tela. **A validar:** criar uma tela real de "Meus vínculos" (com pendentes e aceitos) numa rodada de funcionalidade.

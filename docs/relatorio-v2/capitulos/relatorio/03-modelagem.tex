@@ -44,7 +44,7 @@ que participam de cada um, e as figuras seguintes detalham os casos de
 uso de cada pacote. Os diagramas foram modelados em PlantUML, e o código
 de cada um acompanha o projeto.
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Visão geral dos casos de uso do RoundUp, por pacote}
   \label{fig:casos-uso}
@@ -76,7 +76,7 @@ de cada um acompanha o projeto.
          uso exclusivos dela.}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Casos de uso do pacote Contas}
   \label{fig:uc-contas}
@@ -84,7 +84,7 @@ de cada um acompanha o projeto.
   \fonte{Elaborado pelo autor (2026).}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Casos de uso do pacote Vínculos}
   \label{fig:uc-vinculos}
@@ -92,7 +92,7 @@ de cada um acompanha o projeto.
   \fonte{Elaborado pelo autor (2026).}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Casos de uso do pacote Treinos}
   \label{fig:uc-treinos}
@@ -100,7 +100,7 @@ de cada um acompanha o projeto.
   \fonte{Elaborado pelo autor (2026).}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Casos de uso do pacote Gamificação}
   \label{fig:uc-gamificacao}
@@ -108,7 +108,7 @@ de cada um acompanha o projeto.
   \fonte{Elaborado pelo autor (2026).}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Casos de uso do pacote Gestão}
   \label{fig:uc-gestao}
@@ -116,7 +116,7 @@ de cada um acompanha o projeto.
   \fonte{Elaborado pelo autor (2026).}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Casos de uso do pacote Conformidade}
   \label{fig:uc-conformidade}
@@ -124,7 +124,7 @@ de cada um acompanha o projeto.
   \fonte{Elaborado pelo autor (2026).}
 \end{figure}
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Casos de uso do pacote Retenção}
   \label{fig:uc-retencao}
@@ -134,25 +134,28 @@ de cada um acompanha o projeto.
 
 Cada caso de uso traz, no próprio diagrama, os requisitos que atende. A
 especificação textual completa de cada um, com atores, pré-condições,
-fluxos e pós-condições, está no repositório do projeto (\autoref{ap:artefatos}). Algumas
-especificações descrevem o comportamento projetado, que ainda não foi
-implementado por inteiro; a situação de cada requisito está na
+fluxos e pós-condições, está no repositório do projeto (\autoref{ap:artefatos}). A situação de
+implementação de cada requisito está na
 \autoref{sec:situacao-implementacao}.
 
 \subsection{Descrição dos casos de uso principais}
 
 O caso de uso central do aplicativo é o registro de presença (UC12),
 porque dele derivam pontos, sequência, medalhas, missões e relatórios. O
-\autoref{qua:uc12-uc15} descreve esse caso de uso e o que o completa, a
+\quadroref{qua:uc12-uc15} descreve esse caso de uso e o que o completa, a
 validação da presença (UC15), de acordo com o comportamento implementado.
 
-\begin{quadro}[!htb]
-  \caption{Descrição dos casos de uso UC12 e UC15}
-  \label{qua:uc12-uc15}
-  \centering
-  \footnotesize
-  \begin{tabular}{|p{2.7cm}|p{10.6cm}|}
-    \hline
+\begin{quadrolongo}
+\begin{longtable}{|p{2.7cm}|p{10.6cm}|}
+  \caption{Descrição dos casos de uso UC12 e UC15}\label{qua:uc12-uc15}\\
+\endfirsthead
+  \multicolumn{2}{r}{\textit{(continuação)}}\\
+  \hline
+\endhead
+  \multicolumn{2}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+  \hline
     \textbf{Caso de uso} & \textbf{UC12 -- Realizar \textit{check-in}} (ator: Aluno; RF13, RN02, RN08, RNF01) \\ \hline
     Pré-condições & Aluno autenticado, com vínculo ativo e matrícula ativa na turma da sessão. \\ \hline
     Fluxo principal & 1. O aluno abre a tela inicial, que destaca a próxima sessão. 2. O aluno toca em ``Fazer \textit{check-in}''. 3. O sistema verifica a sessão, a matrícula, a janela de tempo e a inexistência de \textit{check-in} anterior. 4. O sistema grava o \textit{check-in} com situação ``pendente'' e atualiza o botão. \\ \hline
@@ -163,9 +166,9 @@ validação da presença (UC15), de acordo com o comportamento implementado.
     Fluxo principal & 1. O gestor abre a chamada da sessão do dia. 2. O sistema lista os alunos matriculados e os \textit{check-ins} feitos. 3. O gestor confirma a presença de cada aluno que fez \textit{check-in}. 4. Ao confirmar, o sistema credita o XP no \textit{check-in} e na classificação do aluno, na mesma transação. \\ \hline
     Fluxos alternativos & 3a. O gestor desfaz uma confirmação: o \textit{check-in} volta a ``pendente'' e o sistema estorna os pontos. 3b. Aluno sem \textit{check-in}: aparece como ausente, e o gestor não pode registrar presença em nome dele. \\ \hline
     Pós-condição & Presença confirmada e pontuação atualizada, ou \textit{check-in} mantido como pendente. \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 
 \section{Modelagem estática}
 \label{sec:modelagem-estatica}
@@ -182,9 +185,12 @@ identificadores: o \textit{check-in} tem identificador
 \texttt{turmaId\_alunoId}; o progresso de missão,
 \texttt{missaoId\_alunoId}; e a classificação,
 \texttt{alunoId\_responsavelId\_AAAA-MM}, que separa a pontuação por escopo
-de vínculo (RN09) e por mês (RN04).
+de vínculo (RN09) e por mês (RN04). A medalha usa o identificador do
+marco (por exemplo, \texttt{treinos-10}), o que impede concedê-la duas
+vezes ao mesmo aluno (RF19), e a estrutura de faixas usa o do
+responsável, que tem uma única estrutura (RF33).
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Modelo de dados do RoundUp no Cloud Firestore}
   \label{fig:modelo-dados}
@@ -194,33 +200,40 @@ de vínculo (RN09) e por mês (RN04).
                   text width=3.55cm, inner sep=2.5pt, rectangle split part fill={black!12,white}},
       rel/.style={thin}]
     \node[col, anchor=north] (usu) at (0,0) {\textbf{usuarios}
-      \nodepart{second} id, nome\\ perfil: aluno $|$ professor $|$ academia\\ modalidades, faixaOuGrau\\ graduacoes (por modalidade)\\ autonomo (só professor)\\ preferenciasNotificacao\\ participaClassificacao};
+      \nodepart{second} id, nome\\ perfil: aluno $|$ professor $|$ academia\\ modalidades, faixaOuGrau\\ graduacoes (por modalidade)\\ faixasEstruturadas (por modalidade)\\ autonomo (só professor)\\ preferenciasNotificacao\\ participaClassificacao};
     \node[col, anchor=north] (vin) at (4.8,0) {\textbf{vinculos}
       \nodepart{second} id: solicitante\_destinatario\\ solicitanteId, destinatarioId\\ tipo (derivado dos perfis)\\ status: pendente $|$ aceito $|$\\ \quad recusado $|$ encerrado};
     \node[col, anchor=north] (tur) at (9.6,0) {\textbf{turmas}
       \nodepart{second} id, nome, modalidade, nivel\\ responsavelId, professorId\\ diasSemana, horários\\ ativa};
-    \node[col, anchor=north] (chk) at (0,-3.6) {\textbf{checkins}
-      \nodepart{second} id: sessao\_aluno\\ sessaoId, alunoId\\ responsavelId, dataHora\\ status: pendente $|$ validado $|$\\ \quad rejeitado\\ pontos, validadoPor\\ classificacaoId};
-    \node[col, anchor=north] (ses) at (4.8,-3.6) {\textbf{sessoes}
+    \node[col, anchor=north] (chk) at (0,-4.3) {\textbf{checkins}
+      \nodepart{second} id: sessao\_aluno\\ sessaoId, alunoId\\ responsavelId, dataHora\\ status: pendente $|$ validado $|$\\ \quad rejeitado\\ pontos, validadoPor\\ classificacaoId, professorId};
+    \node[col, anchor=north] (ses) at (4.8,-4.3) {\textbf{sessoes}
       \nodepart{second} id, turmaId, responsavelId\\ inicio, fim\\ janelaCheckInInicio, janelaCheckInFim\\ status\\ leitoresIds[\,]};
-    \node[col, anchor=north] (mat) at (9.6,-3.6) {\textbf{matriculas}
-      \nodepart{second} id: turma\_aluno\\ turmaId, alunoId, responsavelId\\ status: ativa $|$ inativa};
-    \node[col, anchor=north] (cla) at (0,-7.3) {\textbf{classificacoes}
+    \node[col, anchor=north] (mat) at (9.6,-4.3) {\textbf{matriculas}
+      \nodepart{second} id: turma\_aluno\\ turmaId, alunoId, responsavelId\\ professorId\\ status: ativa $|$ inativa};
+    \node[col, anchor=north] (cla) at (0,-8.2) {\textbf{classificacoes}
       \nodepart{second} id: aluno\_responsavel\_AAAA-MM\\ alunoId, responsavelId\\ periodo, pontos\\ leitoresIds[\,], origemCheckinId};
-    \node[col, anchor=north] (mis) at (4.8,-7.3) {\textbf{missoes} e \textbf{missoesProgresso}
-      \nodepart{second} titulo, tipo, meta, pontos\\ responsavelId, ativa\\ id: missao\_aluno, progressoAtual\\ concluida, pontosCreditados};
-    \node[col, anchor=north] (gra) at (9.6,-7.3) {\textbf{configuracoesGamificacao}
+    \node[col, anchor=north] (mis) at (4.8,-8.2) {\textbf{missoes} e \textbf{missoesProgresso}
+      \nodepart{second} titulo, tipo, meta, pontos\\ responsavelId, ativa\\ publicoAlvo: todos $|$ turma $|$ alunos\\ turmaId, alunosAlvoIds[\,]\\ vigenciaInicio, vigenciaFim\\ leitoresIds[\,], situacao\\ id: missao\_aluno, progressoAtual\\ concluida, pontosCreditados};
+    \node[col, anchor=north] (gra) at (9.6,-8.2) {\textbf{configuracoesGamificacao}
       \nodepart{second} id: responsavelId\\ pontosPorCheckin\\ pontosPorMissao, niveisXp};
+        \node[col, anchor=north] (med) at (0,-12.6) {\textbf{usuarios/\{id\}/medalhas}
+      \nodepart{second} id: marco (ex.: treinos-10)\\ tipo, quantidade, rotulo\\ conquistadaEm, origem\\ registradaEm};
+    \node[col, anchor=north] (grd) at (4.8,-12.6) {\textbf{graduacoes}
+      \nodepart{second} alunoId, responsavelId\\ modalidade, grau (texto)\\ faixaId, faixaNome, faixaCor\\ grauNumero, dataGraduacao};
+    \node[col, anchor=north] (est) at (9.6,-12.6) {\textbf{estruturasFaixas}
+      \nodepart{second} id: responsavelId\\ modalidades: mapa de\\ \quad modalidade $\rightarrow$ faixas[\,]\\ \quad (id, nome, cor, graus)};
     \draw[rel] (usu.east |- 0,-0.9) -- node[above]{1 : N} (vin.west |- 0,-0.9);
     \draw[rel] (vin.east |- 0,-0.9) -- node[above]{escopo} (tur.west |- 0,-0.9);
     \draw[rel] (tur.south) -- node[right]{1 : N} (mat.north);
     \draw[rel] (tur.south west) -- node[above, sloped]{1 : N} (ses.north east);
-    \draw[rel] (ses.west |- 0,-4.5) -- node[above]{1 : N} (chk.east |- 0,-4.5);
+    \draw[rel] (ses.west |- 0,-5.2) -- node[above]{1 : N} (chk.east |- 0,-5.2);
     \draw[rel] (chk.south) -- node[right]{credita (RN01)} (cla.north);
-    \draw[rel] (gra.west) -- node[above]{valores} (mis.east);
+        \draw[rel] (gra.west) -- node[above]{valores} (mis.east);
+    \draw[rel] (est.west) -- node[above]{faixas} (grd.east);
   \end{tikzpicture}
   \fonte{Elaborado pelo autor (2026), a partir de \texttt{src/types/index.ts}.
-         Omitidas da figura: \texttt{graduacoes}, \texttt{consentimentosLGPD}
+         Omitidas da figura: \texttt{consentimentosLGPD}
          (registros imutáveis), \texttt{notificacoes} (registro de envios,
          escrito só pelas Cloud Functions) e os subdocumentos privados de
          \texttt{usuarios}, legíveis só pelo dono: \texttt{privado/dados}
@@ -245,7 +258,11 @@ automatizados (\autoref{sec:testes-prototipo}):
         Cloud Functions. O mesmo padrão foi usado na classificação: cada
         documento guarda os alunos do mesmo escopo que participam do
         \textit{ranking}, e quem desativa a participação (RNF11) sai das
-        listas dos colegas.
+        listas dos colegas. Nas missões, a lista de leitores reflete o
+        público-alvo e a vigência (RF23); como a regra de uma consulta de
+        lista também não consegue comparar a vigência com a hora atual,
+        uma Cloud Function agendada atualiza essa lista todos os dias, às
+        00h05.
   \item \textbf{Vínculos em documento privado.} Para que as regras possam
         verificar se um aluno tem vínculo ativo com um responsável sem
         expor o grafo de vínculos a todos os usuários, essa informação foi
@@ -263,7 +280,7 @@ ciclo completo de uma presença: o aluno registra o \textit{check-in}
 os pontos só existem depois da validação (RN01), o aluno não consegue
 acumular XP sem ter, de fato, comparecido ao treino.
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
   \caption{Diagrama de sequência do registro e da validação de presença}
   \label{fig:sequencia-checkin}
@@ -292,9 +309,10 @@ acumular XP sem ter, de fato, comparecido ao treino.
   \fonte{Elaborado pelo autor (2026).}
 \end{figure}
 
-O nível, a sequência e as medalhas não são gravados no banco: eles são
-calculados no aplicativo, a cada carregamento, a partir dos \textit{check-ins}
-validados e da pontuação acumulada. Essa escolha evita manter dados
-derivados sincronizados, ao custo de não registrar a data em que cada
-medalha foi conquistada.
+O nível e a sequência não são gravados no banco: eles são calculados no
+aplicativo, a cada carregamento, a partir dos \textit{check-ins} validados
+e da pontuação acumulada, o que evita manter dados derivados
+sincronizados. As medalhas seguem outro caminho: são gravadas por uma
+Cloud Function no momento em que o marco é atingido, para registrar a data
+da conquista (RF19), e não são retiradas se a contagem cair depois.
 

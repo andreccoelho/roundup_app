@@ -40,7 +40,7 @@ treinou, mas parou). Cada seção combinava:
 
 \begin{itemize}
   \item perguntas sobre motivação, evasão e acompanhamento dos treinos;
-  \item a avaliação de cada ideia do \autoref{qua:ideias}, convertida em
+  \item a avaliação de cada ideia do \quadroref{qua:ideias}, convertida em
         recurso do aplicativo, em uma escala de 1 (pouco útil) a 5 (muito
         útil);
   \item perguntas abertas sobre funcionalidades desejadas e motivos para
@@ -65,7 +65,7 @@ com usuários reais, as ideias voltadas à gestão. A \autoref{tab:perfil}
 resume o perfil da amostra. Os dados pessoais de contato informados por
 alguns respondentes foram descartados da análise.
 
-\begin{table}[!htb]
+\begin{table}[H]
   \centering
   \caption{Perfil dos respondentes do questionário}
   \label{tab:perfil}
@@ -110,7 +110,7 @@ que a maioria avaliou bem.
 
 A \autoref{tab:survey-notas} apresenta as notas atribuídas a cada ideia.
 
-\begin{table}[!htb]
+\begin{table}[H]
   \centering
   \caption{Notas atribuídas às ideias (escala de 1 a 5)}
   \label{tab:survey-notas}
@@ -211,7 +211,7 @@ a distribuição resultante, definida para cobrir os perfis ausentes da
 amostra real; entre os dez professores, quatro são donos de academia, e
 os ex-alunos têm doze motivos principais de abandono diferentes.
 
-\begin{table}[!htb]
+\begin{table}[H]
   \centering
   \caption{Perfil das respostas sintéticas}
   \label{tab:perfil-personas}
@@ -275,7 +275,7 @@ a saída da análise e verificar o gerador: \textbf{os valores sintéticos
 refletem as regras escritas pelo autor e pelo modelo, e não a percepção de
 usuários}.
 
-\begin{table}[!htb]
+\begin{table}[H]
   \centering
   \caption{Notas médias das respostas sintéticas e das respostas reais}
   \label{tab:personas-comparacao}
@@ -335,7 +335,7 @@ porque é nas regras que estão garantidas as regras de negócio que
 protegem a credibilidade da gamificação (RN01, RN02 e RN08) e o
 isolamento de dados (RNF04).
 
-\begin{table}[!htb]
+\begin{table}[H]
   \centering
   \caption{Suítes de testes automatizados}
   \label{tab:suites}
@@ -344,15 +344,21 @@ isolamento de dados (RNF04).
     \toprule
     \textbf{Suíte} & \textbf{O que verifica} & \textbf{Casos} & \textbf{Aprovados} \\
     \midrule
-    Unidade (\texttt{src/utils}) & Datas e janelas de sessão, sequência, níveis e validação da configuração & 37 & 37 \\
-    Regras do Firestore (\texttt{tests/rules}) & Usuários, vínculos, turmas, matrículas, sessões, \textit{check-ins}, classificação, missões, configuração, notificações e coleções bloqueadas & 124 & 124 \\
-    Cloud Functions (\texttt{tests/functions}) & Leitores de sessões e classificações, progresso e pontos de missões, exclusão de conta, graduações e notificações & 33 & 33 \\
+    Unidade (\texttt{src/utils}) & Datas e janelas de sessão, sequência, níveis, validação da configuração, estrutura de faixas e vigência de missões & 62 & 62 \\
+    Regras do Firestore (\texttt{tests/rules}) & Usuários, vínculos, turmas, matrículas, sessões, \textit{check-ins}, classificação, missões com público e vigência, medalhas, estrutura de faixas, professor atribuído, configuração, notificações e coleções bloqueadas & 163 & 163 \\
+    Cloud Functions (\texttt{tests/functions}) & Leitores de sessões, classificações e missões, progresso e pontos de missões, medalhas e sua migração, exclusão de conta, graduações, professor atribuído e notificações & 63 & 63 \\
+    \midrule
+    \textbf{Total} & & \textbf{288} & \textbf{288} \\
     \bottomrule
   \end{tabular}
-  \fonte{Elaborado pelo autor (2026). Todas as suítes executadas em 12 nov. 2026.}
+  \fonte{Elaborado pelo autor (2026). Todas as suítes executadas em 13 nov. 2026.}
 \end{table}
 
-As três suítes foram executadas em 12 de novembro de 2026, sobre a versão entregue do código. Os testes de
+As três suítes foram executadas em 13 de novembro de 2026, sobre a versão entregue do código,
+depois da conclusão dos requisitos que estavam parciais, que acrescentou
+94 casos de teste aos 194 da versão anterior. Dois testes de datas
+dependem do fuso horário de Brasília, e por isso as suítes são executadas
+com a variável \texttt{TZ=America/Sao\_Paulo}. Os testes de
 regras e de Cloud Functions rodaram nos emuladores do Firebase
 (\texttt{firebase-tools} 15.29.0), que exigem Java 21 ou superior; foi
 usado o OpenJDK 22, e as funções rodaram no Node 21, embora o projeto
@@ -365,7 +371,7 @@ do código, depois da correção descrita na
 A \autoref{tab:testes} relaciona os principais casos de teste aos
 requisitos.
 
-\begin{table}[!htb]
+\begin{table}[H]
   \centering
   \caption{Casos de teste do protótipo}
   \label{tab:testes}
@@ -388,18 +394,29 @@ requisitos.
     CT12 & RF29 & Exclusão de conta apaga os dados do usuário e preserva os de outros & Aceito \\
     CT13 & RN09, RNF11 & Aluno lê a classificação de outro escopo ou de quem não participa & Negado \\
     CT14 & RF18 & Aluno grava o próprio progresso de missão & Negado \\
-    CT15 & RNF01 & \textit{Check-in} a partir da tela inicial (roteiro manual) & $\leq$ 3 toques \\
+        CT15 & RNF01 & \textit{Check-in} a partir da tela inicial (roteiro manual) & $\leq$ 3 toques \\
+    CT16 & RF23 & Aluno conclui missão antes do início ou depois do fim da vigência & Negado \\
+    CT17 & RF23 & Aluno fora do público-alvo conclui a missão & Negado \\
+    CT18 & RF19 & Aluno grava ou altera a própria medalha & Negado \\
+    CT19 & RF19 & Estorno de \textit{check-in} depois de a medalha ser concedida & Medalha mantida \\
+    CT20 & RF33 & Gestor grava a estrutura de faixas de outro responsável & Negado \\
+        CT21 & RF22 & Professor atribuído pela academia valida \textit{check-in} da própria turma & Aceito \\
+    CT22 & RNF02 & Carregamento da tela inicial em rede 4G (medição manual) & $\leq$ 3 s \\
     \bottomrule
   \end{tabular}
   \fonte{Elaborado pelo autor (2026), a partir de \texttt{tests/} e
          \texttt{docs/roteiro-teste-ciclo1.md}.}
 \end{table}
 
-Os casos CT01 a CT09, CT11, CT13 e CT14 correspondem a testes da suíte
-de regras; o CT10 e o CT12, à suíte de Cloud Functions; e o CT15, ao
-roteiro manual, segundo o
-qual o \textit{check-in} exige dois toques na agenda e um toque na tela
-inicial da versão final da interface.
+Os casos CT01 a CT09, CT11, CT13, CT14, CT16 a CT18, CT20 e CT21
+correspondem a testes da suíte de regras; o CT10, o CT12 e o CT19, à
+suíte de Cloud Functions; e o CT15 e o CT22, a verificações manuais.
+Segundo o roteiro de teste, o \textit{check-in} exige dois toques na
+agenda e um toque na tela inicial da versão final da interface (CT15).
+No CT22, o tempo de carregamento da tela inicial foi cronometrado três
+vezes em um iPhone conectado à rede 4G, com o aplicativo acessando o
+Firebase de produção: 2,25~s, 2,22~s e 1,92~s, com média de 2,13~s,
+dentro do limite de 3~s do RNF02.
 
 \subsection{Verificações de qualidade da interface}
 
@@ -410,10 +427,10 @@ acessibilidade axe-core (critérios WCAG 2.1, níveis A e AA), sem violações
 registradas. As cores de texto foram ajustadas para atingir a razão
 mínima de contraste de 4,5:1 nos dois temas; por isso, o vermelho de
 destaque e os cinzas de texto ficaram um pouco mais escuros que os
-padrões do iOS no tema claro. A interface foi conferida na versão web; o
-comportamento exclusivo dos aparelhos, como as barras translúcidas, os
-gestos das folhas e o retorno tátil, ainda precisa ser verificado em
-dispositivo.
+padrões do iOS no tema claro. A interface foi conferida na versão web e, na etapa final, o
+aplicativo foi executado em um iPhone, pelo Expo Go, para validar as
+notificações e os requisitos concluídos nessa etapa (RF19, RF23, RF31 e
+RF33).
 
 \subsection{Defeitos encontrados pelos testes}
 \label{sec:defeitos-testes}
@@ -440,3 +457,22 @@ que os gatilhos das funções escutavam o projeto errado. A correção
 o emulador de acessar o projeto de produção, e aumentou o limite de tempo
 da suíte de 5 para 20 segundos, já que a espera dentro do teste pode
 chegar a 10 segundos. Depois da correção, as quatro passaram.
+
+A execução em aparelho revelou outros defeitos, todos corrigidos e
+cobertos por novos testes:
+
+\begin{itemize}
+  \item a exclusão de uma turma com matrícula ativa fazia a lista de
+        turmas do aluno falhar por permissão negada (RF11);
+  \item a aba de turmas do professor mostrava só as turmas criadas por
+        ele, e não as atribuídas pela academia (RF10);
+  \item o professor atribuído pela academia não via os alunos e os
+        \textit{check-ins} da turma nem validava presença (RF22); as
+        matrículas e os \textit{check-ins} passaram a guardar o
+        \texttt{professorId}, mantido por Cloud Functions, e os pontos
+        validados por ele são creditados no escopo da academia;
+  \item a primeira validação de presença do mês de cada aluno falhava,
+        qualquer que fosse o validador;
+  \item o \textit{check-in} aceitava qualquer academia como escopo, e
+        passou a exigir o escopo da própria turma (RNF04).
+\end{itemize}

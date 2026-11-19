@@ -30,6 +30,10 @@ export interface Usuario {
   // Declarada pelo aluno no cadastro; depois só muda pelo registro do professor/academia (Cloud Function
   // aplicarGraduacaoNoPerfil, a partir de `graduacoes/{id}`).
   graduacoes?: Record<string, string>;
+  // RF33, RF25: só perfil 'aluno' — a mesma graduação por modalidade, estruturada (faixa da estrutura
+  // do responsável que registrou + grau). Escrita pela Cloud Function aplicarGraduacaoNoPerfil (ou pela
+  // migração scripts/migrar-faixas.cjs); ausente para quem só tem o texto livre antigo.
+  faixasEstruturadas?: Record<string, GraduacaoEstruturada>;
   graduacao?: string;     // RF05: só perfil 'professor'
   nomeAcademia?: string;  // RF04: só perfil 'academia' — nome institucional, distinto de `nome` (contato)
   endereco?: string;      // RF04: só perfil 'academia'
@@ -119,6 +123,10 @@ export interface Matricula {
   turmaId: string;
   alunoId: string;
   responsavelId: string;            // desnormalizado da turma, habilita consulta pelo gestor
+  // RF22, RF10: professor que a ACADEMIA atribuiu à turma. Escrito só pela Cloud Function
+  // (functions/src/professorNosRegistros.ts) — habilita a consulta do professor atribuído. Ausente
+  // quando o responsável é o próprio professor (autônomo) ou a turma não tem professor.
+  professorId?: string;
   status: StatusMatricula;
   criadoEm: Timestamp;
   atualizadoEm: Timestamp;
@@ -158,10 +166,16 @@ export interface CheckIn {
   validadoPor?: string;
   validadoEm?: Timestamp;
   classificacaoId?: string;         // RN01: classificação que recebeu o crédito — a regra confere que ela mudou junto
+  professorId?: string;             // RF22: professor atribuído à turma pela academia (só a Cloud Function escreve)
 }
 
 // RF23 (Ciclo 3): criação e gerenciamento de missões de gamificação
 export type TipoMissao = 'presenca' | 'pontuacao' | 'sequencia' | 'personalizada';
+
+// RF23: público-alvo — todos os alunos com vínculo aceito, os matriculados numa turma, ou alunos
+// escolhidos. Sempre restrito a quem tem vínculo aceito com o responsável.
+export type PublicoAlvo = 'todos' | 'turma' | 'alunos';
+export type SituacaoMissao = 'agendada' | 'vigente' | 'encerrada' | 'inativa';
 
 export interface Missao {
   id: string;
@@ -172,6 +186,18 @@ export interface Missao {
   pontos: number;
   responsavelId: string;
   ativa: boolean;
+  // RF23: público-alvo. Ausente nas missões criadas antes desta mudança, que valem para 'todos'.
+  publicoAlvo?: PublicoAlvo;
+  turmaId?: string;          // só com publicoAlvo 'turma'
+  alunosAlvoIds?: string[];  // só com publicoAlvo 'alunos'
+  // RF23: vigência [início, fim) — 00:00 do primeiro dia até 00:00 do dia seguinte ao último.
+  // Ausente nas missões antigas: valem desde criadoEm, sem fim.
+  vigenciaInicio?: Timestamp;
+  vigenciaFim?: Timestamp;
+  // Escritos só pela Cloud Function (functions/src/missoesPublico.ts), nunca pelo client:
+  leitoresIds?: string[];          // quem lê: o público na vigência; fora dela, só quem concluiu
+  situacao?: SituacaoMissao;
+  alunosNotificadosIds?: string[]; // RF31: quem já recebeu o aviso de nova missão
   criadoEm: Date;
   atualizadoEm: Date;
 }
@@ -211,16 +237,65 @@ export interface Classificacao {
   atualizadoEm: Date;
 }
 
+// RF19: medalha conquistada, em usuarios/{alunoId}/medalhas/{marcoId} (id == id do marco em
+// MARCOS_MEDALHAS). Escrita só pela Cloud Function (functions/src/medalhas.ts), nunca pelo client.
+// Não é apagada se a contagem cair depois (estorno, sequência quebrada).
+export interface MedalhaConquistada {
+  id: string;
+  tipo: 'treinos' | 'sequencia' | 'graduacoes';
+  quantidade: number;
+  rotulo: string;
+  conquistadaEm: Timestamp;
+  origem: 'checkin' | 'graduacao' | 'migracao'; // 'migracao': data reconstruída do histórico
+  registradaEm: Timestamp;
+}
+
 // RF25, RN03 (Ciclo 3): registro de graduações (faixas/belts)
 export interface Graduacao {
   id: string;
   alunoId: string;
   responsavelId: string;
   modalidade: string;
-  grau: string;
+  grau: string;           // texto exibido: "Faixa roxa, 2º grau"
+  // RF33: faixa da estrutura do responsável (ausente em graduação de modalidade "Outra", em texto livre)
+  faixaId?: string;
+  faixaNome?: string;
+  faixaCor?: CorFaixa;
+  grauNumero?: number;
   dataGraduacao: Date;
   observacoes?: string;
   criadoEm: Date;
+}
+
+// RF33: cores de faixa disponíveis (paleta fixa, a mesma que o SeloFaixa desenha)
+export type CorFaixa =
+  | 'branca' | 'cinza' | 'amarela' | 'laranja' | 'verde' | 'azul' | 'roxa' | 'marrom' | 'vermelha' | 'preta';
+
+// RF33: uma faixa da estrutura de uma modalidade, na ordem de progressão
+export interface FaixaConfig {
+  id: string;     // estável: renomear a faixa não perde quem já está nela
+  nome: string;   // "Roxa"
+  cor: CorFaixa;
+  graus: number;  // graus (tarjas) dentro da faixa, 0 a 10
+}
+
+// RF33: estrutura de faixas personalizada do responsável, um documento por responsável (id ==
+// responsavelId). Só as modalidades personalizadas aparecem em `modalidades`; as demais usam a
+// estrutura padrão (src/utils/faixas.ts).
+export interface EstruturaFaixas {
+  id: string;
+  responsavelId: string;
+  modalidades: Record<string, FaixaConfig[]>;
+  atualizadoEm: Date;
+}
+
+// RF33: graduação atual estruturada do aluno numa modalidade
+export interface GraduacaoEstruturada {
+  faixaId: string;
+  faixa: string;        // nome da faixa no momento do registro
+  cor: CorFaixa;
+  grau: number;
+  responsavelId?: string; // de quem é a estrutura (quem registrou); ausente = estrutura padrão
 }
 
 // RF33: personalização da pontuação e dos níveis por academia ou professor autônomo. Um documento

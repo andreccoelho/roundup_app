@@ -1,0 +1,64 @@
+% =====================================================================
+%  FOLHA DE ROSTO (obrigatório) -- Manual, seção 2.1.2 e Quadro 2
+%  Não é preciso editar: os dados vêm de config/dados.tex.
+% =====================================================================
+\begin{folhaderosto}
+  \centering
+
+  {\bfseries\MakeTextUppercase{\imprimirautor}\par}
+
+  \vfill
+
+  {\bfseries\OnehalfSpacing\imprimirtitulocompleto\par}
+
+  \vfill
+
+  % Natureza do trabalho: espaço simples, alinhada do meio da folha para
+  % a margem direita, sem negrito (Manual, 3.3 e Quadro 2)
+  \hspace{.45\textwidth}%
+  \begin{minipage}{.55\textwidth}
+    \SingleSpacing\raggedright
+    \imprimirnatureza
+
+    \vspace{\baselineskip}
+    \imprimirrotuloorientador: \imprimirorientador.
+    \imprimircoorientadorlinha
+  \end{minipage}
+
+  \vfill
+
+  {\bfseries\MakeTextUppercase{\imprimirlocal}\par
+   \imprimirdata\par}
+\end{folhaderosto}
+
+% ---------------------------------------------------------------------
+%  VERSO DA FOLHA DE ROSTO: FICHA CATALOGRÁFICA
+%  Exigida na versão final (Regulamento, Art. 21, II).
+%  1. Gere a ficha no site indicado pelo Manual (seção 2.1.2.2) ou pela
+%     biblioteca do Ibmec;
+%  2. Salve o PDF da ficha como  ficha/ficha-catalografica.pdf
+%  3. Compile de novo: ela entra aqui automaticamente.
+% ---------------------------------------------------------------------
+\IfFileExists{ficha/ficha-catalografica.pdf}{%
+  \includepdf[pages=1, pagecommand={\thispagestyle{empty}}]{ficha/ficha-catalografica.pdf}%
+}{%
+  \begin{fichacatalografica}
+    \vspace*{\fill}
+    \begin{center}
+      \fbox{\begin{minipage}[c][7cm][c]{12.5cm}
+        \centering\footnotesize
+        \textbf{FICHA CATALOGRÁFICA}\\[8pt]
+        Este espaço é o verso da folha de rosto.\\
+        Na versão final, gere a ficha catalográfica e salve o PDF\\
+        como \texttt{ficha/ficha-catalografica.pdf}.\\
+        Ela substituirá este quadro automaticamente.
+      \end{minipage}}
+    \end{center}
+  \end{fichacatalografica}
+}
+
+% No modo "oneside" o verso ocupa uma página própria no PDF, mas não é
+% uma nova folha -- por isso não deve ser contado (Manual, 3.6).
+\makeatletter
+\if@twoside\else\addtocounter{page}{-1}\fi
+\makeatother

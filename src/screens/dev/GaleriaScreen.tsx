@@ -512,7 +512,7 @@ export default function GaleriaScreen() {
       <Secao titulo="Medalhas">
         <Cartao>
           <View style={styles.gradeMedalhas}>
-            <Medalha rotulo="10 treinos" tipo="treinos" numero={10} />
+            <Medalha rotulo="10 treinos" tipo="treinos" numero={10} conquistadaEm="12/10/2026" />
             <Medalha rotulo="7 treinos seguidos" tipo="sequencia" numero={7} />
             <Medalha rotulo="100 treinos" tipo="treinos" numero={100} maxima />
             <Medalha rotulo="Primeira graduação" tipo="graduacoes" numero={1} conquistada={false} />

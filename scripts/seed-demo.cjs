@@ -133,6 +133,8 @@ async function main() {
     if (t.matricula) {
       par(`matriculas/${t.id}_${uid.aluno}`, {
         id: `${t.id}_${uid.aluno}`, turmaId: t.id, alunoId: uid.aluno, responsavelId: uid.academia,
+        // RF22: professor atribuído pela academia (a Cloud Function grava igual em registros novos)
+        professorId: uid.professor,
         status: 'ativa', criadoEm: criadoVinculo, atualizadoEm: criadoVinculo,
       });
     }
@@ -171,7 +173,7 @@ async function main() {
     const classificacaoId = `${uid.aluno}_${uid.academia}_${periodo}`;
     par(`checkins/${c.sessaoId}_${uid.aluno}`, {
       id: `${c.sessaoId}_${uid.aluno}`, sessaoId: c.sessaoId, turmaId: c.turmaId, alunoId: uid.aluno,
-      responsavelId: uid.academia, dataHora: ts(new Date(c.inicio.getTime() - 10 * 60_000)),
+      responsavelId: uid.academia, professorId: uid.professor, dataHora: ts(new Date(c.inicio.getTime() - 10 * 60_000)),
       status: 'validado', pontos: XP_POR_CHECKIN, validadoPor: uid.professor,
       validadoEm: ts(new Date(c.inicio.getTime() + 90 * 60_000)), classificacaoId,
     });
@@ -194,6 +196,11 @@ async function main() {
     id: 'demo-missao-presenca', titulo: 'Maratona do tatame',
     descricao: 'Valide 12 treinos para ganhar pontos extras.', tipo: 'presenca', meta: 12, pontos: 50,
     responsavelId: uid.academia, ativa: true, criadoEm: agoraTs, atualizadoEm: agoraTs,
+    // RF23: todos os alunos, vigente de 30 dias atrás a 30 dias à frente. leitoresIds e situacao
+    // são calculados pela Cloud Function sincronizarMissaoNaEscrita ao gravar.
+    publicoAlvo: 'todos',
+    vigenciaInicio: ts(new Date(agora.getTime() - 30 * 86_400_000)),
+    vigenciaFim: ts(new Date(agora.getTime() + 30 * 86_400_000)),
   });
 
   // ---------- gravação ----------

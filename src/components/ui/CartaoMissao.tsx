@@ -12,9 +12,11 @@ interface CartaoMissaoProps {
   meta: number;
   concluida?: boolean;
   pontos?: number;
+  // RF23: período de vigência, ex.: "12/11/2026 a 30/11/2026"
+  vigencia?: string | null;
 }
 
-export default function CartaoMissao({ titulo, descricao, progressoAtual, meta, concluida, pontos }: CartaoMissaoProps) {
+export default function CartaoMissao({ titulo, descricao, progressoAtual, meta, concluida, pontos, vigencia }: CartaoMissaoProps) {
   const { cores } = useTema();
   const styles = useEstilos();
   const atual = Math.min(progressoAtual, meta);
@@ -24,12 +26,13 @@ export default function CartaoMissao({ titulo, descricao, progressoAtual, meta, 
     <View
       style={styles.linha}
       accessible
-      accessibilityLabel={`${titulo}. ${descricao}. ${progressoAtual} de ${meta}${concluida ? ', concluída' : ''}${pontos ? `, vale ${pontos} pontos` : ''}`}
+      accessibilityLabel={`${titulo}. ${descricao}. ${progressoAtual} de ${meta}${concluida ? ', concluída' : ''}${pontos ? `, vale ${pontos} pontos` : ''}${vigencia ? `. Vigência: ${vigencia}` : ''}`}
     >
       <View style={styles.cabecalho}>
         <View style={styles.textos}>
           <Texto variante="headline">{titulo}</Texto>
           <Texto variante="footnote">{descricao}</Texto>
+          {vigencia ? <Texto variante="caption" cor="texto3">{`Vigência: ${vigencia}`}</Texto> : null}
         </View>
         <View style={styles.placar}>
           {concluida ? (

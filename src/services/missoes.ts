@@ -15,7 +15,12 @@ const COLECAO_PROGRESSO = 'missoesProgresso';
 
 // RF23: mesmo padrão de criarTurma() — gera id e timestamps aqui, o caller só passa os campos
 // de negócio. Primeiro consumidor real desta função (antes só o esqueleto existia).
-export async function criarMissao(dados: Omit<Missao, 'id' | 'criadoEm' | 'atualizadoEm'>): Promise<Missao> {
+// RF23: público-alvo e vigência são obrigatórios na criação (firestore.rules). Os campos de
+// servidor (leitoresIds, situacao, alunosNotificadosIds) ficam de fora: a Cloud Function preenche.
+export type DadosNovaMissao = Omit<Missao, 'id' | 'criadoEm' | 'atualizadoEm' | 'leitoresIds' | 'situacao' | 'alunosNotificadosIds'>
+  & Required<Pick<Missao, 'publicoAlvo' | 'vigenciaInicio' | 'vigenciaFim'>>;
+
+export async function criarMissao(dados: DadosNovaMissao): Promise<Missao> {
   const ref = doc(collection(db, COLECAO_MISSOES));
   const agora = new Date();
   const missao: Missao = { id: ref.id, criadoEm: agora, atualizadoEm: agora, ...dados };
@@ -42,15 +47,12 @@ export async function listarMissoesPorResponsavel(responsavelId: string): Promis
   return snap.docs.map(d => d.data() as Missao);
 }
 
-// RF18: missões ativas do escopo do aluno — chamada com o responsavelId do vínculo dele, não o
-// próprio id. A regra de leitura permite (missão ativa é legível por qualquer autenticado,
-// mesmo padrão de turmas ativas — ver docs/DECISOES_PENDENTES.md).
-export async function listarMissoesAtivasDoResponsavel(responsavelId: string): Promise<Missao[]> {
-  const q = query(
-    collection(db, COLECAO_MISSOES),
-    where('responsavelId', '==', responsavelId),
-    where('ativa', '==', true),
-  );
+// RF18, RF23: missões que o aluno pode ver, de todos os responsáveis de uma vez. `leitoresIds` é
+// mantido pela Cloud Function (functions/src/missoesPublico.ts): o público-alvo enquanto a missão
+// está vigente e, depois, só quem a concluiu. O filtro é o mesmo campo da regra de leitura, o que
+// torna a consulta provável (docs/decisoes-tecnicas.md).
+export async function listarMissoesDoAluno(alunoId: string): Promise<Missao[]> {
+  const q = query(collection(db, COLECAO_MISSOES), where('leitoresIds', 'array-contains', alunoId));
   const snap = await getDocs(q);
   return snap.docs.map(d => d.data() as Missao);
 }

@@ -153,6 +153,8 @@ export function vinculosPrivadoBase(responsaveisIds: string[]) {
   return { responsaveisIds };
 }
 
+// RF23: por padrão, para todos os alunos e vigente (de 30 dias atrás a 30 dias à frente). Para
+// simular missão antiga, anterior ao público-alvo e à vigência, use missaoAntigaBase().
 export function missaoBase(responsavelId: string, overrides: Record<string, unknown> = {}) {
   return {
     titulo: 'Missão de teste',
@@ -162,10 +164,18 @@ export function missaoBase(responsavelId: string, overrides: Record<string, unkn
     pontos: 10,
     responsavelId,
     ativa: true,
+    publicoAlvo: 'todos',
+    vigenciaInicio: minutosAPartirDeAgora(-30 * 24 * 60),
+    vigenciaFim: minutosAPartirDeAgora(30 * 24 * 60),
     criadoEm: AGORA,
     atualizadoEm: AGORA,
     ...overrides,
   };
+}
+
+export function missaoAntigaBase(responsavelId: string, overrides: Record<string, unknown> = {}) {
+  const { publicoAlvo, vigenciaInicio, vigenciaFim, ...antiga } = missaoBase(responsavelId);
+  return { ...antiga, ...overrides };
 }
 
 export function graduacaoBase(alunoId: string, responsavelId: string, overrides: Record<string, unknown> = {}) {

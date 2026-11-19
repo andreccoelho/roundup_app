@@ -1,21 +1,25 @@
-// RF31: registro do aparelho para notificações push (expo-notifications, SDK 57). O token Expo
+// RF31: registro do aparelho para notificações push (expo-notifications, SDK 58). O token Expo
 // fica em usuarios/{uid}/privado/notificacoes — documento fechado a outros usuários (mesmo motivo
 // de privado/vinculos: `usuarios/{uid}` raiz é legível por qualquer autenticado). O envio é das
 // Cloud Functions em functions/src/notificacoes.ts, que respeitam usuarios.preferenciasNotificacao.
 //
-// Limites (docs.expo.dev, SDK 57): push remoto não funciona no Expo Go no Android nem na web —
-// precisa de development build. Sem `extra.eas.projectId` no app.json (`npx eas init`),
-// getExpoPushTokenAsync rejeita. Nos dois casos o registro falha em silêncio (só console): o app
-// funciona igual, só não recebe push. Passo a passo em docs/DECISOES_PENDENTES.md, RF31.
+// Limites (docs.expo.dev, SDK 58): push remoto não funciona no Expo Go no Android nem na web —
+// precisa de development build (perfil `development` do eas.json, com expo-dev-client). Sem
+// `extra.eas.projectId` no app.json (`eas init`), getExpoPushTokenAsync rejeita — ele lê o projectId
+// sozinho de Constants.easConfig / expoConfig.extra.eas. Nos dois casos o registro falha em silêncio
+// (só console): o app funciona igual, só não recebe push. Passo a passo para validar no aparelho:
+// docs/ROTEIRO_TESTE_NOTIFICACOES.md.
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { arrayRemove, arrayUnion, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from './firebase';
+import type { PreferenciasNotificacao } from '../types';
 
 const CANAL_ANDROID = 'padrao';
 
-// Sem handler, notificação que chega com o app aberto não aparece (docs do SDK 57). Na web não há
-// push (a doc do SDK 57 só lista Android e iOS), então nem registra.
+// Sem handler, notificação que chega com o app aberto não aparece (docs do SDK 58). Na web não há
+// push (a doc do SDK 58 só lista Android e iOS), então nem registra.
 if (Platform.OS !== 'web') {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -69,4 +73,15 @@ export async function desregistrarDispositivo(): Promise<void> {
   } catch (e) {
     console.warn('Não foi possível remover o token de notificações:', e);
   }
+}
+
+export type StatusTeste = 'enviado' | 'erro' | 'semDispositivo' | 'simulado' | 'desligado';
+
+// RF31: pede ao servidor uma notificação de exemplo deste tipo, só para o próprio usuário, pelo
+// caminho real (Cloud Function enviarNotificacaoDeTeste → Expo → FCM/APNs). Antes, tenta registrar
+// o aparelho de novo (se a permissão foi dada depois do login, o token entra agora).
+export async function enviarNotificacaoDeTeste(usuarioId: string, tipo: keyof PreferenciasNotificacao): Promise<StatusTeste> {
+  await registrarDispositivo(usuarioId);
+  const resposta = await httpsCallable<{ tipo: string }, { status: StatusTeste }>(functions, 'enviarNotificacaoDeTeste')({ tipo });
+  return resposta.data.status;
 }

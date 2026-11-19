@@ -228,3 +228,74 @@ do documento privado) fica documentada como trabalho do Ciclo 3, junto de RF09.
 - **Em massa:** `node scripts/migrar-dados-pessoais.cjs --aplicar` (dry-run por padrão; exige credenciais Admin) cobre todo mundo de uma vez. Ainda não foi rodado em produção.
 
 **Não coberto:** `participaClassificacao` e `preferenciasNotificacao` continuam no raiz — baixa sensibilidade e há gatilho (`classificacao.ts`) escutando o documento raiz.
+
+## 2026-11-13 — Missões com público-alvo e vigência (RF23): `leitoresIds` mantido por Cloud Function
+
+**Problema:** a leitura de `missoes` era aberta a qualquer autenticado quando `ativa == true`
+(provisório). Com público-alvo e vigência, o aluno só deveria ver a missão se estiver no público e
+dentro do período. Nenhuma das duas condições cabe numa regra de lista:
+- vínculo e matrícula exigem `get()` cruzado (primeira entrada deste documento);
+- **`request.time` comparado com `resource.data` também não é provável numa consulta de lista.**
+  Testado no emulador (2026-11-13): com a regra
+  `meuId() in resource.data.leitoresIds && resource.data.vigenciaInicio <= request.time && resource.data.vigenciaFim > request.time`,
+  tanto a consulta `leitoresIds array-contains uid` quanto a mesma consulta com
+  `where('vigenciaFim', '>', agora)` foram negadas. O valor de "agora" do client não prova nada
+  sobre o `request.time` do servidor.
+
+**Decisão:** mesmo padrão de `sessoes` e `classificacoes`. A Cloud Function
+(`functions/src/missoesPublico.ts`) mantém na missão:
+- `leitoresIds`: o público-alvo (sempre restrito a vínculo aceito) enquanto a missão está vigente;
+  fora da vigência ou desligada, só quem já concluiu, para a missão ficar no histórico dele;
+- `situacao` e `alunosNotificadosIds` (aviso de nova missão uma vez por aluno, RF31).
+
+A regra de leitura virou `responsavelId == meuId() || meuId() in leitoresIds`, e o client nunca
+escreve esses três campos. Como `leitoresIds` precisa mudar com o relógio (início e fim da vigência),
+um agendamento diário (`virarSituacaoDasMissoes`, 00:05 de Brasília) recalcula as missões cuja
+situação mudou. Com vigência em dias inteiros, ele vira as missões 5 minutos depois da meia-noite. O app
+também esconde da aba "Em curso" a missão que já passou do fim pelo relógio do aparelho.
+
+**Onde a vigência é garantida de verdade:** na conclusão. `missoesProgresso` (marcação manual de
+missão personalizada) é escrita de documento único, então a regra pode usar `get()` e
+`request.time`: marcar como concluída exige estar dentro da vigência e o aluno no público
+(`missaoAbertaParaAluno`). O progresso automático (Cloud Function) só conta treinos dentro da
+vigência e só de alunos do público.
+
+**Alternativa descartada:** manter a leitura aberta e filtrar por público e data no app. É o que
+existia antes e não atende ao pedido de aplicar a regra fora da tela.
+
+## 2026-11-13 — Professor atribuído pela academia: `professorId` nos registros e validação (RF22, RF10)
+
+**Problema:** quando uma ACADEMIA atribui um professor a uma turma (`turmas.professorId`), o professor via a turma e as
+sessões, mas não as matrículas nem os check-ins, e não conseguia validar presença. As regras de `matriculas` e
+`checkins` só liberavam `alunoId` e `responsavelId` (a academia), e o professor autônomo só funcionava porque ele é o
+próprio responsável. O código tinha um comentário reconhecendo "só o responsavelId raiz da turma tem acesso".
+
+**Leitura (listas):** mesma solução de `leitoresIds`. A regra de lista não consegue consultar a turma, então a Cloud
+Function `professorNosRegistros.ts` grava `professorId` em cada matrícula e check-in da turma (só quando a turma é de
+academia e o professor é diferente do responsável). A regra de leitura aceita `professorId == meuId()` e o app consulta
+por esse campo, junto com a consulta por `responsavelId`. Gatilhos: matrícula criada, check-in criado e turma que
+muda de professor (acerta todos os registros dela). Os registros anteriores são acertados por
+`scripts/migrar-professor-nos-registros.cjs`.
+
+**O campo é só do servidor:** o aluno não cria matrícula nem check-in com `professorId` e não o altera. Sem isso, um
+aluno daria acesso (e poder de validar) a qualquer professor. Por isso a reativação de matrícula passou a usar
+`updateDoc` em vez de `setDoc`, que apagaria o campo.
+
+**Validação (escritas, que podem usar get()):** `checkins.update` aceita o professor atribuído, conferido direto na
+turma (`turmas.professorId == meuId()`). `classificacoes` aceita a escrita do professor do check-in de origem, e a
+regra RN01 continua exigindo que o delta seja exatamente o dos pontos desse check-in na mesma transação. A pontuação
+vai sempre para o escopo da academia.
+
+**Brecha fechada junto:** o check-in aceitava qualquer `responsavelId`. Agora exige o da turma; senão um professor
+atribuído poderia validar um check-in e jogar pontos no escopo de outra academia.
+
+**Bug anterior encontrado ao testar:** a regra de leitura de `classificacoes` não tinha a guarda `resource == null ||`.
+No 1º check-in validado do aluno no mês a classificação ainda não existe, e a leitura dentro da transação de
+`validarCheckIn` era negada: **a primeira validação do mês falhava para qualquer validador, inclusive a academia.**
+Os testes antigos não pegavam porque já semeavam a classificação. A leitura foi separada em `list` (inalterada) e
+`get` (com a guarda, e aceitando também o professor com vínculo aceito com a academia do escopo, que precisa do valor
+atual para estornar).
+
+**Trade-off aceito:** um professor com vínculo aceito com a academia pode ler, por id, as classificações mensais
+dessa academia (não consegue listar o ranking). É o que permite estornar sem mover a validação para uma Cloud
+Function; a alternativa, mais restritiva, seria uma callable de validação com Admin SDK.

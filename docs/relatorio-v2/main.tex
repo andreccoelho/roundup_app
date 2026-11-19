@@ -50,13 +50,15 @@
 %   \mostrarorientacoesfalse -> as caixas somem (use na versão entregue à banca)
 % ---------------------------------------------------------------------
 \newif\ifmostrarorientacoes
-\mostrarorientacoestrue
+\mostrarorientacoesfalse
 
 % Formatação (não editar) e dados do trabalho (editar!)
 \input{config/estilo}
 \input{config/dados}
+\input{config/quadrolongo}
 
 % Pacote extra deste projeto: diagramas desenhados direto no LaTeX (TikZ)
+\usepackage{float}   % [H]: figuras e quadros ficam onde aparecem no texto, sem partir parágrafos
 \usepackage{tikz}
 \usepackage{multicol}
 \usetikzlibrary{arrows.meta,positioning,fit,shapes.geometric,shapes.multipart}

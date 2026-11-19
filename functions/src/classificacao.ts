@@ -17,7 +17,7 @@ import { getFirestore, type Firestore, type DocumentSnapshot } from 'firebase-ad
 // Limite do WriteBatch do Firestore
 const TAMANHO_LOTE = 500;
 
-async function alunosVinculados(db: Firestore, responsavelId: string): Promise<string[]> {
+export async function alunosVinculados(db: Firestore, responsavelId: string): Promise<string[]> {
   const snap = await db.collection('vinculos')
     .where('destinatarioId', '==', responsavelId)
     .where('status', '==', 'aceito')

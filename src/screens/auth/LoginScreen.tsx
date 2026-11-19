@@ -7,7 +7,7 @@
 // campos arredondados preenchidos e o botão principal fixo no rodapé — o KeyboardAvoidingView da
 // Tela sobe o rodapé junto com o teclado. Enter no e-mail vai para a senha; Enter na senha envia.
 import { useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { View, type TextInputInstance } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { criarEstilos, Espacamento } from '../../theme';
@@ -25,7 +25,7 @@ import Logo from '../../components/Logo';
 export default function LoginScreen() {
   const { login } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList, 'Login'>>();
-  const refSenha = useRef<TextInput>(null);
+  const refSenha = useRef<TextInputInstance>(null);
   const styles = useEstilos();
 
   const [email, setEmail] = useState('');

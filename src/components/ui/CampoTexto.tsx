@@ -5,7 +5,7 @@
 // de data (DD/MM/AAAA) e hora (HH:MM) com teclado numérico — o valor entregue continua sendo o
 // texto formatado, exatamente como as telas já validavam antes.
 import { useState, type Ref } from 'react';
-import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
+import { Pressable, TextInput, View, type TextInputInstance, type TextInputProps } from 'react-native';
 import { Alturas, criarEstilos, Espacamento, Raios, Tipografia, useTema } from '../../theme';
 import { estiloAnelFoco, estiloSemOutline, useFocoVisivel } from '../../hooks/useFocoVisivel';
 import { IconeOlho, IconeOlhoFechado } from '../icones';
@@ -35,7 +35,7 @@ interface CampoTextoProps
   ajuda?: string;
   mascara?: Mascara;
   // Para encadear campos (Enter/"próximo" foca o seguinte).
-  refCampo?: Ref<TextInput>;
+  refCampo?: Ref<TextInputInstance>;
 }
 
 function aplicarMascara(texto: string, mascara: Mascara): string {

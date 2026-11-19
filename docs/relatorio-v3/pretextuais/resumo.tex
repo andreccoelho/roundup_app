@@ -1,0 +1,60 @@
+% =====================================================================
+%  RESUMO EM LÍNGUA PORTUGUESA (obrigatório) -- Manual, seção 2.1.8
+% ---------------------------------------------------------------------
+%  Regras (ABNT NBR 6028:2021):
+%   - UM ÚNICO parágrafo, sem recuo, espaço simples;
+%   - entre 150 e 500 palavras;
+%   - frases concisas e afirmativas; terceira pessoa do singular e voz
+%     ativa ("Este trabalho analisa...", e não "Neste trabalho eu analisei...");
+%   - deve apresentar: OBJETIVO, MÉTODO, RESULTADOS e CONCLUSÕES;
+%   - sem citações, figuras, tabelas ou equações;
+%   - palavras-chave logo abaixo, separadas por ponto e vírgula (;) e
+%     terminadas com ponto final (.).
+%  DICA: escreva o resumo por último, quando o trabalho estiver pronto.
+% =====================================================================
+\setlength{\absparsep}{18pt}
+\begin{resumo}
+\SingleSpacing
+\noindent A evasão de praticantes é um problema recorrente em academias de
+lutas e artes marciais, e muitos alunos abandonam o treino antes de
+perceber os seus benefícios físicos e mentais. Este trabalho apresenta o
+RoundUp, um aplicativo móvel gamificado que busca aumentar o engajamento e
+a retenção dos alunos e apoiar professores e academias na gestão das
+turmas. O projeto foi conduzido como um processo de ideação do autor:
+treze ideias de funcionalidades foram convertidas em requisitos,
+construídas como hipóteses e, em paralelo, submetidas a um questionário
+que serviu para confirmá-las ou refutá-las e para revelar ideias novas.
+O questionário foi respondido por praticantes e ex-praticantes reais e,
+para cobrir perfis ausentes, como o de professor, por 65 respostas
+sintéticas, geradas por um \textit{script} a partir de 12 personas
+elaboradas com apoio de inteligência artificial; essas respostas
+trouxeram ideias novas e um sinal complementar, mas a decisão sobre cada
+requisito se apoiou nos dados reais. O protótipo foi desenvolvido em
+React Native com Firebase, com três perfis de usuário (aluno, professor e
+academia), e implementa os 33 requisitos funcionais, entre eles registro
+de presença com validação pelo professor, pontos de experiência, níveis,
+sequência de treinos, medalhas, classificação, missões, registro de
+graduação, relatórios de frequência e consentimento conforme a LGPD. A
+maior parte do código foi escrita por agentes de IA, enquanto o autor
+concentrou o seu trabalho no planejamento, no projeto e no controle de
+qualidade dos agentes e do software em si: as regras de negócio que protegem a gamificação foram
+implementadas nas regras de segurança do banco de dados e cobertas por
+288 testes automatizados, e quatro requisitos foram verificados em
+aparelho. Na avaliação real, seis das doze ideias avaliadas foram
+confirmadas, com destaque para os recursos que tornam o progresso
+visível, como a barra de progresso até a graduação e o histórico de
+presença; lembretes, mensagens automáticas, missões e o próprio registro
+de presença não foram confirmados, e os comentários apontaram o excesso
+de notificações e de dados a inserir como riscos de abandono, já tratados
+por requisitos do projeto. As respostas sintéticas e os comentários
+resultaram em nove requisitos candidatos para versões futuras. Conclui-se
+que a gamificação centrada no progresso visível é a direção mais
+promissora para o aplicativo, que parte da evasão tem causas externas que
+um aplicativo não resolve, que o desenvolvimento com agentes de IA
+desloca o papel do desenvolvedor para a especificação e a verificação, e
+que a próxima etapa é validar o aplicativo e os requisitos de gestão com
+alunos e professores em campo.
+
+\vspace{\onelineskip}
+\noindent\textbf{Palavras-chave}: gamificação; artes marciais; engenharia de requisitos; personas; desenvolvimento assistido por IA.
+\end{resumo}

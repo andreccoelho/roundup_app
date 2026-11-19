@@ -3,7 +3,8 @@
 //  - bloqueada: disco em cinza translúcido (`preenchimento`), ícone e número em texto3 e um
 //    cadeado pequeno — forma e ícone diferentes, não só cor;
 //  - `maxima`: a medalha de nível máximo, a única em ouro (docs/DESIGN.md, R-03).
-// Vai numa grade (o pai arruma em linhas); rótulo de até duas linhas embaixo.
+// Vai numa grade (o pai arruma em linhas); rótulo de até duas linhas embaixo e, na conquistada
+// registrada pelo servidor (RF19), a data da conquista.
 import type { ComponentType } from 'react';
 import { View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -28,9 +29,11 @@ interface MedalhaProps {
   tamanho?: number;
   // Sem o rótulo embaixo (quando o contexto já diz o nome da medalha, como no momento de conquista)
   semRotulo?: boolean;
+  // RF19: data da conquista já formatada ("12/10/2026")
+  conquistadaEm?: string;
 }
 
-export default function Medalha({ rotulo, conquistada = true, tipo = 'treinos', numero, maxima, tamanho = 64, semRotulo }: MedalhaProps) {
+export default function Medalha({ rotulo, conquistada = true, tipo = 'treinos', numero, maxima, tamanho = 64, semRotulo, conquistadaEm }: MedalhaProps) {
   const { cores } = useTema();
   const styles = useEstilos();
   const ouro = conquistada && maxima;
@@ -41,7 +44,7 @@ export default function Medalha({ rotulo, conquistada = true, tipo = 'treinos', 
   const r = tamanho / 2;
 
   return (
-    <View style={[styles.container, { width: tamanho + 20 }]} accessible accessibilityRole="image" accessibilityLabel={`Medalha: ${rotulo}${conquistada ? ', conquistada' : ', ainda não conquistada'}`}>
+    <View style={[styles.container, { width: tamanho + 20 }]} accessible accessibilityRole="image" accessibilityLabel={`Medalha: ${rotulo}${conquistada ? `, conquistada${conquistadaEm ? ` em ${conquistadaEm}` : ''}` : ', ainda não conquistada'}`}>
       <View style={{ width: tamanho, height: tamanho }}>
         <Svg width={tamanho} height={tamanho} aria-hidden>
           <Circle cx={r} cy={r} r={r} fill={corDisco} />
@@ -70,6 +73,11 @@ export default function Medalha({ rotulo, conquistada = true, tipo = 'treinos', 
           {rotulo}
         </Texto>
       )}
+      {!semRotulo && conquistada && conquistadaEm ? (
+        <Texto variante="caption" cor="texto3" alinhamento="center" style={styles.data} maxFontSizeMultiplier={1.4}>
+          {conquistadaEm}
+        </Texto>
+      ) : null}
     </View>
   );
 }
@@ -80,4 +88,5 @@ const useEstilos = criarEstilos(() => ({
   numero: { marginTop: -1, fontVariant: ['tabular-nums'], fontWeight: '700' },
   cadeado: { position: 'absolute', right: -2, bottom: -2, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   rotulo: { marginTop: Espacamento.pequeno - 2 },
+  data: { fontVariant: ['tabular-nums'] },
 }));

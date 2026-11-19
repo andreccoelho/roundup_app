@@ -1,0 +1,20 @@
+@startuml RoundUp_UC_04_Gamificacao
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Aluno
+
+package "Gamificação" {
+  usecase "UC16 Visualizar Nível\ne Progresso (RF16, RF17)" as UC16
+  usecase "UC17 Consultar\nMissões (RF18)" as UC17
+  usecase "UC18 Consultar Classificação\n(RF20, RN04, RN09, RNF11)" as UC18
+  usecase "UC19 Consultar Sequência\nde Treinos (RF21)" as UC19
+}
+
+Aluno -- UC16
+Aluno -- UC17
+Aluno -- UC18
+Aluno -- UC19
+
+@enduml

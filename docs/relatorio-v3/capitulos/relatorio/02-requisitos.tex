@@ -1,0 +1,475 @@
+% =====================================================================
+%  CAPÍTULO 2 -- IDEAÇÃO E REQUISITOS DO PROJETO
+%  (Regulamento, Art. 9º, item ii)
+% ---------------------------------------------------------------------
+%  Neste projeto, o capítulo de requisitos também descreve o PROCESSO DE
+%  IDEAÇÃO, pois os requisitos iniciais nasceram das ideias e foram,
+%  depois, avaliados no survey com usuarios reais (ver Capítulo 5).
+%
+%  Linha do raciocínio (para o aluno não se perder):
+%    IDEIA (I01...)  ->  REQUISITO (RF01...)  ->  ITEM DO SURVEY
+%                                       ->  NOTA DOS USUÁRIOS REAIS
+%                                       ->  DECISÃO (manter, ajustar, adiar)
+% =====================================================================
+
+\chapter{Requisitos funcionais e não funcionais}
+\label{cap:requisitos}
+
+\section{Fundamentos que orientaram a ideação}
+\label{sec:fundamentos}
+
+\subsection{Gamificação}
+
+\citeonline{deterding2011} definem gamificação como o uso de elementos de
+design de jogos em contextos que não são jogos. Em saúde e bem-estar, a
+revisão sistemática de \citeonline{johnson2016} indica que sistemas
+gamificados podem favorecer o engajamento com hábitos saudáveis,
+principalmente quando tornam o progresso visível e recompensador, embora
+os efeitos variem conforme o desenho da intervenção. Obras de referência
+da área \cite{zichermann2011,kapp2012} alertam que as mecânicas devem
+servir a objetivos de comportamento bem definidos; caso contrário, viram
+apenas uma camada visual sem efeito real.
+
+Para escolher as mecânicas, adotou-se o \textit{framework} Octalysis
+\cite{chou2015}, que organiza a motivação humana em oito impulsos
+(\textit{core drives}), como o sentido de progresso e realização, a
+influência social e o medo de perder algo conquistado. Complementarmente,
+a Teoria da Autodeterminação \cite{ryan2000} lembra que a motivação mais
+duradoura depende da sensação de competência, de autonomia e de
+pertencimento -- e que recompensas externas mal aplicadas podem enfraquecer
+a motivação interna. Essa ressalva é especialmente relevante para
+mecânicas competitivas, como \textit{rankings}.
+
+\subsection{Personas}
+
+Uma \textbf{persona} é um personagem fictício, porém fundamentado em
+dados, que representa um grupo de usuários com objetivos e
+comportamentos semelhantes \cite{cooper1999,pruitt2006}. Neste projeto,
+além de orientar o design, as personas serviram de base para gerar
+\textbf{respostas sintéticas} ao questionário. As personas foram
+elaboradas com apoio de um modelo de linguagem, mas as respostas não
+foram simuladas uma a uma pelo modelo: foram sorteadas por um
+\textit{script} com regras por perfil, derivadas das fichas
+(\autoref{sec:val-personas}). Estudos recentes mostram que modelos de
+linguagem conseguem reproduzir, em alguma medida, padrões de resposta de
+grupos humanos \cite{argyle2023}, mas também apontam distorções
+sistemáticas em relação a pessoas reais \cite{aher2023}, como respostas
+menos diversas do que as dos grupos que pretendem representar
+\cite{wang2025}. Por isso, as personas e as respostas derivadas delas
+tiveram três papéis bem delimitados: \textbf{gerar ideias} não previstas
+pelo autor, sobretudo nos perfis ausentes da amostra real, como o
+professor e o dono de academia; oferecer um \textbf{sinal
+complementar}, sempre rotulado como sintético, sobre cada requisito; e
+servir de \textbf{dados de teste} do instrumento e da análise. Em nenhum
+caso substituíram a opinião de usuários reais: a decisão sobre cada
+requisito se apoiou nos dados reais e na literatura.
+
+\section{Processo de ideação}
+\label{sec:processo-ideacao}
+
+O projeto seguiu um modelo iterativo e incremental combinado com
+prototipação \cite{sommerville2019,pressman2021}, adequado quando parte
+dos requisitos é desconhecida no início -- aqui, sobretudo, o valor que
+cada mecânica de jogo tem para alunos e professores. Nesse modelo, as
+ideias do autor não precisam esperar uma pesquisa para serem
+construídas: elas entram como hipóteses, são implementadas em ciclos
+curtos e, em paralelo, submetidas a avaliação, que as confirma, as
+refuta ou revela ideias novas para os ciclos seguintes. A
+\autoref{fig:ciclo-ideacao} resume o ciclo seguido.
+
+\begin{figure}[H]
+  \centering
+  \caption{Ciclo de ideação adotado no projeto}
+  \label{fig:ciclo-ideacao}
+  \begin{tikzpicture}[
+      font=\footnotesize,
+      etapa/.style={draw, rounded corners=3pt, align=center,
+                    minimum width=3.0cm, minimum height=1.0cm, fill=white},
+      seta/.style={-{Stealth[length=2.5mm]}, thick},
+      node distance=0.6cm and 0.9cm]
+    \node[etapa] (ideias) {1. Ideias de\\funcionalidades};
+    \node[etapa, right=of ideias] (req) {2. Requisitos\\iniciais (RF/RNF)};
+    \node[etapa, above right=0.3cm and 0.9cm of req] (app) {3a. Construção\\do aplicativo};
+    \node[etapa, right=of req] (survey) {3b. \textit{Survey} com\\usuários reais};
+    \node[etapa, below right=0.3cm and 0.9cm of req] (pers) {3c. Personas e\\respostas sintéticas};
+    \node[etapa, right=4.6cm of req] (cons) {4. Consolidação\\e priorização};
+    \draw[seta] (ideias) -- (req);
+    \draw[seta] (req) -- (app);
+    \draw[seta] (req) -- (survey);
+    \draw[seta] (req) -- (pers);
+    \draw[seta] (survey) -- (cons);
+    \draw[seta, dashed] (pers.east) -| node[pos=0.8, right, font=\scriptsize, align=left]{ideias e sinal\\complementar} (cons.south);
+    \draw[seta, dashed] (cons.north) -- ++(0,1.55) -| node[pos=0.25, above]{confirmação, revisão e ideias novas} (app.north);
+  \end{tikzpicture}
+  \fonte{Elaborado pelo autor (2026).}
+\end{figure}
+
+As etapas foram as seguintes:
+
+\begin{enumerate}
+  \item \textbf{Geração de ideias.} A partir da vivência do autor como
+        praticante, da literatura
+        (\autoref{sec:fundamentos}) e da observação de aplicativos que
+        mantêm hábitos com pontos, metas e sequências (como o Duolingo) e
+        de plataformas brasileiras de gestão de academias de luta, foram
+        listadas ideias de funcionalidades para o aluno e para o
+        professor.
+  \item \textbf{Conversão em requisitos iniciais.} Cada ideia recebeu um
+        código (I01, I02\ldots) e deu origem a um ou mais requisitos
+        funcionais verificáveis (\autoref{sec:rf}). Os requisitos foram
+        registrados em uma base no Notion, com descrição, ator, ciclo de
+        desenvolvimento, origem, prioridade (MoSCoW) e situação, e a lista
+        consolidada foi versionada no repositório em 8 de setembro de 2026.
+        Desde a origem, alguns requisitos não funcionais já antecipavam
+        riscos conhecidos, como o \textit{check-in} em poucos toques
+        (RNF01) e a adesão opcional à classificação (RNF11).
+  \item \textbf{Construção e avaliação em paralelo.} Os requisitos
+        iniciais guiaram a construção do aplicativo
+        (\autoref{cap:implementacao}), cujos quatro ciclos tinham uma
+        primeira versão pronta em meados de setembro. Ao mesmo tempo, as
+        ideias viraram itens de um questionário, em que o respondente
+        atribui uma nota de 1 (pouco útil) a 5 (muito útil) a cada recurso
+        e comenta o que mudaria.
+  \item \textbf{Confirmação ou refutação com usuários reais.} O
+        questionário foi respondido por praticantes e ex-praticantes em 18
+        e 19 de setembro de 2026. As notas e os comentários confirmaram ou
+        refutaram cada ideia, segundo a regra da \autoref{sec:rf}.
+  \item \textbf{Ideias novas e sinal complementar com personas.} Em 26
+        de outubro de 2026, 65 respostas sintéticas, geradas a partir de
+        personas, foram registradas em uma cópia separada do formulário
+        (\autoref{cap:testes}). Elas trouxeram ideias não pensadas pelo
+        autor, sobretudo do ponto de vista do professor
+        (\autoref{sec:ideias-novas}), e um sinal complementar sobre os
+        requisitos, registrado à parte nos quadros, sem entrar no
+        cálculo da situação de cada um.
+  \item \textbf{Consolidação.} As decisões foram levadas aos ciclos
+        seguintes: os requisitos confirmados foram mantidos, os ajustes
+        foram implementados na etapa de fechamento (novembro de 2026), os
+        não confirmados ficaram marcados para revisão e as ideias novas
+        foram registradas como candidatas para versões futuras.
+\end{enumerate}
+
+Durante a ideação, uma decisão de modelagem alterou o conjunto de
+requisitos: além do aluno e do professor, a \textbf{academia} passou a ser
+um perfil próprio, que gerencia professores e turmas, enquanto o professor
+pode atuar vinculado a uma academia ou de forma autônoma. Essa decisão
+originou os requisitos de vínculo (RF07 a RF09) e as regras RN05 a RN07,
+que não correspondem a nenhuma ideia do questionário, mas são condição
+para que as ideias funcionem nos dois arranjos encontrados na prática.
+
+\section{Ideias iniciais}
+\label{sec:ideias}
+
+O \quadroref{qua:ideias} apresenta as ideias iniciais, o perfil a que se
+destinam, o impulso motivacional do Octalysis \cite{chou2015} a que cada
+uma se relaciona e os requisitos funcionais que ela originou
+(\autoref{sec:rf}).
+
+\begin{quadrolongo}
+\begin{longtable}{|c|p{4.6cm}|c|p{3.9cm}|p{2.0cm}|}
+  \caption{Ideias iniciais de funcionalidades}\label{qua:ideias}\\
+  \hline
+  \textbf{ID} & \textbf{Ideia} & \textbf{Perfil} & \textbf{Impulso (Octalysis)} & \textbf{Requisitos} \\ \hline
+\endfirsthead
+  \multicolumn{5}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Ideia} & \textbf{Perfil} & \textbf{Impulso (Octalysis)} & \textbf{Requisitos} \\ \hline
+\endhead
+  \multicolumn{5}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    I01 & Pontos de experiência (XP) a cada treino & Aluno & Desenvolvimento e realização & RF16 \\ \hline
+    I02 & Registro rápido de presença (\textit{check-in}) & Ambos & -- (base do sistema) & RF13, RF22 \\ \hline
+    I03 & Contador de dias treinados e frequência semanal & Ambos & Desenvolvimento e realização & RF15, RF24 \\ \hline
+    I04 & Ofensiva: sequência de treinos sem falhar & Aluno & Perda e evitação & RF21 \\ \hline
+    I05 & Missões e desafios semanais criados pelo professor & Ambos & Empoderamento da criatividade e \textit{feedback} & RF18, RF23 \\ \hline
+    I06 & \textit{Ranking} de frequência da turma & Aluno & Influência social e pertencimento & RF20 \\ \hline
+    I07 & Medalhas por marcos (100 treinos, 1 ano) & Aluno & Desenvolvimento e realização & RF19 \\ \hline
+    I08 & Barra de progresso até a próxima graduação & Aluno & Desenvolvimento e realização & RF17, RF25 \\ \hline
+    I09 & Histórico de presença e evolução pessoal & Aluno & Propriedade e posse & RF15 \\ \hline
+    I10 & Mural (\textit{feed}) com conquistas da turma & Aluno & Influência social e pertencimento & -- \\ \hline
+    I11 & Lembretes nos dias habituais de treino & Aluno & -- (gatilho externo) & RF31 \\ \hline
+    I12 & Alerta ao professor e mensagem após ausência & Ambos & Influência social e pertencimento & RF32 \\ \hline
+    I13 & Relatório de frequência e evolução da turma & Professor & -- (gestão) & RF26, RF27 \\ \hline
+\end{longtable}
+  \fonte{Elaborado pelo autor (2026).}
+\end{quadrolongo}
+
+A ideia I10 (mural da turma) foi a única que não originou requisito: ela
+ficou fora do escopo definido para esta versão e, na avaliação
+(\autoref{cap:testes}), não foi confirmada: teve média 3,3 entre os
+usuários reais e também ficou abaixo de 3,5 nas respostas sintéticas
+(3,4), o que sustentou a decisão de não incorporá-la.
+
+\section{Requisitos funcionais}
+\label{sec:rf}
+
+Os requisitos funcionais foram escritos no formato ``O sistema deve\ldots'',
+priorizados pelo método MoSCoW (\textit{Must}, \textit{Should},
+\textit{Could}, \textit{Won't}) e distribuídos em quatro ciclos de
+desenvolvimento: Ciclo~1, contas, vínculos e treinos; Ciclo~2,
+gamificação; Ciclo~3, gestão; e Ciclo~4, conformidade e retenção. Para
+caber na página, as descrições abaixo estão resumidas; o texto integral de
+cada requisito está na base de requisitos do projeto.
+
+Nos quadros a seguir, a coluna ``Ideia'' liga o requisito à ideia que o
+originou (``--'' indica requisito de base, sem ideia correspondente no
+questionário); quando há mais de uma ideia, a primeira é a principal e é
+a que conta para a decisão. A coluna ``Situação'' registra o resultado da
+avaliação descrita no \autoref{cap:testes}, pela seguinte regra, aplicada
+na ordem:
+
+\begin{itemize}
+  \item \textit{Base}: requisito estrutural, sem ideia correspondente no
+        questionário;
+  \item \textit{Sem dados}: recurso usado pelo professor ou pela
+        academia e cujo benefício recai sobre o próprio gestor (validação
+        de presença, lista de alunos, relatórios e alertas), sem
+        respondentes reais desse perfil. Recursos operados pelo gestor mas
+        voltados ao aluno, como missões (RF23) e graduação (RF25), são
+        julgados pela avaliação dos alunos;
+  \item \textit{A revisar}: ideia \textbf{não confirmada}, com média
+        geral abaixo de 3,5 entre os usuários reais. O requisito pode
+        continuar implementado, quando é necessário a outros, mas a ideia
+        volta a ser investigada;
+  \item \textit{Ajustado}: ideia \textbf{confirmada} (média geral igual
+        ou superior a 3,5), mas com mudança no requisito motivada pelos
+        comentários ou pela literatura;
+  \item \textit{Mantido}: ideia \textbf{confirmada}, sem mudança.
+\end{itemize}
+
+A diferença entre praticantes e ex-praticantes é comentada no texto, mas
+não entra na regra, porque o grupo de ex-praticantes tem apenas duas
+pessoas. A coluna ``Sint.'' mostra, à parte, o sinal das respostas
+sintéticas (\autoref{sec:val-personas}) para a mesma ideia, usando o
+mesmo corte de 3,5: ``+'' quando a média sintética do perfil a que o
+requisito se destina (alunos e ex-alunos, ou professores, nos requisitos
+de gestão) é igual ou superior a 3,5, e ``$-$'' quando é inferior. Esse
+sinal não altera a situação: ele indica onde as hipóteses do autor e das
+personas convergem ou divergem dos dados reais.
+
+\begin{quadrolongo}
+\begin{longtable}{|c|p{6.6cm}|c|c|c|c|p{1.6cm}|}
+  \caption{Requisitos funcionais dos Ciclos 1 e 2}\label{qua:rf}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Sint.} & \textbf{Situação} \\ \hline
+\endfirsthead
+  \multicolumn{7}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Sint.} & \textbf{Situação} \\ \hline
+\endhead
+  \multicolumn{7}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    RF01 & O sistema deve permitir o cadastro escolhendo o perfil Aluno, Professor ou Academia. & -- & 1 & M & -- & Base \\ \hline
+    RF02 & O sistema deve permitir login, encerramento de sessão e recuperação de senha. & -- & 1 & M & -- & Base \\ \hline
+    RF03 & O sistema deve liberar a cada perfil apenas as funcionalidades correspondentes. & -- & 1 & M & -- & Base \\ \hline
+    RF04 & O sistema deve permitir que a academia mantenha seu perfil institucional. & -- & 1 & M & -- & Base \\ \hline
+    RF05 & O sistema deve permitir que o professor mantenha seu perfil e indique se é autônomo. & -- & 1 & M & -- & Base \\ \hline
+    RF06 & O sistema deve permitir que o aluno edite seu perfil (nome, modalidade, faixa, foto). & -- & 1 & M & -- & Base \\ \hline
+    RF07 & O sistema deve permitir vincular professor a academia, com solicitação e aceite. & -- & 1 & M & -- & Base \\ \hline
+    RF08 & O sistema deve permitir vincular o aluno a uma academia ou a um professor autônomo. & -- & 1 & M & -- & Base \\ \hline
+    RF10 & O sistema deve permitir criar e manter turmas (nome, modalidade, nível, responsável). & -- & 1 & M & -- & Base \\ \hline
+    RF11 & O sistema deve permitir matricular o aluno em turmas do seu vínculo ativo. & -- & 1 & M & -- & Base \\ \hline
+    RF12 & O sistema deve permitir criar sessões de treino, inclusive a partir de grade semanal. & -- & 1 & M & -- & Base \\ \hline
+    RF13 & O sistema deve permitir que o aluno faça \textit{check-in} em uma sessão da sua turma. & I02 & 1 & M & + & A revisar \\ \hline
+    RF14 & O sistema deve exibir ao aluno a agenda das próximas sessões. & -- & 1 & M & -- & Base \\ \hline
+    RF15 & O sistema deve exibir ao aluno o histórico de \textit{check-ins} validados. & I09, I03 & 1 & M & + & Mantido \\ \hline
+    RF16 & O sistema deve creditar XP por \textit{check-ins} validados e missões concluídas. & I01 & 2 & M & + & Mantido \\ \hline
+    RF17 & O sistema deve exibir o nível atual, o XP acumulado e o quanto falta para o próximo nível. & I08 & 2 & M & + & Ajustado \\ \hline
+    RF18 & O sistema deve exibir ao aluno as missões ativas e o progresso em cada uma. & I05 & 2 & M & + & A revisar \\ \hline
+    RF19 & O sistema deve conceder medalhas ao atingir marcos predefinidos. & I07 & 2 & M & + & Mantido \\ \hline
+    RF20 & O sistema deve exibir a classificação por pontos, no escopo do vínculo do aluno. & I06 & 2 & M & $-$ & Ajustado \\ \hline
+    RF21 & O sistema deve contabilizar e exibir a sequência de treinos consecutivos. & I04 & 2 & S & + & Mantido \\ \hline
+\end{longtable}
+  \fonte{Elaborado pelo autor (2026). Prior.: M = \textit{Must}; S = \textit{Should}. Sint.: sinal das respostas sintéticas (``+'' média $\geq$ 3,5; ``$-$'' média $<$ 3,5; ``--'' sem ideia correspondente).}
+\end{quadrolongo}
+
+\begin{quadrolongo}
+\begin{longtable}{|c|p{6.6cm}|c|c|c|c|p{1.6cm}|}
+  \caption{Requisitos funcionais dos Ciclos 3 e 4}\label{qua:rf2}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Sint.} & \textbf{Situação} \\ \hline
+\endfirsthead
+  \multicolumn{7}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Descrição resumida} & \textbf{Ideia} & \textbf{Ciclo} & \textbf{Prior.} & \textbf{Sint.} & \textbf{Situação} \\ \hline
+\endhead
+  \multicolumn{7}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    RF09 & O sistema deve permitir que a academia aceite e encerre vínculos com professores. & -- & 3 & S & -- & Base \\ \hline
+    RF22 & O sistema deve permitir que o responsável valide ou rejeite os \textit{check-ins}. & I02 & 3 & M & + & Sem dados \\ \hline
+    RF23 & O sistema deve permitir criar missões personalizadas (critério, recompensa, vigência). & I05 & 3 & M & $-$ & A revisar \\ \hline
+    RF24 & O sistema deve exibir os alunos sob responsabilidade do gestor e sua frequência recente. & I03 & 3 & M & + & Sem dados \\ \hline
+    RF25 & O sistema deve permitir registrar a graduação de faixa ou grau do aluno. & I08 & 3 & M & + & Ajustado \\ \hline
+    RF26 & O sistema deve apresentar relatório de frequência por turma e por período. & I13 & 3 & S & + & Sem dados \\ \hline
+    RF27 & O sistema deve apresentar à academia uma visão consolidada com indicadores agregados. & I13 & 3 & S & + & Sem dados \\ \hline
+    RF33 & O sistema deve permitir ao gestor personalizar pontuação, níveis e faixas. & -- & 3 & S & -- & Base \\ \hline
+    RF28 & O sistema deve registrar o consentimento LGPD no cadastro. & -- & 4 & M & -- & Base \\ \hline
+    RF29 & O sistema deve permitir que o usuário solicite a exclusão da conta e dos dados. & -- & 4 & M & -- & Base \\ \hline
+    RF30 & O sistema deve registrar o responsável legal de alunos menores de 18 anos. & -- & 4 & M & -- & Base \\ \hline
+    RF31 & O sistema deve enviar notificações de sessão, nova missão e conquista. & I11 & 4 & S & $-$ & A revisar \\ \hline
+    RF32 & O sistema deve sinalizar ao gestor os alunos com queda relevante de frequência. & I12 & 4 & S & + & Sem dados \\ \hline
+\end{longtable}
+  \fonte{Elaborado pelo autor (2026). Prior.: M = \textit{Must}; S = \textit{Should}. Sint.: sinal das respostas sintéticas (``+'' média $\geq$ 3,5; ``$-$'' média $<$ 3,5; ``--'' sem ideia correspondente).}
+\end{quadrolongo}
+
+A aplicação da regra levou aos seguintes resultados.
+
+\textbf{Ideias confirmadas sem mudança.} O XP por treino (RF16), o
+histórico de presença (RF15), as medalhas (RF19) e a sequência de treinos
+(RF21) tiveram médias entre 3,7 e 3,8 entre os usuários reais, e o sinal
+sintético foi favorável em todas.
+
+\textbf{Ideias confirmadas com ajuste.} A barra de progresso até a
+próxima graduação (I08, média 3,8) foi a ideia mais bem avaliada, mas foi
+ajustada em RF17 e RF25 porque a troca de faixa é sempre uma decisão do
+professor (RN03), e não um limiar automático: o progresso por pontos
+passou a ser exibido como nível e XP (RF17), e a barra de graduação mede
+os graus registrados pelo professor dentro da faixa atual e indica a
+próxima faixa da estrutura do responsável (RF25 e RF33), sem prever
+quando a troca vai acontecer. O \textit{ranking} (RF20) teve média 3,7 e
+foi confirmado pelos usuários reais, mas é o caso em que o sinal
+sintético divergiu (3,4 entre alunos e 2,4 entre professores, que
+apontaram riscos como lesões por competição e exposição de quem treina
+menos). Como a literatura também alerta para o efeito de recompensas
+competitivas sobre a motivação interna \cite{ryan2000}, a classificação
+foi mantida com as salvaguardas previstas desde a lista inicial, a adesão
+opcional (RNF11) e a janela de tempo (RN04), implementadas no fechamento
+como classificação mensal da qual o aluno pode sair.
+
+\textbf{Ideias não confirmadas (a revisar).} O \textit{check-in} (I02)
+teve média 3,2 (3,5 entre praticantes e 2,5 entre ex-praticantes), e um
+respondente citou ``inserir muitos dados constantemente'' como motivo
+para desinstalar o aplicativo. Como é a base do sistema, RF13 continua
+implementado, e o comentário confirmou a importância do critério de
+baixo esforço já previsto (RNF01, até três toques), atendido com um toque
+na tela inicial (\autoref{sec:testes-prototipo}); o sinal sintético, mais
+favorável (4,1), não altera a decisão. As missões (I05, média 3,2)
+ficaram a revisar no lado do aluno (RF18) e na criação pelo gestor
+(RF23); aqui os dois sinais convergem, pois os professores sintéticos
+também deram notas baixas (2,5). Os lembretes (I11) tiveram a menor
+média entre as ideias apresentadas a todos (3,0), e as notificações em
+excesso foram citadas como motivo de abandono; as preferências por tipo
+de notificação, implementadas desde o Ciclo 4, respondem a esse risco,
+mas a ideia de lembretes automáticos continua não confirmada (RF31).
+
+\textbf{Ideias sem dados reais.} Os requisitos de gestão (RF22, RF24,
+RF26, RF27 e RF32) não puderam ser confirmados nem refutados, pois nenhum
+professor real respondeu ao questionário. O sinal sintético é favorável
+em todos eles (médias de 4,5 a 5,0 entre os professores sintéticos), o
+que os mantém como hipóteses plausíveis a validar em campo, e não como
+ideias confirmadas. Na ideia I12, a parte avaliada pelos alunos, a
+mensagem automática ao aluno após ausência, foi refutada (média 2,5
+entre os ex-praticantes) e descartada; manteve-se apenas o alerta ao
+professor (RF32), que depende dessa validação.
+
+\section{Ideias novas surgidas na avaliação}
+\label{sec:ideias-novas}
+
+Além de confirmar ou refutar as ideias iniciais, as respostas abertas
+revelaram ideias que o autor não havia previsto. O
+\quadroref{qua:ideias-novas} as registra como \textbf{requisitos
+candidatos}, com a origem (respostas reais ou sintéticas), a relação com
+os requisitos existentes e o destino dado a cada uma. As ideias de origem
+sintética derivam de bancos de respostas escritos pelo autor com apoio de
+IA a partir das personas; por isso, valem como sugestões a investigar, e
+não como demanda de usuários.
+
+\begin{quadrolongo}
+\begin{longtable}{|c|>{\raggedright\arraybackslash}p{4.0cm}|>{\raggedright\arraybackslash}p{2.1cm}|>{\raggedright\arraybackslash}p{4.0cm}|>{\raggedright\arraybackslash}p{2.6cm}|}
+  \caption{Ideias novas surgidas na avaliação (requisitos candidatos)}\label{qua:ideias-novas}\\
+  \hline
+  \textbf{ID} & \textbf{Ideia} & \textbf{Origem} & \textbf{Relação com os requisitos} & \textbf{Destino} \\ \hline
+\endfirsthead
+  \multicolumn{5}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Ideia} & \textbf{Origem} & \textbf{Relação com os requisitos} & \textbf{Destino} \\ \hline
+\endhead
+  \multicolumn{5}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    N01 & Benefícios ou descontos para os alunos mais assíduos & Real (praticante) e sintética (ex-aluno) & Recompensa externa ligada a RF16 e RF20; depende da política comercial da academia & Fora do escopo desta versão (aspecto comercial) \\ \hline
+    N02 & Professor visualizar a progressão de cada aluno & Real (ex-praticante) & Reforça RF24 e RF25 & Já coberta; aguarda validação com professores \\ \hline
+    N03 & Registro das técnicas aprendidas, com vídeos das posições & Sintética (alunos) & Amplia o histórico (RF15) e a percepção de evolução técnica & Candidata a versão futura \\ \hline
+    N04 & Agendamento ou reserva de vaga na aula & Sintética (alunos) & Amplia a agenda (RF12 e RF14) & Candidata a versão futura \\ \hline
+    N05 & Presença automática ou chamada pelo celular & Sintética (professores) & Reduz o esforço de RF13 e RF22; deve preservar a validação humana (RN01) & Candidata: \textit{check-in} por QR code, mantendo a validação \\ \hline
+    N06 & Critérios para indicar quem pode ser graduado (tempo mínimo e frequência) & Sintética (professores) & Amplia RF25 e RF33, preservando a decisão do professor (RN03) & Candidata a versão futura \\ \hline
+    N07 & Acompanhamento do aluno novo nas primeiras semanas & Sintética (professores) & Antecipa o alerta de queda de frequência (RF32) & Candidata a versão futura \\ \hline
+    N08 & Não dar trabalho extra ao professor nem à recepção & Sintética (professores) & Equivalente, para o gestor, ao baixo esforço do RNF01 & Candidato a RNF; a chamada já confirma presença com um toque \\ \hline
+    N09 & Aplicativo sem propaganda e sem comparação forçada com colegas & Sintética (alunos e ex-alunos) & Reforça RNF11 & Candidato a RNF \\ \hline
+\end{longtable}
+  \fonte{Elaborado pelo autor (2026), a partir das respostas abertas do questionário.}
+\end{quadrolongo}
+
+\section{Regras de negócio}
+\label{sec:rn}
+
+As regras de negócio (\quadroref{qua:rn}) restringem o comportamento dos
+requisitos funcionais. Várias delas protegem a credibilidade da
+gamificação, impedindo que o aluno acumule pontos sem ter treinado.
+
+\begin{quadrolongo}
+\begin{longtable}{|c|p{11.6cm}|c|}
+  \caption{Regras de negócio}\label{qua:rn}\\
+  \hline
+  \textbf{ID} & \textbf{Regra} & \textbf{Ciclo} \\ \hline
+\endfirsthead
+  \multicolumn{3}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Regra} & \textbf{Ciclo} \\ \hline
+\endhead
+  \multicolumn{3}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    RN01 & Pontos só são creditados após o \textit{check-in} ser validado pelo responsável da sessão. & 2 \\ \hline
+    RN02 & É permitido no máximo um \textit{check-in} por aluno por sessão de treino. & 1 \\ \hline
+    RN03 & A graduação de faixa é sempre decisão do professor ou da academia, nunca automática por pontos. & 3 \\ \hline
+    RN04 & A classificação considera apenas os pontos do período vigente. & 2 \\ \hline
+    RN05 & Todo aluno precisa de ao menos um vínculo ativo, com academia ou professor autônomo. & 1 \\ \hline
+    RN06 & O vínculo entre professor e academia é opcional e depende do aceite das duas partes. & 1 \\ \hline
+    RN07 & Toda turma tem um único responsável, e toda sessão pertence a uma turma. & 1 \\ \hline
+    RN08 & O \textit{check-in} só é permitido dentro da janela de tempo da sessão. & 1 \\ \hline
+    RN09 & A classificação segue o escopo do vínculo: academia, turma ou alunos do professor autônomo. & 2 \\ \hline
+\end{longtable}
+  \fonte{Elaborado pelo autor (2026).}
+\end{quadrolongo}
+
+\section{Requisitos não funcionais}
+\label{sec:rnf}
+
+O \quadroref{qua:rnf} apresenta os requisitos não funcionais, classificados
+segundo as características de qualidade da ISO/IEC 25010 e os requisitos
+organizacionais e legais do projeto. Vários deles já antecipavam, desde a
+lista inicial, riscos que os respondentes depois confirmaram: RNF01
+(esforço de registro), RNF11 (adesão opcional à classificação) e,
+indiretamente, o controle de notificações previsto em RF31.
+
+\begin{quadrolongo}
+\begin{longtable}{|c|p{2.3cm}|p{7.0cm}|p{3.6cm}|}
+  \caption{Requisitos não funcionais}\label{qua:rnf}\\
+  \hline
+  \textbf{ID} & \textbf{Categoria} & \textbf{Descrição} & \textbf{Critério de aceitação} \\ \hline
+\endfirsthead
+  \multicolumn{4}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{ID} & \textbf{Categoria} & \textbf{Descrição} & \textbf{Critério de aceitação} \\ \hline
+\endhead
+  \multicolumn{4}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    RNF01 & Usabilidade & O \textit{check-in} deve exigir pouco esforço. & Até 3 toques a partir da tela inicial. \\ \hline
+    RNF02 & Desempenho & As telas principais devem carregar rapidamente em rede móvel. & Até 3 s em conexão 4G. \\ \hline
+    RNF03 & Segurança & Senhas armazenadas de forma criptografada, com gestão delegada ao Firebase Authentication. & Nenhuma senha gravada no banco do app. \\ \hline
+    RNF04 & Segurança & Dados de uma academia ou professor não acessíveis por outro; aluno não acessa dados de outro aluno, exceto a classificação. & Regras de segurança do banco cobertas por testes. \\ \hline
+    RNF05 & Compatibilidade & Funcionar em Android e iOS. & Android 8.0+ e iOS 14+; revisado para iOS 16.4+ (\autoref{sec:situacao-implementacao}). \\ \hline
+    RNF06 & Confiabilidade & Preservar ações feitas sem conexão e sincronizá-las depois. & Ação concluída após reconexão. \\ \hline
+    RNF07 & Organizacional & Desenvolvimento em React Native com Expo e Firebase. & Pilha adotada no repositório. \\ \hline
+    RNF08 & Organizacional & Código versionado em Git com repositório remoto. & Histórico de \textit{commits} por ciclo. \\ \hline
+    RNF09 & Organizacional & Modelagem UML e protótipo no Figma antes da codificação. & Diagramas e protótipo produzidos. \\ \hline
+    RNF10 & Legal & Tratamento de dados conforme a LGPD, com coleta limitada à finalidade \cite{lgpd2018}. & Consentimento registrado; minimização de dados. \\ \hline
+    RNF11 & Ético & Participação na classificação opcional para o aluno. & Aluno pode sair do \textit{ranking}. \\ \hline
+\end{longtable}
+  \fonte{Elaborado pelo autor (2026).}
+\end{quadrolongo}

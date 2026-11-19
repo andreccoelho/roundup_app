@@ -21,23 +21,28 @@ usuários reais foram usados para revisar a situação dos requisitos
 
 \section{Tecnologias e ferramentas}
 
-O \autoref{qua:tecnologias} apresenta as tecnologias adotadas e a
+O \quadroref{qua:tecnologias} apresenta as tecnologias adotadas e a
 justificativa de cada escolha.
 
-\begin{quadro}[!htb]
-  \caption{Tecnologias e ferramentas}
-  \label{qua:tecnologias}
-  \centering
-  \footnotesize
-  \begin{tabular}{|p{3.2cm}|p{4.0cm}|p{6.0cm}|}
-    \hline
-    \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
-    Aplicativo móvel & React Native com Expo (SDK 57) e TypeScript & Base de código única para Android, iOS e web (RNF05); tipagem estática reduz erros entre telas e serviços. \\ \hline
+\begin{quadrolongo}
+\begin{longtable}{|p{3.2cm}|p{4.0cm}|p{6.0cm}|}
+  \caption{Tecnologias e ferramentas}\label{qua:tecnologias}\\
+  \hline
+  \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
+\endfirsthead
+  \multicolumn{3}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{Finalidade} & \textbf{Tecnologia} & \textbf{Justificativa} \\ \hline
+\endhead
+  \multicolumn{3}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    Aplicativo móvel & React Native com Expo (SDK 58) e TypeScript & Base de código única para Android 7.0+, iOS 16.4+ e web (RNF05); tipagem estática reduz erros entre telas e serviços. \\ \hline
     Navegação & React Navigation & Abas e pilhas de telas separadas por perfil. \\ \hline
     Autenticação & Firebase Authentication & Senhas tratadas pelo provedor, sem armazenamento próprio (RNF03). \\ \hline
     Banco de dados & Cloud Firestore & Banco de documentos gerenciado, com regras de segurança declarativas (RNF04). \\ \hline
     Arquivos & Cloud Storage & Fotos de perfil (RF06), com regras próprias. \\ \hline
-    Lógica no servidor & Cloud Functions & Tarefas que o cliente não pode fazer com segurança: listas de leitores, progresso de missões, exclusão de conta e envio de notificações. \\ \hline
+    Lógica no servidor & Cloud Functions & Tarefas que o cliente não pode fazer com segurança: listas de leitores, público e progresso de missões, registro de medalhas, exclusão de conta e envio de notificações. \\ \hline
     Notificações & Expo Notifications & Registro do aparelho e envio de notificações \textit{push} (RF31). \\ \hline
     Interface & Expo Blur e Expo System UI & Barras translúcidas e acompanhamento do tema claro ou escuro do aparelho. \\ \hline
     Testes & Jest e Firebase Emulator Suite & Testes unitários e testes das regras de segurança e das funções em emulador local. \\ \hline
@@ -45,9 +50,9 @@ justificativa de cada escolha.
     Modelagem & PlantUML & Diagramas UML versionáveis como texto. \\ \hline
     Gestão do projeto & Notion e Git/GitHub & Base de requisitos e \textit{backlog}; histórico de alterações por ciclo (RNF08). \\ \hline
     Respostas sintéticas & Claude (\texttt{claude-opus-5-5}), Python e Google Apps Script & Apoio à criação das personas e do gerador de respostas; envio das respostas de teste a uma cópia do formulário (\autoref{sec:val-personas}). \\ \hline
-  \end{tabular}
+\end{longtable}
   \fonte{Elaborado pelo autor (2026).}
-\end{quadro}
+\end{quadrolongo}
 
 \section{Arquitetura do aplicativo}
 
@@ -61,8 +66,9 @@ banco, concentram o acesso ao Firestore e as transações. As
 por presença e tabela de níveis, podem ser configurados por cada professor
 ou academia (RF33); quando não há configuração, valem os valores-padrão
 de \texttt{src/config/gamificacao.ts}. As tarefas que dependem de dados de
-vários usuários, como manter as listas de leitores, atualizar o progresso
-das missões, excluir uma conta em cascata e enviar notificações, ficam em
+vários usuários, como manter as listas de leitores, atualizar o público e o
+progresso das missões, registrar medalhas, excluir uma conta em cascata e
+enviar notificações, ficam em
 \textbf{Cloud Functions} (\texttt{functions/src}). O código-fonte
 completo, com as regras de segurança, as suítes de testes e a
 documentação das decisões técnicas, está no repositório público
@@ -112,6 +118,15 @@ núcleo para os recursos complementares:
         RN03), o gestor passou a alterar o horário e excluir turmas
         (RF10, RF12), e aluno e professor passaram a encerrar vínculos e
         o aluno a sair de turmas (RF07, RF08, RF11);
+  \item \textbf{Conclusão dos requisitos parciais} (meados de novembro):
+        medalhas persistidas com data de conquista (RF19), público-alvo e
+        vigência das missões (RF23), estrutura de faixas personalizável
+        por modalidade, com barra de progresso até a próxima graduação
+        (RF33 e RF25), e preparação do envio de notificações para teste em
+        aparelho (RF31). Nessa etapa, o Expo SDK foi atualizado da versão
+        57 para a 58, e a execução do aplicativo em um iPhone revelou
+        defeitos que foram corrigidos
+        (\autoref{sec:defeitos-testes});
   \item \textbf{Refinamento de interface} (outubro e novembro): três
         rodadas de \textit{redesign}. A última seguiu as diretrizes de
         interface da Apple (\textit{Human Interface Guidelines}), com temas
@@ -121,55 +136,68 @@ núcleo para os recursos complementares:
         discreto de lona de ringue nos cartões principais.
 \end{enumerate}
 
-A \autoref{fig:telas} mostra quatro telas do protótipo na versão final
+A \autoref{fig:telas} mostra seis telas do protótipo na versão final
 da interface.
 
-\begin{figure}[!htb]
+\begin{figure}[H]
   \centering
-  \caption{Telas do protótipo: (a) acesso; (b) início do aluno; (c) classificação; (d) chamada do professor}
+  \caption{Telas do protótipo: (a) acesso; (b) início do aluno; (c) classificação; (d) perfil do aluno; (e) missões; (f) chamada do professor}
   \label{fig:telas}
-  \begin{tabular}{cccc}
-    \includegraphics[width=0.225\textwidth]{figuras/tela-login.png} &
-    \includegraphics[width=0.225\textwidth]{figuras/tela-aluno-inicio.png} &
-    \includegraphics[width=0.225\textwidth]{figuras/tela-aluno-classificacao.png} &
-    \includegraphics[width=0.225\textwidth]{figuras/tela-professor-chamada.png} \\
-    \footnotesize (a) & \footnotesize (b) & \footnotesize (c) & \footnotesize (d)
+  \setlength{\fboxsep}{0pt}\setlength{\fboxrule}{0.3pt}
+  \begin{tabular}{ccc}
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-login.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-inicio.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-classificacao.png}} \\
+    \footnotesize (a) & \footnotesize (b) & \footnotesize (c) \\[6pt]
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-perfil.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-aluno-missoes.png}} &
+    \fbox{\includegraphics[width=0.27\textwidth]{figuras/tela-professor-chamada.png}} \\
+    \footnotesize (d) & \footnotesize (e) & \footnotesize (f)
   \end{tabular}
-  \fonte{Elaborado pelo autor (2026). Tema claro; as telas (b) a (d) foram
-         capturadas com dados fictícios.}
+  \fonte{Elaborado pelo autor (2026). Tema claro; as telas (b) a (f) foram
+         capturadas na versão web, com dados fictícios.}
 \end{figure}
 
 Na tela inicial do aluno (b), o cartão do próximo treino traz o botão de
 \textit{check-in} a um toque de distância, o que atende ao RNF01; logo
 abaixo aparecem o anel de progresso, com o nível e o XP que falta para o
 próximo, e a sequência de treinos. Na classificação (c), o aluno vê a sua
-posição no mês e a linha dele aparece destacada. Na chamada do professor
-(d), cada aluno que fez \textit{check-in} tem a presença confirmada com um
+posição no mês e a linha dele aparece destacada. No perfil (d), a barra
+de graduação mostra o grau atual dentro da faixa e a próxima faixa da
+estrutura do responsável (RF33), e as medalhas conquistadas exibem a data
+da conquista (RF19). Nas missões (e), cada missão mostra o progresso, a
+recompensa e o período de vigência (RF23). Na chamada do professor (f),
+cada aluno que fez \textit{check-in} tem a presença confirmada com um
 toque no círculo.
 
 \section{Situação de implementação dos requisitos}
 \label{sec:situacao-implementacao}
 
-O \autoref{qua:implementacao} resume o que foi implementado. Os itens
-parciais foram registrados no repositório como decisões pendentes, para
-que a limitação fique explícita, e não escondida na interface.
+O \quadroref{qua:implementacao} resume o que foi implementado. As
+limitações remanescentes foram registradas no repositório como decisões
+pendentes, para que fiquem explícitas, e não escondidas na interface. O
+critério de compatibilidade do RNF05 foi revisado de iOS 14 para iOS
+16.4, versão mínima exigida pelo Expo SDK 58, adotado na etapa final; no
+Android, o mínimo do SDK (Android 7.0) já atende ao critério original.
 
-\begin{quadro}[!htb]
-  \caption{Situação de implementação dos requisitos}
-  \label{qua:implementacao}
-  \centering
-  \footnotesize
-  \begin{tabular}{|p{2.2cm}|p{4.2cm}|p{7.0cm}|}
-    \hline
-    \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
-    Implementado & RF01--RF18, RF20--RF22, RF24--RF30, RF32; RN01--RN09; RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. \\ \hline
-    Parcial & RF19 & As medalhas são calculadas a cada acesso, sem registro da data de conquista. \\ \hline
-    Parcial & RF23 & As missões não têm público-alvo nem período de vigência. \\ \hline
-    Parcial & RF31 & O envio está implementado e testado em emulador, mas não foi validado em aparelho, porque depende de credenciais e de uma versão de desenvolvimento do aplicativo. \\ \hline
-    Parcial & RF33 & Pontos e níveis são configuráveis; as faixas, não: as graduações vêm de uma lista fixa por modalidade, igual para todos os gestores. \\ \hline
-  \end{tabular}
+\begin{quadrolongo}
+\begin{longtable}{|p{2.2cm}|p{4.2cm}|p{7.0cm}|}
+  \caption{Situação de implementação dos requisitos}\label{qua:implementacao}\\
+  \hline
+  \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
+\endfirsthead
+  \multicolumn{3}{r}{\textit{(continuação)}}\\
+  \hline
+  \textbf{Situação} & \textbf{Requisitos} & \textbf{Observação} \\ \hline
+\endhead
+  \multicolumn{3}{r}{\textit{(continua)}}\\
+\endfoot
+\endlastfoot
+    Implementado & RF01--RF33; RN01--RN09; RNF01--RNF05, RNF07--RNF11 & Funcionalidades disponíveis nas telas e cobertas, na parte de segurança e de servidor, por testes em emulador. RF19, RF23, RF31 e RF33 também foram verificados em um iPhone, e o tempo de carregamento (RNF02) foi medido em 4G (\autoref{sec:testes-prototipo}). \\ \hline
+    Não implementado & RNF06 & Decisão de projeto: o \textit{check-in} e a validação de presença são gravados em transações que exigem conexão, porque o servidor precisa garantir a janela de horário (RN08) e o limite de um \textit{check-in} por sessão (RN02). Um registro feito sem conexão poderia ser recusado depois, quando o aluno já acreditasse ter treinado com pontos garantidos. \\ \hline
+\end{longtable}
   \fonte{Elaborado pelo autor (2026), a partir do repositório do projeto.}
-\end{quadro}
+\end{quadrolongo}
 
 Os valores de gamificação têm um padrão, usado quando o professor ou a
 academia não configuram os seus: 10 pontos por presença validada, dez
@@ -177,6 +205,39 @@ níveis com limiares crescentes (100, 250, 450\ldots{} até 3.250 pontos) e
 medalhas para 10, 30 e 100 treinos, para sequências de 7 e 30 sessões e
 para a primeira graduação. Esses valores permitiram construir e testar a
 interface, mas ainda precisam ser calibrados com uso real.
+
+Na conclusão dos requisitos que estavam parciais, quatro decisões
+merecem registro:
+
+\begin{itemize}
+  \item \textbf{Medalhas (RF19).} Cada medalha é gravada em
+        \texttt{usuarios/\{aluno\}/medalhas}, com a data de conquista,
+        somente por Cloud Function; o aplicativo não consegue escrevê-la.
+        O estorno de um \textit{check-in} não retira uma medalha já
+        conquistada, e um \textit{script} de migração reconstruiu, a partir
+        do histórico, a data das medalhas dos alunos existentes.
+  \item \textbf{Missões (RF23).} O gestor define o público (todos os alunos
+        vinculados, uma turma ou alunos escolhidos) e a vigência. A regra
+        vale no banco de dados, não só na tela: só o público lê a missão,
+        a conclusão manual só é aceita dentro da vigência, o progresso
+        automático só conta treinos do período e o aviso de nova missão
+        (RF31) vai só para o público, uma vez por aluno. Depois do fim da
+        vigência, a missão continua no histórico de quem a concluiu.
+  \item \textbf{Faixas (RF33).} O gestor personaliza, por modalidade, a
+        ordem, o nome, a cor e o número de graus de cada faixa; sem
+        personalização, vale a lista anterior como padrão. O registro de
+        graduação (RF25) passou a gravar a faixa de forma estruturada, e o
+        perfil do aluno ganhou a barra de progresso até a próxima
+        graduação, medida pelos graus da faixa atual (por exemplo, ``2º
+        grau de 4 · próxima: Roxa''). Graduações antigas, registradas como
+        texto livre, foram convertidas por um \textit{script} que reconhece
+        o nome da faixa; os textos sem correspondência permanecem como
+        texto.
+  \item \textbf{Notificações (RF31).} O projeto foi preparado para gerar
+        versões instaláveis pelo EAS, e a tela de preferências de
+        notificação ganhou botões para enviar uma notificação de teste ao
+        próprio aparelho, o que permitiu validar o envio em um iPhone.
+\end{itemize}
 
 \section{Detalhes de implementação}
 
@@ -193,7 +254,7 @@ configurado, e o estorno só pode devolver o que o \textit{check-in}
 recebeu. Isso impede créditos arbitrários mesmo que alguém altere o
 aplicativo.
 
-\begin{codigo}[!htb]
+\begin{codigo}[H]
   \caption{Validação de presença e crédito de pontos (TypeScript, trecho)}
   \label{cod:validar}
 \begin{lstlisting}
@@ -246,7 +307,7 @@ ela só é interrompida quando houve sessão e o aluno não compareceu. O
 mesmo critério é usado no aplicativo e nas Cloud Functions que avaliam as
 missões de sequência.
 
-\begin{codigo}[!htb]
+\begin{codigo}[H]
   \caption{Cálculo da sequência de treinos por sessão (TypeScript)}
   \label{cod:sequencia}
 \begin{lstlisting}

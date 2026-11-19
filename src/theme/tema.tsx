@@ -5,7 +5,7 @@
 // estilos com `criarEstilos`, que gera um StyleSheet por tema uma única vez e devolve o do tema
 // atual a cada render.
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme, type ImageStyle, type TextStyle, type ViewStyle } from 'react-native';
 import { CoresClaro, CoresEscuro, type PaletaCores } from './tokens';
 
 export type Esquema = 'claro' | 'escuro';
@@ -42,7 +42,10 @@ export function useTema(): ValorTema {
 
 // Uso: `const useEstilos = criarEstilos((c) => ({ raiz: { backgroundColor: c.fundo } }));` no
 // módulo e `const styles = useEstilos();` no componente.
-export function criarEstilos<T extends StyleSheet.NamedStyles<T>>(fabrica: (cores: PaletaCores, escuro: boolean) => T) {
+// RN 0.88 (SDK 58) removeu o tipo StyleSheet.NamedStyles; o equivalente é um mapa de nome → estilo.
+type EstilosNomeados<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
+
+export function criarEstilos<T extends EstilosNomeados<T>>(fabrica: (cores: PaletaCores, escuro: boolean) => T) {
   const cache: Partial<Record<Esquema, T>> = {};
   return function useEstilos(): T {
     const { esquema, cores, escuro } = useTema();

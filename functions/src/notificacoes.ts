@@ -7,17 +7,17 @@
 // com o status: 'enviado', 'erro', 'semDispositivo' ou 'simulado' — no emulador nada sai para a
 // internet, o registro é a prova do que teria sido enviado.
 //
-// Para funcionar de verdade (ver docs/DECISOES_PENDENTES.md, RF31): plano Blaze (deploy de
-// functions e Cloud Scheduler), `npx eas init` (projectId), credenciais FCM no EAS e um
-// development build. Opcional: a variável EXPO_ACCESS_TOKEN, se o "enhanced security" de push
+// Para funcionar de verdade (passo a passo em docs/ROTEIRO_TESTE_NOTIFICACOES.md): plano Blaze
+// (deploy de functions e Cloud Scheduler), `eas init` (projectId), google-services.json e chave FCM V1
+// no EAS (Android) ou chave APNs (iOS), e um development build. Opcional: a variável EXPO_ACCESS_TOKEN, se o "enhanced security" de push
 // estiver ligado no projeto Expo.
-import { onDocumentCreated, onDocumentUpdated, onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { onDocumentCreated, onDocumentWritten } from 'firebase-functions/v2/firestore';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getFirestore, FieldValue, Timestamp, type Firestore } from 'firebase-admin/firestore';
 import { FUSO, diaLocal, limitesDoDia } from './datas';
-import { maiorSequenciaDeSessoes } from './sequencia';
-import { marcosAlcancados, selecionarLembretes, textoLembrete } from './notificacoesRegras';
+import { selecionarLembretes, textoLembrete } from './notificacoesRegras';
 
 type TipoNotificacao = 'lembreteSessao' | 'novaMissao' | 'conquista';
 
@@ -77,15 +77,20 @@ async function enviarExpo(tokens: string[], mensagem: Mensagem): Promise<{ inval
   return { invalidos, falhou };
 }
 
-// Envia para cada uid que quer este tipo de notificação e registra o resultado em `notificacoes`
-export async function notificar(db: Firestore, uids: string[], tipo: TipoNotificacao, mensagem: Mensagem): Promise<void> {
+// Envia para cada uid que quer este tipo de notificação e registra o resultado em `notificacoes`.
+// Devolve o status de cada uid ('desligado' = o usuário desligou este tipo; esse não é registrado).
+export async function notificar(
+  db: Firestore, uids: string[], tipo: TipoNotificacao, mensagem: Mensagem,
+): Promise<Record<string, string>> {
+  const resultado: Record<string, string> = {};
   const unicos = [...new Set(uids)];
-  if (unicos.length === 0) return;
+  if (unicos.length === 0) return resultado;
   const usuarios = await db.getAll(...unicos.map((uid) => db.doc(`usuarios/${uid}`)));
   const querem = usuarios
     .filter((u) => u.exists && u.data()?.preferenciasNotificacao?.[tipo] !== false)
     .map((u) => u.id);
-  if (querem.length === 0) return;
+  unicos.filter((uid) => !querem.includes(uid)).forEach((uid) => { resultado[uid] = 'desligado'; });
+  if (querem.length === 0) return resultado;
   const privados = await db.getAll(...querem.map((uid) => refPrivado(db, uid)));
 
   await Promise.all(privados.map(async (privado, i) => {
@@ -106,10 +111,12 @@ export async function notificar(db: Firestore, uids: string[], tipo: TipoNotific
         status = 'erro';
       }
     }
+    resultado[uid] = status;
     await db.collection('notificacoes').add({
       destinatarioId: uid, tipo, titulo: mensagem.titulo, corpo: mensagem.corpo, status, criadoEm: Timestamp.now(),
     });
   }));
+  return resultado;
 }
 
 // Conquista notificada uma vez só por aluno: a chave entra em conquistasNotificadas numa transação
@@ -124,33 +131,14 @@ async function marcarConquistaNova(db: Firestore, uid: string, chave: string): P
   });
 }
 
-async function notificarConquista(db: Firestore, uid: string, chave: string, mensagem: Mensagem): Promise<void> {
+export async function notificarConquista(db: Firestore, uid: string, chave: string, mensagem: Mensagem): Promise<void> {
   if (await marcarConquistaNova(db, uid, chave)) {
     await notificar(db, [uid], 'conquista', mensagem);
   }
 }
 
 // ---------- nova missão ----------
-// Missão criada ativa ou reativada: avisa os alunos com vínculo aceito com o responsável
-export const notificarNovaMissao = onDocumentWritten(
-  'missoes/{missaoId}',
-  async (event) => {
-    const antes = event.data?.before.data();
-    const depois = event.data?.after.data();
-    if (!depois?.ativa || antes?.ativa) return;
-    const db = getFirestore();
-    const vinculos = await db.collection('vinculos')
-      .where('destinatarioId', '==', depois.responsavelId)
-      .where('status', '==', 'aceito')
-      .where('perfilSolicitante', '==', 'aluno')
-      .get();
-    await notificar(db, vinculos.docs.map((v) => v.data().solicitanteId), 'novaMissao', {
-      titulo: 'Nova missão',
-      corpo: `${depois.titulo} — vale ${depois.pontos} pts.`,
-      dados: { tela: 'Missoes' },
-    });
-  },
-);
+// RF23, RF31: o aviso de nova missão respeita o público-alvo e a vigência — ver missoesPublico.ts.
 
 // ---------- conquistas ----------
 export const notificarMissaoConcluida = onDocumentWritten(
@@ -182,38 +170,7 @@ export const notificarGraduacao = onDocumentCreated(
   },
 );
 
-// RF19: marcos de treinos e de sequência, contados em todos os escopos do aluno
-export const notificarMarcoDeTreino = onDocumentUpdated(
-  'checkins/{checkinId}',
-  async (event) => {
-    const antes = event.data?.before.data();
-    const depois = event.data?.after.data();
-    if (!depois || depois.status !== 'validado' || antes?.status === 'validado') return;
-    const db = getFirestore();
-    const [checkins, sessoes] = await Promise.all([
-      db.collection('checkins').where('alunoId', '==', depois.alunoId).get(),
-      db.collection('sessoes').where('leitoresIds', 'array-contains', depois.alunoId).get(),
-    ]);
-    const validados = checkins.docs.filter((c) => c.data().status === 'validado').length;
-    const agora = Date.now();
-    // RF21: sequência por sessão agendada (functions/src/sequencia.ts), em todos os escopos
-    const sequencia = maiorSequenciaDeSessoes(
-      sessoes.docs
-        .map((s) => ({ id: s.id, status: s.data().status, janelaFimMs: (s.data().janelaCheckInFim as Timestamp).toMillis(), inicioMs: (s.data().inicio as Timestamp).toMillis() }))
-        .filter((s) => s.inicioMs <= agora),
-      new Map(checkins.docs.map((c) => [c.data().sessaoId as string, c.data().status as string])),
-      agora,
-    );
-    for (const marco of marcosAlcancados(validados, sequencia)) {
-      // eslint-disable-next-line no-await-in-loop
-      await notificarConquista(db, depois.alunoId, `medalha:${marco.id}`, {
-        titulo: 'Medalha conquistada',
-        corpo: `Você chegou a ${marco.rotulo}.`,
-        dados: { tela: 'Perfil' },
-      });
-    }
-  },
-);
+// RF19: as medalhas (marcos de treinos e de sequência) são concedidas e avisadas em medalhas.ts.
 
 // ---------- lembrete de sessão ----------
 // Uma vez por dia, às 7h: um lembrete por aluno com sessão agendada ou aberta hoje, com o horário
@@ -262,3 +219,36 @@ export const enviarLembretesDeSessao = onSchedule(
     await enviarLembretesDoDia(new Date());
   },
 );
+
+// ---------- teste no aparelho ----------
+// RF31: botão "Enviar teste" da tela Notificações (docs/ROTEIRO_TESTE_NOTIFICACOES.md). Manda uma
+// notificação de exemplo do tipo pedido SÓ para quem chamou, pelo mesmo caminho real (preferência,
+// token, Expo, registro em `notificacoes`), e devolve o status para a tela explicar o resultado.
+// Não toca em missão, conquista nem lembrete de verdade. Limite: um teste a cada 15 s por usuário.
+const TIPOS_TESTE: TipoNotificacao[] = ['lembreteSessao', 'novaMissao', 'conquista'];
+const MENSAGENS_TESTE: Record<TipoNotificacao, Mensagem> = {
+  lembreteSessao: { titulo: 'Treino hoje (teste)', corpo: 'Assim chega o lembrete do dia de treino.', dados: { tela: 'Agenda' } },
+  novaMissao: { titulo: 'Nova missão (teste)', corpo: 'Assim chega o aviso de uma missão nova.', dados: { tela: 'Missoes' } },
+  conquista: { titulo: 'Conquista (teste)', corpo: 'Assim chega o aviso de uma conquista.', dados: { tela: 'Perfil' } },
+};
+export const INTERVALO_TESTE_MS = 15_000;
+
+export const enviarNotificacaoDeTeste = onCall(async (request) => {
+  const uid = request.auth?.uid;
+  if (!uid) throw new HttpsError('unauthenticated', 'É preciso estar autenticado.');
+  const tipo = request.data?.tipo as TipoNotificacao;
+  if (!TIPOS_TESTE.includes(tipo)) throw new HttpsError('invalid-argument', 'Tipo de notificação desconhecido.');
+
+  const db = getFirestore();
+  const liberado = await db.runTransaction(async (t) => {
+    const ref = refPrivado(db, uid);
+    const ultimo: number = (await t.get(ref)).data()?.ultimoTesteMs ?? 0;
+    if (Date.now() - ultimo < INTERVALO_TESTE_MS) return false;
+    t.set(ref, { ultimoTesteMs: Date.now() }, { merge: true });
+    return true;
+  });
+  if (!liberado) throw new HttpsError('resource-exhausted', 'Espere alguns segundos antes de outro teste.');
+
+  const status = (await notificar(db, [uid], tipo, MENSAGENS_TESTE[tipo]))[uid] ?? 'desligado';
+  return { status };
+});

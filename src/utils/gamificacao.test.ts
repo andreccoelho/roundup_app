@@ -1,6 +1,9 @@
 import { Timestamp } from 'firebase/firestore';
 import type { CheckIn, StatusSessao } from '../types';
-import { calcularProgressoNivel, calcularSequencia, lerTabelaNiveis, validarConfiguracao } from './gamificacao';
+import {
+  calcularMedalhas, calcularProgressoNivel, calcularSequencia, combinarMedalhas, formatarDataConquista, lerTabelaNiveis,
+  validarConfiguracao,
+} from './gamificacao';
 
 const VALIDOS = { pontosPorCheckin: 10, pontosPorMissao: 30, niveisXp: [100, 250, 450] };
 
@@ -81,5 +84,32 @@ describe('calcularSequencia (RF21, por sessão agendada)', () => {
   test('check-in rejeitado quebra', () => {
     const sessoes = [sessao('s1', 1), sessao('s2', 2)];
     expect(calcularSequencia(sessoes, [checkin('s1', 'rejeitado'), checkin('s2', 'validado')], AGORA)).toBe(0);
+  });
+});
+
+describe('combinarMedalhas (RF19)', () => {
+  const conquistadaEm = Timestamp.fromDate(new Date(2026, 9, 12));
+
+  test('medalha registrada pelo servidor vem com a data', () => {
+    const [m] = combinarMedalhas(calcularMedalhas(10, 0, 0), [{ id: 'treinos-10', conquistadaEm }]);
+    expect(m.conquistada).toBe(true);
+    expect(m.conquistadaEm).toEqual(new Date(2026, 9, 12));
+    expect(formatarDataConquista(m.conquistadaEm!)).toBe('12/10/2026');
+  });
+
+  test('registrada continua conquistada mesmo se a contagem caiu depois (estorno, sequência quebrada)', () => {
+    const medalhas = combinarMedalhas(calcularMedalhas(3, 0, 0), [
+      { id: 'treinos-10', conquistadaEm }, { id: 'sequencia-7', conquistadaEm },
+    ]);
+    expect(medalhas.find((m) => m.id === 'treinos-10')?.conquistada).toBe(true);
+    expect(medalhas.find((m) => m.id === 'sequencia-7')?.conquistada).toBe(true);
+  });
+
+  test('sem registro, vale o cálculo ao vivo, sem data', () => {
+    const medalhas = combinarMedalhas(calcularMedalhas(10, 0, 0), []);
+    const m = medalhas.find((x) => x.id === 'treinos-10');
+    expect(m?.conquistada).toBe(true);
+    expect(m?.conquistadaEm).toBeUndefined();
+    expect(medalhas.find((x) => x.id === 'treinos-30')?.conquistada).toBe(false);
   });
 });

@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import HomeAlunoVisao, { type SessaoHome } from '../aluno/HomeAlunoVisao';
 import PerfilAlunoVisao, { type MedalhaPerfil } from '../aluno/PerfilAlunoVisao';
+import { faixasDoAluno } from '../../utils/faixas';
 import ClassificacaoVisao, { type LinhaRanking } from '../aluno/ClassificacaoVisao';
 import HojeProfessorVisao, { type ItemChamadaVisao } from '../professor/HojeProfessorVisao';
 import PerfilProfessorVisao from '../professor/PerfilProfessorVisao';
@@ -60,7 +61,7 @@ function sessoesFicticias(estadoHero: EstadoCheckIn): SessaoHome[] {
 }
 
 const MEDALHAS: MedalhaPerfil[] = [
-  { id: 'treinos-10', rotulo: '10 treinos', tipo: 'treinos', quantidade: 10, conquistada: true },
+  { id: 'treinos-10', rotulo: '10 treinos', tipo: 'treinos', quantidade: 10, conquistada: true, conquistadaEm: '12/10/2026' },
   { id: 'treinos-30', rotulo: '30 treinos', tipo: 'treinos', quantidade: 30, conquistada: true },
   { id: 'treinos-100', rotulo: '100 treinos', tipo: 'treinos', quantidade: 100, conquistada: true, maxima: true },
   { id: 'sequencia-7', rotulo: '7 treinos seguidos', tipo: 'sequencia', quantidade: 7, conquistada: true },
@@ -123,6 +124,8 @@ export function ComposicaoPerfil() {
     <PerfilAlunoVisao
       nome="Rafael Souza"
       faixa="Faixa azul, 2º grau"
+      graduacoes={{ 'Jiu-Jitsu': 'Faixa azul, 2º grau' }}
+      faixasEstruturadas={faixasDoAluno({ 'Jiu-Jitsu': 'Faixa azul, 2º grau' }, undefined, () => null, undefined)}
       email="rafael@exemplo.com"
       membroDesde="setembro de 2026"
       nivel={calcularProgressoNivel(640).nivel}

@@ -1,0 +1,31 @@
+% =====================================================================
+%  CAPA (obrigatório) -- Manual, seção 2.1.1 e Quadro 2
+%  Não é preciso editar: os dados vêm de config/dados.tex.
+%  Conteúdo: instituição, curso, autor, título (e subtítulo), local, ano.
+%  Tudo em Arial 12, negrito.
+% =====================================================================
+\begin{capa}
+  \centering\bfseries
+
+  % Logotipo (opcional). Para remover, coloque % no início da linha abaixo.
+  \includegraphics[width=4cm]{figuras/logo-ibmec.jpg}\par
+  \vspace{0.5cm}
+
+  \MakeTextUppercase{\imprimirinstituicao}\par
+  \MakeTextUppercase{Curso de \imprimircurso}\par
+
+  \vfill
+  \MakeTextUppercase{\imprimirautor}\par
+  \vfill
+
+  {\OnehalfSpacing \imprimirtitulocompleto\par}
+
+  \vfill
+  \MakeTextUppercase{\imprimirlocal}\par
+  \imprimirdata\par
+\end{capa}
+
+% A capa não é contada; a contagem das folhas começa na folha de rosto
+% (Manual, 3.6). As duas linhas abaixo garantem isso.
+\clearpage
+\setcounter{page}{1}

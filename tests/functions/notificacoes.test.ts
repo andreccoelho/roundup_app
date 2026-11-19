@@ -152,3 +152,43 @@ describe('notificações (RF31)', () => {
     expect(await lembretes('professor1')).toHaveLength(0);
   });
 });
+
+// RF31: botão "Enviar teste" (enviarNotificacaoDeTeste) — só para quem chamou, pelo caminho real
+describe('notificação de teste no aparelho (RF31)', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires, global-require
+  const { criarConta, chamarFuncao, limparContas } = require('./emuladores');
+  afterEach(() => limparContas());
+
+  test('envia só para quem pediu, respeita a preferência e limita a frequência', async () => {
+    const conta = await criarConta('teste-push@example.com');
+    await semear(async (db) => {
+      await setDoc(doc(db, 'usuarios', conta.uid), usuarioBase({
+        perfil: 'aluno', preferenciasNotificacao: { lembreteSessao: true, novaMissao: false, conquista: true },
+      }));
+      await setDoc(doc(db, 'usuarios', conta.uid, 'privado', 'notificacoes'), { tokens: ['ExponentPushToken[teste]'] });
+    });
+
+    const ok = await chamarFuncao('enviarNotificacaoDeTeste', { tipo: 'conquista' }, conta.idToken);
+    expect(ok).toEqual({ ok: true, resultado: { status: 'simulado' } });
+    const registros = await notificacoesDe(conta.uid);
+    expect(registros).toHaveLength(1);
+    expect(registros[0]).toMatchObject({ tipo: 'conquista', titulo: 'Conquista (teste)', status: 'simulado' });
+
+    const repetido = await chamarFuncao('enviarNotificacaoDeTeste', { tipo: 'conquista' }, conta.idToken);
+    expect(repetido.erro?.status).toBe('RESOURCE_EXHAUSTED');
+
+    // libera o limite e testa um tipo desligado: não envia nem registra
+    await semear(async (db) => {
+      await updateDoc(doc(db, 'usuarios', conta.uid, 'privado', 'notificacoes'), { ultimoTesteMs: 0 });
+    });
+    const desligado = await chamarFuncao('enviarNotificacaoDeTeste', { tipo: 'novaMissao' }, conta.idToken);
+    expect(desligado.resultado).toEqual({ status: 'desligado' });
+    expect(await notificacoesDe(conta.uid)).toHaveLength(1);
+  });
+
+  test('sem login ou com tipo inválido é recusado', async () => {
+    expect((await chamarFuncao('enviarNotificacaoDeTeste', { tipo: 'conquista' })).erro?.status).toBe('UNAUTHENTICATED');
+    const conta = await criarConta('teste-push2@example.com');
+    expect((await chamarFuncao('enviarNotificacaoDeTeste', { tipo: 'qualquer' }, conta.idToken)).erro?.status).toBe('INVALID_ARGUMENT');
+  });
+});
