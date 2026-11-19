@@ -1,20 +1,23 @@
 // Contas das PERSONAS da apresentação da defesa, com o histórico que cada cenário precisa:
 //   - Cenário 1, Marina (aluna iniciante, primeira semana de Jiu-Jitsu, faixa branca);
 //   - Cenário 2, Davi (16 anos, 1 ano de Jiu-Jitsu, faixa branca 3º grau — menor, com responsável legal, RF30);
-//   - Cenário 3, Felipe (professor de Muay Thai vinculado à academia, RF07) e a academia do Cláudio, que
-//     faz a gestão (alunos e alerta de queda, RF24/RF32; graduação, RF25; missões, RF23).
-// Felipe não tem relação com Marina e Davi: dá a turma de Muay Thai, com alunos de apoio próprios.
+//   - Cenário 3, Felipe (professor de Jiu-Jitsu vinculado à academia, RF07), que dá a turma da Marina e
+//     confirma na chamada o check-in que ela fez no Cenário 1 (RF22); e a academia do Cláudio, que faz a
+//     gestão (alunos e alerta de queda, RF24/RF32; graduação, RF25; missões, RF23).
+// Equipe da academia (RF09): Felipe (Jiu-Jitsu Iniciante), Otávio (Jiu-Jitsu Adulto, a turma do Davi) e
+// Ricardo (Muay Thai). Otávio e Ricardo são professores de apoio, só no Firestore, sem login.
 // Alunos de apoio (só Firestore, sem login) completam turmas de tamanho real (12 a 14 alunos) e dão
-// corpo ao ranking (RF20), às chamadas (RF22) e ao alerta de queda de frequência (RF32: Gabriel e
-// Leonardo vieram uma vez e sumiram).
+// corpo ao ranking (RF20), às chamadas (RF22) e ao alerta de queda de frequência (RF32: Gabriel,
+// Leonardo e Beatriz vieram uma vez e sumiram).
 //
-// Idempotente: ids determinísticos e datas relativas a "agora". Rode de novo no dia da defesa para
-// renovar a agenda (o histórico de check-ins é refeito em relação à nova data).
+// "Aula da demonstração": no dia DEMO_DATA (padrão: hoje) o script cria uma sessão de dia inteiro
+// (07:00 às 23:00) na turma de Jiu-Jitsu Iniciante, com 4 colegas da Marina já com check-in pendente.
+// Ao vivo, a Marina faz o check-in dela (RN08) e o Felipe confirma todos na chamada.
 //
-// "Aulas da demonstração": no dia DEMO_DATA (padrão: hoje) o script cria uma sessão de dia inteiro
-// (07:00 às 23:00) na turma de Jiu-Jitsu Iniciante (check-in ao vivo da Marina, RN08) e outra na de
-// Muay Thai, com 5 check-ins pendentes para o Felipe confirmar na chamada. Aulas da demonstração de
-// datas anteriores são canceladas, para não quebrarem a sequência (RF21) de quem faltou.
+// Idempotente e serve de RESET: ids determinísticos, datas relativas a "agora" e, antes de gravar, apaga
+// o que os testes criaram no escopo da academia — check-ins das aulas da demonstração que não são do
+// script (o da Marina), aulas da demonstração de outras datas, missões e graduações criadas no app e
+// medalhas que não decorrem do histórico gravado. Rodar de novo volta tudo ao ponto de partida.
 //
 // Uso (credenciais Admin: GOOGLE_APPLICATION_CREDENTIALS apontando para a chave de uma conta de
 // serviço do projeto, ou `gcloud auth application-default login`):
@@ -104,11 +107,18 @@ async function main() {
   const ACADEMIA = uid.academia;
 
   // ---------- turmas (RF10) ----------
-  // professorId ausente = a própria academia ministra e valida (sessão usa o responsável, como o app)
+  // ---------- professores de apoio da academia (RF05, RF07, RF09) ----------
+  const PROFESSORES_APOIO = [
+    { chave: 'otavio', id: 'personas-professor-otavio', nome: 'Otávio Brandão', modalidades: ['Jiu-Jitsu'], graduacao: 'Faixa preta, 3º grau' },
+    { chave: 'ricardo', id: 'personas-professor-ricardo', nome: 'Ricardo Nogueira', modalidades: ['Muay Thai'], graduacao: 'Faixa preta' },
+  ];
+
+  // Cada turma tem o professor que a academia atribuiu (RF10, RF22). demo: turma que recebe a aula da
+  // demonstração de dia inteiro.
   const TURMAS = {
-    iniciante: { id: 'personas-turma-jj-iniciante', nome: 'Jiu-Jitsu Iniciante', modalidade: 'Jiu-Jitsu', nivel: 'iniciante', diasSemana: [1, 3, 5], inicio: '19:00', fim: '20:30', historicoDias: 42 },
-    adulto: { id: 'personas-turma-jj-adulto', nome: 'Jiu-Jitsu Adulto', modalidade: 'Jiu-Jitsu', nivel: 'intermediario', diasSemana: [2, 4], inicio: '20:00', fim: '21:30', historicoDias: 370 },
-    muayThai: { id: 'personas-turma-muay-thai', nome: 'Muay Thai', modalidade: 'Muay Thai', nivel: 'iniciante', diasSemana: [2, 4], inicio: '19:00', fim: '20:30', historicoDias: 42, professorId: uid.felipe },
+    iniciante: { id: 'personas-turma-jj-iniciante', nome: 'Jiu-Jitsu Iniciante', modalidade: 'Jiu-Jitsu', nivel: 'iniciante', diasSemana: [1, 3, 5], inicio: '19:00', fim: '20:30', historicoDias: 42, professorId: uid.felipe, demo: true },
+    adulto: { id: 'personas-turma-jj-adulto', nome: 'Jiu-Jitsu Adulto', modalidade: 'Jiu-Jitsu', nivel: 'intermediario', diasSemana: [2, 4], inicio: '20:00', fim: '21:30', historicoDias: 370, professorId: 'personas-professor-otavio' },
+    muayThai: { id: 'personas-turma-muay-thai', nome: 'Muay Thai', modalidade: 'Muay Thai', nivel: 'iniciante', diasSemana: [2, 4], inicio: '19:00', fim: '20:30', historicoDias: 42, professorId: 'personas-professor-ricardo' },
   };
 
   // ---------- alunos (RF06) ----------
@@ -120,14 +130,14 @@ async function main() {
     { chave: 'davi', id: uid.davi, nome: CONTAS.davi.nome, turma: 'adulto', faixa: 'branca', grau: 3, entrouHaDias: 365, falta: (i) => i >= 12 && i % 5 === 2,
       nascimento: new Date(2010, 5, 2), email: CONTAS.davi.email,
       responsavelLegal: { nome: 'Patrícia Santos', contato: 'responsavel.davi@example.com' } },
-    { chave: 'bruno', id: 'personas-aluno-bruno', nome: 'Bruno Lima', turma: 'iniciante', faixa: 'branca', grau: 1, entrouHaDias: 35, falta: (i) => i % 6 === 3 },
-    { chave: 'carla', id: 'personas-aluno-carla', nome: 'Carla Nunes', turma: 'iniciante', faixa: 'branca', grau: 0, entrouHaDias: 21, falta: (i) => i % 3 === 1 },
+    { chave: 'bruno', id: 'personas-aluno-bruno', nome: 'Bruno Lima', turma: 'iniciante', faixa: 'branca', grau: 1, entrouHaDias: 35, falta: (i) => i % 6 === 3, pendenteNaDemo: true },
+    { chave: 'carla', id: 'personas-aluno-carla', nome: 'Carla Nunes', turma: 'iniciante', faixa: 'branca', grau: 0, entrouHaDias: 21, falta: (i) => i % 3 === 1, pendenteNaDemo: true },
     { chave: 'rafael', id: 'personas-aluno-rafael', nome: 'Rafael Duarte', turma: 'adulto', faixa: 'azul', grau: 2, entrouHaDias: 42, falta: () => false },
     { chave: 'juliana', id: 'personas-aluno-juliana', nome: 'Juliana Prado', turma: 'adulto', faixa: 'branca', grau: 2, entrouHaDias: 42, falta: (i) => i % 4 === 1 },
     { chave: 'pedro', id: 'personas-aluno-pedro', nome: 'Pedro Nogueira', turma: 'adulto', faixa: 'roxa', grau: 0, entrouHaDias: 42, falta: (i) => i % 3 === 0 },
-    { chave: 'ana', id: 'personas-aluno-ana', nome: 'Ana Rocha', turma: 'muayThai', faixa: 'amarela', grau: 0, entrouHaDias: 42, falta: (i) => i % 7 === 4, pendenteNaDemo: true },
-    { chave: 'thiago', id: 'personas-aluno-thiago', nome: 'Thiago Mendes', turma: 'muayThai', faixa: 'laranja', grau: 0, entrouHaDias: 42, falta: (i) => i % 4 === 2, pendenteNaDemo: true },
-    { chave: 'isabela', id: 'personas-aluno-isabela', nome: 'Isabela Cruz', turma: 'muayThai', faixa: 'branca', grau: 0, entrouHaDias: 28, falta: (i) => i % 5 === 0, pendenteNaDemo: true },
+    { chave: 'ana', id: 'personas-aluno-ana', nome: 'Ana Rocha', turma: 'muayThai', faixa: 'amarela', grau: 0, entrouHaDias: 42, falta: (i) => i % 7 === 4 },
+    { chave: 'thiago', id: 'personas-aluno-thiago', nome: 'Thiago Mendes', turma: 'muayThai', faixa: 'laranja', grau: 0, entrouHaDias: 42, falta: (i) => i % 4 === 2 },
+    { chave: 'isabela', id: 'personas-aluno-isabela', nome: 'Isabela Cruz', turma: 'muayThai', faixa: 'branca', grau: 0, entrouHaDias: 28, falta: (i) => i % 5 === 0 },
     // RF32: veio na primeira semana e sumiu — 1 check-in validado só, então aparece em queda
     { chave: 'gabriel', id: 'personas-aluno-gabriel', nome: 'Gabriel Torres', turma: 'muayThai', faixa: 'branca', grau: 0, entrouHaDias: 35, soPrimeiraAula: true },
     { chave: 'leonardo', id: 'personas-aluno-leonardo', nome: 'Leonardo Pires', turma: 'iniciante', faixa: 'branca', grau: 0, entrouHaDias: 24, soPrimeiraAula: true },
@@ -136,11 +146,11 @@ async function main() {
   // sorteadas de forma determinística (a mesma semente dá sempre o mesmo resultado)
   const EXTRAS = {
     iniciante: { nomes: ['Beatriz Ramos', 'Mateus Carvalho', 'Larissa Gomes', 'Henrique Barros', 'Sofia Martins', 'Caio Teixeira', 'Yasmin Freitas', 'Diego Araújo'],
-      faixas: [['branca', 0], ['branca', 0], ['branca', 1], ['branca', 2]], entrada: [10, 42] },
+      faixas: [['branca', 0], ['branca', 0], ['branca', 1], ['branca', 2]], entrada: [10, 42], pendentes: 2 },
     adulto: { nomes: ['Mariana Lopes', 'Gustavo Almeida', 'Fernanda Castro', 'João Vitor Rezende', 'Camila Dias', 'Eduardo Pacheco', 'Letícia Moura', 'Rodrigo Farias', 'Natália Brito', 'Vinícius Campos'],
       faixas: [['branca', 3], ['branca', 4], ['azul', 0], ['azul', 1], ['azul', 3], ['roxa', 1], ['marrom', 0]], entrada: [42, 42] },
     muayThai: { nomes: ['Paulo Neves', 'Renata Lima', 'Marcos Vieira', 'Priscila Antunes', 'Daniel Cunha', 'Tatiane Sales', 'Igor Batista', 'Aline Queiroz'],
-      faixas: [['branca', 0], ['amarela', 0], ['laranja', 0], ['verde', 0]], entrada: [14, 42], pendentes: 2 },
+      faixas: [['branca', 0], ['amarela', 0], ['laranja', 0], ['verde', 0]], entrada: [14, 42] },
   };
   const sorteio = (texto) => { // hash FNV-1a + mistura final (fmix32) → [0, 1)
     let h = 2166136261;
@@ -180,7 +190,7 @@ async function main() {
 
   par(`usuarios/${uid.felipe}`, {
     id: uid.felipe, nome: CONTAS.felipe.nome, perfil: 'professor', autonomo: false,
-    modalidades: ['Muay Thai'], graduacao: 'Faixa preta', criadoEm: ts(haUmAno), atualizadoEm: agoraTs,
+    modalidades: ['Jiu-Jitsu'], graduacao: 'Faixa preta, 2º grau', criadoEm: ts(haUmAno), atualizadoEm: agoraTs,
   });
   par(`usuarios/${uid.felipe}/privado/dados`, { email: CONTAS.felipe.email });
   par(`usuarios/${uid.felipe}/privado/vinculos`, { responsaveisIds: [ACADEMIA] });
@@ -189,6 +199,19 @@ async function main() {
     perfilSolicitante: 'professor', perfilDestinatario: 'academia', tipo: 'professor-academia',
     status: 'aceito', criadoEm: ts(haUmAno), respondidoEm: ts(haUmAno),
   });
+  for (const p of PROFESSORES_APOIO) {
+    par(`usuarios/${p.id}`, {
+      id: p.id, nome: p.nome, perfil: 'professor', autonomo: false, modalidades: p.modalidades,
+      graduacao: p.graduacao, criadoEm: ts(haUmAno), atualizadoEm: agoraTs,
+    });
+    par(`usuarios/${p.id}/privado/dados`, { email: `${p.chave}.professor.apoio@example.com` });
+    par(`usuarios/${p.id}/privado/vinculos`, { responsaveisIds: [ACADEMIA] });
+    par(`vinculos/${p.id}_${ACADEMIA}`, {
+      id: `${p.id}_${ACADEMIA}`, solicitanteId: p.id, destinatarioId: ACADEMIA,
+      perfilSolicitante: 'professor', perfilDestinatario: 'academia', tipo: 'professor-academia',
+      status: 'aceito', criadoEm: ts(haUmAno), respondidoEm: ts(haUmAno),
+    });
+  }
 
   for (const t of Object.values(TURMAS)) {
     par(`turmas/${t.id}`, {
@@ -240,8 +263,8 @@ async function main() {
     for (let delta = -t.historicoDias; delta <= 14; delta += 1) {
       const base = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() + delta);
       if (!t.diasSemana.includes(base.getDay())) continue;
-      // no dia da demonstração a aula de dia inteiro substitui a aula da grade (iniciante e Muay Thai)
-      if (dia(base) === dia(demo) && chave !== 'adulto') continue;
+      // no dia da demonstração a aula de dia inteiro substitui a aula da grade da turma da Marina
+      if (dia(base) === dia(demo) && t.demo) continue;
       const inicio = comHorario(base, t.inicio);
       const fim = comHorario(base, t.fim);
       const id = `${t.id}_${dia(base)}`;
@@ -253,7 +276,7 @@ async function main() {
       });
       if (passada) sessoesPorTurma[chave].push({ id, inicio, turmaId: t.id, professor });
     }
-    if (chave !== 'adulto') {
+    if (t.demo) {
       const inicio = comHorario(demo, '07:00');
       const fim = comHorario(demo, '23:00');
       const id = `${t.id}_demo_${dia(demo)}`;
@@ -284,12 +307,13 @@ async function main() {
     }
   }
 
-  // check-ins pendentes na aula de Muay Thai da demonstração: o Felipe confirma na chamada (RF22)
-  const mt = TURMAS.muayThai;
+  // check-ins pendentes de colegas da Marina na aula da demonstração: ao vivo, a Marina faz o dela e o
+  // Felipe confirma todos na chamada (RF22)
+  const turmaDemo = TURMAS.iniciante;
   for (const a of ALUNOS.filter((x) => x.pendenteNaDemo)) {
-    par(`checkins/${mt.sessaoDemo.id}_${a.id}`, {
-      id: `${mt.sessaoDemo.id}_${a.id}`, sessaoId: mt.sessaoDemo.id, turmaId: mt.id, alunoId: a.id,
-      responsavelId: ACADEMIA, professorId: uid.felipe, dataHora: ts(new Date(mt.sessaoDemo.inicio.getTime() + 30 * 60_000)),
+    par(`checkins/${turmaDemo.sessaoDemo.id}_${a.id}`, {
+      id: `${turmaDemo.sessaoDemo.id}_${a.id}`, sessaoId: turmaDemo.sessaoDemo.id, turmaId: turmaDemo.id, alunoId: a.id,
+      responsavelId: ACADEMIA, professorId: uid.felipe, dataHora: ts(new Date(turmaDemo.sessaoDemo.inicio.getTime() + 30 * 60_000)),
       status: 'pendente', pontos: 0,
     });
   }
@@ -394,9 +418,36 @@ async function main() {
   ALUNOS.forEach((a) => console.log(`  ${a.nome.padEnd(16)} ${String(a.resumo.treinos).padStart(3)}  ${String(a.resumo.seguidosAgora).padStart(3)}  ${a.resumo.medalhas.join(', ')}`));
 
   if (!aplicar) {
-    console.log('\nDry-run: nada foi gravado. Rode de novo com --aplicar.');
+    console.log('\nDry-run: nada foi gravado (a limpeza do reset também só roda com --aplicar).');
     return;
   }
+
+  // ---------- reset: apaga, no escopo da academia, tudo o que não é deste script ----------
+  // Check-ins feitos ao vivo (o da Marina), aulas da demonstração de outras datas, missões e graduações
+  // criadas no app, sessões e check-ins de execuções anteriores que saíram da janela de datas. Roda
+  // ANTES de gravar: as Cloud Functions disparadas pelas exclusões (estorno de missão, por exemplo)
+  // terminam durante a espera abaixo, e a gravação final prevalece.
+  const doScript = new Set(todos.map(([c]) => c));
+  const sobras = [];
+  for (const colecao of ['sessoes', 'checkins', 'classificacoes', 'matriculas', 'missoes', 'missoesProgresso', 'graduacoes']) {
+    // eslint-disable-next-line no-await-in-loop
+    const snap = await db.collection(colecao).where('responsavelId', '==', ACADEMIA).get();
+    snap.docs.filter((d) => !doScript.has(`${colecao}/${d.id}`)).forEach((d) => sobras.push(d.ref));
+  }
+  for (const a of ALUNOS) {
+    // eslint-disable-next-line no-await-in-loop
+    const snap = await db.collection(`usuarios/${a.id}/medalhas`).get();
+    snap.docs.filter((d) => !doScript.has(`usuarios/${a.id}/medalhas/${d.id}`)).forEach((d) => sobras.push(d.ref));
+  }
+  for (let i = 0; i < sobras.length; i += 400) {
+    const lote = db.batch();
+    sobras.slice(i, i + 400).forEach((ref) => lote.delete(ref));
+    // eslint-disable-next-line no-await-in-loop
+    await lote.commit();
+  }
+  const porTipo = {};
+  sobras.forEach((ref) => { const k = ref.path.includes('/medalhas/') ? 'medalhas' : ref.path.split('/')[0]; porTipo[k] = (porTipo[k] || 0) + 1; });
+  console.log(`\nReset: ${sobras.length} registro(s) fora do script apagado(s)${sobras.length ? ` (${Object.entries(porTipo).map(([k, n]) => `${k}: ${n}`).join(', ')})` : ''}.`);
 
   const gravar = async (lista) => {
     for (let i = 0; i < lista.length; i += 400) {
@@ -413,20 +464,6 @@ async function main() {
   }
   await gravar(docs);
   await gravar(perfis);
-
-  // aulas da demonstração de outras datas: canceladas, para não quebrarem a sequência (RF21)
-  let canceladas = 0;
-  for (const t of [TURMAS.iniciante, TURMAS.muayThai]) {
-    // eslint-disable-next-line no-await-in-loop
-    const snap = await db.collection('sessoes').where('turmaId', '==', t.id).get();
-    const antigas = snap.docs.filter((d) => d.id.includes('_demo_') && d.id !== t.sessaoDemo.id && d.data().status !== 'cancelada');
-    for (const d of antigas) {
-      // eslint-disable-next-line no-await-in-loop
-      await d.ref.update({ status: 'cancelada', atualizadoEm: agoraTs });
-      canceladas += 1;
-    }
-  }
-  if (canceladas > 0) console.log(`${canceladas} aula(s) da demonstração de outras datas cancelada(s).`);
 
   console.log('\nPronto. Contas (todas com a mesma senha):');
   Object.entries(CONTAS).forEach(([k, c]) => console.log(`  ${k.padEnd(9)} ${c.email}`));
